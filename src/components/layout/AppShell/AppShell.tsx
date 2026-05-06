@@ -278,6 +278,13 @@ export function AppShell({ children }: AppShellProps) {
     ? 64 + Math.max(safeAreaInset.top, contentSafeAreaInset.top) + telegramHeaderHeight
     : 64;
 
+  const isDashboard = location.pathname === '/';
+  const isConnection = location.pathname.startsWith('/connection');
+  const isSubscription = location.pathname.startsWith('/subscription');
+  const isHeaderHidden = isDashboard || isConnection || isSubscription;
+  const isFullscreenContent = isDashboard || isConnection;
+  const isPurchasePage = location.pathname === '/subscription/purchase';
+
   return (
     <div className="min-h-screen">
       {/* Animated background renders via portal on document.body at z-index: -1 */}
@@ -423,38 +430,49 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </header>
 
-      {/* Mobile Header */}
-      <AppHeader
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        onCommandPaletteOpen={() => {}}
-        headerHeight={headerHeight}
-        isFullscreen={isMobileFullscreen}
-        safeAreaInset={safeAreaInset}
-        contentSafeAreaInset={contentSafeAreaInset}
-        telegramPlatform={platform}
-        wheelEnabled={wheelEnabled}
-        referralEnabled={referralEnabled}
-        hasContests={hasContests}
-        hasPolls={hasPolls}
-        giftEnabled={giftEnabled}
-      />
+      {/* Mobile Header — hidden on Dashboard, Connection, Subscription */}
+      {!isHeaderHidden && (
+        <AppHeader
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+          onCommandPaletteOpen={() => {}}
+          headerHeight={headerHeight}
+          isFullscreen={isMobileFullscreen}
+          safeAreaInset={safeAreaInset}
+          contentSafeAreaInset={contentSafeAreaInset}
+          telegramPlatform={platform}
+          wheelEnabled={wheelEnabled}
+          referralEnabled={referralEnabled}
+          hasContests={hasContests}
+          hasPolls={hasPolls}
+          giftEnabled={giftEnabled}
+        />
+      )}
 
-      {/* Desktop spacer */}
-      <div className="hidden h-14 lg:block" />
+      {/* Desktop spacer — hidden when header is hidden */}
+      {!isHeaderHidden && <div className="hidden h-14 lg:block" />}
 
-      {/* Mobile spacer */}
-      <div className="lg:hidden" style={{ height: headerHeight }} />
+      {/* Mobile spacer — hidden when header is hidden */}
+      {!isHeaderHidden && <div className="lg:hidden" style={{ height: headerHeight }} />}
 
       {/* Main content */}
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 lg:px-6 lg:pb-8">{children}</main>
+      <main className={cn(
+        'mx-auto max-w-6xl lg:px-6',
+        isFullscreenContent
+          ? 'px-5 py-0 pb-0 h-[calc(100vh-80px)] overflow-hidden'
+          : isPurchasePage
+            ? 'px-4 py-6 pb-6 overflow-y-auto h-[calc(100vh-0px)]'
+            : 'px-4 py-6 pb-28 lg:pb-8'
+      )}>{children}</main>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        isKeyboardOpen={isKeyboardOpen}
-        referralEnabled={referralEnabled}
-        wheelEnabled={wheelEnabled}
-      />
+      {!isPurchasePage && (
+        <MobileBottomNav
+          isKeyboardOpen={isKeyboardOpen}
+          referralEnabled={referralEnabled}
+          wheelEnabled={wheelEnabled}
+        />
+      )}
     </div>
   );
 }

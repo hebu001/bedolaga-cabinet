@@ -106,7 +106,8 @@ export function useHapticFeedback() {
   return {
     // Common actions
     buttonPress: useCallback(() => haptic.impact('light'), [haptic]),
-    buttonPressHeavy: useCallback(() => haptic.impact('medium'), [haptic]),
+    buttonPressMedium: useCallback(() => haptic.impact('medium'), [haptic]),
+    buttonPressHeavy: useCallback(() => haptic.impact('heavy'), [haptic]),
     toggle: useCallback(() => haptic.impact('rigid'), [haptic]),
 
     // Notifications

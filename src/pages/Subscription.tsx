@@ -14,7 +14,7 @@ import { useCurrency } from '../hooks/useCurrency';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
 import { CopyIcon, CheckIcon } from '../components/icons';
-import { useHaptic } from '../platform';
+import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import {
   getErrorMessage,
   getInsufficientBalanceError,
@@ -170,7 +170,7 @@ export default function Subscription() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
-  const haptic = useHaptic();
+  const haptic = useHapticFeedback();
   const [copied, setCopied] = useState(false);
 
   // Helper to format price from kopeks
@@ -436,8 +436,8 @@ export default function Subscription() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('subscription.title')}</h1>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold text-white sm:text-3xl">{t('subscription.title')}</h1>
 
       {/* Current Subscription */}
       {subscription ? (
@@ -451,17 +451,12 @@ export default function Subscription() {
 
           return (
             <div
-              className="relative overflow-hidden rounded-3xl backdrop-blur-xl"
+              className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
               style={{
-                background: g.cardBg,
                 border: subscription.is_trial
-                  ? '1px solid rgba(var(--color-accent-400), 0.15)'
-                  : isDark
-                    ? `1px solid ${g.cardBorder}`
-                    : `1px solid ${zone.mainHex}25`,
-                boxShadow: isDark
-                  ? g.shadow
-                  : `0 2px 16px ${zone.mainHex}12, 0 0 0 1px ${zone.mainHex}08`,
+                  ? '1px solid var(--figma-green-border)'
+                  : isDark ? 'none' : '1px solid rgba(0, 183, 131, 0.18)',
+                boxShadow: isDark ? 'none' : '0 0 0 1px rgba(0,183,131,0.08), 0 4px 32px rgba(0,183,131,0.06)',
                 padding: '28px 28px 24px',
               }}
             >
@@ -482,7 +477,7 @@ export default function Subscription() {
                   width: 200,
                   height: 200,
                   borderRadius: '50%',
-                  background: `radial-gradient(circle, ${zone.mainHex}${g.glowAlpha} 0%, transparent 70%)`,
+                  background: 'radial-gradient(circle, rgba(0,183,131,0.07) 0%, transparent 70%)',
                   transition: 'background 0.8s ease',
                 }}
                 aria-hidden="true"
@@ -496,15 +491,15 @@ export default function Subscription() {
                     <div
                       className="h-2 w-2 rounded-full"
                       style={{
-                        background: zone.mainHex,
-                        boxShadow: `0 0 8px ${zone.mainHex}80`,
+                        background: 'var(--figma-green)',
+                        boxShadow: '0 0 8px rgba(0,183,131,0.5)',
                         transition: 'all 0.6s ease',
                       }}
                       aria-hidden="true"
                     />
                     <span
                       className="font-mono text-[11px] font-semibold uppercase tracking-widest"
-                      style={{ color: zone.mainHex, transition: 'color 0.6s ease' }}
+                      style={{ color: 'var(--figma-green)', transition: 'color 0.6s ease' }}
                     >
                       {isUnlimited ? t('dashboard.unlimited') : t(zone.labelKey)}
                     </span>
@@ -686,7 +681,7 @@ export default function Subscription() {
                         : `${formatTraffic(usedGb)} / ${formatTraffic(subscription.traffic_limit_gb)}`}
                     </span>
                     <button
-                      onClick={() => refreshTrafficMutation.mutate()}
+                      onClick={() => { haptic.buttonPressMedium(); refreshTrafficMutation.mutate(); }}
                       disabled={refreshTrafficMutation.isPending || trafficRefreshCooldown > 0}
                       className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-dark-50/30 transition-colors hover:bg-dark-50/[0.05] hover:text-dark-50/50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -732,8 +727,9 @@ export default function Subscription() {
                   accentColor={zone.mainHex}
                   disabled={isAtDeviceLimit}
                   onClick={() => {
+                    haptic.buttonPressMedium();
                     if (isAtDeviceLimit) {
-                      haptic.notification('error');
+                      haptic.error();
                       return;
                     }
                     navigate('/connection');
@@ -769,9 +765,9 @@ export default function Subscription() {
                       {subscription.device_limit === 0
                         ? t('dashboard.devicesConnectedUnlimited', { used: connectedDevices })
                         : t('dashboard.devicesOfMax', {
-                            used: connectedDevices,
-                            max: subscription.device_limit,
-                          })}
+                          used: connectedDevices,
+                          max: subscription.device_limit,
+                        })}
                     </div>
                     {isAtDeviceLimit && (
                       <div
@@ -836,7 +832,7 @@ export default function Subscription() {
                     {subscription.subscription_url}
                   </code>
                   <button
-                    onClick={copyUrl}
+                    onClick={() => { haptic.buttonPressMedium(); copyUrl(); }}
                     className="flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300"
                     style={{
                       background: copied ? 'rgba(var(--color-accent-400), 0.12)' : g.innerBorder,
@@ -897,10 +893,10 @@ export default function Subscription() {
                     {subscription.traffic_purchases.map((purchase) => (
                       <div
                         key={purchase.id}
-                        className="rounded-[12px] p-3"
+                        className={`rounded-[12px] p-3 ${isDark ? 'dark-glass-subtle border-transparent' : ''}`}
                         style={{
-                          background: g.innerBg,
-                          border: `1px solid ${g.innerBorder}`,
+                          background: isDark ? 'transparent' : g.innerBg,
+                          border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
                         }}
                       >
                         <div className="mb-2 flex items-center justify-between">
@@ -973,10 +969,10 @@ export default function Subscription() {
               {/* ─── Autopay Toggle ─── */}
               {!subscription.is_trial && !subscription.is_daily && (
                 <div
-                  className="flex items-center justify-between rounded-[14px] p-3.5"
+                  className={`flex items-center justify-between rounded-[14px] p-3.5 ${isDark ? 'dark-glass-subtle border-transparent' : ''}`}
                   style={{
-                    background: g.innerBg,
-                    border: `1px solid ${g.innerBorder}`,
+                    background: isDark ? 'transparent' : g.innerBg,
+                    border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
                   }}
                 >
                   <div>
@@ -990,7 +986,7 @@ export default function Subscription() {
                     </div>
                   </div>
                   <button
-                    onClick={() => autopayMutation.mutate(!subscription.autopay_enabled)}
+                    onClick={() => { haptic.buttonPressMedium(); autopayMutation.mutate(!subscription.autopay_enabled); }}
                     disabled={autopayMutation.isPending}
                     className="relative h-7 w-[52px] rounded-full transition-colors duration-300"
                     style={{
@@ -1012,11 +1008,11 @@ export default function Subscription() {
         })()
       ) : (
         <div
-          className="relative overflow-hidden rounded-3xl py-12 text-center"
+          className={`relative overflow-hidden rounded-3xl py-12 text-center ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
           style={{
-            background: g.cardBg,
-            border: `1px solid ${g.cardBorder}`,
-            boxShadow: g.shadow,
+            background: isDark ? 'transparent' : g.cardBg,
+            border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
+            boxShadow: isDark ? 'none' : g.shadow,
           }}
         >
           <div
@@ -1046,11 +1042,11 @@ export default function Subscription() {
       {/* Daily Subscription Pause */}
       {subscription && subscription.is_daily && !subscription.is_trial && (
         <div
-          className="relative overflow-hidden rounded-3xl"
+          className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
           style={{
-            background: g.cardBg,
-            border: `1px solid ${g.cardBorder}`,
-            boxShadow: g.shadow,
+            background: isDark ? 'transparent' : g.cardBg,
+            border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
+            boxShadow: isDark ? 'none' : g.shadow,
             padding: '24px 28px',
           }}
         >
@@ -1070,7 +1066,7 @@ export default function Subscription() {
               </div>
             </div>
             <button
-              onClick={() => pauseMutation.mutate()}
+              onClick={() => { haptic.buttonPressMedium(); pauseMutation.mutate(); }}
               disabled={pauseMutation.isPending}
               className="rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors duration-300"
               style={{
@@ -1218,11 +1214,11 @@ export default function Subscription() {
         !subscription.is_trial &&
         subscription.device_limit !== 0 && (
           <div
-            className="relative overflow-hidden rounded-3xl"
+            className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
             style={{
-              background: g.cardBg,
-              border: `1px solid ${g.cardBorder}`,
-              boxShadow: g.shadow,
+              background: isDark ? 'transparent' : g.cardBg,
+              border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
+              boxShadow: isDark ? 'none' : g.shadow,
               padding: '24px 28px',
             }}
           >
@@ -1233,7 +1229,7 @@ export default function Subscription() {
             {/* Buy Devices */}
             {!showDeviceTopup ? (
               <button
-                onClick={() => setShowDeviceTopup(true)}
+                onClick={() => { haptic.buttonPressMedium(); setShowDeviceTopup(true); }}
                 className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
               >
                 <div className="flex items-center justify-between">
@@ -1265,7 +1261,7 @@ export default function Subscription() {
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-medium text-dark-100">{t('subscription.buyDevices')}</h3>
                   <button
-                    onClick={() => setShowDeviceTopup(false)}
+                    onClick={() => { haptic.buttonPressMedium(); setShowDeviceTopup(false); }}
                     className="text-sm text-dark-400 hover:text-dark-200"
                   >
                     ✕
@@ -1283,7 +1279,7 @@ export default function Subscription() {
                     {/* Device selector - show even at max limit */}
                     <div className="flex items-center justify-center gap-6">
                       <button
-                        onClick={() => setDevicesToAdd(Math.max(1, devicesToAdd - 1))}
+                        onClick={() => { haptic.buttonPressMedium(); setDevicesToAdd(Math.max(1, devicesToAdd - 1)); }}
                         disabled={devicesToAdd <= 1}
                         className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
                       >
@@ -1300,7 +1296,7 @@ export default function Subscription() {
                         disabled={
                           devicePriceData?.max_device_limit
                             ? (devicePriceData.current_device_limit || 0) + devicesToAdd >=
-                              devicePriceData.max_device_limit
+                            devicePriceData.max_device_limit
                             : false
                         }
                         className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
@@ -1328,7 +1324,7 @@ export default function Subscription() {
                         <div className="mb-2 text-sm text-dark-400">
                           {/* Show original price with strikethrough if discount */}
                           {devicePriceData.discount_percent &&
-                          devicePriceData.discount_percent > 0 ? (
+                            devicePriceData.discount_percent > 0 ? (
                             <span>
                               <span className="text-dark-500 line-through">
                                 {formatPrice(devicePriceData.original_price_per_device_kopeks || 0)}
@@ -1387,7 +1383,7 @@ export default function Subscription() {
                       )}
 
                     <button
-                      onClick={() => devicePurchaseMutation.mutate()}
+                      onClick={() => { haptic.buttonPressMedium(); devicePurchaseMutation.mutate(); }}
                       disabled={
                         devicePurchaseMutation.isPending ||
                         !devicePriceData?.available ||
@@ -1422,7 +1418,7 @@ export default function Subscription() {
             <div className="mt-4">
               {!showDeviceReduction ? (
                 <button
-                  onClick={() => setShowDeviceReduction(true)}
+                  onClick={() => { haptic.buttonPressMedium(); setShowDeviceReduction(true); }}
                   className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
                 >
                   <div className="flex items-center justify-between">
@@ -1541,12 +1537,12 @@ export default function Subscription() {
                       {/* Warning if connected devices block reduction */}
                       {deviceReductionInfo.connected_devices_count >
                         deviceReductionInfo.min_device_limit && (
-                        <div className="rounded-lg bg-warning-500/10 p-3 text-center text-sm text-warning-400">
-                          {t('subscription.additionalOptions.disconnectDevicesFirst', {
-                            count: deviceReductionInfo.connected_devices_count,
-                          })}
-                        </div>
-                      )}
+                          <div className="rounded-lg bg-warning-500/10 p-3 text-center text-sm text-warning-400">
+                            {t('subscription.additionalOptions.disconnectDevicesFirst', {
+                              count: deviceReductionInfo.connected_devices_count,
+                            })}
+                          </div>
+                        )}
 
                       {/* New limit preview */}
                       <div className="text-center">
@@ -1558,7 +1554,7 @@ export default function Subscription() {
                       </div>
 
                       <button
-                        onClick={() => deviceReductionMutation.mutate()}
+                        onClick={() => { haptic.buttonPressMedium(); deviceReductionMutation.mutate(); }}
                         disabled={
                           deviceReductionMutation.isPending ||
                           targetDeviceLimit >= deviceReductionInfo.current_device_limit ||
@@ -1597,7 +1593,7 @@ export default function Subscription() {
               <div className="mt-4">
                 {!showTrafficTopup ? (
                   <button
-                    onClick={() => setShowTrafficTopup(true)}
+                    onClick={() => { haptic.buttonPressMedium(); setShowTrafficTopup(true); }}
                     className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
                   >
                     <div className="flex items-center justify-between">
@@ -1659,13 +1655,12 @@ export default function Subscription() {
                             <button
                               key={pkg.gb}
                               onClick={() => setSelectedTrafficPackage(pkg.gb)}
-                              className={`rounded-xl border p-4 text-center transition-all ${
-                                selectedTrafficPackage === pkg.gb
+                              className={`rounded-xl border p-4 text-center transition-all ${selectedTrafficPackage === pkg.gb
                                   ? 'border-accent-500 bg-accent-500/10'
                                   : isDark
                                     ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                                     : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
-                              }`}
+                                }`}
                             >
                               <div className="text-lg font-semibold text-dark-100">
                                 {pkg.is_unlimited
@@ -1683,8 +1678,8 @@ export default function Subscription() {
                               {/* Price with original strikethrough if discount */}
                               <div className="font-medium text-accent-400">
                                 {pkg.discount_percent &&
-                                pkg.discount_percent > 0 &&
-                                pkg.base_price_kopeks ? (
+                                  pkg.discount_percent > 0 &&
+                                  pkg.base_price_kopeks ? (
                                   <>
                                     <span className="mr-1 text-sm text-dark-500 line-through">
                                       {formatPrice(pkg.base_price_kopeks)}
@@ -1765,7 +1760,7 @@ export default function Subscription() {
               <div className="mt-4">
                 {!showServerManagement ? (
                   <button
-                    onClick={() => setShowServerManagement(true)}
+                    onClick={() => { haptic.buttonPressMedium(); setShowServerManagement(true); }}
                     className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
                   >
                     <div className="flex items-center justify-between">
@@ -1850,8 +1845,7 @@ export default function Subscription() {
                                     }
                                   }}
                                   disabled={!country.is_available && !isCurrentlyConnected}
-                                  className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${
-                                    isSelected
+                                  className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${isSelected
                                       ? willBeAdded
                                         ? 'border-success-500 bg-success-500/10'
                                         : 'border-accent-500 bg-accent-500/10'
@@ -1860,7 +1854,7 @@ export default function Subscription() {
                                         : isDark
                                           ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                                           : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
-                                  } ${!country.is_available && !isCurrentlyConnected ? 'cursor-not-allowed opacity-50' : ''}`}
+                                    } ${!country.is_available && !isCurrentlyConnected ? 'cursor-not-allowed opacity-50' : ''}`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <span className="text-lg">
@@ -1893,7 +1887,7 @@ export default function Subscription() {
                                                 Math.round(
                                                   (country.base_price_kopeks *
                                                     countriesData.days_left) /
-                                                    30,
+                                                  30,
                                                 ),
                                               )}
                                             </span>
@@ -2047,11 +2041,11 @@ export default function Subscription() {
       {/* My Devices Section */}
       {subscription && (
         <div
-          className="relative overflow-hidden rounded-3xl"
+          className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
           style={{
-            background: g.cardBg,
-            border: `1px solid ${g.cardBorder}`,
-            boxShadow: g.shadow,
+            background: isDark ? 'transparent' : g.cardBg,
+            border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
+            boxShadow: isDark ? 'none' : g.shadow,
             padding: '24px 28px',
           }}
         >
@@ -2095,10 +2089,10 @@ export default function Subscription() {
               {devicesData.devices.map((device) => (
                 <div
                   key={device.hwid}
-                  className="flex items-center justify-between rounded-[12px] p-3.5"
+                  className={`flex items-center justify-between rounded-[12px] p-3.5 ${isDark ? 'dark-glass-subtle border-transparent' : ''}`}
                   style={{
-                    background: g.innerBg,
-                    border: `1px solid ${g.innerBorder}`,
+                    background: isDark ? 'transparent' : g.innerBg,
+                    border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
                   }}
                 >
                   <div className="flex items-center gap-3">

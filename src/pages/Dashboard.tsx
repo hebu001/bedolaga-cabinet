@@ -2,38 +2,87 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useAuthStore } from '../store/auth';
 import { useBlockingStore } from '../store/blocking';
 import { subscriptionApi } from '../api/subscription';
 import { referralApi } from '../api/referral';
 import { balanceApi } from '../api/balance';
-import { wheelApi } from '../api/wheel';
 import Onboarding, { useOnboarding } from '../components/Onboarding';
-import PromoOffersSection from '../components/PromoOffersSection';
-import SubscriptionCardActive from '../components/dashboard/SubscriptionCardActive';
-import SubscriptionCardExpired from '../components/dashboard/SubscriptionCardExpired';
 import TrialOfferCard from '../components/dashboard/TrialOfferCard';
-import StatsGrid from '../components/dashboard/StatsGrid';
 import { giftApi } from '../api/gift';
 import { promoApi } from '../api/promo';
 import PendingGiftCard from '../components/dashboard/PendingGiftCard';
 import { API } from '../config/constants';
+import { formatTraffic } from '../utils/formatTraffic';
 
-const ChevronRightIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+/* ─── Shield SVG (Ultima logo) ─── */
+const ShieldLogo = ({ className = '' }: { className?: string }) => (
+  <img src="/logo-main.svg" alt="Logo" className={className} />
+);
+
+/* ─── Ring Animation ─── */
+const RingAnimation = () => (
+  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+    {[1, 2, 3, 4].map((i) => (
+      <motion.div
+        key={i}
+        className="absolute rounded-full border border-white/5"
+        initial={{ width: 120 + i * 70, height: 120 + i * 70, opacity: 0.15 }}
+        animate={{
+          scale: [1, 1.08, 1],
+          opacity: [0.08, 0.15, 0.08],
+        }}
+        transition={{
+          duration: 3 + i * 0.5,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: i * 0.4,
+        }}
+      />
+    ))}
+  </div>
+);
+
+/* ─── Icons ─── */
+const GlobeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+    <path d="M2 12h20" />
   </svg>
 );
 
+const UnplugIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m19 5 3-3" />
+    <path d="m2 22 3-3" />
+    <path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z" />
+    <path d="M7.5 13.5 10 11" />
+    <path d="M10.5 16.5 13 14" />
+    <path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z" />
+  </svg>
+);
+
+const LaptopIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect width="18" height="12" x="3" y="4" rx="2" ry="2" />
+    <line x1="2" x2="22" y1="20" y2="20" />
+  </svg>
+);
+
+
 export default function Dashboard() {
   const { t } = useTranslation();
-  const user = useAuthStore((state) => state.user);
+  const haptic = useHapticFeedback();
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const queryClient = useQueryClient();
   const { isCompleted: isOnboardingCompleted, complete: completeOnboarding } = useOnboarding();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const blockingType = useBlockingStore((state) => state.blockingType);
   const [trialError, setTrialError] = useState<string | null>(null);
+  const [showDevicePanel, setShowDevicePanel] = useState(false);
 
   // Refresh user data on mount
   useEffect(() => {
@@ -71,14 +120,22 @@ export default function Dashboard() {
     staleTime: API.BALANCE_STALE_TIME_MS,
   });
 
-  const { data: referralInfo, isLoading: refLoading } = useQuery({
+  const deleteDeviceMutation = useMutation({
+    mutationFn: (hwid: string) => subscriptionApi.deleteDevice(hwid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+    },
+  });
+
+  const { isLoading: refLoading } = useQuery({
     queryKey: ['referral-info'],
     queryFn: referralApi.getReferralInfo,
   });
 
-  const { data: wheelConfig } = useQuery({
-    queryKey: ['wheel-config'],
-    queryFn: wheelApi.getConfig,
+  // Fetch purchase options for min price display
+  const { data: purchaseOptions } = useQuery({
+    queryKey: ['purchase-options'],
+    queryFn: subscriptionApi.getPurchaseOptions,
     staleTime: 60000,
     retry: false,
   });
@@ -90,7 +147,7 @@ export default function Dashboard() {
     retry: false,
   });
 
-  const { data: promoGroupData } = useQuery({
+  const { data: _promoGroupData } = useQuery({
     queryKey: ['promo-group-discounts'],
     queryFn: promoApi.getGroupDiscounts,
     staleTime: 60_000,
@@ -197,19 +254,19 @@ export default function Dashboard() {
       description: string;
       placement: Placement;
     }> = [
-      {
-        target: 'welcome',
-        title: t('onboarding.steps.welcome.title'),
-        description: t('onboarding.steps.welcome.description'),
-        placement: 'bottom',
-      },
-      {
-        target: 'balance',
-        title: t('onboarding.steps.balance.title'),
-        description: t('onboarding.steps.balance.description'),
-        placement: 'bottom',
-      },
-    ];
+        {
+          target: 'welcome',
+          title: t('onboarding.steps.welcome.title'),
+          description: t('onboarding.steps.welcome.description'),
+          placement: 'bottom',
+        },
+        {
+          target: 'balance',
+          title: t('onboarding.steps.balance.title'),
+          description: t('onboarding.steps.balance.description'),
+          placement: 'bottom',
+        },
+      ];
 
     if (subscription?.subscription_url) {
       steps.splice(1, 0, {
@@ -228,112 +285,304 @@ export default function Dashboard() {
     completeOnboarding();
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div data-onboarding="welcome">
-        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
-          {t('dashboard.welcome', { name: user?.first_name || user?.username || '' })}
-        </h1>
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          <p className="text-dark-400">{t('dashboard.yourSubscription')}</p>
-          {promoGroupData?.group_name && (
-            <span
-              className="inline-flex max-w-[160px] items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-              style={{
-                background: 'rgba(var(--color-accent-400), 0.1)',
-                border: '1px solid rgba(var(--color-accent-400), 0.2)',
-                color: 'rgb(var(--color-accent-400))',
-              }}
+  // ── Derived display data ──
+  const usedGb = trafficData?.traffic_used_gb ?? subscription?.traffic_used_gb ?? 0;
+
+  // Subscription status derivation
+  const subscriptionStatus = useMemo(() => {
+    if (!subscription) return { label: '', color: 'rgba(255,255,255,0.4)' };
+    if (subscription.is_expired) return { label: 'Истекла', color: '#ef4444' };
+    if (subscription.is_limited) return { label: 'Лимит', color: 'var(--figma-green)' };
+    if (subscription.status === 'disabled') return { label: 'Отключена', color: '#ef4444' };
+    if (subscription.is_active) return { label: 'Активна', color: 'var(--figma-green)' };
+    return { label: subscription.status, color: 'rgba(255,255,255,0.4)' };
+  }, [subscription]);
+
+  const formattedDate = subscription
+    ? new Date(subscription.end_date).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+    : '';
+
+  const deviceCount = devicesData?.total ?? 0;
+
+  // Compute minimum tariff price for CTA button
+  const minPriceLabel = useMemo(() => {
+    if (!purchaseOptions) return '';
+    let minKopeks = Infinity;
+    if (purchaseOptions.sales_mode === 'tariffs') {
+      for (const tariff of purchaseOptions.tariffs) {
+        for (const period of tariff.periods) {
+          if (period.price_kopeks < minKopeks) minKopeks = period.price_kopeks;
+        }
+      }
+    } else if (purchaseOptions.sales_mode === 'classic') {
+      for (const period of purchaseOptions.periods) {
+        if (period.price_kopeks < minKopeks) minKopeks = period.price_kopeks;
+      }
+    }
+    if (minKopeks === Infinity) return '';
+    const rubles = Math.round(minKopeks / 100);
+    return `от ${rubles}\u00A0₽`;
+  }, [purchaseOptions]);
+
+  // ── Expired / Disabled / Limited ──
+  if (
+    !subLoading &&
+    subscription &&
+    (subscription.is_expired || subscription.status === 'disabled' || subscription.is_limited)
+  ) {
+    const expiredDate = new Date(subscription.end_date).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const statusLabel = subscription.is_expired
+      ? 'ПОДПИСКА ИСТЕКЛА'
+      : subscription.is_limited
+        ? 'ЛИМИТ ИСЧЕРПАН'
+        : 'ПОДПИСКА ОТКЛЮЧЕНА';
+
+    return (
+      <div className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5" style={{ touchAction: 'none', overscrollBehavior: 'none' }}>
+        {/* Hero area — large status text replaces logo */}
+        <div className="relative flex flex-1 items-center justify-center">
+          <RingAnimation />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="relative z-10 text-center px-4"
+          >
+            <h1
+              className="text-4xl sm:text-5xl font-black text-white leading-tight"
+              style={{ letterSpacing: '0.12em', fontStretch: 'expanded' }}
             >
-              <svg
-                className="shrink-0"
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-              <span className="truncate">{promoGroupData.group_name}</span>
-            </span>
-          )}
+              {statusLabel}
+            </h1>
+            <p
+              className="mt-4 text-2xl sm:text-3xl text-white/60 font-semibold"
+              style={{ letterSpacing: '0.08em', fontStretch: 'expanded' }}
+            >
+              {expiredDate}
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Bottom CTA buttons */}
+        <div className="mt-auto space-y-2 pb-2">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Link
+              to="/subscription/purchase"
+              onClick={() => haptic.buttonPressMedium()}
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 transform-gpu hover:brightness-110 active:scale-[0.97] active:brightness-90"
+              style={{ background: 'var(--figma-green)' }}
+            >
+              <GlobeIcon />
+              <span>{t('dashboard.expired.renew')}</span>
+              {minPriceLabel && (
+                <span className="ml-auto shrink-0 text-right text-white/70">{minPriceLabel}</span>
+              )}
+            </Link>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <Link
+              to="/connection"
+              onClick={() => haptic.buttonPressMedium()}
+              className="flex h-14 w-full items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 transform-gpu hover:brightness-95 active:scale-[0.97] active:brightness-90"
+            >
+              <UnplugIcon />
+              <span>{t('dashboard.connectDevice')}</span>
+              <span className="ml-auto flex text-gray-400">
+                <LaptopIcon />
+              </span>
+            </Link>
+          </motion.div>
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5" style={{ touchAction: 'none', overscrollBehavior: 'none' }} data-onboarding="welcome">
       {/* Pending Gift Activations */}
       {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
 
-      {/* Subscription Status Card */}
-      {subLoading ? (
-        <div className="bento-card">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="skeleton h-5 w-20" />
-            <div className="skeleton h-6 w-16 rounded-full" />
+      {/* ─── Hero Area: Logo + Rings ─── */}
+      <div className="relative flex flex-1 items-center justify-center">
+        <RingAnimation />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <div style={{ transform: 'translateX(-5%)' }}>
+            <ShieldLogo className="w-[288px] sm:w-[384px] opacity-90" />
           </div>
-          <div className="skeleton mb-3 h-10 w-32" />
-          <div className="skeleton mb-3 h-4 w-40" />
-          <div className="skeleton h-3 w-full rounded-full" />
-          <div className="mt-5">
-            <div className="skeleton h-12 w-full rounded-xl" />
-          </div>
-        </div>
-      ) : subscription?.is_expired ||
-        subscription?.status === 'disabled' ||
-        subscription?.is_limited ? (
-        <SubscriptionCardExpired
-          subscription={subscription}
-          balanceKopeks={balanceData?.balance_kopeks ?? 0}
-          balanceRubles={balanceData?.balance_rubles ?? 0}
-        />
-      ) : subscription ? (
-        <SubscriptionCardActive
-          subscription={subscription}
-          trafficData={trafficData}
-          refreshTrafficMutation={refreshTrafficMutation}
-          trafficRefreshCooldown={trafficRefreshCooldown}
-          connectedDevices={devicesData?.total ?? 0}
-        />
-      ) : null}
+        </motion.div>
+      </div>
 
-      {/* Trial Activation */}
-      {hasNoSubscription && !trialLoading && trialInfo?.is_available && (
-        <TrialOfferCard
-          trialInfo={trialInfo}
-          balanceKopeks={balanceData?.balance_kopeks || 0}
-          balanceRubles={balanceData?.balance_rubles || 0}
-          activateTrialMutation={activateTrialMutation}
-          trialError={trialError}
-        />
-      )}
-
-      {/* Promo Offers */}
-      <PromoOffersSection />
-
-      {/* Stats Grid */}
-      <StatsGrid
-        balanceRubles={balanceData?.balance_rubles || 0}
-        referralCount={referralInfo?.total_referrals || 0}
-        earningsRubles={referralInfo?.available_balance_rubles || 0}
-        refLoading={refLoading}
-      />
-
-      {/* Fortune Wheel Banner */}
-      {wheelConfig?.is_enabled && (
-        <Link to="/wheel" className="bento-card-hover group flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-3xl">🎰</span>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-base font-semibold text-dark-100">{t('wheel.banner.title')}</h3>
-              <p className="text-sm text-dark-400">{t('wheel.banner.description')}</p>
+      {/* ─── Bottom Section ─── */}
+      <div className="mt-auto space-y-2 pb-2">
+        {/* Subscription Info Row */}
+        {subscription && !subLoading && (
+          <motion.div
+            className="flex items-center justify-between py-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <div className="flex flex-col text-lg leading-5">
+              <span className="text-xl font-black" style={{ letterSpacing: '0.04em', fontStretch: 'expanded', textShadow: '0.5px 0 0 currentColor' }}>{t('dashboard.validUntil', { date: formattedDate })}</span>
+              <span className="mt-1 text-base font-medium" style={{ color: subscriptionStatus.color }}>
+                {subscriptionStatus.label}  ·  {formatTraffic(usedGb)}/{subscription.traffic_limit_gb > 0 ? formatTraffic(subscription.traffic_limit_gb) : '∞'}
+              </span>
             </div>
+
+            {/* Device count pill */}
+            <button
+              onClick={() => { haptic.buttonPressMedium(); setShowDevicePanel(!showDevicePanel); }}
+              className="flex h-9 items-center gap-2 rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              data-onboarding="connect-devices"
+            >
+              {t('dashboard.devicesLabel', 'Устройства')} {deviceCount}/{subscription?.device_limit ?? 0}
+            </button>
+          </motion.div>
+        )}
+
+        {/* ─── Device Panel ─── */}
+        <AnimatePresence>
+          {showDevicePanel && devicesData && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ type: 'tween', duration: 0.15, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-2 rounded-2xl bg-black/40 p-3 backdrop-blur-2xl border border-white/10">
+                <div className="mb-1 font-mono text-[11px] text-white/30">
+                  {devicesData.device_limit === 0
+                    ? `${devicesData.total} · ∞`
+                    : `${devicesData.total} / ${devicesData.device_limit}`}
+                </div>
+                {devicesData.devices.length > 0 ? devicesData.devices.map((device) => (
+                  <div
+                    key={device.hwid}
+                    className="flex items-center justify-between rounded-xl bg-white/5 p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white/5">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-white">
+                          {device.device_model || device.platform}
+                        </div>
+                        <div className="text-[11px] text-white/30">{device.platform}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        haptic.buttonPressMedium();
+                        if (confirm(t('subscription.confirmDeleteDevice'))) {
+                          deleteDeviceMutation.mutate(device.hwid);
+                        }
+                      }}
+                      disabled={deleteDeviceMutation.isPending}
+                      className="p-2 text-white/20 transition-colors hover:text-red-400"
+                      title={t('subscription.deleteDevice')}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    </button>
+                  </div>
+                )) : (
+                  <div className="py-3 text-center text-sm text-white/30">
+                    {t('subscription.noDevicesConnected', { defaultValue: 'Нет подключенных устройств' })}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Loading skeleton */}
+        {subLoading && (
+          <div className="flex items-center justify-between py-4">
+            <div>
+              <div className="skeleton mb-2 h-5 w-40" />
+              <div className="skeleton h-4 w-24" />
+            </div>
+            <div className="skeleton h-8 w-28 rounded-full" />
           </div>
-          <div className="flex-shrink-0 text-dark-500 transition-all duration-300 group-hover:translate-x-1 group-hover:text-accent-400">
-            <ChevronRightIcon />
-          </div>
-        </Link>
-      )}
+        )}
+
+        {/* Trial Activation */}
+        {hasNoSubscription && !trialLoading && trialInfo?.is_available && (
+          <TrialOfferCard
+            trialInfo={trialInfo}
+            balanceKopeks={balanceData?.balance_kopeks || 0}
+            balanceRubles={balanceData?.balance_rubles || 0}
+            activateTrialMutation={activateTrialMutation}
+            trialError={trialError}
+          />
+        )}
+
+        {/* CTA: Renew Subscription */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <Link
+            to="/subscription/purchase"
+            onClick={() => haptic.buttonPressMedium()}
+            className="flex h-14 w-full items-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 transform-gpu hover:brightness-110 active:scale-[0.97] active:brightness-90"
+            style={{ background: 'var(--figma-green)' }}
+          >
+            <GlobeIcon />
+            <span>{t('dashboard.expired.renew')}</span>
+            {minPriceLabel && (
+              <span className="ml-auto shrink-0 text-right text-white/70">{minPriceLabel}</span>
+            )}
+          </Link>
+        </motion.div>
+
+        {/* CTA: Setup & Configuration */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <Link
+            to="/connection"
+            onClick={() => haptic.buttonPressMedium()}
+            className="flex h-14 w-full items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 transform-gpu hover:brightness-95 active:scale-[0.97] active:brightness-90"
+          >
+            <UnplugIcon />
+            <span>{t('dashboard.connectDevice')}</span>
+            <span className="ml-auto flex text-gray-400">
+              <LaptopIcon />
+            </span>
+          </Link>
+        </motion.div>
+
+      </div>
 
       {/* Onboarding Tutorial */}
       {showOnboarding && (

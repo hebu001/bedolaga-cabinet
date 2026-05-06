@@ -41,8 +41,8 @@ export default function StatsGrid({
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
 
-  const accentColor = 'rgb(var(--color-accent-400))';
-  const accentBg = 'rgba(var(--color-accent-400), 0.07)';
+  const accentColor = 'var(--figma-green)';
+  const accentBg = 'rgba(0,168,120,0.08)';
 
   const cards = [
     {
@@ -108,11 +108,9 @@ export default function StatsGrid({
         <Link
           key={i}
           to={card.to}
-          className="group relative overflow-hidden rounded-[18px] transition-all duration-200"
+          className="group relative overflow-hidden rounded-2xl transition-all duration-200"
           style={{
-            background: g.cardBg,
-            border: `1px solid ${g.cardBorder}`,
-            boxShadow: g.shadow,
+            background: 'rgba(255, 255, 255, 0.05)',
             padding: '18px 20px 20px',
           }}
           data-onboarding={card.onboarding}

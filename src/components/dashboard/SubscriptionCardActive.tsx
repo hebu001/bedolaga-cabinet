@@ -10,7 +10,7 @@ import { useTrafficZone } from '../../hooks/useTrafficZone';
 import { formatTraffic } from '../../utils/formatTraffic';
 import { getGlassColors } from '../../utils/glassTheme';
 import { HoverBorderGradient } from '../ui/hover-border-gradient';
-import { useHaptic } from '../../platform';
+import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 import type { Subscription } from '../../types';
 
 interface SubscriptionCardActiveProps {
@@ -51,6 +51,7 @@ export default function SubscriptionCardActive({
 }: SubscriptionCardActiveProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const haptic = useHapticFeedback();
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
 
@@ -59,7 +60,6 @@ export default function SubscriptionCardActive({
   const isUnlimited = trafficData?.is_unlimited ?? subscription.traffic_limit_gb === 0;
   const zone = useTrafficZone(usedPercent);
   const animatedPercent = useAnimatedNumber(usedPercent);
-  const haptic = useHaptic();
 
   const isAtDeviceLimit =
     subscription.device_limit > 0 && connectedDevices >= subscription.device_limit;
@@ -72,18 +72,12 @@ export default function SubscriptionCardActive({
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl backdrop-blur-xl"
+      className="relative overflow-hidden rounded-3xl"
       style={{
-        background: g.cardBg,
-        border: subscription.is_trial
-          ? '1px solid rgba(var(--color-accent-400), 0.15)'
-          : isDark
-            ? `1px solid ${g.cardBorder}`
-            : `1px solid rgba(${zone.mainVarRaw}, 0.14)`,
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
         padding: '28px 28px 24px',
-        boxShadow: isDark
-          ? g.shadow
-          : `0 2px 16px rgba(${zone.mainVarRaw}, 0.07), 0 0 0 1px rgba(${zone.mainVarRaw}, 0.03)`,
       }}
     >
       {/* Trial shimmer border */}
@@ -94,7 +88,7 @@ export default function SubscriptionCardActive({
         />
       )}
 
-      {/* Background glow */}
+      {/* Subtle background glow */}
       <div
         className="pointer-events-none absolute"
         style={{
@@ -103,7 +97,7 @@ export default function SubscriptionCardActive({
           width: 200,
           height: 200,
           borderRadius: '50%',
-          background: `radial-gradient(circle, rgba(${zone.mainVarRaw}, ${isDark ? 0.08 : 0.03}) 0%, transparent 70%)`,
+          background: 'radial-gradient(circle, rgba(0,168,120,0.05) 0%, transparent 70%)',
           transition: 'background 0.8s ease',
         }}
         aria-hidden="true"
@@ -117,15 +111,15 @@ export default function SubscriptionCardActive({
             <div
               className="h-2 w-2 rounded-full"
               style={{
-                background: zone.mainVar,
-                boxShadow: `0 0 8px rgba(${zone.mainVarRaw}, 0.5)`,
+                background: 'var(--figma-green)',
+                boxShadow: '0 0 8px rgba(0,168,120,0.5)',
                 transition: 'all 0.6s ease',
               }}
               aria-hidden="true"
             />
             <span
               className="font-mono text-[11px] font-semibold uppercase tracking-widest"
-              style={{ color: zone.mainVar, transition: 'color 0.6s ease' }}
+              style={{ color: 'var(--figma-green)', transition: 'color 0.6s ease' }}
             >
               {isUnlimited ? t('dashboard.unlimited') : t(zone.labelKey)}
             </span>
@@ -171,21 +165,21 @@ export default function SubscriptionCardActive({
             <>
               <div
                 className="font-display text-[28px] font-extrabold leading-none tracking-tight"
-                style={{ color: zone.mainVar }}
+                style={{ color: 'var(--figma-green)' }}
               >
                 &#8734;
               </div>
-              <div className="mt-1 font-mono text-[11px] text-dark-50/30">
+              <div className="mt-1 font-mono text-[11px] text-white/30">
                 {formatTraffic(usedGb)} {t('dashboard.usedSuffix')}
               </div>
             </>
           ) : (
             <>
-              <div className="font-display text-[38px] font-extrabold leading-none tracking-tight text-dark-50">
+              <div className="font-display text-[38px] font-extrabold leading-none tracking-tight text-white">
                 {animatedPercent.toFixed(0)}
-                <span className="ml-px text-lg font-medium text-dark-50/35">%</span>
+                <span className="ml-px text-lg font-medium text-white/30">%</span>
               </div>
-              <div className="mt-0.5 font-mono text-[11px] text-dark-50/30">
+              <div className="mt-0.5 font-mono text-[11px] text-white/25">
                 {formatTraffic(usedGb)} / {formatTraffic(subscription.traffic_limit_gb)}
               </div>
             </>
@@ -210,8 +204,9 @@ export default function SubscriptionCardActive({
           accentColor={zone.mainHex}
           disabled={isAtDeviceLimit}
           onClick={() => {
+            haptic.buttonPressMedium();
             if (isAtDeviceLimit) {
-              haptic.notification('error');
+              haptic.error();
               return;
             }
             navigate('/connection');
@@ -223,14 +218,14 @@ export default function SubscriptionCardActive({
           {/* Monitor icon */}
           <div
             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] transition-colors duration-500"
-            style={{ background: `rgba(${zone.mainVarRaw}, 0.07)` }}
+            style={{ background: 'rgba(0,168,120,0.10)' }}
           >
             <svg
               width="16"
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke={zone.mainVar}
+              stroke="var(--figma-green)"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -315,13 +310,13 @@ export default function SubscriptionCardActive({
           to="/subscription"
           className="flex-1 rounded-[14px] p-3.5 transition-all duration-500"
           style={{
-            background: `linear-gradient(135deg, rgba(${zone.mainVarRaw}, 0.07), rgba(${zone.mainVarRaw}, 0.02))`,
-            border: `1px solid rgba(${zone.mainVarRaw}, 0.09)`,
+            background: 'rgba(0,168,120,0.06)',
+            border: '1px solid rgba(0,168,120,0.12)',
           }}
         >
           <div
             className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider opacity-70 transition-colors duration-500"
-            style={{ color: zone.mainVar }}
+            style={{ color: 'var(--figma-green)' }}
           >
             {t('dashboard.tariff')}
           </div>
@@ -385,7 +380,7 @@ export default function SubscriptionCardActive({
       {/* ─── Traffic Refresh ─── */}
       <div className="mb-5 flex items-center justify-between px-0.5">
         <button
-          onClick={() => refreshTrafficMutation.mutate()}
+          onClick={() => { haptic.buttonPressMedium(); refreshTrafficMutation.mutate(); }}
           disabled={refreshTrafficMutation.isPending || trafficRefreshCooldown > 0}
           className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium text-dark-50/35 transition-colors hover:bg-dark-50/[0.05] hover:text-dark-50/50 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label={t('common.refresh')}
