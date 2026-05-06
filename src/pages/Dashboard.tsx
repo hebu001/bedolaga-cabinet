@@ -99,7 +99,7 @@ export default function Dashboard() {
 
   const { data: subscriptionResponse, isLoading: subLoading } = useQuery({
     queryKey: ['subscription'],
-    queryFn: subscriptionApi.getSubscription,
+    queryFn: () => subscriptionApi.getSubscription(),
     retry: false,
     staleTime: API.BALANCE_STALE_TIME_MS,
     refetchOnMount: 'always',
@@ -109,13 +109,13 @@ export default function Dashboard() {
 
   const { data: trialInfo, isLoading: trialLoading } = useQuery({
     queryKey: ['trial-info'],
-    queryFn: subscriptionApi.getTrialInfo,
+    queryFn: () => subscriptionApi.getTrialInfo(),
     enabled: !subscription && !subLoading,
   });
 
   const { data: devicesData } = useQuery({
     queryKey: ['devices'],
-    queryFn: subscriptionApi.getDevices,
+    queryFn: () => subscriptionApi.getDevices(),
     enabled: !!subscription,
     staleTime: API.BALANCE_STALE_TIME_MS,
   });
@@ -135,7 +135,7 @@ export default function Dashboard() {
   // Fetch purchase options for min price display
   const { data: purchaseOptions } = useQuery({
     queryKey: ['purchase-options'],
-    queryFn: subscriptionApi.getPurchaseOptions,
+    queryFn: () => subscriptionApi.getPurchaseOptions(),
     staleTime: 60000,
     retry: false,
   });
@@ -178,7 +178,7 @@ export default function Dashboard() {
   } | null>(null);
 
   const refreshTrafficMutation = useMutation({
-    mutationFn: subscriptionApi.refreshTraffic,
+    mutationFn: () => subscriptionApi.refreshTraffic(),
     onSuccess: (data) => {
       setTrafficData({
         traffic_used_gb: data.traffic_used_gb,

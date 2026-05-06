@@ -45,6 +45,8 @@ export default function SubscriptionPurchase() {
     : undefined;
   const { formatAmount, currencySymbol } = useCurrency();
   const haptic = useHapticFeedback();
+  const { isDark } = useTheme();
+  const g = getGlassColors(isDark);
 
   const autoMode = searchParams.get('auto') === '1';
 
