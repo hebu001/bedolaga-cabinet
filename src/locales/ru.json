@@ -643,7 +643,11 @@
       "stopScan": "Закрыть камеру",
       "noCamera": "Нет доступа к камере",
       "codeFound": "Код найден"
-    }
+    },
+    "selectPaymentMethod": "Выберите способ оплаты",
+    "missingAmount": "Не хватает {{amount}}",
+    "payAndActivate": "Оплатить и активировать",
+    "directPayError": "Ошибка оплаты. Попробуйте ещё раз."
   },
   "balance": {
     "title": "Баланс",
@@ -815,6 +819,8 @@
       "topUpAmount": "Сумма пополнения",
       "success": "Баланс пополнен!",
       "successDesc": "Ваш баланс успешно пополнен. Средства уже доступны.",
+      "activatingSubscription": "Активация подписки...",
+      "goToSubscription": "Активировать подписку",
       "failed": "Оплата не прошла",
       "failedDesc": "К сожалению, платёж не был завершён. Попробуйте ещё раз или выберите другой способ оплаты.",
       "timeout": "Дольше, чем обычно",
@@ -1092,7 +1098,7 @@
       "beams": "Beams",
       "beamsDesc": "Световые лучи по SVG-путям",
       "beamsCollision": "Beams Collision",
-      "beamsCollisionDesc": "Взрывающиеся световые лучи",
+      "beamsCollisionDesc": "Шейдер Перлин-шума",
       "gradientAnimation": "Gradient Animation",
       "gradientAnimationDesc": "Плавно движущиеся градиентные блобы",
       "wavy": "Wavy",

@@ -228,8 +228,19 @@ export const backgroundRegistry: BackgroundDefinition[] = [
     type: 'background-beams-collision',
     labelKey: 'admin.backgrounds.beamsCollision',
     descriptionKey: 'admin.backgrounds.beamsCollisionDesc',
-    category: 'svg',
-    settings: [],
+    category: 'canvas',
+    settings: [
+      { key: 'shaderColor', label: 'admin.backgrounds.particleColor', type: 'color', default: '#4169E1' },
+      {
+        key: 'speed',
+        label: 'admin.backgrounds.speed',
+        type: 'number',
+        min: 0.1,
+        max: 2.0,
+        step: 0.1,
+        default: 1.0,
+      },
+    ],
   },
   {
     type: 'gradient-animation',

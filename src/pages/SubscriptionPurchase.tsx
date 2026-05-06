@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 import { AxiosError } from 'axios';
 import { subscriptionApi } from '../api/subscription';
+import { balanceApi } from '../api/balance';
 import { promoApi } from '../api/promo';
 import { WebBackButton } from '../components/WebBackButton';
 import { getGlassColors } from '../utils/glassTheme';
@@ -14,10 +15,12 @@ import type {
   Tariff,
   TariffPeriod,
   ClassicPurchaseOptions,
+  PaymentMethod,
 } from '../types';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
+import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { CheckIcon } from '../components/icons';
 import Twemoji from 'react-twemoji';
 import {
@@ -25,6 +28,12 @@ import {
   getInsufficientBalanceError,
   type PurchaseStep,
 } from '../utils/subscriptionHelpers';
+import {
+  savePurchaseIntent,
+  loadPurchaseIntent,
+  clearPurchaseIntent,
+} from '../utils/purchaseIntentStorage';
+import { saveTopUpPendingInfo } from '../utils/topUpStorage';
 
 export default function SubscriptionPurchase() {
   const { t } = useTranslation();
@@ -35,8 +44,9 @@ export default function SubscriptionPurchase() {
     ? parseInt(searchParams.get('subscriptionId')!, 10)
     : undefined;
   const { formatAmount, currencySymbol } = useCurrency();
-  const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const haptic = useHapticFeedback();
+
+  const autoMode = searchParams.get('auto') === '1';
 
   const formatPrice = (kopeks: number) =>
     kopeks === 0
@@ -64,6 +74,13 @@ export default function SubscriptionPurchase() {
     queryFn: () => subscriptionApi.getPurchaseOptions(subscriptionId),
     staleTime: 0,
     refetchOnMount: 'always',
+  });
+
+  // Payment methods for direct payment
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: balanceApi.getPaymentMethods,
+    staleTime: 60000,
   });
 
   // Active promo discount
@@ -145,6 +162,40 @@ export default function SubscriptionPurchase() {
   const [customTrafficGb, setCustomTrafficGb] = useState<number>(50);
   const [useCustomDays, setUseCustomDays] = useState(false);
   const [useCustomTraffic, setUseCustomTraffic] = useState(false);
+
+  // Direct payment state
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState<string | null>(null);
+  const [isDirectPaying, setIsDirectPaying] = useState(false);
+  const [directPayError, setDirectPayError] = useState<string | null>(null);
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+  const autoProcessedRef = useRef(false);
+  // Swipe-left to go back (must be before early returns per Rules of Hooks)
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - (touchStartY.current ?? 0));
+    if (dx > 80 && dy < 80) navigate(-1);
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  // Auto-select first payment method
+  useEffect(() => {
+    if (paymentMethods && paymentMethods.length > 0 && !selectedPaymentMethod) {
+      const first = paymentMethods.find((m) => m.is_available);
+      if (first) {
+        setSelectedPaymentMethod(first.id);
+        setSelectedPaymentOption(first.options?.[0]?.id ?? null);
+      }
+    }
+  }, [paymentMethods, selectedPaymentMethod]);
 
   // Refs for auto-scroll
   const switchModalRef = useRef<HTMLDivElement>(null);
@@ -308,12 +359,99 @@ export default function SubscriptionPurchase() {
       return subscriptionApi.purchaseTariff(selectedTariff.id, days, trafficGb);
     },
     onSuccess: () => {
+      clearPurchaseIntent();
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       navigate('/subscriptions', { replace: true });
     },
   });
+
+  // Direct payment handler: create top-up for exact missing amount and redirect
+  const handleDirectPay = async (missingKopeks: number, tariffId: number, tariffName: string, periodDays: number, totalPriceKopeks: number, trafficGb?: number) => {
+    if (!selectedPaymentMethod || isDirectPaying) return;
+    setIsDirectPaying(true);
+    setDirectPayError(null);
+
+    try {
+      // Save purchase intent before redirecting
+      savePurchaseIntent({
+        tariff_id: tariffId,
+        tariff_name: tariffName,
+        period_days: periodDays,
+        traffic_gb: trafficGb,
+        total_price_kopeks: totalPriceKopeks,
+        created_at: Date.now(),
+      });
+
+      // Create top-up for the missing amount
+      const topUpAmount = Math.max(missingKopeks, 100); // Minimum 1 ruble
+      const result = await balanceApi.createTopUp(
+        topUpAmount,
+        selectedPaymentMethod,
+        selectedPaymentOption ?? undefined,
+      );
+
+      // Save top-up info for TopUpResult polling
+      saveTopUpPendingInfo({
+        amount_kopeks: result.amount_kopeks,
+        method_id: selectedPaymentMethod,
+        method_name: selectedPaymentMethod,
+        payment_id: result.payment_id,
+        created_at: Date.now(),
+      });
+
+      // Redirect to payment
+      window.location.href = result.payment_url;
+    } catch (err) {
+      clearPurchaseIntent();
+      const msg = err instanceof AxiosError
+        ? err.response?.data?.detail?.message || err.response?.data?.detail || t('subscription.directPayError', 'Payment error. Please try again.')
+        : t('subscription.directPayError', 'Payment error. Please try again.');
+      setDirectPayError(typeof msg === 'string' ? msg : t('subscription.directPayError', 'Payment error. Please try again.'));
+      setIsDirectPaying(false);
+    }
+  };
+
+  // Available payment methods filtered by amount
+  const getAvailablePaymentMethods = useCallback((amountKopeks: number): PaymentMethod[] => {
+    if (!paymentMethods) return [];
+    return paymentMethods.filter(
+      (m) => m.is_available && amountKopeks >= m.min_amount_kopeks && amountKopeks <= m.max_amount_kopeks,
+    );
+  }, [paymentMethods]);
+
+  // Auto-purchase on return from payment (when ?auto=1)
+  useEffect(() => {
+    if (!autoMode || autoProcessedRef.current || !purchaseOptions) return;
+    const intent = loadPurchaseIntent();
+    if (!intent) return;
+
+    const balance = purchaseOptions.balance_kopeks;
+    if (balance >= intent.total_price_kopeks) {
+      autoProcessedRef.current = true;
+      clearPurchaseIntent();
+
+      // Find the tariff and set state, then trigger purchase
+      if (isTariffsMode && tariffs.length > 0) {
+        const tariff = tariffs.find((t) => t.id === intent.tariff_id);
+        if (tariff) {
+          // Directly call purchaseTariff
+          subscriptionApi
+            .purchaseTariff(intent.tariff_id, intent.period_days, intent.traffic_gb)
+            .then(() => {
+              queryClient.invalidateQueries({ queryKey: ['subscription'] });
+              queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
+              navigate('/subscription', { replace: true });
+            })
+            .catch(() => {
+              // If auto-purchase fails, navigate normally
+              navigate('/subscription/purchase', { replace: true });
+            });
+        }
+      }
+    }
+  }, [autoMode, purchaseOptions, isTariffsMode, tariffs, queryClient, navigate]);
 
   // Auto-scroll effects
   useEffect(() => {
@@ -413,7 +551,7 @@ export default function SubscriptionPurchase() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <WebBackButton
@@ -552,7 +690,7 @@ export default function SubscriptionPurchase() {
 
           {/* Switch Tariff Preview Modal */}
           {switchTariffId && (
-            <div ref={switchModalRef} className="mb-6 space-y-4 rounded-xl bg-dark-800/50 p-5">
+            <div ref={switchModalRef} className="dark-glass mb-6 space-y-4 p-5">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-dark-100">
                   {t('subscription.switchTariff.title')}
@@ -691,6 +829,18 @@ export default function SubscriptionPurchase() {
 
           {!showTariffPurchase ? (
             <>
+              {/* Back button */}
+              <div className="flex w-full mb-4">
+                <button
+                  onClick={() => { haptic.buttonPressMedium(); navigate(-1); }}
+                  className="dark-glass ml-auto flex items-center gap-2 px-5 py-3 text-sm font-medium text-dark-200 hover:text-white transition-all active:scale-95"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  {t('common.back')}
+                </button>
+              </div>
               {/* Promo group discount banner */}
               {tariffs.some((tariff) => tariff.promo_group_name) && (
                 <div className="mb-4 flex items-center gap-3 rounded-xl border border-success-500/30 bg-success-500/10 p-3">
@@ -788,13 +938,13 @@ export default function SubscriptionPurchase() {
                     return (
                       <div
                         key={tariff.id}
-                        className={`bento-card-hover p-5 text-left transition-all ${
-                          isCurrentTariff ? 'bento-card-glow border-accent-500' : ''
+                        className={`dark-glass p-5 text-left ${
+                          isCurrentTariff ? 'ring-2 ring-[var(--figma-green)]' : ''
                         }`}
                       >
                         <div className="mb-3 flex items-start justify-between">
                           <div>
-                            <div className="text-lg font-semibold text-dark-100">{tariff.name}</div>
+                            <div className="text-lg font-semibold text-white">{tariff.name}</div>
                             {tariff.description && (
                               <div className="mt-1 whitespace-pre-line text-sm text-dark-400">
                                 {tariff.description}
@@ -869,7 +1019,7 @@ export default function SubscriptionPurchase() {
                             )}
                         </div>
                         {/* Price info */}
-                        <div className="mt-3 border-t border-dark-700/50 pt-3 text-sm text-dark-400">
+                        <div className="mt-3 border-t border-white/10 pt-3 text-sm text-white/40">
                           {(() => {
                             const dailyPrice =
                               tariff.daily_price_kopeks ?? tariff.price_per_day_kopeks ?? 0;
@@ -955,11 +1105,13 @@ export default function SubscriptionPurchase() {
                             ) : (
                               <button
                                 onClick={() => {
+                                  haptic.buttonPressMedium();
                                   setSelectedTariff(tariff);
                                   setSelectedTariffPeriod(tariff.periods[0] || null);
                                   setShowTariffPurchase(true);
                                 }}
-                                className="btn-primary flex-1 py-2 text-sm"
+                                className="w-full rounded-full py-2.5 text-sm font-medium text-white transition-all active:scale-[0.97] hover:opacity-90"
+                                style={{ background: 'var(--figma-green)' }}
                               >
                                 {t('subscription.extend')}
                               </button>
@@ -971,14 +1123,15 @@ export default function SubscriptionPurchase() {
                                 setSelectedTariffPeriod(tariff.periods[0] || null);
                                 setShowTariffPurchase(true);
                               }}
-                              className="btn-primary flex-1 py-2 text-sm"
+                              className="w-full rounded-full py-2.5 text-sm font-medium text-white transition-all active:scale-[0.97] hover:opacity-90"
+                              style={{ background: 'var(--figma-green)' }}
                             >
                               {t('subscription.tariff.selectForRenewal')}
                             </button>
                           ) : canSwitch ? (
                             <button
                               onClick={() => setSwitchTariffId(tariff.id)}
-                              className="btn-secondary flex-1 py-2 text-sm"
+                              className="w-full rounded-full py-2.5 text-sm font-medium text-white/70 ring-1 ring-white/20 transition-all active:scale-[0.97] hover:ring-white/40 hover:text-white"
                             >
                               {t('subscription.switchTariff.switch')}
                             </button>
@@ -989,7 +1142,8 @@ export default function SubscriptionPurchase() {
                                 setSelectedTariffPeriod(tariff.periods[0] || null);
                                 setShowTariffPurchase(true);
                               }}
-                              className="btn-primary flex-1 py-2 text-sm"
+                              className="w-full rounded-full py-2.5 text-sm font-medium text-white transition-all active:scale-[0.97] hover:opacity-90"
+                              style={{ background: 'var(--figma-green)' }}
                             >
                               {t('subscription.purchase')}
                             </button>
@@ -1008,18 +1162,22 @@ export default function SubscriptionPurchase() {
                   <h3 className="text-lg font-medium text-dark-100">{selectedTariff.name}</h3>
                   <button
                     onClick={() => {
+                      haptic.buttonPressMedium();
                       setShowTariffPurchase(false);
                       setSelectedTariff(null);
                       setSelectedTariffPeriod(null);
                     }}
-                    className="text-dark-400 hover:text-dark-200"
+                    className="dark-glass ml-auto flex items-center gap-2 px-5 py-3 text-sm font-medium text-dark-200 hover:text-white transition-all active:scale-95"
                   >
-                    ← {t('common.back')}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    {t('common.back')}
                   </button>
                 </div>
 
                 {/* Tariff Info */}
-                <div className="rounded-xl bg-dark-800/50 p-4">
+                <div className="dark-glass p-4">
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div>
                       <span className="text-dark-500">{t('subscription.traffic')}:</span>
@@ -1072,33 +1230,155 @@ export default function SubscriptionPurchase() {
                       const dailyPrice = selectedTariff.daily_price_kopeks || 0;
                       const hasEnoughBalance =
                         purchaseOptions && dailyPrice <= purchaseOptions.balance_kopeks;
+                      const missingAmount = purchaseOptions
+                        ? dailyPrice - purchaseOptions.balance_kopeks
+                        : dailyPrice;
+                      const availableMethods = getAvailablePaymentMethods(missingAmount);
 
                       return (
                         <div className="mt-6">
-                          {purchaseOptions && !hasEnoughBalance && (
-                            <InsufficientBalancePrompt
-                              missingAmountKopeks={dailyPrice - purchaseOptions.balance_kopeks}
-                              compact
-                              className="mb-4"
-                            />
+                          {/* Balance info */}
+                          {purchaseOptions && (
+                            <div className={`mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-sm ${
+                              hasEnoughBalance
+                                ? 'bg-success-500/10 border border-success-500/20'
+                                : 'bg-dark-800/60 border border-dark-700/40'
+                            }`}>
+                              <div className="flex w-full justify-between">
+                                <div className="flex flex-col items-start">
+                                    <span className="text-[10px] uppercase tracking-wider text-dark-500">Ваш баланс</span>
+                                    <span className={hasEnoughBalance ? 'font-semibold text-success-400' : 'font-semibold text-dark-200'}>
+                                      {formatPrice(purchaseOptions.balance_kopeks)}
+                                    </span>
+                                </div>
+                                {!hasEnoughBalance && missingAmount > 0 && (
+                                    <div className="flex flex-col items-start">
+                                      <span className="text-[10px] uppercase tracking-wider text-dark-500">Не хватает</span>
+                                      <span className="font-semibold text-error-400">
+                                        {formatPrice(missingAmount)}
+                                      </span>
+                                    </div>
+                                )}
+                              </div>
+                            </div>
                           )}
-
                           <button
-                            onClick={() => tariffPurchaseMutation.mutate()}
-                            disabled={tariffPurchaseMutation.isPending}
-                            className="btn-primary w-full py-3"
+                            onClick={() => {
+                              haptic.buttonPressMedium();
+                              if (hasEnoughBalance || !purchaseOptions || availableMethods.length === 0) {
+                                tariffPurchaseMutation.mutate();
+                              } else {
+                                setShowPaymentSheet(true);
+                              }
+                            }}
+                            disabled={tariffPurchaseMutation.isPending || isDirectPaying}
+                            className="w-full rounded-full h-14 bg-[var(--figma-green)] text-white font-medium text-base flex items-center justify-center gap-3 transition-all active:scale-[0.97] hover:opacity-90 disabled:opacity-50"
                           >
-                            {tariffPurchaseMutation.isPending ? (
+                            {(tariffPurchaseMutation.isPending || isDirectPaying) ? (
                               <span className="flex items-center justify-center gap-2">
                                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                                 {t('common.loading')}
                               </span>
                             ) : (
-                              t('subscription.dailyPurchase.activate', {
-                                price: formatPrice(dailyPrice),
-                              })
+                              <>
+                                {t('subscription.paySubscription', 'Оплатить')}
+                                {!hasEnoughBalance && missingAmount > 0
+                                  ? <span className="text-white/90">{formatPrice(missingAmount)}</span>
+                                  : <span className="text-white/90">{formatPrice(dailyPrice)}</span>}
+                              </>
                             )}
                           </button>
+
+                          {/* Payment Method Bottom Sheet for Daily */}
+                          {showPaymentSheet && !hasEnoughBalance && availableMethods.length > 0 && (
+                            <>
+                              <div
+                                className="fixed inset-0 bg-black/60 z-[999] animate-[backdropFadeIn_0.2s_ease-out]"
+                                onClick={() => setShowPaymentSheet(false)}
+                              />
+                              <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
+                                <div className="bg-black mx-auto max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border-none text-white">
+                                  <div className="flex items-center justify-between p-6 pb-0">
+                                    <h3 className="text-lg font-medium text-white">
+                                      {t('subscription.selectPaymentMethod', 'Способ оплаты')}
+                                    </h3>
+                                    <button
+                                      onClick={() => setShowPaymentSheet(false)}
+                                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-colors"
+                                      aria-label="Close"
+                                    >
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18 6L6 18M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  <div className="p-6 pt-4">
+                                  <div className="space-y-2 mb-5">
+                                    {availableMethods.map((method) => (
+                                      <button
+                                        key={method.id}
+                                        onClick={() => {
+                                          setSelectedPaymentMethod(method.id);
+                                          setSelectedPaymentOption(method.options?.[0]?.id ?? null);
+                                          setDirectPayError(null);
+                                        }}
+                                        className={`w-full rounded-2xl p-4 text-left text-sm transition-all bg-white/5 ${
+                                          selectedPaymentMethod === method.id
+                                            ? 'ring-2 ring-[var(--figma-green)]'
+                                            : 'ring-1 ring-white/10 hover:bg-white/[0.07]'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-3 font-medium text-white">
+                                          <img src="/SBP.svg" alt="" className="h-[30px] w-[24px] flex-shrink-0" />
+                                          {method.name}
+                                        </div>
+                                        {method.description && (
+                                          <div className="mt-1 text-xs text-white/40">{method.description}</div>
+                                        )}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  {selectedPaymentMethod && (
+                                    <button
+                                      onClick={() => {
+                                        handleDirectPay(
+                                          missingAmount,
+                                          selectedTariff.id,
+                                          selectedTariff.name,
+                                          1,
+                                          dailyPrice,
+                                        );
+                                        setShowPaymentSheet(false);
+                                      }}
+                                      disabled={isDirectPaying}
+                                      className="w-full rounded-full h-14 bg-[var(--figma-green)] text-white font-medium text-base flex items-center justify-center transition-all active:scale-[0.97] hover:opacity-90 disabled:opacity-50"
+                                    >
+                                      {isDirectPaying ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                          {t('common.loading')}
+                                        </span>
+                                      ) : (
+                                        t('subscription.payAndActivate', 'Оплатить и активировать')
+                                      )}
+                                    </button>
+                                  )}
+                                   {directPayError && (
+                                    <div className="mt-3 text-center text-sm text-error-400">{directPayError}</div>
+                                  )}
+                                  </div>{/* close p-6 pt-4 */}
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {purchaseOptions && !hasEnoughBalance && availableMethods.length === 0 && (
+                            <InsufficientBalancePrompt
+                              missingAmountKopeks={missingAmount}
+                              compact
+                              className="mt-4"
+                            />
+                          )}
 
                           {tariffPurchaseMutation.isError &&
                             !getInsufficientBalanceError(tariffPurchaseMutation.error) && (
@@ -1108,15 +1388,8 @@ export default function SubscriptionPurchase() {
                             )}
                           {tariffPurchaseMutation.isError &&
                             getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                              <div className="mt-3">
-                                <InsufficientBalancePrompt
-                                  missingAmountKopeks={
-                                    getInsufficientBalanceError(tariffPurchaseMutation.error)
-                                      ?.missingAmount ||
-                                    dailyPrice - (purchaseOptions?.balance_kopeks || 0)
-                                  }
-                                  compact
-                                />
+                              <div className="mt-3 text-center text-sm text-error-400">
+                                {t('subscription.directPayError', 'Payment error. Please try again.')}
                               </div>
                             )}
                         </div>
@@ -1149,15 +1422,29 @@ export default function SubscriptionPurchase() {
                             return (
                               <button
                                 key={period.days}
-                                onClick={() => {
-                                  setSelectedTariffPeriod(period);
-                                  setUseCustomDays(false);
-                                }}
-                                className={`relative rounded-xl border p-4 text-left transition-all ${
+                                  onClick={(e) => {
+                                    haptic.buttonPressMedium();
+                                    setSelectedTariffPeriod(period);
+                                    setUseCustomDays(false);
+                                    // Ripple effect
+                                    const btn = e.currentTarget;
+                                    const ripple = document.createElement('span');
+                                    const rect = btn.getBoundingClientRect();
+                                    const size = Math.max(rect.width, rect.height) * 2;
+                                    ripple.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.15);width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px;transform:scale(0);animation:ripple-wave 0.5s ease-out forwards;pointer-events:none;z-index:0;`;
+                                    btn.appendChild(ripple);
+                                    setTimeout(() => ripple.remove(), 600);
+                                  }}
+                                className={`dark-glass-subtle p-4 text-left active:scale-[0.97] ${
                                   selectedTariffPeriod?.days === period.days && !useCustomDays
-                                    ? 'border-accent-500 bg-accent-500/10'
-                                    : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                                    ? 'ring-2 ring-[var(--figma-green)]'
+                                    : ''
                                 }`}
+                                style={
+                                  selectedTariffPeriod?.days === period.days && !useCustomDays
+                                    ? { background: 'rgba(255,255,255,0.14)', borderColor: 'rgba(255,255,255,0.22)' }
+                                    : undefined
+                                }
                               >
                                 {displayDiscount && displayDiscount > 0 && (
                                   <div
@@ -1168,10 +1455,10 @@ export default function SubscriptionPurchase() {
                                     -{displayDiscount}%
                                   </div>
                                 )}
-                                <div className="text-lg font-semibold text-dark-100">
+                                <div className="flex w-full justify-between items-center text-white text-base mb-auto">
                                   {period.label}
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-col text-2xl font-medium leading-6 tracking-tight text-white">
                                   <span className="font-medium text-accent-400">
                                     {formatPrice(displayPrice)}
                                   </span>
@@ -1181,9 +1468,9 @@ export default function SubscriptionPurchase() {
                                     </span>
                                   )}
                                 </div>
-                                <div className="mt-1 text-xs text-dark-500">
+                                <small className="text-xs text-white/40 tracking-normal font-normal">
                                   {formatPrice(displayPerMonth)}/{t('subscription.month')}
-                                </div>
+                                </small>
                               </button>
                             );
                           })}
@@ -1220,7 +1507,7 @@ export default function SubscriptionPurchase() {
                       {/* Custom days option */}
                       {selectedTariff.custom_days_enabled &&
                         (selectedTariff.price_per_day_kopeks ?? 0) > 0 && (
-                          <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-4">
+                          <div className="dark-glass p-4">
                             <div className="mb-3 flex items-center justify-between">
                               <span className="font-medium text-dark-200">
                                 {t('subscription.customDays.title')}
@@ -1328,7 +1615,7 @@ export default function SubscriptionPurchase() {
                           <div className="mb-3 text-sm text-dark-400">
                             {t('subscription.customTraffic.label')}
                           </div>
-                          <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-4">
+                          <div className="dark-glass p-4">
                             <div className="mb-3 flex items-center justify-between">
                               <span className="font-medium text-dark-200">
                                 {t('subscription.customTraffic.selectVolume')}
@@ -1410,7 +1697,7 @@ export default function SubscriptionPurchase() {
 
                     {/* Summary & Purchase */}
                     {(selectedTariffPeriod || useCustomDays) && (
-                      <div className="rounded-xl bg-dark-800/50 p-5">
+                      <div className="dark-glass p-5">
                         {(() => {
                           const basePeriodPrice = useCustomDays
                             ? customDays * (selectedTariff.price_per_day_kopeks ?? 0)
@@ -1445,21 +1732,7 @@ export default function SubscriptionPurchase() {
                             <>
                               <div className="mb-4 space-y-2">
                                 {useCustomDays ? (
-                                  <div className="flex justify-between text-sm text-dark-300">
-                                    <span>
-                                      {t('subscription.stepPeriod')}:{' '}
-                                      {t('subscription.days', { count: customDays })}
-                                    </span>
-                                    <div className="flex items-center gap-2">
-                                      <span>{formatPrice(promoPeriod.price)}</span>
-                                      {promoPeriod.original &&
-                                        promoPeriod.original > promoPeriod.price && (
-                                          <span className="text-xs text-dark-500 line-through">
-                                            {formatPrice(promoPeriod.original)}
-                                          </span>
-                                        )}
-                                    </div>
-                                  </div>
+                                  null
                                 ) : (
                                   selectedTariffPeriod && (
                                     <>
@@ -1490,24 +1763,7 @@ export default function SubscriptionPurchase() {
                                             </span>
                                           </div>
                                         </>
-                                      ) : (
-                                        <div className="flex justify-between text-sm text-dark-300">
-                                          <span>
-                                            {t('subscription.summary.period', {
-                                              label: selectedTariffPeriod.label,
-                                            })}
-                                          </span>
-                                          <div className="flex items-center gap-2">
-                                            <span>{formatPrice(promoPeriod.price)}</span>
-                                            {promoPeriod.original &&
-                                              promoPeriod.original > promoPeriod.price && (
-                                                <span className="text-xs text-dark-500 line-through">
-                                                  {formatPrice(promoPeriod.original)}
-                                                </span>
-                                              )}
-                                          </div>
-                                        </div>
-                                      )}
+                                      ) : null}
                                     </>
                                   )
                                 )}
@@ -1545,20 +1801,158 @@ export default function SubscriptionPurchase() {
                                 </div>
                               </div>
 
-                              <button
-                                onClick={() => tariffPurchaseMutation.mutate()}
-                                disabled={tariffPurchaseMutation.isPending}
-                                className="btn-primary w-full py-3"
-                              >
-                                {tariffPurchaseMutation.isPending ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                    {t('common.loading')}
-                                  </span>
-                                ) : (
-                                  t('subscription.purchase')
-                                )}
-                              </button>
+                              {/* Payment CTA Button */}
+                              {(() => {
+                                const hasEnoughBalance = purchaseOptions && totalPrice <= purchaseOptions.balance_kopeks;
+                                const missingAmount = purchaseOptions
+                                  ? totalPrice - purchaseOptions.balance_kopeks
+                                  : totalPrice;
+                                const methods = getAvailablePaymentMethods(missingAmount);
+
+                                return (
+                                  <>
+                                    {/* Balance info */}
+                                    {purchaseOptions && (
+                                      <div className={`mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-sm ${
+                                        hasEnoughBalance
+                                          ? 'bg-success-500/10 border border-success-500/20'
+                                          : 'bg-dark-800/60 border border-dark-700/40'
+                                      }`}>
+                                        <div className="flex w-full justify-between">
+                                          <div className="flex flex-col items-start">
+                                              <span className="text-[10px] uppercase tracking-wider text-dark-500">Ваш баланс</span>
+                                              <span className={hasEnoughBalance ? 'font-semibold text-success-400' : 'font-semibold text-dark-200'}>
+                                                {formatPrice(purchaseOptions.balance_kopeks)}
+                                              </span>
+                                          </div>
+                                          {!hasEnoughBalance && missingAmount > 0 && (
+                                              <div className="flex flex-col items-start">
+                                                <span className="text-[10px] uppercase tracking-wider text-dark-500">Не хватает</span>
+                                                <span className="font-semibold text-error-400">
+                                                  {formatPrice(missingAmount)}
+                                                </span>
+                                              </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        haptic.buttonPressMedium();
+                                        if (hasEnoughBalance || !purchaseOptions || methods.length === 0) {
+                                          tariffPurchaseMutation.mutate();
+                                        } else {
+                                          setShowPaymentSheet(true);
+                                        }
+                                      }}
+                                      disabled={tariffPurchaseMutation.isPending || isDirectPaying}
+                                      className="w-full rounded-full h-14 bg-[var(--figma-green)] text-white font-medium text-base flex items-center justify-center gap-3 transition-all active:scale-[0.97] hover:opacity-90 disabled:opacity-50"
+                                    >
+                                      {(tariffPurchaseMutation.isPending || isDirectPaying) ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                          {t('common.loading')}
+                                        </span>
+                                      ) : (
+                                        <>
+                                          {t('subscription.paySubscription', 'Оплатить')}
+                                          <span className="text-white/90">
+                                            {hasEnoughBalance
+                                              ? formatPrice(totalPrice)
+                                              : formatPrice(missingAmount)}
+                                          </span>
+                                        </>
+                                      )}
+                                    </button>
+
+                                    {/* Payment Method Bottom Sheet */}
+                                    {showPaymentSheet && !hasEnoughBalance && methods.length > 0 && (
+                                      <>
+                                        {/* Backdrop */}
+                                        <div
+                                          className="fixed inset-0 bg-black/60 z-[999] animate-[backdropFadeIn_0.2s_ease-out]"
+                                          onClick={() => setShowPaymentSheet(false)}
+                                        />
+                                        {/* Sheet */}
+                                        <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
+                                          <div className="bg-black mx-auto max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border-none text-white">
+                                            <div className="flex items-center justify-between p-6 pb-0">
+                                              <h3 className="text-lg font-medium text-white">
+                                                {t('subscription.selectPaymentMethod', 'Способ оплаты')}
+                                              </h3>
+                                              <button
+                                                onClick={() => setShowPaymentSheet(false)}
+                                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/15 hover:text-white transition-colors"
+                                                aria-label="Close"
+                                              >
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                  <path d="M18 6L6 18M6 6l12 12" />
+                                                </svg>
+                                              </button>
+                                            </div>
+                                            <div className="p-6 pt-4">
+                                              <div className="space-y-2 mb-5">
+                                               {methods.map((method) => (
+                                                 <button
+                                                   key={method.id}
+                                                   onClick={() => {
+                                                     setSelectedPaymentMethod(method.id);
+                                                     setSelectedPaymentOption(method.options?.[0]?.id ?? null);
+                                                     setDirectPayError(null);
+                                                   }}
+                                                   className={`w-full rounded-2xl p-4 text-left text-sm transition-all bg-white/5 ${
+                                                     selectedPaymentMethod === method.id
+                                                       ? 'ring-2 ring-[var(--figma-green)]'
+                                                       : 'ring-1 ring-white/10 hover:bg-white/[0.07]'
+                                                   }`}
+                                                 >
+                                                   <div className="flex items-center gap-3 font-medium text-white">
+                                                     <img src="/SBP.svg" alt="" className="h-[30px] w-[24px] flex-shrink-0" />
+                                                     {method.name}
+                                                   </div>
+                                                   {method.description && (
+                                                     <div className="mt-1 text-xs text-white/40">{method.description}</div>
+                                                   )}
+                                                 </button>
+                                               ))}
+                                              </div>
+                                              {selectedPaymentMethod && (
+                                                <button
+                                                  onClick={() => {
+                                                    handleDirectPay(
+                                                      missingAmount,
+                                                      selectedTariff.id,
+                                                      selectedTariff.name,
+                                                      useCustomDays ? customDays : selectedTariffPeriod?.days || 30,
+                                                      totalPrice,
+                                                      useCustomTraffic && selectedTariff.custom_traffic_enabled ? customTrafficGb : undefined,
+                                                    );
+                                                    setShowPaymentSheet(false);
+                                                  }}
+                                                  disabled={isDirectPaying}
+                                                  className="w-full rounded-full h-14 bg-[var(--figma-green)] text-white font-medium text-base flex items-center justify-center transition-all active:scale-[0.97] hover:opacity-90 disabled:opacity-50"
+                                                >
+                                                  {isDirectPaying ? (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                                      {t('common.loading')}
+                                                    </span>
+                                                  ) : (
+                                                    t('subscription.payAndActivate', 'Оплатить и активировать')
+                                                  )}
+                                                </button>
+                                              )}
+                                              {directPayError && (
+                                                <div className="mt-3 text-center text-sm text-error-400">{directPayError}</div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </>
                           );
                         })()}
@@ -1571,14 +1965,8 @@ export default function SubscriptionPurchase() {
                           )}
                         {tariffPurchaseMutation.isError &&
                           getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                            <div className="mt-3">
-                              <InsufficientBalancePrompt
-                                missingAmountKopeks={
-                                  getInsufficientBalanceError(tariffPurchaseMutation.error)
-                                    ?.missingAmount || 0
-                                }
-                                compact
-                              />
+                            <div className="mt-3 text-center text-sm text-error-400">
+                              {t('subscription.directPayError', 'Payment error. Please try again.')}
                             </div>
                           )}
                       </div>
@@ -1593,15 +1981,7 @@ export default function SubscriptionPurchase() {
 
       {/* Purchase/Extend Section - Classic Mode */}
       {classicOptions && classicOptions.periods.length > 0 && (
-        <div
-          className="relative overflow-hidden rounded-3xl"
-          style={{
-            background: g.cardBg,
-            border: `1px solid ${g.cardBorder}`,
-            boxShadow: g.shadow,
-            padding: '24px 28px',
-          }}
-        >
+        <div>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-bold tracking-tight text-dark-50">
               {subscription && !subscription.is_trial
@@ -1714,7 +2094,7 @@ export default function SubscriptionPurchase() {
                     return (
                       <button
                         key={option.value}
-                        onClick={() => setSelectedTraffic(option.value)}
+                        onClick={() => { haptic.buttonPressMedium(); setSelectedTraffic(option.value); }}
                         disabled={!option.is_available}
                         className={`bento-card-hover relative p-4 text-center transition-all ${
                           selectedTraffic === option.value
@@ -1772,7 +2152,7 @@ export default function SubscriptionPurchase() {
                             selectedServers.includes(server.uuid)
                               ? 'border-accent-500 bg-accent-500/10'
                               : server.is_available
-                                ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                                ? 'border-dark-700/50 bg-dark-800 hover:border-dark-600'
                                 : 'cursor-not-allowed border-dark-800/30 bg-dark-900/30 opacity-50'
                           }`}
                         >
@@ -1876,7 +2256,7 @@ export default function SubscriptionPurchase() {
                       <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
                     </div>
                   ) : preview ? (
-                    <div className="space-y-4 rounded-xl bg-dark-800/50 p-5">
+                    <div className="dark-glass space-y-4 p-5">
                       {activeDiscount?.is_active && activeDiscount.discount_percent && (
                         <div className="flex items-center justify-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
                           <svg
@@ -1936,12 +2316,78 @@ export default function SubscriptionPurchase() {
                         </div>
                       )}
 
+                      {/* Balance info - always show above payment section */}
+                      {purchaseOptions && preview && (
+                        <div className={`mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-sm ${
+                          preview.can_purchase
+                            ? 'bg-success-500/10 border border-success-500/20'
+                            : 'bg-dark-800/60 border border-dark-700/40'
+                        }`}>
+                          <div className="flex w-full justify-between">
+                            <div className="flex flex-col items-start">
+                              <span className="text-[10px] uppercase tracking-wider text-dark-500">Ваш баланс</span>
+                              <span className={preview.can_purchase ? 'font-semibold text-success-400' : 'font-semibold text-dark-200'}>
+                                {formatPrice(purchaseOptions.balance_kopeks)}
+                              </span>
+                            </div>
+                            {!preview.can_purchase && preview.missing_amount_kopeks > 0 && (
+                              <div className="flex flex-col items-start">
+                                <span className="text-[10px] uppercase tracking-wider text-dark-500">Не хватает</span>
+                                <span className="font-semibold text-error-400">
+                                  {formatPrice(preview.missing_amount_kopeks)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {!preview.can_purchase &&
                         (preview.missing_amount_kopeks > 0 ? (
-                          <InsufficientBalancePrompt
-                            missingAmountKopeks={preview.missing_amount_kopeks}
-                            compact
-                          />
+                          (() => {
+                            const methods = getAvailablePaymentMethods(preview.missing_amount_kopeks);
+                            if (methods.length > 0) {
+                              return (
+                                <div className="space-y-3">
+
+                                  <div className="space-y-2">
+                                    {methods.map((method) => (
+                                      <button
+                                        key={method.id}
+                                        onClick={() => {
+                                          setSelectedPaymentMethod(method.id);
+                                          setSelectedPaymentOption(method.options?.[0]?.id ?? null);
+                                          setDirectPayError(null);
+                                        }}
+                                        className={`w-full rounded-xl border p-3 text-left text-sm transition-all ${
+                                          selectedPaymentMethod === method.id
+                                            ? 'border-accent-500 bg-accent-500/10 text-dark-100'
+                                            : 'border-dark-700/50 bg-dark-800 text-dark-300 hover:border-dark-600'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2 font-medium">
+                                          <img src="/SBP.svg" alt="" className="h-[30px] w-[24px] flex-shrink-0" />
+                                          {method.name}
+                                        </div>
+                                        {method.description && (
+                                          <div className="mt-0.5 text-xs text-dark-500">{method.description}</div>
+                                        )}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  {directPayError && (
+                                    <div className="text-center text-sm text-error-400">{directPayError}</div>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return (
+                              <InsufficientBalancePrompt
+                                missingAmountKopeks={preview.missing_amount_kopeks}
+                                compact
+                              />
+                            );
+                          })()
                         ) : preview.status_message ? (
                           <div className="rounded-lg bg-error-500/10 px-4 py-3 text-center text-sm text-error-400">
                             {preview.status_message}
@@ -1955,13 +2401,13 @@ export default function SubscriptionPurchase() {
               {/* Navigation Buttons */}
               <div className="flex gap-3 border-t border-dark-800/50 pt-4">
                 {!isFirstStep && (
-                  <button onClick={goToPrevStep} className="btn-secondary flex-1">
+                  <button onClick={() => { haptic.buttonPressMedium(); goToPrevStep(); }} className="dark-glass ml-auto flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-dark-200 hover:text-white transition-all active:scale-95">
                     {t('common.back')}
                   </button>
                 )}
 
                 {isFirstStep && (
-                  <button onClick={resetPurchase} className="btn-secondary">
+                  <button onClick={() => { haptic.buttonPressMedium(); resetPurchase(); }} className="dark-glass ml-auto flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-dark-200 hover:text-white transition-all active:scale-95">
                     {t('common.cancel')}
                   </button>
                 )}

@@ -52,7 +52,7 @@ export default function SubscriptionCardExpired({
   const handleQuickRenew = async () => {
     setIsRenewing(true);
     setRenewError(null);
-    haptic.buttonPressHeavy();
+    haptic.buttonPressMedium();
 
     try {
       if (isDisabledDaily) {
@@ -92,7 +92,7 @@ export default function SubscriptionCardExpired({
   };
 
   const handleTopUp = () => {
-    haptic.buttonPress();
+    haptic.buttonPressMedium();
     const params = new URLSearchParams();
     params.set('returnTo', location.pathname);
     navigate(`/balance/top-up?${params.toString()}`);

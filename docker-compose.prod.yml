@@ -1,0 +1,35 @@
+# Production Docker Compose — Cabinet отдельно от бота
+# Cabinet доступен только через Docker-сеть (без проброса портов наружу)
+# Caddy проксирует запросы на cabinet_frontend:80
+
+services:
+  cabinet-frontend:
+    image: ghcr.io/bedolaga-dev/bedolaga-cabinet:latest
+    # Или собрать локально:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    #   args:
+    #     VITE_API_URL: /api
+    #     VITE_TELEGRAM_BOT_USERNAME: ${VITE_TELEGRAM_BOT_USERNAME}
+    #     VITE_APP_NAME: ${VITE_APP_NAME:-Cabinet}
+    #     VITE_APP_LOGO: ${VITE_APP_LOGO:-V}
+    container_name: cabinet_frontend
+    restart: unless-stopped
+    # Порты НЕ пробрасываем — доступ только через Docker-сеть через Caddy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:80/']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - caddy_network
+
+networks:
+  # Сеть для связи cabinet_frontend ↔ Caddy
+  # Измените на имя вашей Caddy docker-сети
+  caddy_network:
+    external: true
+    name: caddy_network
+

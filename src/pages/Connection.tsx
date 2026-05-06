@@ -1,11 +1,11 @@
-import { useEffect, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { openLink as sdkOpenLink } from '@telegram-apps/sdk-react';
 import { subscriptionApi } from '../api/subscription';
 import { useTelegramSDK } from '../hooks/useTelegramSDK';
-import { useHaptic } from '@/platform';
+import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { resolveTemplate, hasTemplates } from '../utils/templateEngine';
 import { isHappCryptolinkMode, resolveConnectionUrlForUi } from '../utils/connectionLink';
 import { useAuthStore } from '../store/auth';
@@ -20,10 +20,7 @@ export default function Connection() {
   const user = useAuthStore((state) => state.user);
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const { isTelegramWebApp } = useTelegramSDK();
-  const { impact: hapticImpact } = useHaptic();
-
-  const hapticRef = useRef(hapticImpact);
-  hapticRef.current = hapticImpact;
+  const haptic = useHapticFeedback();
 
   const {
     data: appConfig,
@@ -65,6 +62,7 @@ export default function Connection() {
   );
 
   const handleGoBack = useCallback(() => {
+    haptic.buttonPressMedium();
     navigate(-1);
   }, [navigate]);
 
@@ -210,14 +208,28 @@ export default function Connection() {
   // No subscription
   if (!appConfig.hasSubscription) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-        <h3 className="mb-2 text-xl font-bold text-dark-100">
-          {t('subscription.connection.title')}
-        </h3>
-        <p className="mb-4 text-dark-400">{t('subscription.connection.noSubscription')}</p>
-        <button onClick={handleGoBack} className="btn-primary px-6 py-2">
-          {t('common.close')}
-        </button>
+      <div className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5" style={{ touchAction: 'none', overscrollBehavior: 'none' }}>
+        {/* Hero area — large status text */}
+        <div className="relative flex flex-1 items-center justify-center">
+          <div className="relative z-10 text-center px-4">
+            <h1
+              className="text-3xl sm:text-4xl font-black text-white leading-tight uppercase"
+              style={{ letterSpacing: '0.1em', fontStretch: 'expanded' }}
+            >
+              {t('subscription.connection.noSubscription', 'Для подключения нужна активная подписка')}
+            </h1>
+          </div>
+        </div>
+
+        {/* Bottom button */}
+        <div className="mt-auto space-y-2 pb-2">
+          <button
+            onClick={handleGoBack}
+            className="w-full h-14 rounded-full bg-white/15 text-white font-medium text-base transition-all active:scale-[0.97] hover:bg-white/10"
+          >
+            {t('common.close', 'Закрыть')}
+          </button>
+        </div>
       </div>
     );
   }

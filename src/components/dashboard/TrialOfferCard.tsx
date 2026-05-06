@@ -3,8 +3,7 @@ import { Link } from 'react-router';
 import { UseMutationResult } from '@tanstack/react-query';
 import type { TrialInfo } from '../../types';
 import { useCurrency } from '../../hooks/useCurrency';
-import { useTheme } from '../../hooks/useTheme';
-import { getGlassColors } from '../../utils/glassTheme';
+import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 
 interface TrialOfferCardProps {
   trialInfo: TrialInfo;
@@ -23,8 +22,7 @@ export default function TrialOfferCard({
 }: TrialOfferCardProps) {
   const { t } = useTranslation();
   const { formatAmount, currencySymbol } = useCurrency();
-  const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const haptic = useHapticFeedback();
   const isFree = !trialInfo.requires_payment;
   const canAfford = balanceKopeks >= trialInfo.price_kopeks;
 
@@ -32,136 +30,38 @@ export default function TrialOfferCard({
     <div
       className="relative overflow-hidden rounded-3xl text-center"
       style={{
-        background: g.cardBg,
-        border: isDark
-          ? `1px solid ${g.cardBorder}`
-          : isFree
-            ? '1px solid rgba(var(--color-accent-400), 0.2)'
-            : '1px solid rgba(255,184,0,0.2)',
-        boxShadow: isDark
-          ? g.shadow
-          : isFree
-            ? '0 2px 16px rgba(var(--color-accent-400), 0.12), 0 0 0 1px rgba(var(--color-accent-400), 0.06)'
-            : '0 2px 16px rgba(255,184,0,0.12), 0 0 0 1px rgba(255,184,0,0.06)',
+        background: 'rgba(255, 255, 255, 0.04)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
         padding: '32px 28px 28px',
       }}
     >
-      {/* Animated glow background */}
-      <div
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2"
-        style={{
-          top: -100,
-          width: 300,
-          height: 300,
-          borderRadius: '50%',
-          background: isFree
-            ? 'radial-gradient(circle, rgba(var(--color-accent-400), 0.08) 0%, transparent 70%)'
-            : 'radial-gradient(circle, rgba(255,184,0,0.07) 0%, transparent 70%)',
-          transition: 'background 0.5s ease',
-        }}
-        aria-hidden="true"
-      />
-      {/* Grid pattern */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          opacity: isDark ? 0.025 : 0.04,
-          backgroundImage: isDark
-            ? `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-               linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`
-            : `linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
-               linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Icon */}
-      <div
-        className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
-        style={{
-          background: isDark
-            ? isFree
-              ? 'linear-gradient(135deg, rgba(var(--color-accent-900), 0.5), rgba(var(--color-accent-950), 0.6))'
-              : 'linear-gradient(135deg, #3a3020, #282418)'
-            : isFree
-              ? 'linear-gradient(135deg, rgba(var(--color-accent-400), 0.15), rgba(var(--color-accent-400), 0.08))'
-              : 'linear-gradient(135deg, rgba(255,184,0,0.15), rgba(255,184,0,0.08))',
-          border: isFree
-            ? '1px solid rgba(var(--color-accent-400), 0.25)'
-            : '1px solid rgba(255,184,0,0.25)',
-          transition: 'all 0.5s ease',
-        }}
-      >
-        {isFree ? (
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="rgb(var(--color-accent-400))"
-            strokeWidth="1.5"
-            aria-hidden="true"
-          >
-            <path
-              d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ) : (
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#FFB800"
-            strokeWidth="1.5"
-            aria-hidden="true"
-          >
-            <path
-              d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-        {/* Glow effect */}
-        <div
-          className="absolute inset-[-1px] animate-trial-glow rounded-2xl"
-          style={{
-            boxShadow: isFree
-              ? '0 0 20px rgba(var(--color-accent-400), 0.15)'
-              : '0 0 20px rgba(255,184,0,0.12)',
-          }}
-          aria-hidden="true"
-        />
-      </div>
-
       {/* Title */}
-      <h2 className="mb-1.5 text-[22px] font-bold tracking-tight text-dark-50">
+      <h2
+        className="mb-2 text-2xl font-black text-white uppercase"
+        style={{ letterSpacing: '0.08em', fontStretch: 'expanded' }}
+      >
         {isFree ? t('dashboard.trialOffer.freeTitle') : t('dashboard.trialOffer.paidTitle')}
       </h2>
-      <p className="mb-5 text-sm text-dark-50/40">
+      <p className="mb-6 text-sm text-white/40">
         {isFree ? t('dashboard.trialOffer.freeDesc') : t('dashboard.trialOffer.paidDesc')}
       </p>
 
       {/* Price tag for paid trial */}
       {!isFree && trialInfo.price_rubles > 0 && (
         <div
-          className="mb-5 inline-flex items-baseline gap-1 rounded-xl px-5 py-2"
+          className="mb-6 inline-flex items-baseline gap-1 rounded-full px-6 py-2"
           style={{
-            background: 'rgba(255,184,0,0.08)',
-            border: '1px solid rgba(255,184,0,0.15)',
+            background: 'rgba(249, 115, 22, 0.12)',
+            border: '1px solid rgba(249, 115, 22, 0.2)',
           }}
         >
           <span
             className="text-[32px] font-extrabold leading-none tracking-tight"
-            style={{ color: '#FFB800' }}
+            style={{ color: 'var(--figma-green)' }}
           >
             {trialInfo.price_rubles.toFixed(0)}
           </span>
-          <span className="text-base font-semibold opacity-70" style={{ color: '#FFB800' }}>
+          <span className="text-base font-semibold opacity-70" style={{ color: 'var(--figma-green)' }}>
             {currencySymbol}
           </span>
         </div>
@@ -181,10 +81,10 @@ export default function TrialOfferCard({
           },
         ].map((stat, i) => (
           <div key={i} className="text-center">
-            <div className="text-4xl font-extrabold leading-none tracking-tight text-dark-50">
+            <div className="text-4xl font-extrabold leading-none tracking-tight text-white">
               {stat.value}
             </div>
-            <div className="mt-1 text-xs font-medium text-dark-50/30">{stat.label}</div>
+            <div className="mt-1 text-xs font-medium text-white/30">{stat.label}</div>
           </div>
         ))}
       </div>
@@ -192,19 +92,19 @@ export default function TrialOfferCard({
       {/* Balance info for paid trial */}
       {!isFree && trialInfo.price_rubles > 0 && (
         <div
-          className="mb-4 space-y-2 rounded-xl p-4 text-left"
-          style={{ background: g.innerBg, border: `1px solid ${g.innerBorder}` }}
+          className="mb-4 space-y-2 rounded-2xl p-4 text-left"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm text-dark-50/40">{t('balance.currentBalance')}</span>
+            <span className="text-sm text-white/40">{t('balance.currentBalance')}</span>
             <span
-              className={`font-display text-sm font-semibold ${canAfford ? 'text-success-400' : 'text-warning-400'}`}
+              className={`font-display text-sm font-semibold ${canAfford ? 'text-green-400' : 'text-orange-400'}`}
             >
               {formatAmount(balanceRubles)} {currencySymbol}
             </span>
           </div>
           {!canAfford && (
-            <div className="text-xs text-warning-400">
+            <div className="text-xs text-orange-400">
               {t('subscription.trial.insufficientBalance')}
             </div>
           )}
@@ -213,7 +113,7 @@ export default function TrialOfferCard({
 
       {/* Error */}
       {trialError && (
-        <div className="mb-4 rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-center text-sm text-error-400">
+        <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-center text-sm text-red-400">
           {trialError}
         </div>
       )}
@@ -222,14 +122,10 @@ export default function TrialOfferCard({
       {!isFree && trialInfo.price_kopeks > 0 ? (
         canAfford ? (
           <button
-            onClick={() => !activateTrialMutation.isPending && activateTrialMutation.mutate()}
+            onClick={() => { haptic.buttonPressMedium(); !activateTrialMutation.isPending && activateTrialMutation.mutate(); }}
             disabled={activateTrialMutation.isPending}
-            className="w-full rounded-[14px] py-4 text-base font-bold tracking-tight transition-all duration-300 disabled:opacity-50"
-            style={{
-              background: 'linear-gradient(135deg, #FFB800, #FF8C42)',
-              color: '#1a1200',
-              boxShadow: '0 4px 20px rgba(255,184,0,0.2)',
-            }}
+            className="w-full h-14 rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+            style={{ background: 'var(--figma-green)' }}
           >
             {activateTrialMutation.isPending
               ? t('common.loading')
@@ -238,39 +134,35 @@ export default function TrialOfferCard({
         ) : (
           <Link
             to="/balance"
-            className="block w-full rounded-[14px] py-4 text-center text-base font-bold tracking-tight transition-all duration-300"
-            style={{
-              background: 'linear-gradient(135deg, #FFB800, #FF8C42)',
-              color: '#1a1200',
-              boxShadow: '0 4px 20px rgba(255,184,0,0.2)',
-            }}
+            className="flex h-14 w-full items-center justify-center rounded-full text-base font-medium text-white transition-all active:scale-[0.97]"
+            style={{ background: 'var(--figma-green)' }}
           >
             {t('subscription.trial.topUpToActivate')}
           </Link>
         )
       ) : (
-        <button
-          onClick={() => !activateTrialMutation.isPending && activateTrialMutation.mutate()}
-          disabled={activateTrialMutation.isPending}
-          className="w-full rounded-[14px] py-4 text-base font-bold tracking-tight transition-all duration-300 disabled:opacity-50"
-          style={
-            isDark
-              ? {
-                  background:
-                    'linear-gradient(135deg, rgba(var(--color-accent-400), 0.12) 0%, rgba(var(--color-accent-400), 0.04) 100%)',
-                  border: '1px solid rgba(var(--color-accent-400), 0.25)',
-                  color: '#fff',
-                }
-              : {
-                  background:
-                    'linear-gradient(135deg, rgb(var(--color-accent-400)), rgb(var(--color-accent-500)))',
-                  color: '#0a2a1e',
-                  boxShadow: '0 4px 20px rgba(var(--color-accent-400), 0.25)',
-                }
-          }
-        >
-          {activateTrialMutation.isPending ? t('common.loading') : t('subscription.trial.activate')}
-        </button>
+        <div className="relative">
+          {/* Pulsing glow ring */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              animation: 'trialButtonPulse 2s ease-in-out infinite',
+              background: 'var(--figma-green)',
+              opacity: 0,
+            }}
+          />
+          <button
+            onClick={() => { haptic.buttonPressMedium(); !activateTrialMutation.isPending && activateTrialMutation.mutate(); }}
+            disabled={activateTrialMutation.isPending}
+            className="relative w-full h-14 rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+            style={{
+              background: 'var(--figma-green)',
+              animation: 'trialButtonPulse 2s ease-in-out infinite',
+            }}
+          >
+            {activateTrialMutation.isPending ? t('common.loading') : t('subscription.trial.activate')}
+          </button>
+        </div>
       )}
     </div>
   );

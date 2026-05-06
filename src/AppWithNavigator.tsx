@@ -42,9 +42,17 @@ function TelegramBackButton() {
     } catch {}
   }, [location]);
 
+  const locationRef = useRef(location);
+  locationRef.current = location;
+
   // Stable handler — ref prevents re-subscription on every render
   const handler = useCallback(() => {
-    navigateRef.current(-1);
+    // On subscription pages, back goes to main screen
+    if (locationRef.current.pathname.startsWith('/subscription')) {
+      navigateRef.current('/');
+    } else {
+      navigateRef.current(-1);
+    }
   }, []);
 
   useEffect(() => {

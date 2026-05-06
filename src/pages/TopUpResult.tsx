@@ -12,6 +12,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { AnimatedCheckmark } from '@/components/ui/AnimatedCheckmark';
 import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
 import { loadTopUpPendingInfo, clearTopUpPendingInfo } from '../utils/topUpStorage';
+import { loadPurchaseIntent } from '../utils/purchaseIntentStorage';
 import { isPaidStatus, isFailedStatus } from '../utils/paymentStatus';
 
 // ── Constants ────────────────────────────────────────────────
@@ -60,10 +61,27 @@ function PendingState({ amountKopeks }: { amountKopeks: number | null }) {
 function SuccessState({ amountKopeks }: { amountKopeks: number | null }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [intent] = useState(() => loadPurchaseIntent());
+  const autoRedirectedRef = useRef(false);
 
   const handleGoToBalance = useCallback(() => {
     navigate('/balance', { replace: true });
   }, [navigate]);
+
+  const handleGoToSubscription = useCallback(() => {
+    navigate('/subscription/purchase?auto=1', { replace: true });
+  }, [navigate]);
+
+  // Auto-redirect to subscription purchase if intent exists
+  useEffect(() => {
+    if (intent && !autoRedirectedRef.current) {
+      autoRedirectedRef.current = true;
+      const timer = setTimeout(() => {
+        navigate('/subscription/purchase?auto=1', { replace: true });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [intent, navigate]);
 
   return (
     <motion.div
@@ -75,20 +93,34 @@ function SuccessState({ amountKopeks }: { amountKopeks: number | null }) {
 
       <div>
         <h1 className="text-xl font-bold text-dark-50">{t('balance.topUpResult.success')}</h1>
-        <p className="mt-2 text-sm text-dark-400">{t('balance.topUpResult.successDesc')}</p>
+        <p className="mt-2 text-sm text-dark-400">
+          {intent
+            ? t('balance.topUpResult.activatingSubscription', 'Activating subscription...')
+            : t('balance.topUpResult.successDesc')}
+        </p>
       </div>
 
       {amountKopeks != null && amountKopeks > 0 && (
         <AmountDisplay amountKopeks={amountKopeks} label={t('balance.topUpResult.topUpAmount')} />
       )}
 
-      <button
-        type="button"
-        onClick={handleGoToBalance}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
-      >
-        {t('balance.topUpResult.goToBalance')}
-      </button>
+      {intent ? (
+        <button
+          type="button"
+          onClick={handleGoToSubscription}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
+        >
+          {t('balance.topUpResult.goToSubscription', 'Activate subscription')}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleGoToBalance}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
+        >
+          {t('balance.topUpResult.goToBalance')}
+        </button>
+      )}
     </motion.div>
   );
 }

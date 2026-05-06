@@ -1063,7 +1063,7 @@
       "beams": "Beams",
       "beamsDesc": "Light beams along SVG paths",
       "beamsCollision": "Beams Collision",
-      "beamsCollisionDesc": "Exploding light beams",
+      "beamsCollisionDesc": "Perlin noise shader",
       "gradientAnimation": "Gradient Animation",
       "gradientAnimationDesc": "Smoothly moving gradient blobs",
       "wavy": "Wavy",
