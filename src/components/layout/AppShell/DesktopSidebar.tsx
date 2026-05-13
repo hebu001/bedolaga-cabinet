@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/store/auth';
+import { displayName } from '@/utils/displayName';
 import {
   brandingApi,
   getCachedBranding,
@@ -95,7 +96,10 @@ export function DesktopSidebar({
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-60 flex-col" style={{ background: 'transparent' }}>
+    <aside
+      className="fixed left-0 top-0 z-40 flex h-screen w-60 flex-col"
+      style={{ background: 'transparent' }}
+    >
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 px-4">
         <Link to="/" className="flex items-center gap-3" onClick={handleNavClick}>
@@ -121,9 +125,7 @@ export function DesktopSidebar({
             )}
           </div>
           {appName && (
-            <span className="whitespace-nowrap text-base font-semibold text-white">
-              {appName}
-            </span>
+            <span className="whitespace-nowrap text-base font-semibold text-white">{appName}</span>
           )}
         </Link>
       </div>
@@ -137,9 +139,7 @@ export function DesktopSidebar({
             onClick={handleNavClick}
             className={cn(
               'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold leading-none transition-all duration-200',
-              isActive(item.path)
-                ? 'text-black'
-                : 'text-white hover:bg-white/10',
+              isActive(item.path) ? 'text-black' : 'text-white hover:bg-white/10',
             )}
           >
             {isActive(item.path) && (
@@ -190,9 +190,7 @@ export function DesktopSidebar({
             <UserIcon className="h-4 w-4 text-white/60" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
-              {user?.first_name || user?.username || `#${user?.telegram_id}`}
-            </p>
+            <p className="truncate text-sm font-medium text-white">{displayName(user)}</p>
             <p className="truncate text-xs text-white/40">
               @{user?.username || `ID: ${user?.telegram_id}`}
             </p>
@@ -212,7 +210,7 @@ export function DesktopSidebar({
       </div>
 
       {/* Footer */}
-      <small className="px-6 pb-6 text-white/25 text-xs">© 2026</small>
+      <small className="px-6 pb-6 text-xs text-white/25">© 2026</small>
     </aside>
   );
 }
