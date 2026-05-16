@@ -29,11 +29,9 @@ import Twemoji from 'react-twemoji';
 const CountdownTimer = memo(function CountdownTimer({
   endDate,
   isActive,
-  glassColors: g,
 }: {
   endDate: string;
   isActive: boolean;
-  glassColors: ReturnType<typeof getGlassColors>;
 }) {
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -55,7 +53,6 @@ const CountdownTimer = memo(function CountdownTimer({
   }, [endDate]);
 
   const isExpired = !isActive;
-  const isUrgent = countdown.days <= 3;
 
   const formattedDate = new Date(endDate).toLocaleDateString(undefined, {
     day: 'numeric',
@@ -63,105 +60,38 @@ const CountdownTimer = memo(function CountdownTimer({
     year: 'numeric',
   });
 
+  const units = [
+    { v: countdown.days, l: t('subscription.daysShort', 'дн') },
+    { v: countdown.hours, l: t('subscription.hoursShort', 'ч') },
+    { v: countdown.minutes, l: t('subscription.minutesShort', 'м') },
+    { v: countdown.seconds, l: t('subscription.secondsShort', 'с') },
+  ];
+
   return (
-    <div
-      className="min-w-0 overflow-hidden rounded-[14px] p-3.5"
-      style={{
-        background: isExpired
-          ? 'rgba(255,59,92,0.06)'
-          : isUrgent
-            ? 'rgba(255,184,0,0.06)'
-            : g.innerBg,
-        border: isExpired
-          ? '1px solid rgba(255,59,92,0.15)'
-          : isUrgent
-            ? '1px solid rgba(255,184,0,0.15)'
-            : `1px solid ${g.innerBorder}`,
-      }}
-    >
-      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-apple-ink/35">
-        <div
-          className="flex h-6 w-6 items-center justify-center rounded-[7px]"
-          style={{
-            background: isExpired
-              ? 'rgba(255,59,92,0.1)'
-              : isUrgent
-                ? 'rgba(255,184,0,0.1)'
-                : g.hoverBg,
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={isExpired ? '#ff453a' : isUrgent ? '#ff9f0a' : g.textSecondary}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <path d="M16 2v4M8 2v4M3 10h18" />
-          </svg>
-        </div>
+    <div className="rounded-[14px] p-4" style={{ background: 'rgba(0,0,0,0.35)' }}>
+      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-apple-faint">
         {t('dashboard.remaining')}
       </div>
       {isExpired ? (
-        <div className="text-[18px] font-bold tracking-tight" style={{ color: '#ff453a' }}>
+        <div className="text-[20px] font-bold tracking-tight" style={{ color: '#ff453a' }}>
           {t('subscription.expired')}
         </div>
       ) : (
-        <div className="flex items-baseline justify-between">
-          <div className="flex items-baseline gap-1 font-mono tabular-nums">
-            {countdown.days > 0 && (
-              <>
-                <span
-                  className="text-[20px] font-bold tracking-tight"
-                  style={{ color: isUrgent ? '#ff9f0a' : g.text }}
-                >
-                  {countdown.days}
+        <>
+          <div className="flex items-baseline gap-2">
+            {units.map((u) => (
+              <div key={u.l} className="flex items-baseline gap-[3px]">
+                <span className="text-[26px] font-bold tabular-nums tracking-tight text-apple-ink">
+                  {String(u.v).padStart(2, '0')}
                 </span>
-                <span className="mr-1 text-[10px] font-medium text-apple-ink/25">
-                  {t('subscription.daysShort')}
-                </span>
-              </>
-            )}
-            <span
-              className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
-            >
-              {String(countdown.hours).padStart(2, '0')}
-            </span>
-            <span
-              className="mx-[-1px] text-[16px] font-bold opacity-30"
-              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
-            >
-              :
-            </span>
-            <span
-              className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
-            >
-              {String(countdown.minutes).padStart(2, '0')}
-            </span>
-            <span
-              className="mx-[-1px] text-[16px] font-bold opacity-30"
-              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
-            >
-              :
-            </span>
-            <span
-              className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
-            >
-              {String(countdown.seconds).padStart(2, '0')}
-            </span>
+                <span className="text-[12px] text-apple-faint">{u.l}</span>
+              </div>
+            ))}
           </div>
-          <div className="text-[10px] font-medium text-apple-ink/25">
+          <div className="mt-1.5 text-[12px] text-apple-mute">
             {t('subscription.expiresAt')}: {formattedDate}
           </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -595,6 +525,11 @@ export default function Subscription() {
           const connectedDevices = devicesData?.total ?? 0;
           const isAtDeviceLimit =
             subscription.device_limit > 0 && connectedDevices >= subscription.device_limit;
+          const statusHex = subscription.is_active
+            ? '#30d158'
+            : subscription.is_limited
+              ? '#ff9f0a'
+              : '#ff453a';
 
           return (
             <>
@@ -619,7 +554,8 @@ export default function Subscription() {
                     width: 230,
                     height: 230,
                     borderRadius: '50%',
-                    background: `radial-gradient(circle, ${zone.mainHex}26 0%, transparent 70%)`,
+                    background:
+                      'radial-gradient(circle, rgba(10,132,255,0.30) 0%, transparent 70%)',
                   }}
                   aria-hidden="true"
                 />
@@ -630,58 +566,49 @@ export default function Subscription() {
                         <span
                           className="h-[7px] w-[7px] rounded-full"
                           style={{
-                            background: zone.mainHex,
-                            boxShadow: `0 0 8px ${zone.mainHex}`,
+                            background: statusHex,
+                            boxShadow: `0 0 8px ${statusHex}`,
                           }}
                           aria-hidden="true"
                         />
                         <span
                           className="text-[11px] font-semibold uppercase tracking-widest"
-                          style={{ color: zone.mainHex }}
+                          style={{ color: statusHex }}
                         >
-                          {isUnlimited ? t('dashboard.unlimited') : t(zone.labelKey)}
+                          {subscription.is_active
+                            ? t('subscription.active')
+                            : subscription.is_limited
+                              ? t('subscription.trafficLimited')
+                              : subscription.status === 'disabled'
+                                ? t('subscription.pause.suspended')
+                                : t('subscription.expired')}
                         </span>
                       </div>
-                      <h2 className="truncate text-[26px] font-bold tracking-tight text-apple-ink">
+                      <h2 className="truncate text-[28px] font-bold tracking-tight text-apple-ink">
                         {subscription.tariff_name || t('subscription.currentPlan')}
                       </h2>
                     </div>
                     <span
-                      className="shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider"
+                      className="shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold"
                       style={{
-                        background: subscription.is_active
-                          ? `${zone.mainHex}15`
-                          : subscription.is_limited
-                            ? 'rgba(255,159,10,0.12)'
-                            : 'rgba(255,69,58,0.12)',
-                        border: subscription.is_active
-                          ? `1px solid ${zone.mainHex}30`
-                          : subscription.is_limited
-                            ? '1px solid rgba(255,159,10,0.25)'
-                            : '1px solid rgba(255,69,58,0.25)',
-                        color: subscription.is_active
-                          ? zone.mainHex
-                          : subscription.is_limited
-                            ? '#ff9f0a'
-                            : '#ff453a',
+                        background: subscription.is_trial
+                          ? 'rgba(255,159,10,0.14)'
+                          : 'rgba(10,132,255,0.14)',
+                        border: subscription.is_trial
+                          ? '1px solid rgba(255,159,10,0.3)'
+                          : '1px solid rgba(10,132,255,0.3)',
+                        color: subscription.is_trial ? '#ff9f0a' : '#0a84ff',
                       }}
                     >
-                      {subscription.is_active
-                        ? subscription.is_trial
-                          ? t('subscription.trialStatus')
-                          : t('subscription.active')
-                        : subscription.is_limited
-                          ? t('subscription.trafficLimited')
-                          : subscription.status === 'disabled'
-                            ? t('subscription.pause.suspended')
-                            : t('subscription.expired')}
+                      {subscription.is_trial
+                        ? t('subscription.trialStatus')
+                        : t('subscription.tariffBadge', 'Тариф')}
                     </span>
                   </div>
                   <div className="mt-4">
                     <CountdownTimer
                       endDate={subscription.end_date}
                       isActive={subscription.is_active || subscription.is_limited}
-                      glassColors={g}
                     />
                   </div>
                 </div>
