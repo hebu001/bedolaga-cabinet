@@ -101,6 +101,20 @@ export default {
           900: withOpacity('--color-error-900'),
           950: withOpacity('--color-error-950'),
         },
+        // Apple dark mode palette (static — iOS dark mode tokens)
+        apple: {
+          bg: '#000000',
+          card: '#1c1c1e',
+          elevated: '#2c2c2e',
+          ink: '#f5f5f7',
+          mute: '#98989d',
+          faint: '#5a5a5e',
+          hairline: 'rgba(255,255,255,0.08)',
+          blue: '#0a84ff',
+          green: '#30d158',
+          red: '#ff453a',
+          amber: '#ff9f0a',
+        },
       },
       fontFamily: {
         sans: [

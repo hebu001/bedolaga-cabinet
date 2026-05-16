@@ -10,8 +10,6 @@ import { useCurrency } from '../hooks/useCurrency';
 import { API } from '../config/constants';
 import type { PaginatedResponse, Transaction } from '../types';
 
-import { Card } from '@/components/data-display/Card';
-import { Button } from '@/components/primitives/Button';
 import { ChevronDownIcon, ChevronRightIcon } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import { isPaidStatus, isFailedStatus } from '../utils/paymentStatus';
@@ -31,6 +29,10 @@ const WalletIcon = ({ className = 'h-8 w-8' }: { className?: string }) => (
     />
   </svg>
 );
+
+// Apple-dark surface helpers
+const cardCls = 'rounded-2xl bg-apple-card';
+const sectionTitleCls = 'mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute';
 
 export default function Balance() {
   const { t } = useTranslation();
@@ -111,18 +113,19 @@ export default function Balance() {
 
   const normalizeType = (type: string) => type?.toUpperCase?.() ?? type;
 
-  const getTypeBadge = (type: string) => {
+  // Apple-dark badge tint per transaction type
+  const getTypeColor = (type: string) => {
     switch (normalizeType(type)) {
       case 'DEPOSIT':
-        return 'badge-success';
+        return 'border-apple-green/30 bg-apple-green/12 text-apple-green';
       case 'SUBSCRIPTION_PAYMENT':
-        return 'badge-info';
+        return 'border-apple-blue/30 bg-apple-blue/12 text-apple-blue';
       case 'REFERRAL_REWARD':
-        return 'badge-warning';
+        return 'border-apple-amber/30 bg-apple-amber/12 text-apple-amber';
       case 'WITHDRAWAL':
-        return 'badge-error';
+        return 'border-apple-red/30 bg-apple-red/12 text-apple-red';
       default:
-        return 'badge-neutral';
+        return 'border-apple-hairline bg-apple-elevated text-apple-mute';
     }
   };
 
@@ -201,49 +204,52 @@ export default function Balance() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-5 font-sans text-apple-ink"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
     >
       <motion.div variants={staggerItem}>
-        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('balance.title')}</h1>
+        <h1 className="px-1 text-[28px] font-bold tracking-tight text-apple-ink">
+          {t('balance.title')}
+        </h1>
       </motion.div>
 
       {/* Balance Card */}
       <motion.div variants={staggerItem}>
-        <Card className="bg-gradient-to-br from-accent-500/10 to-transparent" glow>
-          <div className="mb-2 text-sm text-dark-400">{t('balance.currentBalance')}</div>
-          <div className="text-4xl font-bold text-dark-50 sm:text-5xl">
+        <div className={`${cardCls} p-6 text-center`}>
+          <div className="text-sm text-apple-mute">{t('balance.currentBalance')}</div>
+          <div className="mt-2 text-[44px] font-semibold tabular-nums leading-none tracking-tight text-apple-ink">
             {formatAmount(balanceData?.balance_rubles || 0)}
-            <span className="ml-2 text-2xl text-dark-400">{currencySymbol}</span>
+            <span className="ml-1.5 text-2xl font-medium text-apple-mute">{currencySymbol}</span>
           </div>
-        </Card>
+        </div>
       </motion.div>
 
       {/* Promo Code Section */}
       <motion.div variants={staggerItem}>
-        <Card>
-          <h2 className="mb-4 text-lg font-semibold text-dark-100">
+        <div className={`${cardCls} p-5`}>
+          <h2 className="mb-3.5 text-[17px] font-semibold text-apple-ink">
             {t('balance.promocode.title')}
           </h2>
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <input
               type="text"
               value={promocode}
               onChange={(e) => setPromocode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handlePromocodeActivate()}
               placeholder={t('balance.promocode.placeholder')}
-              className="input flex-1"
+              className="flex-1 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60 disabled:opacity-50"
               disabled={promocodeLoading}
             />
-            <Button
+            <button
+              type="button"
               onClick={() => handlePromocodeActivate()}
-              disabled={!promocode.trim()}
-              loading={promocodeLoading}
+              disabled={!promocode.trim() || promocodeLoading}
+              className="shrink-0 rounded-full bg-apple-blue px-5 py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
             >
-              {t('balance.promocode.activate')}
-            </Button>
+              {promocodeLoading ? '…' : t('balance.promocode.activate')}
+            </button>
           </div>
           <AnimatePresence mode="wait">
             {promocodeError && (
@@ -251,7 +257,7 @@ export default function Balance() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mt-3 rounded-linear border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-400"
+                className="mt-3 rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red"
               >
                 {promocodeError}
               </motion.div>
@@ -261,7 +267,7 @@ export default function Balance() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="mt-3 rounded-linear border border-success-500/30 bg-success-500/10 p-3 text-sm text-success-400"
+                className="mt-3 rounded-xl border border-apple-green/30 bg-apple-green/10 p-3 text-sm text-apple-green"
               >
                 <div className="font-medium">{promocodeSuccess.message}</div>
                 {promocodeSuccess.amount > 0 && (
@@ -278,9 +284,9 @@ export default function Balance() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 space-y-2 rounded-linear border border-accent-500/30 bg-accent-500/10 p-3"
+              className="mt-3 space-y-2 rounded-xl border border-apple-blue/30 bg-apple-blue/10 p-3"
             >
-              <div className="text-sm font-medium text-dark-200">
+              <div className="text-sm font-medium text-apple-ink">
                 {t('balance.promocode.selectSubscription', 'К какой подписке применить промокод?')}
               </div>
               {promoSelectSubs.map((sub) => (
@@ -288,10 +294,10 @@ export default function Balance() {
                   key={sub.id}
                   onClick={() => handlePromocodeActivate(sub.id)}
                   disabled={promocodeLoading}
-                  className="flex w-full items-center justify-between rounded-linear border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-200 transition-colors hover:border-accent-500/50 hover:bg-dark-600"
+                  className="flex w-full items-center justify-between rounded-xl bg-apple-elevated px-3 py-2.5 text-sm text-apple-ink transition-opacity hover:opacity-80 disabled:opacity-50"
                 >
                   <span>{sub.tariff_name}</span>
-                  <span className="text-dark-400">
+                  <span className="text-apple-mute">
                     {t('balance.promocode.daysLeft', '{{count}} дн.', { count: sub.days_left })}
                   </span>
                 </button>
@@ -301,71 +307,80 @@ export default function Balance() {
                   setPromoSelectSubs(null);
                   setPromoSelectCode(null);
                 }}
-                className="text-xs text-dark-400 hover:text-dark-200"
+                className="text-xs text-apple-mute transition-colors hover:text-apple-ink"
               >
                 {t('common.cancel', 'Отмена')}
               </button>
             </motion.div>
           )}
-        </Card>
+        </div>
       </motion.div>
 
       {/* Payment Methods */}
       {paymentMethods && paymentMethods.length > 0 && (
         <motion.div variants={staggerItem}>
-          <Card>
-            <h2 className="mb-4 text-lg font-semibold text-dark-100">
-              {t('balance.topUpBalance')}
-            </h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {paymentMethods.map((method) => {
-                const methodKey = method.id.toLowerCase().replace(/-/g, '_');
-                const translatedName = t(`balance.paymentMethods.${methodKey}.name`, {
-                  defaultValue: '',
-                });
-                const translatedDesc = t(`balance.paymentMethods.${methodKey}.description`, {
-                  defaultValue: '',
-                });
+          <div className={sectionTitleCls}>{t('balance.topUpBalance')}</div>
+          <div className={`${cardCls} overflow-hidden`}>
+            {paymentMethods.map((method, idx) => {
+              const methodKey = method.id.toLowerCase().replace(/-/g, '_');
+              const translatedName = t(`balance.paymentMethods.${methodKey}.name`, {
+                defaultValue: '',
+              });
+              const translatedDesc = t(`balance.paymentMethods.${methodKey}.description`, {
+                defaultValue: '',
+              });
 
-                return (
-                  <Card
-                    key={method.id}
-                    interactive={method.is_available}
-                    className={!method.is_available ? 'cursor-not-allowed opacity-50' : ''}
-                    onClick={() => method.is_available && navigate(`/balance/top-up/${method.id}`)}
-                  >
-                    <div className="font-semibold text-dark-100">
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  disabled={!method.is_available}
+                  onClick={() => method.is_available && navigate(`/balance/top-up/${method.id}`)}
+                  className={`flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors ${
+                    idx !== paymentMethods.length - 1 ? 'border-b border-apple-hairline' : ''
+                  } ${
+                    method.is_available
+                      ? 'hover:bg-apple-elevated active:bg-apple-elevated'
+                      : 'cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated text-apple-blue">
+                    ◉
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[15px] font-medium text-apple-ink">
                       {translatedName || method.name}
                     </div>
                     {(translatedDesc || method.description) && (
-                      <div className="mt-1 text-sm text-dark-500">
+                      <div className="mt-0.5 truncate text-[13px] text-apple-mute">
                         {translatedDesc || method.description}
                       </div>
                     )}
-                    <div className="mt-3 text-xs text-dark-600">
+                    <div className="mt-0.5 text-xs tabular-nums text-apple-faint">
                       {formatAmount(method.min_amount_kopeks / 100, 0)} –{' '}
                       {formatAmount(method.max_amount_kopeks / 100, 0)} {currencySymbol}
                     </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </Card>
+                  </div>
+                  <ChevronRightIcon className="h-5 w-5 shrink-0 text-apple-faint" />
+                </button>
+              );
+            })}
+          </div>
         </motion.div>
       )}
 
       {/* Transaction History */}
       <motion.div variants={staggerItem}>
-        <Card className="overflow-hidden">
+        <div className={`${cardCls} overflow-hidden p-5`}>
           <button
             onClick={() => setIsHistoryOpen(!isHistoryOpen)}
             className="flex w-full items-center justify-between text-left"
           >
-            <h2 className="text-lg font-semibold text-dark-100">
+            <h2 className="text-[17px] font-semibold text-apple-ink">
               {t('balance.transactionHistory')}
             </h2>
             <ChevronDownIcon
-              className={`h-5 w-5 text-dark-400 transition-transform duration-200 ${isHistoryOpen ? 'rotate-180' : ''}`}
+              className={`h-5 w-5 text-apple-mute transition-transform duration-200 ${isHistoryOpen ? 'rotate-180' : ''}`}
             />
           </button>
 
@@ -381,11 +396,11 @@ export default function Balance() {
                 <div className="mt-4">
                   {isLoading ? (
                     <div className="flex items-center justify-center py-12">
-                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
                     </div>
                   ) : transactions?.items && transactions.items.length > 0 ? (
                     <motion.div
-                      className="space-y-3"
+                      className="space-y-2"
                       variants={staggerContainer}
                       initial="initial"
                       animate="animate"
@@ -396,31 +411,33 @@ export default function Balance() {
                         const displayAmount = Math.abs(tx.amount_rubles);
                         const sign = isZero ? '' : isPositive ? '+' : '-';
                         const colorClass = isZero
-                          ? 'text-dark-400'
+                          ? 'text-apple-mute'
                           : isPositive
-                            ? 'text-success-400'
-                            : 'text-error-400';
+                            ? 'text-apple-green'
+                            : 'text-apple-red';
 
                         return (
                           <motion.div
                             key={tx.id}
                             variants={staggerItem}
-                            className="flex items-center justify-between rounded-linear border border-dark-700/30 bg-dark-800/30 p-4"
+                            className="flex items-center justify-between rounded-xl bg-apple-elevated p-3.5"
                           >
-                            <div className="flex-1">
-                              <div className="mb-1 flex items-center gap-3">
-                                <span className={getTypeBadge(tx.type)}>
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1 flex items-center gap-2.5">
+                                <span
+                                  className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${getTypeColor(tx.type)}`}
+                                >
                                   {getTypeLabel(tx.type)}
                                 </span>
-                                <span className="text-xs text-dark-500">
+                                <span className="text-xs text-apple-faint">
                                   {new Date(tx.created_at).toLocaleDateString()}
                                 </span>
                               </div>
                               {tx.description && (
-                                <div className="text-sm text-dark-400">{tx.description}</div>
+                                <div className="text-sm text-apple-mute">{tx.description}</div>
                               )}
                             </div>
-                            <div className={`text-lg font-semibold ${colorClass}`}>
+                            <div className={`text-[17px] font-semibold tabular-nums ${colorClass}`}>
                               {sign}
                               {formatAmount(displayAmount)} {currencySymbol}
                             </div>
@@ -430,64 +447,64 @@ export default function Balance() {
                     </motion.div>
                   ) : (
                     <div className="py-12 text-center">
-                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-linear-lg bg-dark-800">
-                        <WalletIcon className="h-8 w-8 text-dark-500" />
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated">
+                        <WalletIcon className="h-8 w-8 text-apple-faint" />
                       </div>
-                      <div className="text-dark-400">{t('balance.noTransactions')}</div>
+                      <div className="text-apple-mute">{t('balance.noTransactions')}</div>
                     </div>
                   )}
 
                   {transactions && transactions.pages > 1 && (
-                    <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-dark-500">
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-apple-mute">
+                      <button
+                        type="button"
                         onClick={() => setTransactionsPage((prev) => Math.max(1, prev - 1))}
                         disabled={transactions.page <= 1}
-                        className="min-w-[120px] flex-1 sm:flex-none"
+                        className="min-w-[120px] flex-1 rounded-full bg-apple-elevated px-4 py-2.5 text-[15px] font-medium text-apple-ink transition-opacity hover:opacity-80 disabled:opacity-40 sm:flex-none"
                       >
                         {t('common.back')}
-                      </Button>
+                      </button>
                       <div className="flex-1 text-center">
                         {t('balance.page', {
                           current: transactions.page,
                           total: transactions.pages,
                         })}
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() =>
                           setTransactionsPage((prev) =>
                             transactions.pages ? Math.min(transactions.pages, prev + 1) : prev + 1,
                           )
                         }
                         disabled={transactions.page >= transactions.pages}
-                        className="min-w-[120px] flex-1 sm:flex-none"
+                        className="min-w-[120px] flex-1 rounded-full bg-apple-elevated px-4 py-2.5 text-[15px] font-medium text-apple-ink transition-opacity hover:opacity-80 disabled:opacity-40 sm:flex-none"
                       >
                         {t('common.next')}
-                      </Button>
+                      </button>
                     </div>
                   )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </Card>
+        </div>
       </motion.div>
 
       {/* Saved Cards Navigation */}
       {savedCardsData?.recurrent_enabled && (
         <motion.div variants={staggerItem}>
-          <Card interactive onClick={() => navigate('/balance/saved-cards')}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">💳</span>
-                <span className="font-medium text-dark-100">{t('balance.savedCards.title')}</span>
-              </div>
-              <ChevronRightIcon className="h-5 w-5 text-dark-400" />
+          <button
+            type="button"
+            onClick={() => navigate('/balance/saved-cards')}
+            className={`${cardCls} flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-apple-elevated`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">💳</span>
+              <span className="font-medium text-apple-ink">{t('balance.savedCards.title')}</span>
             </div>
-          </Card>
+            <ChevronRightIcon className="h-5 w-5 text-apple-mute" />
+          </button>
         </motion.div>
       )}
     </motion.div>
