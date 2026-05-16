@@ -80,7 +80,7 @@ const CountdownTimer = memo(function CountdownTimer({
             : `1px solid ${g.innerBorder}`,
       }}
     >
-      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
+      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-apple-ink/35">
         <div
           className="flex h-6 w-6 items-center justify-center rounded-[7px]"
           style={{
@@ -96,7 +96,7 @@ const CountdownTimer = memo(function CountdownTimer({
             height="13"
             viewBox="0 0 24 24"
             fill="none"
-            stroke={isExpired ? '#FF3B5C' : isUrgent ? '#FFB800' : g.textSecondary}
+            stroke={isExpired ? '#ff453a' : isUrgent ? '#ff9f0a' : g.textSecondary}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -109,7 +109,7 @@ const CountdownTimer = memo(function CountdownTimer({
         {t('dashboard.remaining')}
       </div>
       {isExpired ? (
-        <div className="text-[18px] font-bold tracking-tight" style={{ color: '#FF3B5C' }}>
+        <div className="text-[18px] font-bold tracking-tight" style={{ color: '#ff453a' }}>
           {t('subscription.expired')}
         </div>
       ) : (
@@ -119,47 +119,47 @@ const CountdownTimer = memo(function CountdownTimer({
               <>
                 <span
                   className="text-[20px] font-bold tracking-tight"
-                  style={{ color: isUrgent ? '#FFB800' : g.text }}
+                  style={{ color: isUrgent ? '#ff9f0a' : g.text }}
                 >
                   {countdown.days}
                 </span>
-                <span className="mr-1 text-[10px] font-medium text-dark-50/25">
+                <span className="mr-1 text-[10px] font-medium text-apple-ink/25">
                   {t('subscription.daysShort')}
                 </span>
               </>
             )}
             <span
               className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? '#FFB800' : g.text }}
+              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
             >
               {String(countdown.hours).padStart(2, '0')}
             </span>
             <span
               className="mx-[-1px] text-[16px] font-bold opacity-30"
-              style={{ color: isUrgent ? '#FFB800' : g.text }}
+              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
             >
               :
             </span>
             <span
               className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? '#FFB800' : g.text }}
+              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
             >
               {String(countdown.minutes).padStart(2, '0')}
             </span>
             <span
               className="mx-[-1px] text-[16px] font-bold opacity-30"
-              style={{ color: isUrgent ? '#FFB800' : g.text }}
+              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
             >
               :
             </span>
             <span
               className="text-[20px] font-bold tracking-tight"
-              style={{ color: isUrgent ? '#FFB800' : g.text }}
+              style={{ color: isUrgent ? '#ff9f0a' : g.text }}
             >
               {String(countdown.seconds).padStart(2, '0')}
             </span>
           </div>
-          <div className="text-[10px] font-medium text-dark-50/25">
+          <div className="text-[10px] font-medium text-apple-ink/25">
             {t('subscription.expiresAt')}: {formattedDate}
           </div>
         </div>
@@ -550,7 +550,7 @@ export default function Subscription() {
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
       </div>
     );
   }
@@ -559,15 +559,15 @@ export default function Subscription() {
     return (
       <div className="mx-auto max-w-lg p-4 text-center">
         <div className="mb-4 text-4xl">😕</div>
-        <h2 className="mb-2 text-xl font-bold text-dark-50">
+        <h2 className="mb-2 text-xl font-bold text-apple-ink">
           {t('subscription.notFound', 'Подписка не найдена')}
         </h2>
-        <p className="mb-4 text-sm text-dark-50/60">
+        <p className="mb-4 text-sm text-apple-ink/60">
           {t('subscription.notFoundDesc', 'Возможно, подписка была удалена или не существует')}
         </p>
         <button
           onClick={() => navigate('/subscriptions')}
-          className="rounded-xl bg-accent-500 px-6 py-2.5 text-sm font-medium text-white"
+          className="rounded-xl bg-apple-blue px-6 py-2.5 text-sm font-medium text-white"
         >
           {t('subscription.backToList', 'Мои подписки')}
         </button>
@@ -599,12 +599,16 @@ export default function Subscription() {
 
           return (
             <div
-              className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
+              className={`relative overflow-hidden rounded-3xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
               style={{
                 border: subscription.is_trial
                   ? '1px solid var(--figma-green-border)'
-                  : isDark ? 'none' : '1px solid rgba(0, 183, 131, 0.18)',
-                boxShadow: isDark ? 'none' : '0 0 0 1px rgba(0,183,131,0.08), 0 4px 32px rgba(0,183,131,0.06)',
+                  : isDark
+                    ? 'none'
+                    : '1px solid rgba(0, 183, 131, 0.18)',
+                boxShadow: isDark
+                  ? 'none'
+                  : '0 0 0 1px rgba(0,183,131,0.08), 0 4px 32px rgba(0,183,131,0.06)',
                 padding: '28px 28px 24px',
               }}
             >
@@ -654,7 +658,7 @@ export default function Subscription() {
                   </div>
 
                   {/* Plan name */}
-                  <h2 className="text-lg font-bold tracking-tight text-dark-50">
+                  <h2 className="text-lg font-bold tracking-tight text-apple-ink">
                     {subscription.tariff_name || t('subscription.currentPlan')}
                   </h2>
                 </div>
@@ -676,8 +680,8 @@ export default function Subscription() {
                     color: subscription.is_active
                       ? zone.mainHex
                       : subscription.is_limited
-                        ? '#FFB800'
-                        : '#FF3B5C',
+                        ? '#ff9f0a'
+                        : '#ff453a',
                   }}
                 >
                   {subscription.is_active
@@ -712,7 +716,7 @@ export default function Subscription() {
                         height="16"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="#FFB800"
+                        stroke="#ff9f0a"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -724,10 +728,10 @@ export default function Subscription() {
                       </svg>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold" style={{ color: '#FFB800' }}>
+                      <p className="text-sm font-semibold" style={{ color: '#ff9f0a' }}>
                         {t('subscription.trafficLimitedTitle')}
                       </p>
-                      <p className="mt-1 text-xs text-dark-400">
+                      <p className="mt-1 text-xs text-apple-mute">
                         {t('subscription.trafficLimitedDescription')}
                       </p>
                     </div>
@@ -741,21 +745,21 @@ export default function Subscription() {
                   className="mb-6 rounded-[14px] p-4"
                   style={{
                     background:
-                      'linear-gradient(135deg, rgba(var(--color-accent-400), 0.08), rgba(var(--color-accent-400), 0.03))',
-                    border: '1px solid rgba(var(--color-accent-400), 0.12)',
+                      'linear-gradient(135deg, rgba(10, 132, 255, 0.08), rgba(10, 132, 255, 0.03))',
+                    border: '1px solid rgba(10, 132, 255, 0.12)',
                   }}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
-                      style={{ background: 'rgba(var(--color-accent-400), 0.12)' }}
+                      style={{ background: 'rgba(10, 132, 255, 0.12)' }}
                     >
                       <svg
                         width="16"
                         height="16"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="rgb(var(--color-accent-400))"
+                        stroke="rgb(10, 132, 255)"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -765,48 +769,45 @@ export default function Subscription() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <div
-                        className="text-sm font-semibold"
-                        style={{ color: 'rgb(var(--color-accent-400))' }}
-                      >
+                      <div className="text-sm font-semibold" style={{ color: 'rgb(10, 132, 255)' }}>
                         {t('subscription.trialInfo.title')}
                       </div>
-                      <div className="mt-1 text-[12px] text-dark-50/40">
+                      <div className="mt-1 text-[12px] text-apple-ink/40">
                         {t('subscription.trialInfo.description')}
                       </div>
                       <div className="mt-3 flex flex-wrap gap-4">
                         <div className="flex items-center gap-1.5">
                           <span
                             className="font-mono text-[12px] font-semibold"
-                            style={{ color: 'rgb(var(--color-accent-400))' }}
+                            style={{ color: 'rgb(10, 132, 255)' }}
                           >
                             {subscription.days_left > 0
                               ? t('subscription.days', { count: subscription.days_left })
                               : `${subscription.hours_left}${t('subscription.hours')} ${subscription.minutes_left}${t('subscription.minutes')}`}
                           </span>
-                          <span className="text-[11px] text-dark-50/30">
+                          <span className="text-[11px] text-apple-ink/30">
                             {t('subscription.trialInfo.remaining')}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span
                             className="font-mono text-[12px] font-semibold"
-                            style={{ color: 'rgb(var(--color-accent-400))' }}
+                            style={{ color: 'rgb(10, 132, 255)' }}
                           >
                             {subscription.traffic_limit_gb || '∞'} {t('common.units.gb')}
                           </span>
-                          <span className="text-[11px] text-dark-50/30">
+                          <span className="text-[11px] text-apple-ink/30">
                             {t('subscription.traffic')}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span
                             className="font-mono text-[12px] font-semibold"
-                            style={{ color: 'rgb(var(--color-accent-400))' }}
+                            style={{ color: 'rgb(10, 132, 255)' }}
                           >
                             {subscription.device_limit === 0 ? '∞' : subscription.device_limit}
                           </span>
-                          <span className="text-[11px] text-dark-50/30">
+                          <span className="text-[11px] text-apple-ink/30">
                             {t('subscription.devices')}
                           </span>
                         </div>
@@ -819,19 +820,22 @@ export default function Subscription() {
               {/* ─── Traffic Progress ─── */}
               <div className="mb-6">
                 <div className="mb-2.5 flex items-center justify-between">
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-dark-50/40">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-apple-ink/40">
                     {t('subscription.traffic')}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[11px] text-dark-50/30">
+                    <span className="font-mono text-[11px] text-apple-ink/30">
                       {isUnlimited
                         ? formatTraffic(usedGb)
                         : `${formatTraffic(usedGb)} / ${formatTraffic(subscription.traffic_limit_gb)}`}
                     </span>
                     <button
-                      onClick={() => { haptic.buttonPressMedium(); refreshTrafficMutation.mutate(); }}
+                      onClick={() => {
+                        haptic.buttonPressMedium();
+                        refreshTrafficMutation.mutate();
+                      }}
                       disabled={refreshTrafficMutation.isPending || trafficRefreshCooldown > 0}
-                      className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-dark-50/30 transition-colors hover:bg-dark-50/[0.05] hover:text-dark-50/50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-apple-ink/30 transition-colors hover:bg-apple-ink/[0.05] hover:text-apple-ink/50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <svg
                         className={`h-3 w-3 ${refreshTrafficMutation.isPending ? 'animate-spin' : ''}`}
@@ -855,7 +859,7 @@ export default function Subscription() {
                 </div>
                 {subscription.traffic_reset_mode &&
                   subscription.traffic_reset_mode !== 'NO_RESET' && (
-                    <div className="mb-2 text-[10px] text-dark-50/25">
+                    <div className="mb-2 text-[10px] text-apple-ink/25">
                       {t(`subscription.trafficReset.${subscription.traffic_reset_mode}`)}
                     </div>
                   )}
@@ -906,21 +910,21 @@ export default function Subscription() {
                     </svg>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold tracking-tight text-dark-50">
+                    <div className="text-sm font-semibold tracking-tight text-apple-ink">
                       {t('dashboard.connectDevice')}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-dark-50/30">
+                    <div className="mt-0.5 text-[11px] text-apple-ink/30">
                       {subscription.device_limit === 0
                         ? t('dashboard.devicesConnectedUnlimited', { used: connectedDevices })
                         : t('dashboard.devicesOfMax', {
-                          used: connectedDevices,
-                          max: subscription.device_limit,
-                        })}
+                            used: connectedDevices,
+                            max: subscription.device_limit,
+                          })}
                     </div>
                     {isAtDeviceLimit && (
                       <div
                         className="mt-1 text-[10px] font-medium"
-                        style={{ color: 'rgb(var(--color-warning-400))' }}
+                        style={{ color: 'rgb(255, 159, 10)' }}
                       >
                         {t('dashboard.deviceLimitReached')}
                       </div>
@@ -928,7 +932,7 @@ export default function Subscription() {
                   </div>
                   {subscription.device_limit === 0 ? (
                     <div
-                      className="flex flex-shrink-0 items-center text-lg text-dark-50/40"
+                      className="flex flex-shrink-0 items-center text-lg text-apple-ink/40"
                       aria-hidden="true"
                     >
                       ∞
@@ -971,7 +975,7 @@ export default function Subscription() {
               {displayedConnectionUrl && !shouldHideConnectionLink && (
                 <div className="mb-5 flex gap-2">
                   <code
-                    className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] px-3 py-2 font-mono text-[11px] text-dark-50/30"
+                    className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] px-3 py-2 font-mono text-[11px] text-apple-ink/30"
                     style={{
                       background: g.codeBg,
                       border: `1px solid ${g.codeBorder}`,
@@ -981,14 +985,17 @@ export default function Subscription() {
                     {displayedConnectionUrl}
                   </code>
                   <button
-                    onClick={() => { haptic.buttonPressMedium(); copyUrl(); }}
+                    onClick={() => {
+                      haptic.buttonPressMedium();
+                      copyUrl();
+                    }}
                     className="flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300"
                     style={{
-                      background: copied ? 'rgba(var(--color-accent-400), 0.12)' : g.innerBorder,
+                      background: copied ? 'rgba(10, 132, 255, 0.12)' : g.innerBorder,
                       border: copied
-                        ? '1px solid rgba(var(--color-accent-400), 0.2)'
+                        ? '1px solid rgba(10, 132, 255, 0.2)'
                         : `1px solid ${g.trackBg}`,
-                      color: copied ? 'rgb(var(--color-accent-400))' : g.textMuted,
+                      color: copied ? 'rgb(10, 132, 255)' : g.textMuted,
                     }}
                     title={t('subscription.copyLink')}
                   >
@@ -1009,14 +1016,14 @@ export default function Subscription() {
               {/* ─── Locations ─── */}
               {subscription.servers && subscription.servers.length > 0 && (
                 <div className="mb-5">
-                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
+                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-apple-ink/35">
                     {t('subscription.locationsLabel')}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {subscription.servers.map((server) => (
                       <span
                         key={server.uuid}
-                        className="inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[11px] font-medium text-dark-50/50"
+                        className="inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[11px] font-medium text-apple-ink/50"
                         style={{
                           background: g.innerBorder,
                           border: `1px solid ${g.trackBg}`,
@@ -1037,14 +1044,14 @@ export default function Subscription() {
               {/* ─── Purchased Traffic Packages ─── */}
               {subscription.traffic_purchases && subscription.traffic_purchases.length > 0 && (
                 <div className="mb-5">
-                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
+                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-apple-ink/35">
                     {t('subscription.purchasedTraffic')}
                   </div>
                   <div className="space-y-2">
                     {subscription.traffic_purchases.map((purchase) => (
                       <div
                         key={purchase.id}
-                        className={`rounded-[12px] p-3 ${isDark ? 'dark-glass-subtle border-transparent' : ''}`}
+                        className={`rounded-[12px] p-3 ${isDark ? 'bg-apple-elevated' : ''}`}
                         style={{
                           background: isDark ? 'transparent' : g.innerBg,
                           border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
@@ -1070,7 +1077,7 @@ export default function Subscription() {
                                 <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                               </svg>
                             </div>
-                            <span className="text-sm font-semibold text-dark-50">
+                            <span className="text-sm font-semibold text-apple-ink">
                               {purchase.traffic_gb} {t('common.units.gb')}
                             </span>
                           </div>
@@ -1078,14 +1085,14 @@ export default function Subscription() {
                             <div
                               className="text-[11px] font-medium"
                               style={{
-                                color: purchase.days_remaining === 0 ? '#FF6B35' : g.textSecondary,
+                                color: purchase.days_remaining === 0 ? '#ff9f0a' : g.textSecondary,
                               }}
                             >
                               {purchase.days_remaining === 0
                                 ? t('subscription.expired')
                                 : t('subscription.days', { count: purchase.days_remaining })}
                             </div>
-                            <div className="mt-0.5 font-mono text-[9px] text-dark-50/20">
+                            <div className="mt-0.5 font-mono text-[9px] text-apple-ink/20">
                               {t('subscription.trafficResetAt')}:{' '}
                               {new Date(purchase.expires_at).toLocaleDateString(undefined, {
                                 day: '2-digit',
@@ -1107,7 +1114,7 @@ export default function Subscription() {
                             }}
                           />
                         </div>
-                        <div className="mt-1 flex justify-between font-mono text-[9px] text-dark-50/20">
+                        <div className="mt-1 flex justify-between font-mono text-[9px] text-apple-ink/20">
                           <span>{new Date(purchase.created_at).toLocaleDateString()}</span>
                           <span>{new Date(purchase.expires_at).toLocaleDateString()}</span>
                         </div>
@@ -1120,24 +1127,27 @@ export default function Subscription() {
               {/* ─── Autopay Toggle ─── */}
               {!subscription.is_trial && !subscription.is_daily && (
                 <div
-                  className={`flex items-center justify-between rounded-[14px] p-3.5 ${isDark ? 'dark-glass-subtle border-transparent' : ''}`}
+                  className={`flex items-center justify-between rounded-[14px] p-3.5 ${isDark ? 'bg-apple-elevated' : ''}`}
                   style={{
                     background: isDark ? 'transparent' : g.innerBg,
                     border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
                   }}
                 >
                   <div>
-                    <div className="text-sm font-semibold text-dark-50">
+                    <div className="text-sm font-semibold text-apple-ink">
                       {t('subscription.autoRenewal')}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-dark-50/30">
+                    <div className="mt-0.5 text-[11px] text-apple-ink/30">
                       {t('subscription.daysBeforeExpiry', {
                         count: subscription.autopay_days_before,
                       })}
                     </div>
                   </div>
                   <button
-                    onClick={() => { haptic.buttonPressMedium(); autopayMutation.mutate(!subscription.autopay_enabled); }}
+                    onClick={() => {
+                      haptic.buttonPressMedium();
+                      autopayMutation.mutate(!subscription.autopay_enabled);
+                    }}
                     disabled={autopayMutation.isPending}
                     className="relative h-7 w-[52px] rounded-full transition-colors duration-300"
                     style={{
@@ -1159,7 +1169,7 @@ export default function Subscription() {
         })()
       ) : (
         <div
-          className={`relative overflow-hidden rounded-3xl py-12 text-center ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
+          className={`relative overflow-hidden rounded-3xl py-12 text-center ${isDark ? 'bg-apple-card' : 'bg-white'}`}
           style={{
             background: isDark ? 'transparent' : g.cardBg,
             border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -1186,14 +1196,14 @@ export default function Subscription() {
               />
             </svg>
           </div>
-          <div className="text-sm text-dark-50/30">{t('subscription.noSubscription')}</div>
+          <div className="text-sm text-apple-ink/30">{t('subscription.noSubscription')}</div>
         </div>
       )}
 
       {/* Daily Subscription Pause */}
       {subscription && subscription.is_daily && !subscription.is_trial && (
         <div
-          className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
+          className={`relative overflow-hidden rounded-3xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
           style={{
             background: isDark ? 'transparent' : g.cardBg,
             border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -1203,10 +1213,10 @@ export default function Subscription() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold tracking-tight text-dark-50">
+              <h2 className="text-base font-bold tracking-tight text-apple-ink">
                 {t('subscription.pause.title')}
               </h2>
-              <div className="mt-1 text-[12px] text-dark-50/35">
+              <div className="mt-1 text-[12px] text-apple-ink/35">
                 {subscription.is_limited
                   ? t('subscription.trafficLimited')
                   : subscription.status === 'disabled'
@@ -1217,22 +1227,25 @@ export default function Subscription() {
               </div>
             </div>
             <button
-              onClick={() => { haptic.buttonPressMedium(); pauseMutation.mutate(); }}
+              onClick={() => {
+                haptic.buttonPressMedium();
+                pauseMutation.mutate();
+              }}
               disabled={pauseMutation.isPending}
               className="rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors duration-300"
               style={{
                 background:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgba(var(--color-accent-400), 0.12)'
+                    ? 'rgba(10, 132, 255, 0.12)'
                     : 'rgba(255,184,0,0.12)',
                 border:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? '1px solid rgba(var(--color-accent-400), 0.2)'
+                    ? '1px solid rgba(10, 132, 255, 0.2)'
                     : '1px solid rgba(255,184,0,0.2)',
                 color:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgb(var(--color-accent-400))'
-                    : '#FFB800',
+                    ? 'rgb(10, 132, 255)'
+                    : '#ff9f0a',
               }}
             >
               {pauseMutation.isPending ? (
@@ -1269,7 +1282,7 @@ export default function Subscription() {
                   style={{
                     background: 'rgba(255,59,92,0.08)',
                     border: '1px solid rgba(255,59,92,0.15)',
-                    color: '#FF3B5C',
+                    color: '#ff453a',
                   }}
                 >
                   {getErrorMessage(pauseMutation.error)}
@@ -1287,14 +1300,14 @@ export default function Subscription() {
               }}
             >
               <div className="flex items-start gap-3">
-                <div className="text-lg" style={{ color: '#FFB800' }}>
+                <div className="text-lg" style={{ color: '#ff9f0a' }}>
                   ⏸️
                 </div>
                 <div>
-                  <div className="text-sm font-semibold" style={{ color: '#FFB800' }}>
+                  <div className="text-sm font-semibold" style={{ color: '#ff9f0a' }}>
                     {t('subscription.pause.pausedInfo')}
                   </div>
-                  <div className="mt-1 text-[12px] text-dark-50/35">
+                  <div className="mt-1 text-[12px] text-apple-ink/35">
                     {t('subscription.pause.pausedDescription')}{' '}
                     {new Date(subscription.end_date).toLocaleDateString()} (
                     {t('subscription.pause.days', { count: subscription.days_left })})
@@ -1321,10 +1334,10 @@ export default function Subscription() {
               return (
                 <div className="mt-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-dark-50/35">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-apple-ink/35">
                       {t('subscription.pause.nextCharge')}
                     </span>
-                    <span className="font-mono text-[12px] font-semibold text-dark-50">
+                    <span className="font-mono text-[12px] font-semibold text-apple-ink">
                       {hours > 0
                         ? `${hours}${t('subscription.pause.hours')} ${minutes}${t('subscription.pause.minutes')}`
                         : `${minutes}${t('subscription.pause.minutes')}`}
@@ -1338,13 +1351,12 @@ export default function Subscription() {
                       className="absolute inset-0 rounded-full transition-[width] duration-500"
                       style={{
                         width: `${progress}%`,
-                        background:
-                          'linear-gradient(90deg, rgb(var(--color-accent-500)), rgb(var(--color-accent-400)))',
+                        background: 'linear-gradient(90deg, rgb(10, 132, 255), rgb(10, 132, 255))',
                       }}
                     />
                   </div>
                   {subscription.daily_price_kopeks && (
-                    <div className="mt-2 text-center text-[11px] text-dark-50/25">
+                    <div className="mt-2 text-center text-[11px] text-apple-ink/25">
                       {t('subscription.pause.willBeCharged')}:{' '}
                       {formatPrice(subscription.daily_price_kopeks)}
                     </div>
@@ -1445,7 +1457,7 @@ export default function Subscription() {
                   </button>
                   <button
                     onClick={() => setShowDeleteSheet(false)}
-                    className="flex-1 rounded-xl border border-dark-700 py-2.5 text-sm font-medium transition-colors hover:bg-dark-700"
+                    className="flex-1 rounded-xl border border-apple-hairline py-2.5 text-sm font-medium transition-colors hover:bg-apple-elevated"
                     style={{ color: g.textSecondary }}
                   >
                     {t('common.cancel', 'Отмена')}
@@ -1462,7 +1474,7 @@ export default function Subscription() {
         !subscription.is_trial &&
         subscription.device_limit !== 0 && (
           <div
-            className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
+            className={`relative overflow-hidden rounded-3xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
             style={{
               background: isDark ? 'transparent' : g.cardBg,
               border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -1470,29 +1482,32 @@ export default function Subscription() {
               padding: '24px 28px',
             }}
           >
-            <h2 className="mb-4 text-base font-bold tracking-tight text-dark-50">
+            <h2 className="mb-4 text-base font-bold tracking-tight text-apple-ink">
               {t('subscription.additionalOptions.title')}
             </h2>
 
             {/* Buy Devices */}
             {!showDeviceTopup ? (
               <button
-                onClick={() => { haptic.buttonPressMedium(); setShowDeviceTopup(true); }}
-                className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                onClick={() => {
+                  haptic.buttonPressMedium();
+                  setShowDeviceTopup(true);
+                }}
+                className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-dark-100">
+                    <div className="font-medium text-apple-ink">
                       {t('subscription.additionalOptions.buyDevices')}
                     </div>
-                    <div className="mt-1 text-sm text-dark-400">
+                    <div className="mt-1 text-sm text-apple-mute">
                       {t('subscription.additionalOptions.currentDeviceLimit', {
                         count: subscription.device_limit,
                       })}
                     </div>
                   </div>
                   <svg
-                    className="h-5 w-5 text-dark-400"
+                    className="h-5 w-5 text-apple-mute"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -1504,13 +1519,16 @@ export default function Subscription() {
               </button>
             ) : (
               <div
-                className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+                className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
               >
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-medium text-dark-100">{t('subscription.buyDevices')}</h3>
+                  <h3 className="font-medium text-apple-ink">{t('subscription.buyDevices')}</h3>
                   <button
-                    onClick={() => { haptic.buttonPressMedium(); setShowDeviceTopup(false); }}
-                    className="text-sm text-dark-400 hover:text-dark-200"
+                    onClick={() => {
+                      haptic.buttonPressMedium();
+                      setShowDeviceTopup(false);
+                    }}
+                    className="text-sm text-apple-mute hover:text-apple-ink"
                   >
                     ✕
                   </button>
@@ -1518,7 +1536,7 @@ export default function Subscription() {
 
                 {/* Check if completely unavailable (no subscription, price not set, etc.) */}
                 {devicePriceData?.available === false ? (
-                  <div className="py-4 text-center text-sm text-dark-400">
+                  <div className="py-4 text-center text-sm text-apple-mute">
                     {devicePriceData.reason ||
                       t('subscription.additionalOptions.devicesUnavailable')}
                   </div>
@@ -1527,15 +1545,18 @@ export default function Subscription() {
                     {/* Device selector - show even at max limit */}
                     <div className="flex items-center justify-center gap-6">
                       <button
-                        onClick={() => { haptic.buttonPressMedium(); setDevicesToAdd(Math.max(1, devicesToAdd - 1)); }}
+                        onClick={() => {
+                          haptic.buttonPressMedium();
+                          setDevicesToAdd(Math.max(1, devicesToAdd - 1));
+                        }}
                         disabled={devicesToAdd <= 1}
                         className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
                       >
                         -
                       </button>
                       <div className="text-center">
-                        <div className="text-4xl font-bold text-dark-100">{devicesToAdd}</div>
-                        <div className="text-sm text-dark-500">
+                        <div className="text-4xl font-bold text-apple-ink">{devicesToAdd}</div>
+                        <div className="text-sm text-apple-mute">
                           {t('subscription.additionalOptions.devicesUnit')}
                         </div>
                       </div>
@@ -1544,7 +1565,7 @@ export default function Subscription() {
                         disabled={
                           devicePriceData?.max_device_limit
                             ? (devicePriceData.current_device_limit || 0) + devicesToAdd >=
-                            devicePriceData.max_device_limit
+                              devicePriceData.max_device_limit
                             : false
                         }
                         className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
@@ -1555,7 +1576,7 @@ export default function Subscription() {
 
                     {/* Show limit info when at or near max */}
                     {devicePriceData?.max_device_limit && (
-                      <div className="text-center text-sm text-dark-400">
+                      <div className="text-center text-sm text-apple-mute">
                         {t('subscription.additionalOptions.currentDeviceLimit', {
                           count: devicePriceData.current_device_limit || subscription.device_limit,
                         })}{' '}
@@ -1569,12 +1590,12 @@ export default function Subscription() {
                     {/* Price info - only when available */}
                     {devicePriceData?.available && devicePriceData.price_per_device_label && (
                       <div className="text-center">
-                        <div className="mb-2 text-sm text-dark-400">
+                        <div className="mb-2 text-sm text-apple-mute">
                           {/* Show original price with strikethrough if discount */}
                           {devicePriceData.discount_percent &&
-                            devicePriceData.discount_percent > 0 ? (
+                          devicePriceData.discount_percent > 0 ? (
                             <span>
-                              <span className="text-dark-500 line-through">
+                              <span className="text-apple-mute line-through">
                                 {formatPrice(devicePriceData.original_price_per_device_kopeks || 0)}
                               </span>
                               <span className="mx-1">{devicePriceData.price_per_device_label}</span>
@@ -1589,23 +1610,23 @@ export default function Subscription() {
                         {devicePriceData.discount_percent &&
                           devicePriceData.discount_percent > 0 && (
                             <div className="mb-2">
-                              <span className="inline-block rounded-full bg-success-500/20 px-2.5 py-0.5 text-sm font-medium text-success-400">
+                              <span className="inline-block rounded-full bg-apple-green/20 px-2.5 py-0.5 text-sm font-medium text-apple-green">
                                 -{devicePriceData.discount_percent}%
                               </span>
                             </div>
                           )}
                         {/* Total price - show as free if 100% discount or 0 */}
                         {devicePriceData.total_price_kopeks === 0 ? (
-                          <div className="text-2xl font-bold text-success-400">
+                          <div className="text-2xl font-bold text-apple-green">
                             {t('subscription.switchTariff.free')}
                           </div>
                         ) : (
-                          <div className="text-2xl font-bold text-accent-400">
+                          <div className="text-2xl font-bold text-apple-blue">
                             {/* Show original total with strikethrough if discount */}
                             {devicePriceData.discount_percent &&
                               devicePriceData.discount_percent > 0 &&
                               devicePriceData.base_total_price_kopeks && (
-                                <span className="mr-2 text-lg text-dark-500 line-through">
+                                <span className="mr-2 text-lg text-apple-mute line-through">
                                   {formatPrice(devicePriceData.base_total_price_kopeks)}
                                 </span>
                               )}
@@ -1631,7 +1652,10 @@ export default function Subscription() {
                       )}
 
                     <button
-                      onClick={() => { haptic.buttonPressMedium(); devicePurchaseMutation.mutate(); }}
+                      onClick={() => {
+                        haptic.buttonPressMedium();
+                        devicePurchaseMutation.mutate();
+                      }}
                       disabled={
                         devicePurchaseMutation.isPending ||
                         !devicePriceData?.available ||
@@ -1653,7 +1677,7 @@ export default function Subscription() {
                     </button>
 
                     {devicePurchaseMutation.isError && (
-                      <div className="text-center text-sm text-error-400">
+                      <div className="text-center text-sm text-apple-red">
                         {getErrorMessage(devicePurchaseMutation.error)}
                       </div>
                     )}
@@ -1666,20 +1690,23 @@ export default function Subscription() {
             <div className="mt-4">
               {!showDeviceReduction ? (
                 <button
-                  onClick={() => { haptic.buttonPressMedium(); setShowDeviceReduction(true); }}
-                  className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                  onClick={() => {
+                    haptic.buttonPressMedium();
+                    setShowDeviceReduction(true);
+                  }}
+                  className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium text-dark-100">
+                      <div className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.reduceDevices')}
                       </div>
-                      <div className="mt-1 text-sm text-dark-400">
+                      <div className="mt-1 text-sm text-apple-mute">
                         {t('subscription.additionalOptions.reduceDevicesDescription')}
                       </div>
                     </div>
                     <svg
-                      className="h-5 w-5 text-dark-400"
+                      className="h-5 w-5 text-apple-mute"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1691,22 +1718,22 @@ export default function Subscription() {
                 </button>
               ) : (
                 <div
-                  className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+                  className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-medium text-dark-100">
+                    <h3 className="font-medium text-apple-ink">
                       {t('subscription.additionalOptions.reduceDevicesTitle')}
                     </h3>
                     <button
                       onClick={() => setShowDeviceReduction(false)}
-                      className="text-sm text-dark-400 hover:text-dark-200"
+                      className="text-sm text-apple-mute hover:text-apple-ink"
                     >
                       ✕
                     </button>
                   </div>
 
                   {deviceReductionInfo?.available === false ? (
-                    <div className="py-4 text-center text-sm text-dark-400">
+                    <div className="py-4 text-center text-sm text-apple-mute">
                       {deviceReductionInfo.reason ||
                         t('subscription.additionalOptions.reduceUnavailable')}
                     </div>
@@ -1738,10 +1765,10 @@ export default function Subscription() {
                           -
                         </button>
                         <div className="text-center">
-                          <div className="text-4xl font-bold text-dark-100">
+                          <div className="text-4xl font-bold text-apple-ink">
                             {targetDeviceLimit}
                           </div>
-                          <div className="text-sm text-dark-500">
+                          <div className="text-sm text-apple-mute">
                             {t('subscription.additionalOptions.devicesUnit')}
                           </div>
                         </div>
@@ -1764,7 +1791,7 @@ export default function Subscription() {
                       </div>
 
                       {/* Info */}
-                      <div className="space-y-1 text-center text-sm text-dark-400">
+                      <div className="space-y-1 text-center text-sm text-apple-mute">
                         <div>
                           {t('subscription.additionalOptions.currentDeviceLimit', {
                             count: deviceReductionInfo.current_device_limit,
@@ -1785,16 +1812,16 @@ export default function Subscription() {
                       {/* Warning if connected devices block reduction */}
                       {deviceReductionInfo.connected_devices_count >
                         deviceReductionInfo.min_device_limit && (
-                          <div className="rounded-lg bg-warning-500/10 p-3 text-center text-sm text-warning-400">
-                            {t('subscription.additionalOptions.disconnectDevicesFirst', {
-                              count: deviceReductionInfo.connected_devices_count,
-                            })}
-                          </div>
-                        )}
+                        <div className="rounded-lg bg-apple-amber/10 p-3 text-center text-sm text-apple-amber">
+                          {t('subscription.additionalOptions.disconnectDevicesFirst', {
+                            count: deviceReductionInfo.connected_devices_count,
+                          })}
+                        </div>
+                      )}
 
                       {/* New limit preview */}
                       <div className="text-center">
-                        <div className="text-sm text-dark-400">
+                        <div className="text-sm text-apple-mute">
                           {t('subscription.additionalOptions.newDeviceLimit', {
                             count: targetDeviceLimit,
                           })}
@@ -1802,7 +1829,10 @@ export default function Subscription() {
                       </div>
 
                       <button
-                        onClick={() => { haptic.buttonPressMedium(); deviceReductionMutation.mutate(); }}
+                        onClick={() => {
+                          haptic.buttonPressMedium();
+                          deviceReductionMutation.mutate();
+                        }}
                         disabled={
                           deviceReductionMutation.isPending ||
                           targetDeviceLimit >= deviceReductionInfo.current_device_limit ||
@@ -1822,14 +1852,14 @@ export default function Subscription() {
                       </button>
 
                       {deviceReductionMutation.isError && (
-                        <div className="text-center text-sm text-error-400">
+                        <div className="text-center text-sm text-apple-red">
                           {getErrorMessage(deviceReductionMutation.error)}
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="flex items-center justify-center py-4">
-                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-accent-400/30 border-t-accent-400" />
+                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-apple-blue/30 border-t-apple-blue" />
                     </div>
                   )}
                 </div>
@@ -1841,15 +1871,18 @@ export default function Subscription() {
               <div className="mt-4">
                 {!showTrafficTopup ? (
                   <button
-                    onClick={() => { haptic.buttonPressMedium(); setShowTrafficTopup(true); }}
-                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                    onClick={() => {
+                      haptic.buttonPressMedium();
+                      setShowTrafficTopup(true);
+                    }}
+                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium text-dark-100">
+                        <div className="font-medium text-apple-ink">
                           {t('subscription.additionalOptions.buyTraffic')}
                         </div>
-                        <div className="mt-1 text-sm text-dark-400">
+                        <div className="mt-1 text-sm text-apple-mute">
                           {t('subscription.additionalOptions.currentTrafficLimit', {
                             limit: subscription.traffic_limit_gb,
                             used: subscription.traffic_used_gb.toFixed(1),
@@ -1857,7 +1890,7 @@ export default function Subscription() {
                         </div>
                       </div>
                       <svg
-                        className="h-5 w-5 text-dark-400"
+                        className="h-5 w-5 text-apple-mute"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -1869,10 +1902,10 @@ export default function Subscription() {
                   </button>
                 ) : (
                   <div
-                    className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+                    className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-medium text-dark-100">
+                      <h3 className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.buyTrafficTitle')}
                       </h3>
                       <button
@@ -1880,20 +1913,20 @@ export default function Subscription() {
                           setShowTrafficTopup(false);
                           setSelectedTrafficPackage(null);
                         }}
-                        className="text-sm text-dark-400 hover:text-dark-200"
+                        className="text-sm text-apple-mute hover:text-apple-ink"
                       >
                         ✕
                       </button>
                     </div>
 
                     <div
-                      className={`mb-4 rounded-lg p-2 text-xs ${isDark ? 'bg-dark-700/30 text-dark-500' : 'bg-champagne-300/40 text-champagne-600'}`}
+                      className={`mb-4 rounded-lg p-2 text-xs ${isDark ? 'bg-apple-elevated/30 text-apple-mute' : 'bg-champagne-300/40 text-champagne-600'}`}
                     >
                       ⚠️ {t('subscription.additionalOptions.trafficWarning')}
                     </div>
 
                     {!trafficPackages || trafficPackages.length === 0 ? (
-                      <div className="py-4 text-center text-sm text-dark-400">
+                      <div className="py-4 text-center text-sm text-apple-mute">
                         {t('subscription.additionalOptions.trafficUnavailable')}
                       </div>
                     ) : (
@@ -1903,14 +1936,15 @@ export default function Subscription() {
                             <button
                               key={pkg.gb}
                               onClick={() => setSelectedTrafficPackage(pkg.gb)}
-                              className={`rounded-xl border p-4 text-center transition-all ${selectedTrafficPackage === pkg.gb
-                                  ? 'border-accent-500 bg-accent-500/10'
+                              className={`rounded-xl border p-4 text-center transition-all ${
+                                selectedTrafficPackage === pkg.gb
+                                  ? 'border-apple-blue bg-apple-blue/10'
                                   : isDark
-                                    ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                                    ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline'
                                     : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
-                                }`}
+                              }`}
                             >
-                              <div className="text-lg font-semibold text-dark-100">
+                              <div className="text-lg font-semibold text-apple-ink">
                                 {pkg.is_unlimited
                                   ? '♾️ ' + t('subscription.additionalOptions.unlimited')
                                   : `${pkg.gb} ${t('common.units.gb')}`}
@@ -1918,18 +1952,18 @@ export default function Subscription() {
                               {/* Discount badge */}
                               {pkg.discount_percent && pkg.discount_percent > 0 && (
                                 <div className="mb-1">
-                                  <span className="inline-block rounded-full bg-success-500/20 px-2 py-0.5 text-xs font-medium text-success-400">
+                                  <span className="inline-block rounded-full bg-apple-green/20 px-2 py-0.5 text-xs font-medium text-apple-green">
                                     -{pkg.discount_percent}%
                                   </span>
                                 </div>
                               )}
                               {/* Price with original strikethrough if discount */}
-                              <div className="font-medium text-accent-400">
+                              <div className="font-medium text-apple-blue">
                                 {pkg.discount_percent &&
-                                  pkg.discount_percent > 0 &&
-                                  pkg.base_price_kopeks ? (
+                                pkg.discount_percent > 0 &&
+                                pkg.base_price_kopeks ? (
                                   <>
-                                    <span className="mr-1 text-sm text-dark-500 line-through">
+                                    <span className="mr-1 text-sm text-apple-mute line-through">
                                       {formatPrice(pkg.base_price_kopeks)}
                                     </span>
                                     {formatPrice(pkg.price_kopeks)}
@@ -1995,7 +2029,7 @@ export default function Subscription() {
                           })()}
 
                         {trafficPurchaseMutation.isError && (
-                          <div className="text-center text-sm text-error-400">
+                          <div className="text-center text-sm text-apple-red">
                             {getErrorMessage(trafficPurchaseMutation.error)}
                           </div>
                         )}
@@ -2011,20 +2045,23 @@ export default function Subscription() {
               <div className="mt-4">
                 {!showServerManagement ? (
                   <button
-                    onClick={() => { haptic.buttonPressMedium(); setShowServerManagement(true); }}
-                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                    onClick={() => {
+                      haptic.buttonPressMedium();
+                      setShowServerManagement(true);
+                    }}
+                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium text-dark-100">
+                        <div className="font-medium text-apple-ink">
                           {t('subscription.additionalOptions.manageServers')}
                         </div>
-                        <div className="mt-1 text-sm text-dark-400">
+                        <div className="mt-1 text-sm text-apple-mute">
                           {t('subscription.servers', { count: subscription.servers?.length || 0 })}
                         </div>
                       </div>
                       <svg
-                        className="h-5 w-5 text-dark-400"
+                        className="h-5 w-5 text-apple-mute"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -2036,10 +2073,10 @@ export default function Subscription() {
                   </button>
                 ) : (
                   <div
-                    className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+                    className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-medium text-dark-100">
+                      <h3 className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.manageServersTitle')}
                       </h3>
                       <button
@@ -2047,7 +2084,7 @@ export default function Subscription() {
                           setShowServerManagement(false);
                           setSelectedServersToUpdate([]);
                         }}
-                        className="text-sm text-dark-400 hover:text-dark-200"
+                        className="text-sm text-apple-mute hover:text-apple-ink"
                       >
                         ✕
                       </button>
@@ -2055,18 +2092,18 @@ export default function Subscription() {
 
                     {countriesLoading ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
                       </div>
                     ) : countriesData && countriesData.countries.length > 0 ? (
                       <div className="space-y-4">
                         <div
-                          className={`rounded-lg p-2 text-xs ${isDark ? 'bg-dark-700/30 text-dark-500' : 'bg-champagne-300/40 text-champagne-600'}`}
+                          className={`rounded-lg p-2 text-xs ${isDark ? 'bg-apple-elevated/30 text-apple-mute' : 'bg-champagne-300/40 text-champagne-600'}`}
                         >
                           {t('subscription.serverManagement.statusLegend')}
                         </div>
 
                         {countriesData.discount_percent > 0 && (
-                          <div className="rounded-lg border border-success-500/30 bg-success-500/10 p-2 text-xs text-success-400">
+                          <div className="rounded-lg border border-apple-green/30 bg-apple-green/10 p-2 text-xs text-apple-green">
                             🎁{' '}
                             {t('subscription.serverManagement.discountBanner', {
                               percent: countriesData.discount_percent,
@@ -2096,16 +2133,17 @@ export default function Subscription() {
                                     }
                                   }}
                                   disabled={!country.is_available && !isCurrentlyConnected}
-                                  className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${isSelected
+                                  className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${
+                                    isSelected
                                       ? willBeAdded
-                                        ? 'border-success-500 bg-success-500/10'
-                                        : 'border-accent-500 bg-accent-500/10'
+                                        ? 'border-apple-green bg-apple-green/10'
+                                        : 'border-apple-blue bg-apple-blue/10'
                                       : willBeRemoved
-                                        ? 'border-error-500/50 bg-error-500/5'
+                                        ? 'border-apple-red/50 bg-apple-red/5'
                                         : isDark
-                                          ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                                          ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline'
                                           : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
-                                    } ${!country.is_available && !isCurrentlyConnected ? 'cursor-not-allowed opacity-50' : ''}`}
+                                  } ${!country.is_available && !isCurrentlyConnected ? 'cursor-not-allowed opacity-50' : ''}`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <span className="text-lg">
@@ -2118,27 +2156,27 @@ export default function Subscription() {
                                             : '⚪'}
                                     </span>
                                     <div>
-                                      <div className="flex items-center gap-2 font-medium text-dark-100">
+                                      <div className="flex items-center gap-2 font-medium text-apple-ink">
                                         {country.name}
                                         {country.has_discount && !isCurrentlyConnected && (
-                                          <span className="rounded bg-success-500/20 px-1.5 py-0.5 text-xs text-success-400">
+                                          <span className="rounded bg-apple-green/20 px-1.5 py-0.5 text-xs text-apple-green">
                                             -{country.discount_percent}%
                                           </span>
                                         )}
                                       </div>
                                       {willBeAdded && (
-                                        <div className="text-xs text-success-400">
+                                        <div className="text-xs text-apple-green">
                                           +{formatPrice(country.price_kopeks)}{' '}
                                           {t('subscription.serverManagement.forDays', {
                                             days: countriesData.days_left,
                                           })}
                                           {country.has_discount && (
-                                            <span className="ml-1 text-dark-500 line-through">
+                                            <span className="ml-1 text-apple-mute line-through">
                                               {formatPrice(
                                                 Math.round(
                                                   (country.base_price_kopeks *
                                                     countriesData.days_left) /
-                                                  30,
+                                                    30,
                                                 ),
                                               )}
                                             </span>
@@ -2146,18 +2184,18 @@ export default function Subscription() {
                                         </div>
                                       )}
                                       {!willBeAdded && !isCurrentlyConnected && (
-                                        <div className="text-xs text-dark-500">
+                                        <div className="text-xs text-apple-mute">
                                           {formatPrice(country.price_per_month_kopeks)}
                                           {t('subscription.serverManagement.perMonth')}
                                           {country.has_discount && (
-                                            <span className="ml-1 text-dark-600 line-through">
+                                            <span className="ml-1 text-apple-faint line-through">
                                               {formatPrice(country.base_price_kopeks)}
                                             </span>
                                           )}
                                         </div>
                                       )}
                                       {!country.is_available && !isCurrentlyConnected && (
-                                        <div className="text-xs text-dark-500">
+                                        <div className="text-xs text-apple-mute">
                                           {t('subscription.serverManagement.unavailable')}
                                         </div>
                                       )}
@@ -2201,24 +2239,24 @@ export default function Subscription() {
 
                           return hasChanges ? (
                             <div
-                              className={`space-y-3 border-t pt-3 ${isDark ? 'border-dark-700/50' : 'border-champagne-300/60'}`}
+                              className={`space-y-3 border-t pt-3 ${isDark ? 'border-apple-hairline/50' : 'border-champagne-300/60'}`}
                             >
                               {added.length > 0 && (
                                 <div className="text-sm">
-                                  <span className="text-success-400">
+                                  <span className="text-apple-green">
                                     {t('subscription.serverManagement.toAdd')}
                                   </span>{' '}
-                                  <span className="text-dark-300">
+                                  <span className="text-apple-mute">
                                     {addedServers.map((s) => s.name).join(', ')}
                                   </span>
                                 </div>
                               )}
                               {removed.length > 0 && (
                                 <div className="text-sm">
-                                  <span className="text-error-400">
+                                  <span className="text-apple-red">
                                     {t('subscription.serverManagement.toDisconnect')}
                                   </span>{' '}
-                                  <span className="text-dark-300">
+                                  <span className="text-apple-mute">
                                     {countriesData.countries
                                       .filter((c) => removed.includes(c.uuid))
                                       .map((s) => s.name)
@@ -2228,10 +2266,10 @@ export default function Subscription() {
                               )}
                               {totalCost > 0 && (
                                 <div className="text-center">
-                                  <div className="text-sm text-dark-400">
+                                  <div className="text-sm text-apple-mute">
                                     {t('subscription.serverManagement.paymentProrated')}
                                   </div>
-                                  <div className="text-xl font-bold text-accent-400">
+                                  <div className="text-xl font-bold text-apple-blue">
                                     {formatPrice(totalCost)}
                                   </div>
                                 </div>
@@ -2265,20 +2303,20 @@ export default function Subscription() {
                               </button>
                             </div>
                           ) : (
-                            <div className="py-2 text-center text-sm text-dark-500">
+                            <div className="py-2 text-center text-sm text-apple-mute">
                               {t('subscription.serverManagement.selectServersHint')}
                             </div>
                           );
                         })()}
 
                         {updateCountriesMutation.isError && (
-                          <div className="text-center text-sm text-error-400">
+                          <div className="text-center text-sm text-apple-red">
                             {getErrorMessage(updateCountriesMutation.error)}
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="py-4 text-center text-sm text-dark-400">
+                      <div className="py-4 text-center text-sm text-apple-mute">
                         {t('subscription.serverManagement.noServersAvailable')}
                       </div>
                     )}
@@ -2312,7 +2350,7 @@ export default function Subscription() {
                   <div className="font-medium text-amber-400">
                     {t('subscription.revoke.button')}
                   </div>
-                  <div className="mt-1 text-sm text-dark-400">
+                  <div className="mt-1 text-sm text-apple-mute">
                     {revokeCooldown > 0
                       ? t('subscription.revoke.cooldown', {
                           minutes: Math.floor(revokeCooldown / 60),
@@ -2351,7 +2389,7 @@ export default function Subscription() {
       {/* My Devices Section */}
       {subscription && (
         <div
-          className={`relative overflow-hidden rounded-3xl ${isDark ? 'dark-glass border-transparent' : 'bg-white'}`}
+          className={`relative overflow-hidden rounded-3xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
           style={{
             background: isDark ? 'transparent' : g.cardBg,
             border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -2360,7 +2398,7 @@ export default function Subscription() {
           }}
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-bold tracking-tight text-dark-50">
+            <h2 className="text-base font-bold tracking-tight text-apple-ink">
               {t('subscription.myDevices')}
             </h2>
             {devicesData && devicesData.devices.length > 0 && (
@@ -2372,7 +2410,7 @@ export default function Subscription() {
                 }}
                 disabled={deleteAllDevicesMutation.isPending}
                 className="text-[11px] font-medium transition-colors"
-                style={{ color: '#FF3B5C' }}
+                style={{ color: '#ff453a' }}
               >
                 {t('subscription.deleteAllDevices')}
               </button>
@@ -2384,14 +2422,14 @@ export default function Subscription() {
               <div
                 className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
                 style={{
-                  borderColor: 'rgb(var(--color-accent-500))',
+                  borderColor: 'rgb(10, 132, 255)',
                   borderTopColor: 'transparent',
                 }}
               />
             </div>
           ) : devicesData && devicesData.devices.length > 0 ? (
             <div className="space-y-2">
-              <div className="mb-2 font-mono text-[11px] text-dark-50/30">
+              <div className="mb-2 font-mono text-[11px] text-apple-ink/30">
                 {devicesData.device_limit === 0
                   ? `${devicesData.total} · ∞`
                   : `${devicesData.total} / ${t('subscription.devices', { count: devicesData.device_limit })}`}
@@ -2399,7 +2437,7 @@ export default function Subscription() {
               {devicesData.devices.map((device) => (
                 <div
                   key={device.hwid}
-                  className={`flex items-center justify-between rounded-[12px] p-3.5 ${isDark ? 'dark-glass-subtle border-transparent' : ''}`}
+                  className={`flex items-center justify-between rounded-[12px] p-3.5 ${isDark ? 'bg-apple-elevated' : ''}`}
                   style={{
                     background: isDark ? 'transparent' : g.innerBg,
                     border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
@@ -2425,12 +2463,12 @@ export default function Subscription() {
                       </svg>
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-dark-50">
+                      <div className="text-sm font-semibold text-apple-ink">
                         {device.device_model || device.platform}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[11px] text-dark-50/30">
+                      <div className="flex items-center gap-1.5 text-[11px] text-apple-ink/30">
                         <span>{device.platform}</span>
-                        <span className="font-mono text-dark-50/20">
+                        <span className="font-mono text-apple-ink/20">
                           {device.hwid.slice(0, 8).toUpperCase()}
                         </span>
                       </div>
@@ -2465,7 +2503,7 @@ export default function Subscription() {
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-[12px] text-dark-50/25">
+            <div className="py-8 text-center text-[12px] text-apple-ink/25">
               {t('subscription.noDevices')}
             </div>
           )}
