@@ -809,6 +809,23 @@ export default function Subscription() {
                             ? `${trafficRefreshCooldown}s`
                             : t('common.refresh')}
                         </button>
+                        {subscription.traffic_limit_gb > 0 &&
+                          (subscription.is_active || subscription.is_limited) &&
+                          !subscription.is_trial && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                haptic.buttonPressMedium();
+                                setShowDeviceReduction(false);
+                                setShowDeviceTopup(false);
+                                setShowServerManagement(false);
+                                setShowTrafficTopup(true);
+                              }}
+                              className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
+                            >
+                              {t('subscription.additionalOptions.buyTraffic', 'Докупить')}
+                            </button>
+                          )}
                       </div>
                     </div>
                     {subscription.traffic_reset_mode &&
@@ -827,22 +844,8 @@ export default function Subscription() {
                       />
                     </div>
                   </div>
-                  {/* Devices row → connection */}
-                  <button
-                    type="button"
-                    disabled={isAtDeviceLimit}
-                    onClick={() => {
-                      haptic.buttonPressMedium();
-                      if (isAtDeviceLimit) {
-                        haptic.error();
-                        return;
-                      }
-                      navigate(
-                        subscriptionId ? `/connection?sub=${subscriptionId}` : '/connection',
-                      );
-                    }}
-                    className="flex w-full items-center justify-between gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated disabled:cursor-not-allowed disabled:opacity-50"
-                  >
+                  {/* Devices row */}
+                  <div className="flex items-center justify-between gap-3 border-t border-apple-hairline p-4">
                     <div className="min-w-0">
                       <div className="text-[15px] text-apple-ink">{t('subscription.devices')}</div>
                       <div className="mt-0.5 text-[13px] text-apple-mute">
@@ -859,42 +862,107 @@ export default function Subscription() {
                         </div>
                       )}
                     </div>
-                    <span className="shrink-0 text-[13px] font-medium text-apple-blue">
-                      {t('dashboard.connectDevice')}
-                    </span>
-                  </button>
+                    {(subscription.is_active || subscription.is_limited) &&
+                      !subscription.is_trial &&
+                      subscription.device_limit !== 0 && (
+                        <div className="flex shrink-0 items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              haptic.buttonPressMedium();
+                              setShowDeviceTopup(false);
+                              setShowTrafficTopup(false);
+                              setShowServerManagement(false);
+                              setShowDeviceReduction(true);
+                            }}
+                            className="text-[13px] font-medium text-apple-mute transition-opacity hover:opacity-80"
+                          >
+                            {t('subscription.additionalOptions.reduceDevices', 'Уменьшить')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              haptic.buttonPressMedium();
+                              setShowDeviceReduction(false);
+                              setShowTrafficTopup(false);
+                              setShowServerManagement(false);
+                              setShowDeviceTopup(true);
+                            }}
+                            className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
+                          >
+                            {t('subscription.additionalOptions.buyDevices', 'Добавить')}
+                          </button>
+                        </div>
+                      )}
+                  </div>
                 </div>
               </div>
 
-              {/* ─── Connection link ─── */}
-              {displayedConnectionUrl && !shouldHideConnectionLink && (
+              {/* ─── Подключение ─── */}
+              {(subscription.subscription_url ||
+                (displayedConnectionUrl && !shouldHideConnectionLink)) && (
                 <div>
                   <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
-                    {t('subscription.copyLink')}
+                    {t('subscription.connectionLabel', 'Подключение')}
                   </div>
-                  <div className="rounded-2xl bg-apple-card p-4">
-                    <div className="flex gap-2">
-                      <code
-                        className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
-                        title={displayedConnectionUrl}
-                      >
-                        {displayedConnectionUrl}
-                      </code>
+                  <div className="overflow-hidden rounded-2xl bg-apple-card">
+                    {displayedConnectionUrl && !shouldHideConnectionLink && (
+                      <div className="p-4">
+                        <div className="flex gap-2">
+                          <code
+                            className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
+                            title={displayedConnectionUrl}
+                          >
+                            {displayedConnectionUrl}
+                          </code>
+                          <button
+                            onClick={() => {
+                              haptic.buttonPressMedium();
+                              copyUrl();
+                            }}
+                            className="flex items-center rounded-[10px] px-3.5 transition-colors"
+                            style={{
+                              background: copied ? 'rgba(10,132,255,0.15)' : '#2c2c2e',
+                              color: copied ? '#0a84ff' : '#98989d',
+                            }}
+                            title={t('subscription.copyLink')}
+                          >
+                            {copied ? <CheckIcon /> : <CopyIcon />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {subscription.subscription_url && (
                       <button
+                        type="button"
+                        disabled={isAtDeviceLimit}
                         onClick={() => {
                           haptic.buttonPressMedium();
-                          copyUrl();
+                          if (isAtDeviceLimit) {
+                            haptic.error();
+                            return;
+                          }
+                          navigate(
+                            subscriptionId ? `/connection?sub=${subscriptionId}` : '/connection',
+                          );
                         }}
-                        className="flex items-center rounded-[10px] px-3.5 transition-colors"
-                        style={{
-                          background: copied ? 'rgba(10,132,255,0.15)' : '#2c2c2e',
-                          color: copied ? '#0a84ff' : '#98989d',
-                        }}
-                        title={t('subscription.copyLink')}
+                        className={`flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-apple-elevated disabled:cursor-not-allowed disabled:opacity-50 ${
+                          displayedConnectionUrl && !shouldHideConnectionLink
+                            ? 'border-t border-apple-hairline'
+                            : ''
+                        }`}
                       >
-                        {copied ? <CheckIcon /> : <CopyIcon />}
+                        <div className="min-w-0">
+                          <div className="text-[15px] text-apple-ink">
+                            {t('dashboard.connectDevice')}
+                          </div>
+                          <div className="mt-0.5 text-[13px] text-apple-faint">
+                            {t('connection.openHint', 'Открыть в приложении · QR-код')}
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-[18px] text-apple-faint">›</span>
                       </button>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -902,8 +970,27 @@ export default function Subscription() {
               {/* ─── Locations ─── */}
               {subscription.servers && subscription.servers.length > 0 && (
                 <div>
-                  <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
-                    {t('subscription.locationsLabel')}
+                  <div className="mb-2.5 flex items-center justify-between px-1.5">
+                    <span className="text-[13px] font-semibold text-apple-mute">
+                      {t('subscription.locationsLabel')}
+                    </span>
+                    {!isTariffsMode &&
+                      (subscription.is_active || subscription.is_limited) &&
+                      !subscription.is_trial && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            haptic.buttonPressMedium();
+                            setShowDeviceTopup(false);
+                            setShowDeviceReduction(false);
+                            setShowTrafficTopup(false);
+                            setShowServerManagement(true);
+                          }}
+                          className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
+                        >
+                          {t('subscription.additionalOptions.manageServers', 'Управление')}
+                        </button>
+                      )}
                   </div>
                   <div className="rounded-2xl bg-apple-card p-4">
                     <div className="flex flex-wrap gap-1.5">
@@ -1314,59 +1401,17 @@ export default function Subscription() {
           </div>
         )}
 
-      {/* Additional Options (Buy Devices) */}
+      {/* Top-up / management forms — triggered from the Использование & Локации
+          actions; render only when one is open */}
       {subscription &&
         (subscription.is_active || subscription.is_limited) &&
         !subscription.is_trial &&
-        subscription.device_limit !== 0 && (
-          <div
-            className={`relative overflow-hidden rounded-2xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
-            style={{
-              background: isDark ? 'transparent' : g.cardBg,
-              border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
-              boxShadow: isDark ? 'none' : g.shadow,
-              padding: '24px 28px',
-            }}
-          >
-            <h2 className="mb-4 text-base font-bold tracking-tight text-apple-ink">
-              {t('subscription.additionalOptions.title')}
-            </h2>
-
+        subscription.device_limit !== 0 &&
+        (showDeviceTopup || showDeviceReduction || showTrafficTopup || showServerManagement) && (
+          <div className="space-y-3">
             {/* Buy Devices */}
-            {!showDeviceTopup ? (
-              <button
-                onClick={() => {
-                  haptic.buttonPressMedium();
-                  setShowDeviceTopup(true);
-                }}
-                className={
-                  'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
-                }
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-apple-ink">
-                      {t('subscription.additionalOptions.buyDevices')}
-                    </div>
-                    <div className="mt-1 text-sm text-apple-mute">
-                      {t('subscription.additionalOptions.currentDeviceLimit', {
-                        count: subscription.device_limit,
-                      })}
-                    </div>
-                  </div>
-                  <svg
-                    className="h-5 w-5 text-apple-mute"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
-            ) : (
-              <div className={'rounded-xl bg-apple-elevated p-5'}>
+            {showDeviceTopup && (
+              <div className={'rounded-2xl bg-apple-card p-5'}>
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-medium text-apple-ink">{t('subscription.buyDevices')}</h3>
                   <button
@@ -1533,39 +1578,9 @@ export default function Subscription() {
             )}
 
             {/* Reduce Devices */}
-            <div className="mt-4">
-              {!showDeviceReduction ? (
-                <button
-                  onClick={() => {
-                    haptic.buttonPressMedium();
-                    setShowDeviceReduction(true);
-                  }}
-                  className={
-                    'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
-                  }
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-apple-ink">
-                        {t('subscription.additionalOptions.reduceDevices')}
-                      </div>
-                      <div className="mt-1 text-sm text-apple-mute">
-                        {t('subscription.additionalOptions.reduceDevicesDescription')}
-                      </div>
-                    </div>
-                    <svg
-                      className="h-5 w-5 text-apple-mute"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </button>
-              ) : (
-                <div className={'rounded-xl bg-apple-elevated p-5'}>
+            <div>
+              {showDeviceReduction && (
+                <div className={'rounded-2xl bg-apple-card p-5'}>
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-medium text-apple-ink">
                       {t('subscription.additionalOptions.reduceDevicesTitle')}
@@ -1714,42 +1729,9 @@ export default function Subscription() {
 
             {/* Buy Traffic */}
             {subscription.traffic_limit_gb > 0 && (
-              <div className="mt-4">
-                {!showTrafficTopup ? (
-                  <button
-                    onClick={() => {
-                      haptic.buttonPressMedium();
-                      setShowTrafficTopup(true);
-                    }}
-                    className={
-                      'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
-                    }
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-apple-ink">
-                          {t('subscription.additionalOptions.buyTraffic')}
-                        </div>
-                        <div className="mt-1 text-sm text-apple-mute">
-                          {t('subscription.additionalOptions.currentTrafficLimit', {
-                            limit: subscription.traffic_limit_gb,
-                            used: subscription.traffic_used_gb.toFixed(1),
-                          })}
-                        </div>
-                      </div>
-                      <svg
-                        className="h-5 w-5 text-apple-mute"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </button>
-                ) : (
-                  <div className={'rounded-xl bg-apple-elevated p-5'}>
+              <div>
+                {showTrafficTopup && (
+                  <div className={'rounded-2xl bg-apple-card p-5'}>
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.buyTrafficTitle')}
@@ -1888,39 +1870,9 @@ export default function Subscription() {
 
             {/* Server Management - only in classic mode */}
             {!isTariffsMode && (
-              <div className="mt-4">
-                {!showServerManagement ? (
-                  <button
-                    onClick={() => {
-                      haptic.buttonPressMedium();
-                      setShowServerManagement(true);
-                    }}
-                    className={
-                      'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
-                    }
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-apple-ink">
-                          {t('subscription.additionalOptions.manageServers')}
-                        </div>
-                        <div className="mt-1 text-sm text-apple-mute">
-                          {t('subscription.servers', { count: subscription.servers?.length || 0 })}
-                        </div>
-                      </div>
-                      <svg
-                        className="h-5 w-5 text-apple-mute"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </button>
-                ) : (
-                  <div className={'rounded-xl bg-apple-elevated p-5'}>
+              <div>
+                {showServerManagement && (
+                  <div className={'rounded-2xl bg-apple-card p-5'}>
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.manageServersTitle')}
