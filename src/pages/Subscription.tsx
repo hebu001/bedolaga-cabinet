@@ -23,7 +23,6 @@ import {
   getInsufficientBalanceError,
   getFlagEmoji,
 } from '../utils/subscriptionHelpers';
-import Twemoji from 'react-twemoji';
 
 /** Isolated countdown so 1s interval doesn't re-render the whole page */
 const CountdownTimer = memo(function CountdownTimer({
@@ -824,7 +823,7 @@ export default function Subscription() {
                               }}
                               className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
                             >
-                              {t('subscription.additionalOptions.buyTraffic', 'Докупить')}
+                              Докупить
                             </button>
                           )}
                       </div>
@@ -878,7 +877,7 @@ export default function Subscription() {
                             }}
                             className="text-[13px] font-medium text-apple-mute transition-opacity hover:opacity-80"
                           >
-                            {t('subscription.additionalOptions.reduceDevices', 'Уменьшить')}
+                            Уменьшить
                           </button>
                           <button
                             type="button"
@@ -891,7 +890,7 @@ export default function Subscription() {
                             }}
                             className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
                           >
-                            {t('subscription.additionalOptions.buyDevices', 'Добавить')}
+                            Докупить
                           </button>
                         </div>
                       )}
@@ -964,51 +963,6 @@ export default function Subscription() {
                         <span className="shrink-0 text-[18px] text-apple-faint">›</span>
                       </button>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* ─── Locations ─── */}
-              {subscription.servers && subscription.servers.length > 0 && (
-                <div>
-                  <div className="mb-2.5 flex items-center justify-between px-1.5">
-                    <span className="text-[13px] font-semibold text-apple-mute">
-                      {t('subscription.locationsLabel')}
-                    </span>
-                    {!isTariffsMode &&
-                      (subscription.is_active || subscription.is_limited) &&
-                      !subscription.is_trial && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            haptic.buttonPressMedium();
-                            setShowDeviceTopup(false);
-                            setShowDeviceReduction(false);
-                            setShowTrafficTopup(false);
-                            setShowServerManagement(true);
-                          }}
-                          className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
-                        >
-                          {t('subscription.additionalOptions.manageServers', 'Управление')}
-                        </button>
-                      )}
-                  </div>
-                  <div className="rounded-2xl bg-apple-card p-4">
-                    <div className="flex flex-wrap gap-1.5">
-                      {subscription.servers.map((server) => (
-                        <span
-                          key={server.uuid}
-                          className="inline-flex items-center gap-1.5 rounded-[8px] bg-apple-elevated px-2.5 py-1 text-[12px] font-medium text-apple-ink"
-                        >
-                          {server.country_code && (
-                            <span className="text-xs">{getFlagEmoji(server.country_code)}</span>
-                          )}
-                          <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
-                            {server.name}
-                          </Twemoji>
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -2195,14 +2149,38 @@ export default function Subscription() {
                   </button>
                 </div>
               )}
+              {/* Server management */}
+              {!isTariffsMode && (subscription.is_active || subscription.is_limited) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptic.buttonPressMedium();
+                    setShowDeviceTopup(false);
+                    setShowDeviceReduction(false);
+                    setShowTrafficTopup(false);
+                    setShowServerManagement(true);
+                  }}
+                  className="flex w-full items-center justify-between gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated"
+                >
+                  <div className="min-w-0">
+                    <div className="text-[15px] text-apple-ink">
+                      {t('subscription.additionalOptions.manageServers', 'Управление серверами')}
+                    </div>
+                    <div className="mt-0.5 text-[13px] text-apple-mute">
+                      {t('subscription.servers', {
+                        count: subscription.servers?.length || 0,
+                      })}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-[18px] text-apple-faint">›</span>
+                </button>
+              )}
               {/* Reissue link */}
               {(subscription.is_active || subscription.is_limited) && (
                 <button
                   onClick={handleRevoke}
                   disabled={revokeMutation.isPending || revokeCooldown > 0}
-                  className={`flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50 ${
-                    !subscription.is_daily ? 'border-t border-apple-hairline' : ''
-                  }`}
+                  className="flex w-full items-center justify-between gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50"
                 >
                   <div className="min-w-0">
                     <div className="text-[15px] text-apple-ink">
