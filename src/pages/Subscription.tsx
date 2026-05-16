@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
-import { WebBackButton } from '../components/WebBackButton';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform';
 import { formatTraffic } from '../utils/formatTraffic';
@@ -124,6 +124,129 @@ const RowIcon = ({ d }: { d: string }) => (
   </span>
 );
 
+// Pill-style slider — track, filler and thumb share one height (apple-dark)
+const SLIDER_H = 28;
+const SLIDER_INSET = 14;
+const PillSlider = ({
+  min,
+  max,
+  value,
+  onChange,
+  'aria-label': ariaLabel,
+}: {
+  min: number;
+  max: number;
+  value: number;
+  onChange: (v: number) => void;
+  'aria-label'?: string;
+}) => {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const span = Math.max(1, max - min);
+  const clamped = Math.min(Math.max(value, min), max);
+  const pct = ((clamped - min) / span) * 100;
+  const steps = max - min + 1;
+  const showDots = steps > 1;
+  // dots / fill edge travel within an inset on each side
+  const at = (p: number) => `calc(${SLIDER_INSET}px + (100% - ${2 * SLIDER_INSET}px) * ${p / 100})`;
+
+  // Map a pointer X to the nearest step — thumb follows the finger exactly
+  const valueFromX = (clientX: number) => {
+    const el = trackRef.current;
+    if (!el) return clamped;
+    const r = el.getBoundingClientRect();
+    const usable = Math.max(1, r.width - 2 * SLIDER_INSET);
+    const rel = (clientX - r.left - SLIDER_INSET) / usable;
+    return Math.min(max, Math.max(min, Math.round(min + rel * span)));
+  };
+  const apply = (clientX: number) => {
+    const v = valueFromX(clientX);
+    if (v !== clamped) onChange(v);
+  };
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* pointer may already be released */
+    }
+    setDragging(true);
+    apply(e.clientX);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.buttons === 0) return;
+    apply(e.clientX);
+  };
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (clamped > min) onChange(clamped - 1);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (clamped < max) onChange(clamped + 1);
+    }
+  };
+
+  return (
+    <div
+      ref={trackRef}
+      role="slider"
+      tabIndex={0}
+      aria-label={ariaLabel}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={clamped}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={() => setDragging(false)}
+      onPointerCancel={() => setDragging(false)}
+      onKeyDown={onKeyDown}
+      className="relative w-full cursor-pointer touch-none select-none outline-none"
+      style={{ height: SLIDER_H }}
+    >
+      {/* track */}
+      <div
+        className="absolute inset-0 overflow-hidden rounded-full"
+        style={{ background: 'rgba(255,255,255,0.08)' }}
+      >
+        {/* filler — extends a little past the current dot */}
+        <div
+          className="absolute inset-y-0 left-0 rounded-full"
+          style={{
+            width: `calc(${at(pct)} + 14px)`,
+            background: '#F97315',
+            transition: dragging ? 'none' : 'width 0.12s ease-out',
+          }}
+        />
+      </div>
+      {/* step dots — the current one is enlarged, acts as the handle */}
+      {showDots &&
+        Array.from({ length: steps }).map((_, i) => {
+          const dotPct = (i / (steps - 1)) * 100;
+          const inRange = dotPct <= pct + 0.01;
+          const isCurrent = i === clamped - min;
+          const size = isCurrent ? 20 : 8;
+          return (
+            <span
+              key={i}
+              aria-hidden="true"
+              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: size,
+                height: size,
+                left: at(dotPct),
+                background: isCurrent
+                  ? 'rgba(0,0,0,0.6)'
+                  : inRange
+                    ? 'rgba(0,0,0,0.4)'
+                    : 'rgba(255,255,255,0.28)',
+              }}
+            />
+          );
+        })}
+    </div>
+  );
+};
+
 export default function Subscription() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -147,9 +270,7 @@ export default function Subscription() {
       : `${formatAmount(kopeks / 100)} ${currencySymbol}`;
 
   // Device/traffic topup state
-  const [showDeviceTopup, setShowDeviceTopup] = useState(false);
-  const [devicesToAdd, setDevicesToAdd] = useState(1);
-  const [showDeviceReduction, setShowDeviceReduction] = useState(false);
+  const [showDeviceManage, setShowDeviceManage] = useState(false);
   const [targetDeviceLimit, setTargetDeviceLimit] = useState<number>(1);
   const [showTrafficTopup, setShowTrafficTopup] = useState(false);
   const [selectedTrafficPackage, setSelectedTrafficPackage] = useState<number | null>(null);
@@ -247,6 +368,13 @@ export default function Subscription() {
     return null;
   })();
 
+  // Device limit included in the current tariff — reduction can't go below it
+  const currentTariff =
+    purchaseOptions?.sales_mode === 'tariffs'
+      ? purchaseOptions.tariffs?.find((tr) => tr.is_current)
+      : undefined;
+  const tariffDeviceLimit = currentTariff?.base_device_limit ?? currentTariff?.device_limit ?? 0;
+
   const autopayMutation = useMutation({
     mutationFn: (enabled: boolean) =>
       subscriptionApi.updateAutopay(enabled, undefined, subscriptionId),
@@ -291,31 +419,41 @@ export default function Subscription() {
 
   // Auto-close all modals/forms when success notification appears
   const handleCloseAllModals = useCallback(() => {
-    setShowDeviceTopup(false);
-    setShowDeviceReduction(false);
+    setShowDeviceManage(false);
     setShowTrafficTopup(false);
     setShowServerManagement(false);
   }, []);
   useCloseOnSuccessNotification(handleCloseAllModals);
 
-  // Device price query
+  // Devices: one slider drives both add (above current limit) and reduce (below)
+  const deviceCurrentLimit = subscription?.device_limit ?? 0;
+  const deviceAddCount = Math.max(1, targetDeviceLimit - deviceCurrentLimit);
+
+  // Debounce the priced count so dragging the slider doesn't spam the API
+  const [debouncedAddCount, setDebouncedAddCount] = useState(deviceAddCount);
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedAddCount(deviceAddCount), 220);
+    return () => clearTimeout(id);
+  }, [deviceAddCount]);
+
+  // Device price query — priced for how many devices we'd add
   const { data: devicePriceData } = useQuery({
-    queryKey: ['device-price', devicesToAdd, subscriptionId],
-    queryFn: () => subscriptionApi.getDevicePrice(devicesToAdd, subscriptionId),
-    enabled: showDeviceTopup && !!subscription,
+    queryKey: ['device-price', debouncedAddCount, subscriptionId],
+    queryFn: () => subscriptionApi.getDevicePrice(debouncedAddCount, subscriptionId),
+    enabled: showDeviceManage && !!subscription,
+    placeholderData: (prev) => prev,
   });
 
   // Device purchase mutation
   const devicePurchaseMutation = useMutation({
-    mutationFn: () => subscriptionApi.purchaseDevices(devicesToAdd, subscriptionId),
+    mutationFn: () => subscriptionApi.purchaseDevices(deviceAddCount, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-price'] });
       queryClient.invalidateQueries({ queryKey: ['balance'] });
-      setShowDeviceTopup(false);
-      setDevicesToAdd(1);
+      setShowDeviceManage(false);
     },
   });
 
@@ -323,20 +461,31 @@ export default function Subscription() {
   const { data: deviceReductionInfo } = useQuery({
     queryKey: ['device-reduction-info', subscriptionId],
     queryFn: () => subscriptionApi.getDeviceReductionInfo(subscriptionId),
-    enabled: showDeviceReduction && !!subscription,
+    enabled: showDeviceManage && !!subscription,
   });
 
-  // Initialize target device limit when reduction info loads
+  // Reset the slider to the current limit each time the panel opens
   useEffect(() => {
-    if (deviceReductionInfo && showDeviceReduction) {
-      setTargetDeviceLimit(
-        Math.max(
-          deviceReductionInfo.min_device_limit,
-          deviceReductionInfo.current_device_limit - 1,
-        ),
-      );
-    }
-  }, [deviceReductionInfo, showDeviceReduction]);
+    if (showDeviceManage) setTargetDeviceLimit(deviceCurrentLimit);
+  }, [showDeviceManage, deviceCurrentLimit]);
+
+  // Lock body scroll + Escape-to-close while a bottom-sheet modal is open
+  useEffect(() => {
+    if (!showDeviceManage && !showTrafficTopup) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowDeviceManage(false);
+        setShowTrafficTopup(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [showDeviceManage, showTrafficTopup]);
 
   // Device reduction mutation
   const deviceReductionMutation = useMutation({
@@ -346,7 +495,7 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-reduction-info', subscriptionId] });
-      setShowDeviceReduction(false);
+      setShowDeviceManage(false);
     },
   });
 
@@ -557,16 +706,6 @@ export default function Subscription() {
 
   return (
     <div className="space-y-4">
-      {/* Page title */}
-      <div className="flex items-center gap-3">
-        <WebBackButton to={isMultiTariff ? '/subscriptions' : '/'} />
-        <h1 className="text-2xl font-bold text-white sm:text-3xl">
-          {isMultiTariff && subscription?.tariff_name
-            ? subscription.tariff_name
-            : t('subscription.title')}
-        </h1>
-      </div>
-
       {/* Current Subscription */}
       {subscription ? (
         (() => {
@@ -591,7 +730,7 @@ export default function Subscription() {
             <>
               {/* ─── Hero status card ─── */}
               <div
-                className="relative overflow-hidden rounded-3xl bg-apple-card"
+                className="apple-card-grad relative overflow-hidden rounded-3xl bg-apple-card"
                 style={{ padding: '22px' }}
               >
                 {/* Trial shimmer border */}
@@ -601,45 +740,14 @@ export default function Subscription() {
                     aria-hidden="true"
                   />
                 )}
-                {/* Background glow */}
-                <div
-                  className="pointer-events-none absolute"
-                  style={{
-                    top: -80,
-                    right: -50,
-                    width: 230,
-                    height: 230,
-                    borderRadius: '50%',
-                    background:
-                      'radial-gradient(circle, rgba(249, 115, 21,0.30) 0%, transparent 70%)',
-                  }}
-                  aria-hidden="true"
-                />
                 <div className="relative">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="mb-1.5 flex items-center gap-1.5">
-                        <span
-                          className="h-[7px] w-[7px] rounded-full"
-                          style={{
-                            background: statusHex,
-                            boxShadow: `0 0 8px ${statusHex}`,
-                          }}
-                          aria-hidden="true"
-                        />
-                        <span
-                          className="text-[11px] font-semibold uppercase tracking-widest"
-                          style={{ color: statusHex }}
-                        >
-                          {subscription.is_active
-                            ? t('subscription.active')
-                            : subscription.is_limited
-                              ? t('subscription.trafficLimited')
-                              : subscription.status === 'disabled'
-                                ? t('subscription.pause.suspended')
-                                : t('subscription.expired')}
-                        </span>
-                      </div>
+                      <span className="mb-1.5 inline-block text-[11px] font-semibold uppercase tracking-widest text-apple-mute">
+                        {subscription.is_trial
+                          ? t('subscription.trialStatus')
+                          : t('subscription.tariffBadge', 'Тариф')}
+                      </span>
                       <h2 className="truncate text-[28px] font-bold tracking-tight text-apple-ink">
                         {subscription.tariff_name || t('subscription.currentPlan')}
                       </h2>
@@ -647,22 +755,25 @@ export default function Subscription() {
                         <div className="mt-0.5 text-[14px] text-apple-mute">{tariffPriceLabel}</div>
                       )}
                     </div>
-                    <span
-                      className="shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold"
-                      style={{
-                        background: subscription.is_trial
-                          ? 'rgba(255,159,10,0.14)'
-                          : 'rgba(249, 115, 21,0.14)',
-                        border: subscription.is_trial
-                          ? '1px solid rgba(255,159,10,0.3)'
-                          : '1px solid rgba(249, 115, 21,0.3)',
-                        color: subscription.is_trial ? '#ff9f0a' : '#F97315',
-                      }}
-                    >
-                      {subscription.is_trial
-                        ? t('subscription.trialStatus')
-                        : t('subscription.tariffBadge', 'Тариф')}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-1.5 pt-1">
+                      <span
+                        className="h-[7px] w-[7px] rounded-full"
+                        style={{ background: statusHex }}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="text-[11px] font-semibold uppercase tracking-widest"
+                        style={{ color: statusHex }}
+                      >
+                        {subscription.is_active
+                          ? t('subscription.active')
+                          : subscription.is_limited
+                            ? t('subscription.trafficLimited')
+                            : subscription.status === 'disabled'
+                              ? t('subscription.pause.suspended')
+                              : t('subscription.expired')}
+                      </span>
+                    </div>
                   </div>
                   <div className="mt-4">
                     <CountdownTimer
@@ -825,7 +936,7 @@ export default function Subscription() {
                 <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
                   {t('subscription.usage', 'Использование')}
                 </div>
-                <div className="overflow-hidden rounded-2xl bg-apple-card">
+                <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
                   {/* Traffic row */}
                   <div className="p-4">
                     <div className="mb-2.5 flex items-center justify-between gap-2">
@@ -871,8 +982,7 @@ export default function Subscription() {
                               type="button"
                               onClick={() => {
                                 haptic.buttonPressMedium();
-                                setShowDeviceReduction(false);
-                                setShowDeviceTopup(false);
+                                setShowDeviceManage(false);
                                 setShowServerManagement(false);
                                 setShowTrafficTopup(true);
                               }}
@@ -920,501 +1030,403 @@ export default function Subscription() {
                     {(subscription.is_active || subscription.is_limited) &&
                       !subscription.is_trial &&
                       subscription.device_limit !== 0 && (
-                        <div className="flex shrink-0 items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              haptic.buttonPressMedium();
-                              setShowDeviceTopup(false);
-                              setShowTrafficTopup(false);
-                              setShowServerManagement(false);
-                              setShowDeviceReduction(true);
-                            }}
-                            className="text-[13px] font-medium text-apple-mute transition-opacity hover:opacity-80"
-                          >
-                            Уменьшить
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              haptic.buttonPressMedium();
-                              setShowDeviceReduction(false);
-                              setShowTrafficTopup(false);
-                              setShowServerManagement(false);
-                              setShowDeviceTopup(true);
-                            }}
-                            className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
-                          >
-                            Докупить
-                          </button>
-                        </div>
-                      )}
-                  </div>
-                  {/* Buy Devices */}
-                  {showDeviceTopup && (
-                    <div className="border-t border-apple-hairline p-5">
-                      <div className="mb-4 flex items-center justify-between">
-                        <h3 className="font-medium text-apple-ink">
-                          {t('subscription.buyDevices')}
-                        </h3>
                         <button
+                          type="button"
                           onClick={() => {
                             haptic.buttonPressMedium();
-                            setShowDeviceTopup(false);
+                            setShowTrafficTopup(false);
+                            setShowServerManagement(false);
+                            setShowDeviceManage((v) => !v);
                           }}
-                          className="text-sm text-apple-mute hover:text-apple-ink"
+                          className="shrink-0 text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
                         >
-                          ✕
+                          Изменить
                         </button>
-                      </div>
-
-                      {/* Check if completely unavailable (no subscription, price not set, etc.) */}
-                      {devicePriceData?.available === false ? (
-                        <div className="py-4 text-center text-sm text-apple-mute">
-                          {devicePriceData.reason ||
-                            t('subscription.additionalOptions.devicesUnavailable')}
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {/* Device selector — slider */}
-                          {(() => {
-                            const maxAdd = devicePriceData?.max_device_limit
-                              ? Math.max(
-                                  1,
-                                  devicePriceData.max_device_limit -
-                                    (devicePriceData.current_device_limit ||
-                                      subscription.device_limit),
-                                )
-                              : 20;
-                            return (
-                              <div>
-                                <div className="mb-2 text-center">
-                                  <span className="text-[34px] font-bold tabular-nums text-apple-ink">
-                                    +{devicesToAdd}
-                                  </span>
-                                  <span className="ml-1.5 text-sm text-apple-mute">
-                                    {t('subscription.additionalOptions.devicesUnit')}
-                                  </span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min={1}
-                                  max={maxAdd}
-                                  value={Math.min(devicesToAdd, maxAdd)}
-                                  onChange={(e) => {
-                                    haptic.buttonPressMedium();
-                                    setDevicesToAdd(Number(e.target.value));
-                                  }}
-                                  className="w-full accent-apple-blue"
-                                />
-                              </div>
-                            );
-                          })()}
-
-                          {/* Show limit info when at or near max */}
-                          {devicePriceData?.max_device_limit && (
-                            <div className="text-center text-sm text-apple-mute">
-                              {t('subscription.additionalOptions.currentDeviceLimit', {
-                                count:
-                                  devicePriceData.current_device_limit || subscription.device_limit,
-                              })}{' '}
-                              /{' '}
-                              {t('subscription.additionalOptions.maxDevices', {
-                                count: devicePriceData.max_device_limit,
-                              })}
-                            </div>
-                          )}
-
-                          {/* Price info - only when available */}
-                          {devicePriceData?.available && devicePriceData.price_per_device_label && (
-                            <div className="text-center">
-                              <div className="mb-2 text-sm text-apple-mute">
-                                {/* Show original price with strikethrough if discount */}
-                                {devicePriceData.discount_percent &&
-                                devicePriceData.discount_percent > 0 ? (
-                                  <span>
-                                    <span className="text-apple-mute line-through">
-                                      {formatPrice(
-                                        devicePriceData.original_price_per_device_kopeks || 0,
-                                      )}
-                                    </span>
-                                    <span className="mx-1">
-                                      {devicePriceData.price_per_device_label}
-                                    </span>
-                                  </span>
-                                ) : (
-                                  devicePriceData.price_per_device_label
-                                )}
-                                /{t('subscription.perDevice').replace('/ ', '')} (
-                                {t('subscription.days', { count: devicePriceData.days_left })})
-                              </div>
-                              {/* Discount badge */}
-                              {devicePriceData.discount_percent &&
-                                devicePriceData.discount_percent > 0 && (
-                                  <div className="mb-2">
-                                    <span className="inline-block rounded-full bg-apple-green/20 px-2.5 py-0.5 text-sm font-medium text-apple-green">
-                                      -{devicePriceData.discount_percent}%
-                                    </span>
-                                  </div>
-                                )}
-                              {/* Total price - show as free if 100% discount or 0 */}
-                              {devicePriceData.total_price_kopeks === 0 ? (
-                                <div className="text-2xl font-bold text-apple-green">
-                                  {t('subscription.switchTariff.free')}
-                                </div>
-                              ) : (
-                                <div className="text-2xl font-bold text-apple-blue">
-                                  {/* Show original total with strikethrough if discount */}
-                                  {devicePriceData.discount_percent &&
-                                    devicePriceData.discount_percent > 0 &&
-                                    devicePriceData.base_total_price_kopeks && (
-                                      <span className="mr-2 text-lg text-apple-mute line-through">
-                                        {formatPrice(devicePriceData.base_total_price_kopeks)}
-                                      </span>
-                                    )}
-                                  {devicePriceData.total_price_label}
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {devicePriceData?.available &&
-                            purchaseOptions &&
-                            devicePriceData.total_price_kopeks &&
-                            devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks && (
-                              <InsufficientBalancePrompt
-                                missingAmountKopeks={
-                                  devicePriceData.total_price_kopeks -
-                                  purchaseOptions.balance_kopeks
-                                }
-                                compact
-                                onBeforeTopUp={async () => {
-                                  await subscriptionApi.saveDevicesCart(
-                                    devicesToAdd,
-                                    subscriptionId,
-                                  );
-                                }}
-                              />
-                            )}
-
+                      )}
+                  </div>
+                  {/* Manage devices — bottom-sheet modal */}
+                  {showDeviceManage &&
+                    createPortal(
+                      <div
+                        className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
+                        style={{ background: 'rgba(0,0,0,0.5)' }}
+                        onClick={() => setShowDeviceManage(false)}
+                      >
+                        <div
+                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Close */}
                           <button
+                            type="button"
                             onClick={() => {
                               haptic.buttonPressMedium();
-                              devicePurchaseMutation.mutate();
+                              setShowDeviceManage(false);
                             }}
-                            disabled={
-                              devicePurchaseMutation.isPending ||
-                              !devicePriceData?.available ||
-                              !!(
-                                devicePriceData?.total_price_kopeks &&
-                                purchaseOptions &&
-                                devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks
-                              )
-                            }
-                            className="btn-primary w-full !rounded-full py-3"
+                            aria-label={t('common.close', 'Закрыть')}
+                            className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                           >
-                            {devicePurchaseMutation.isPending ? (
-                              <span className="flex items-center justify-center gap-2">
-                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                              </span>
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            >
+                              <path d="M6 6l12 12M18 6 6 18" />
+                            </svg>
+                          </button>
+                          {/* Header */}
+                          <div className="px-7 pb-2 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+                            Управление устройствами
+                          </div>
+                          {/* Body */}
+                          <div className="flex flex-col px-7 pb-7 pt-2">
+                            {!deviceReductionInfo && !devicePriceData ? (
+                              <div className="flex items-center justify-center py-8">
+                                <span className="h-6 w-6 animate-spin rounded-full border-2 border-apple-blue/30 border-t-apple-blue" />
+                              </div>
                             ) : (
-                              t('subscription.additionalOptions.buy')
-                            )}
-                          </button>
+                              (() => {
+                                const reduceOk =
+                                  !!deviceReductionInfo && deviceReductionInfo.available !== false;
+                                const addOk = devicePriceData?.available !== false;
+                                const connected =
+                                  deviceReductionInfo?.connected_devices_count ?? connectedDevices;
+                                const minLimit = Math.max(
+                                  reduceOk
+                                    ? deviceReductionInfo!.min_device_limit
+                                    : deviceCurrentLimit,
+                                  connected,
+                                  tariffDeviceLimit,
+                                );
+                                const maxLimit =
+                                  addOk && devicePriceData?.max_device_limit
+                                    ? devicePriceData.max_device_limit
+                                    : deviceCurrentLimit;
+                                if (minLimit >= maxLimit) {
+                                  return (
+                                    <div className="py-6 text-center text-sm text-apple-mute">
+                                      {devicePriceData?.reason ||
+                                        deviceReductionInfo?.reason ||
+                                        t('subscription.additionalOptions.devicesUnavailable')}
+                                    </div>
+                                  );
+                                }
+                                const target = Math.min(
+                                  Math.max(targetDeviceLimit, minLimit),
+                                  maxLimit,
+                                );
+                                const delta = target - deviceCurrentLimit;
+                                const insufficient = !!(
+                                  delta > 0 &&
+                                  devicePriceData?.total_price_kopeks &&
+                                  purchaseOptions &&
+                                  devicePriceData.total_price_kopeks >
+                                    purchaseOptions.balance_kopeks
+                                );
+                                const unit = t('subscription.additionalOptions.devicesUnit');
+                                const pending =
+                                  devicePurchaseMutation.isPending ||
+                                  deviceReductionMutation.isPending;
+                                return (
+                                  <>
+                                    {/* Status banner */}
+                                    <div
+                                      className="mb-4 mt-1 flex items-center gap-2 rounded-xl p-4 text-sm font-medium"
+                                      style={{
+                                        background:
+                                          delta > 0
+                                            ? 'rgba(249,115,21,0.16)'
+                                            : delta < 0
+                                              ? 'rgba(255,69,58,0.16)'
+                                              : 'rgba(255,255,255,0.06)',
+                                        color:
+                                          delta > 0 ? '#F97315' : delta < 0 ? '#ff6961' : '#98989d',
+                                      }}
+                                    >
+                                      <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="shrink-0"
+                                        aria-hidden="true"
+                                      >
+                                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+                                      </svg>
+                                      <span>
+                                        {delta > 0
+                                          ? `Подписка расширится до ${target} ${unit}`
+                                          : delta < 0
+                                            ? `Подписка сократится до ${target} ${unit}`
+                                            : `Количество устройств: ${target}`}
+                                      </span>
+                                    </div>
 
-                          {devicePurchaseMutation.isError && (
-                            <div className="text-center text-sm text-apple-red">
-                              {getErrorMessage(devicePurchaseMutation.error)}
-                            </div>
-                          )}
+                                    {/* Slider */}
+                                    <PillSlider
+                                      min={minLimit}
+                                      max={maxLimit}
+                                      value={target}
+                                      aria-label={unit}
+                                      onChange={(v) => {
+                                        haptic.buttonPressMedium();
+                                        setTargetDeviceLimit(v);
+                                      }}
+                                    />
+
+                                    {/* Insufficient balance */}
+                                    {insufficient && (
+                                      <div className="mt-4">
+                                        <InsufficientBalancePrompt
+                                          missingAmountKopeks={
+                                            (devicePriceData?.total_price_kopeks || 0) -
+                                            (purchaseOptions?.balance_kopeks || 0)
+                                          }
+                                          compact
+                                          onBeforeTopUp={async () => {
+                                            await subscriptionApi.saveDevicesCart(
+                                              delta,
+                                              subscriptionId,
+                                            );
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+
+                                    {/* CTA */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        haptic.buttonPressMedium();
+                                        if (delta > 0) devicePurchaseMutation.mutate();
+                                        else if (delta < 0) deviceReductionMutation.mutate();
+                                      }}
+                                      disabled={
+                                        delta === 0 ||
+                                        pending ||
+                                        (delta > 0 && (!devicePriceData?.available || insufficient))
+                                      }
+                                      className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
+                                      style={{
+                                        background:
+                                          delta > 0
+                                            ? '#F97315'
+                                            : delta < 0
+                                              ? '#ff453a'
+                                              : 'rgba(255,255,255,0.08)',
+                                        color: delta === 0 ? '#98989d' : '#fff',
+                                        opacity: (delta > 0 && insufficient) || pending ? 0.6 : 1,
+                                      }}
+                                    >
+                                      {pending ? (
+                                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                      ) : delta > 0 ? (
+                                        `Расширить до ${target} ${unit} за ${devicePriceData?.total_price_label ?? ''}`
+                                      ) : delta < 0 ? (
+                                        `Уменьшить до ${target} ${unit}`
+                                      ) : (
+                                        'Измените количество устройств'
+                                      )}
+                                    </button>
+
+                                    {(devicePurchaseMutation.isError ||
+                                      deviceReductionMutation.isError) && (
+                                      <div className="mt-3 text-center text-sm text-apple-red">
+                                        {getErrorMessage(
+                                          devicePurchaseMutation.error ||
+                                            deviceReductionMutation.error,
+                                        )}
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Reduce Devices */}
-                  <div>
-                    {showDeviceReduction && (
-                      <div className="border-t border-apple-hairline p-5">
-                        <div className="mb-4 flex items-center justify-between">
-                          <h3 className="font-medium text-apple-ink">
-                            {t('subscription.additionalOptions.reduceDevicesTitle')}
-                          </h3>
-                          <button
-                            onClick={() => setShowDeviceReduction(false)}
-                            className="text-sm text-apple-mute hover:text-apple-ink"
-                          >
-                            ✕
-                          </button>
-                        </div>
-
-                        {deviceReductionInfo?.available === false ? (
-                          <div className="py-4 text-center text-sm text-apple-mute">
-                            {deviceReductionInfo.reason ||
-                              t('subscription.additionalOptions.reduceUnavailable')}
-                          </div>
-                        ) : deviceReductionInfo ? (
-                          <div className="space-y-4">
-                            {/* Device limit selector — slider */}
-                            <div>
-                              <div className="mb-2 text-center">
-                                <span className="text-[34px] font-bold tabular-nums text-apple-ink">
-                                  {targetDeviceLimit}
-                                </span>
-                                <span className="ml-1.5 text-sm text-apple-mute">
-                                  {t('subscription.additionalOptions.devicesUnit')}
-                                </span>
-                              </div>
-                              <input
-                                type="range"
-                                min={Math.max(
-                                  deviceReductionInfo.min_device_limit,
-                                  deviceReductionInfo.connected_devices_count,
-                                )}
-                                max={Math.max(
-                                  Math.max(
-                                    deviceReductionInfo.min_device_limit,
-                                    deviceReductionInfo.connected_devices_count,
-                                  ),
-                                  deviceReductionInfo.current_device_limit - 1,
-                                )}
-                                value={targetDeviceLimit}
-                                onChange={(e) => {
-                                  haptic.buttonPressMedium();
-                                  setTargetDeviceLimit(Number(e.target.value));
-                                }}
-                                className="w-full accent-apple-blue"
-                              />
-                            </div>
-
-                            {/* Info */}
-                            <div className="space-y-1 text-center text-sm text-apple-mute">
-                              <div>
-                                {t('subscription.additionalOptions.currentDeviceLimit', {
-                                  count: deviceReductionInfo.current_device_limit,
-                                })}
-                              </div>
-                              <div>
-                                {t('subscription.additionalOptions.minDeviceLimit', {
-                                  count: deviceReductionInfo.min_device_limit,
-                                })}
-                              </div>
-                              <div>
-                                {t('subscription.additionalOptions.connectedDevices', {
-                                  count: deviceReductionInfo.connected_devices_count,
-                                })}
-                              </div>
-                            </div>
-
-                            {/* Warning if connected devices block reduction */}
-                            {deviceReductionInfo.connected_devices_count >
-                              deviceReductionInfo.min_device_limit && (
-                              <div className="rounded-lg bg-apple-amber/10 p-3 text-center text-sm text-apple-amber">
-                                {t('subscription.additionalOptions.disconnectDevicesFirst', {
-                                  count: deviceReductionInfo.connected_devices_count,
-                                })}
-                              </div>
-                            )}
-
-                            {/* New limit preview */}
-                            <div className="text-center">
-                              <div className="text-sm text-apple-mute">
-                                {t('subscription.additionalOptions.newDeviceLimit', {
-                                  count: targetDeviceLimit,
-                                })}
-                              </div>
-                            </div>
-
-                            <button
-                              onClick={() => {
-                                haptic.buttonPressMedium();
-                                deviceReductionMutation.mutate();
-                              }}
-                              disabled={
-                                deviceReductionMutation.isPending ||
-                                targetDeviceLimit >= deviceReductionInfo.current_device_limit ||
-                                targetDeviceLimit < deviceReductionInfo.min_device_limit ||
-                                targetDeviceLimit < deviceReductionInfo.connected_devices_count
-                              }
-                              className="btn-primary w-full py-3"
-                            >
-                              {deviceReductionMutation.isPending ? (
-                                <span className="flex items-center justify-center gap-2">
-                                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                  {t('subscription.additionalOptions.reducing')}
-                                </span>
-                              ) : (
-                                t('subscription.additionalOptions.reduce')
-                              )}
-                            </button>
-
-                            {deviceReductionMutation.isError && (
-                              <div className="text-center text-sm text-apple-red">
-                                {getErrorMessage(deviceReductionMutation.error)}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center py-4">
-                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-apple-blue/30 border-t-apple-blue" />
-                          </div>
-                        )}
-                      </div>
+                      </div>,
+                      document.body,
                     )}
-                  </div>
 
-                  {/* Buy Traffic */}
-                  {subscription.traffic_limit_gb > 0 && (
-                    <div>
-                      {showTrafficTopup && (
-                        <div className="border-t border-apple-hairline p-5">
-                          <div className="mb-4 flex items-center justify-between">
-                            <h3 className="font-medium text-apple-ink">
-                              {t('subscription.additionalOptions.buyTrafficTitle')}
-                            </h3>
-                            <button
-                              onClick={() => {
-                                setShowTrafficTopup(false);
-                                setSelectedTrafficPackage(null);
-                              }}
-                              className="text-sm text-apple-mute hover:text-apple-ink"
-                            >
-                              ✕
-                            </button>
-                          </div>
-
-                          <div
-                            className={`mb-4 rounded-lg p-2 text-xs ${isDark ? 'bg-apple-elevated/30 text-apple-mute' : 'bg-champagne-300/40 text-champagne-600'}`}
+                  {/* Buy traffic — bottom-sheet modal */}
+                  {showTrafficTopup &&
+                    subscription.traffic_limit_gb > 0 &&
+                    createPortal(
+                      <div
+                        className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
+                        style={{ background: 'rgba(0,0,0,0.5)' }}
+                        onClick={() => {
+                          setShowTrafficTopup(false);
+                          setSelectedTrafficPackage(null);
+                        }}
+                      >
+                        <div
+                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Close */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              haptic.buttonPressMedium();
+                              setShowTrafficTopup(false);
+                              setSelectedTrafficPackage(null);
+                            }}
+                            aria-label={t('common.close', 'Закрыть')}
+                            className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                           >
-                            ⚠️ {t('subscription.additionalOptions.trafficWarning')}
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            >
+                              <path d="M6 6l12 12M18 6 6 18" />
+                            </svg>
+                          </button>
+                          {/* Header */}
+                          <div className="px-7 pb-2 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+                            {t('subscription.additionalOptions.buyTrafficTitle')}
                           </div>
-
-                          {!trafficPackages || trafficPackages.length === 0 ? (
-                            <div className="py-4 text-center text-sm text-apple-mute">
-                              {t('subscription.additionalOptions.trafficUnavailable')}
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {/* Traffic package selector — slider */}
-                              {(() => {
+                          {/* Body */}
+                          <div className="flex flex-col px-7 pb-7 pt-2">
+                            {!trafficPackages || trafficPackages.length === 0 ? (
+                              <div className="py-6 text-center text-sm text-apple-mute">
+                                {t('subscription.additionalOptions.trafficUnavailable')}
+                              </div>
+                            ) : (
+                              (() => {
                                 const foundIdx = trafficPackages.findIndex(
                                   (p) => p.gb === selectedTrafficPackage,
                                 );
                                 const idx = foundIdx >= 0 ? foundIdx : 0;
                                 const pkg = trafficPackages[idx];
+                                const hasDiscount = !!(
+                                  pkg.discount_percent && pkg.discount_percent > 0
+                                );
+                                const hasEnough =
+                                  !purchaseOptions ||
+                                  pkg.price_kopeks <= purchaseOptions.balance_kopeks;
+                                const missing = purchaseOptions
+                                  ? pkg.price_kopeks - purchaseOptions.balance_kopeks
+                                  : 0;
+                                const pending = trafficPurchaseMutation.isPending;
                                 return (
-                                  <div>
-                                    <div className="mb-1 text-center">
-                                      <span className="text-[34px] font-bold tabular-nums text-apple-ink">
-                                        {pkg.is_unlimited ? '∞' : pkg.gb}
+                                  <>
+                                    {/* Status banner */}
+                                    <div
+                                      className="mb-2 mt-1 flex items-center gap-2 rounded-xl p-4 text-sm font-medium"
+                                      style={{
+                                        background: 'rgba(249,115,21,0.16)',
+                                        color: '#F97315',
+                                      }}
+                                    >
+                                      <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="shrink-0"
+                                        aria-hidden="true"
+                                      >
+                                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+                                      </svg>
+                                      <span>
+                                        {pkg.is_unlimited
+                                          ? 'Безлимитный трафик'
+                                          : `Будет добавлено ${pkg.gb} ${t('common.units.gb')}`}
+                                        {hasDiscount ? ` · −${pkg.discount_percent}%` : ''}
                                       </span>
-                                      {!pkg.is_unlimited && (
-                                        <span className="ml-1.5 text-sm text-apple-mute">
-                                          {t('common.units.gb')}
-                                        </span>
-                                      )}
                                     </div>
+
+                                    {/* Info note */}
+                                    <div className="mb-4 text-[12px] leading-snug text-apple-faint">
+                                      {t('subscription.additionalOptions.trafficWarning')}
+                                    </div>
+
+                                    {/* Slider */}
                                     {trafficPackages.length > 1 && (
-                                      <input
-                                        type="range"
+                                      <PillSlider
                                         min={0}
                                         max={trafficPackages.length - 1}
                                         value={idx}
-                                        onChange={(e) => {
+                                        aria-label={t('common.units.gb')}
+                                        onChange={(v) => {
                                           haptic.buttonPressMedium();
-                                          setSelectedTrafficPackage(
-                                            trafficPackages[Number(e.target.value)].gb,
-                                          );
+                                          setSelectedTrafficPackage(trafficPackages[v].gb);
                                         }}
-                                        className="w-full accent-apple-blue"
                                       />
                                     )}
-                                    <div className="mt-2 text-center font-medium text-apple-blue">
-                                      {pkg.discount_percent &&
-                                      pkg.discount_percent > 0 &&
-                                      pkg.base_price_kopeks ? (
-                                        <>
-                                          <span className="mr-1 text-sm text-apple-mute line-through">
-                                            {formatPrice(pkg.base_price_kopeks)}
-                                          </span>
-                                          {formatPrice(pkg.price_kopeks)}
-                                          <span className="ml-1.5 inline-block rounded-full bg-apple-green/20 px-2 py-0.5 text-xs font-medium text-apple-green">
-                                            -{pkg.discount_percent}%
-                                          </span>
-                                        </>
-                                      ) : (
-                                        formatPrice(pkg.price_kopeks)
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
 
-                              {selectedTrafficPackage !== null &&
-                                (() => {
-                                  const selectedPkg = trafficPackages.find(
-                                    (p) => p.gb === selectedTrafficPackage,
-                                  );
-                                  const hasEnoughBalance =
-                                    !selectedPkg ||
-                                    !purchaseOptions ||
-                                    selectedPkg.price_kopeks <= purchaseOptions.balance_kopeks;
-                                  const missingAmount =
-                                    selectedPkg && purchaseOptions
-                                      ? selectedPkg.price_kopeks - purchaseOptions.balance_kopeks
-                                      : 0;
-
-                                  return (
-                                    <>
-                                      {!hasEnoughBalance && missingAmount > 0 && (
+                                    {/* Insufficient balance */}
+                                    {!hasEnough && missing > 0 && (
+                                      <div className="mt-4">
                                         <InsufficientBalancePrompt
-                                          missingAmountKopeks={missingAmount}
+                                          missingAmountKopeks={missing}
                                           compact
-                                          className="mb-3"
                                           onBeforeTopUp={async () => {
                                             await subscriptionApi.saveTrafficCart(
-                                              selectedTrafficPackage,
+                                              pkg.gb,
                                               subscriptionId,
                                             );
                                           }}
                                         />
-                                      )}
-                                      <button
-                                        onClick={() =>
-                                          trafficPurchaseMutation.mutate(selectedTrafficPackage)
-                                        }
-                                        disabled={
-                                          trafficPurchaseMutation.isPending || !hasEnoughBalance
-                                        }
-                                        className="btn-primary w-full !rounded-full py-3"
-                                      >
-                                        {trafficPurchaseMutation.isPending ? (
-                                          <span className="flex items-center justify-center gap-2">
-                                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                          </span>
-                                        ) : selectedPkg?.is_unlimited ? (
-                                          t('subscription.additionalOptions.buyUnlimited')
-                                        ) : (
-                                          t('subscription.additionalOptions.buyTrafficGb', {
-                                            gb: selectedTrafficPackage,
-                                          })
-                                        )}
-                                      </button>
-                                    </>
-                                  );
-                                })()}
+                                      </div>
+                                    )}
 
-                              {trafficPurchaseMutation.isError && (
-                                <div className="text-center text-sm text-apple-red">
-                                  {getErrorMessage(trafficPurchaseMutation.error)}
-                                </div>
-                              )}
-                            </div>
-                          )}
+                                    {/* CTA */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        haptic.buttonPressMedium();
+                                        trafficPurchaseMutation.mutate(pkg.gb);
+                                      }}
+                                      disabled={pending || !hasEnough}
+                                      className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
+                                      style={{
+                                        background: '#F97315',
+                                        color: '#fff',
+                                        opacity: pending || !hasEnough ? 0.6 : 1,
+                                      }}
+                                    >
+                                      {pending ? (
+                                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                      ) : pkg.is_unlimited ? (
+                                        `${t('subscription.additionalOptions.buyUnlimited')} · ${formatPrice(pkg.price_kopeks)}`
+                                      ) : (
+                                        `Купить ${pkg.gb} ${t('common.units.gb')} за ${formatPrice(pkg.price_kopeks)}`
+                                      )}
+                                    </button>
+
+                                    {trafficPurchaseMutation.isError && (
+                                      <div className="mt-3 text-center text-sm text-apple-red">
+                                        {getErrorMessage(trafficPurchaseMutation.error)}
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>,
+                      document.body,
+                    )}
                 </div>
               </div>
 
@@ -1425,7 +1437,7 @@ export default function Subscription() {
                   <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
                     {t('subscription.connectionLabel', 'Подключение')}
                   </div>
-                  <div className="overflow-hidden rounded-2xl bg-apple-card">
+                  <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
                     {displayedConnectionUrl && !shouldHideConnectionLink && (
                       <div className="flex items-center gap-2.5 p-4">
                         <RowIcon d={ROW_ICON.link} />
@@ -1493,7 +1505,7 @@ export default function Subscription() {
                   <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
                     {t('subscription.purchasedTraffic')}
                   </div>
-                  <div className="overflow-hidden rounded-2xl bg-apple-card">
+                  <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
                     {subscription.traffic_purchases.map((purchase, i) => (
                       <div
                         key={purchase.id}
@@ -1538,7 +1550,7 @@ export default function Subscription() {
         })()
       ) : (
         <div
-          className={`relative overflow-hidden rounded-3xl py-12 text-center ${isDark ? 'bg-apple-card' : 'bg-white'}`}
+          className={`relative overflow-hidden rounded-3xl py-12 text-center ${isDark ? 'apple-card-grad bg-apple-card' : 'bg-white'}`}
           style={{
             background: isDark ? 'transparent' : g.cardBg,
             border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -1572,7 +1584,7 @@ export default function Subscription() {
       {/* Daily Subscription Pause */}
       {subscription && subscription.is_daily && !subscription.is_trial && (
         <div
-          className={`relative overflow-hidden rounded-2xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
+          className={`relative overflow-hidden rounded-2xl ${isDark ? 'apple-card-grad bg-apple-card' : 'bg-white'}`}
           style={{
             background: isDark ? 'transparent' : g.cardBg,
             border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -1852,7 +1864,7 @@ export default function Subscription() {
             {!isTariffsMode && (
               <div>
                 {showServerManagement && (
-                  <div className="rounded-2xl bg-apple-card p-5">
+                  <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.manageServersTitle')}
@@ -2113,7 +2125,7 @@ export default function Subscription() {
             <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
               {t('subscription.management', 'Управление')}
             </div>
-            <div className="overflow-hidden rounded-2xl bg-apple-card">
+            <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
               {/* Autopay */}
               {!subscription.is_daily && (
                 <div className="flex items-center gap-3 p-4">
@@ -2160,8 +2172,7 @@ export default function Subscription() {
                   type="button"
                   onClick={() => {
                     haptic.buttonPressMedium();
-                    setShowDeviceTopup(false);
-                    setShowDeviceReduction(false);
+                    setShowDeviceManage(false);
                     setShowTrafficTopup(false);
                     setShowServerManagement(true);
                   }}
@@ -2247,7 +2258,7 @@ export default function Subscription() {
             )}
           </div>
 
-          <div className="overflow-hidden rounded-2xl bg-apple-card">
+          <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
             {devicesLoading ? (
               <div className="flex items-center justify-center py-10">
                 <div className="h-7 w-7 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />

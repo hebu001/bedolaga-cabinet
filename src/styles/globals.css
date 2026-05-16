@@ -66,14 +66,26 @@
 
 /* Setup wizard — pulsing CTA button */
 @keyframes pulsed {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.75; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
 }
 
 /* Setup wizard — decorative ring expansion */
 @keyframes ring-pulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.08; transform: scale(1.08); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.08;
+    transform: scale(1.08);
+  }
 }
 
 /* Aceternity UI background CSS variables */
@@ -89,7 +101,7 @@
 
 /* Ultima Design Tokens (id.ultm.in) */
 :root {
-  --figma-green: #F97316;
+  --figma-green: #f97316;
   --figma-green-rgb: 249, 115, 22;
   --figma-green-50: rgba(249, 115, 22, 0.5);
   --figma-green-70: rgba(249, 115, 22, 0.7);
@@ -381,6 +393,40 @@ img.twemoji {
 }
 
 @layer components {
+  /* Apple-dark card: subtle light gradient sheen */
+  .apple-card-grad {
+    background-image: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.07) 0%,
+      rgba(255, 255, 255, 0.02) 35%,
+      transparent 65%
+    );
+  }
+
+  /* Apple-dark bottom-sheet modal */
+  .apple-sheet-backdrop {
+    animation: appleSheetFade 0.2s ease both;
+  }
+  .apple-sheet-panel {
+    animation: appleSheetUp 0.34s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+  @keyframes appleSheetFade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes appleSheetUp {
+    from {
+      transform: translateY(110%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
   /* ========== BENTO DESIGN SYSTEM ========== */
 
   .bento-card {
@@ -1618,7 +1664,8 @@ input[type='checkbox']:hover:not(:checked) {
 }
 
 @keyframes trialButtonPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 var(--figma-green-glow, rgba(80, 200, 120, 0.5));
   }
   50% {
@@ -1640,20 +1687,17 @@ input[type='checkbox']:hover:not(:checked) {
     0 8px 32px rgba(0, 0, 0, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
   border-radius: 24px;
-  transition: transform 360ms cubic-bezier(0.22, 0.68, 0, 1.2),
+  transition:
+    transform 360ms cubic-bezier(0.22, 0.68, 0, 1.2),
     box-shadow 360ms cubic-bezier(0.22, 0.68, 0, 1.2),
     background 360ms;
 }
 
 .dark-glass::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.10) 0%,
-    rgba(255, 255, 255, 0) 50%
-  );
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
   pointer-events: none;
   border-radius: inherit;
   z-index: 1;
@@ -1671,7 +1715,8 @@ input[type='checkbox']:hover:not(:checked) {
     0 4px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   border-radius: 20px;
-  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+  transition:
+    transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 180ms,
     background 180ms;
 }
