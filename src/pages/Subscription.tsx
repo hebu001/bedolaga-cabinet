@@ -529,6 +529,11 @@ export default function Subscription() {
             : subscription.is_limited
               ? '#ff9f0a'
               : '#ff453a';
+          const renewLink = subscription.is_trial
+            ? '/subscription/purchase'
+            : isMultiTariff
+              ? `/subscriptions/${subscription.id}/renew`
+              : '/subscription/purchase';
 
           return (
             <>
@@ -611,6 +616,32 @@ export default function Subscription() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* ─── Primary actions ─── */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptic.buttonPressMedium();
+                    navigate(renewLink);
+                  }}
+                  className="flex flex-1 items-center justify-center rounded-full bg-apple-blue py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+                >
+                  {subscription.is_active
+                    ? t('subscription.extend')
+                    : t('subscription.getSubscription')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptic.buttonPressMedium();
+                    navigate(renewLink);
+                  }}
+                  className="flex flex-1 items-center justify-center rounded-full bg-apple-elevated py-3 text-[15px] font-medium text-apple-blue transition-opacity hover:opacity-80"
+                >
+                  {t('subscription.switchTariff.title', 'Сменить тариф')}
+                </button>
               </div>
 
               {/* ─── Traffic Limited Banner ─── */}
@@ -976,41 +1007,6 @@ export default function Subscription() {
                   </div>
                 </div>
               )}
-
-              {/* ─── Autopay Toggle ─── */}
-              {!subscription.is_trial && !subscription.is_daily && (
-                <div className="flex items-center justify-between gap-3 rounded-2xl bg-apple-card p-4">
-                  <div>
-                    <div className="text-[15px] text-apple-ink">
-                      {t('subscription.autoRenewal')}
-                    </div>
-                    <div className="mt-0.5 text-[13px] text-apple-mute">
-                      {t('subscription.daysBeforeExpiry', {
-                        count: subscription.autopay_days_before,
-                      })}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      haptic.buttonPressMedium();
-                      autopayMutation.mutate(!subscription.autopay_enabled);
-                    }}
-                    disabled={autopayMutation.isPending}
-                    className="relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors duration-300 disabled:opacity-50"
-                    style={{
-                      background: subscription.autopay_enabled ? '#30d158' : '#39393d',
-                    }}
-                  >
-                    <span
-                      className="absolute top-[3px] h-[24px] w-[24px] rounded-full bg-white transition-[left] duration-300"
-                      style={{
-                        left: subscription.autopay_enabled ? '23px' : '3px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                      }}
-                    />
-                  </button>
-                </div>
-              )}
             </>
           );
         })()
@@ -1215,8 +1211,11 @@ export default function Subscription() {
         </div>
       )}
 
-      {/* Purchase / Renewal CTA */}
-      <PurchaseCTAButton subscription={subscription} isMultiTariff={isMultiTariff} />
+      {/* Purchase CTA — only when there is no subscription (active subs use the
+          Продлить / Сменить тариф buttons under the hero) */}
+      {!subscription && (
+        <PurchaseCTAButton subscription={subscription} isMultiTariff={isMultiTariff} />
+      )}
 
       {/* Delete expired subscription */}
       {isMultiTariff &&
@@ -2174,80 +2173,101 @@ export default function Subscription() {
           </div>
         )}
 
-      {/* Reissue Subscription — standalone block, not dependent on device_limit */}
+      {/* ─── Управление ─── */}
       {subscription &&
-        (subscription.is_active || subscription.is_limited) &&
-        !subscription.is_trial && (
-          <div
-            className="relative overflow-hidden rounded-3xl"
-            style={{
-              background: g.cardBg,
-              border: `1px solid ${g.cardBorder}`,
-              boxShadow: g.shadow,
-              padding: '16px 20px',
-            }}
-          >
-            <button
-              onClick={handleRevoke}
-              disabled={revokeMutation.isPending || revokeCooldown > 0}
-              className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-left transition-colors hover:bg-amber-500/20 disabled:opacity-50"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-amber-400">
-                    {t('subscription.revoke.button')}
+        !subscription.is_trial &&
+        (!subscription.is_daily || subscription.is_active || subscription.is_limited) && (
+          <div>
+            <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
+              {t('subscription.management', 'Управление')}
+            </div>
+            <div className="overflow-hidden rounded-2xl bg-apple-card">
+              {/* Autopay */}
+              {!subscription.is_daily && (
+                <div className="flex items-center justify-between gap-3 p-4">
+                  <div>
+                    <div className="text-[15px] text-apple-ink">
+                      {t('subscription.autoRenewal')}
+                    </div>
+                    <div className="mt-0.5 text-[13px] text-apple-mute">
+                      {t('subscription.daysBeforeExpiry', {
+                        count: subscription.autopay_days_before,
+                      })}
+                    </div>
                   </div>
-                  <div className="mt-1 text-sm text-apple-mute">
-                    {revokeCooldown > 0
-                      ? t('subscription.revoke.cooldown', {
-                          minutes: Math.floor(revokeCooldown / 60),
-                          seconds: revokeCooldown % 60,
-                        })
-                      : t('subscription.revoke.description')}
-                  </div>
+                  <button
+                    onClick={() => {
+                      haptic.buttonPressMedium();
+                      autopayMutation.mutate(!subscription.autopay_enabled);
+                    }}
+                    disabled={autopayMutation.isPending}
+                    className="relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors duration-300 disabled:opacity-50"
+                    style={{
+                      background: subscription.autopay_enabled ? '#30d158' : '#39393d',
+                    }}
+                  >
+                    <span
+                      className="absolute top-[3px] h-[24px] w-[24px] rounded-full bg-white transition-[left] duration-300"
+                      style={{
+                        left: subscription.autopay_enabled ? '23px' : '3px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                      }}
+                    />
+                  </button>
                 </div>
-                <div className="text-amber-400">
+              )}
+              {/* Reissue link */}
+              {(subscription.is_active || subscription.is_limited) && (
+                <button
+                  onClick={handleRevoke}
+                  disabled={revokeMutation.isPending || revokeCooldown > 0}
+                  className={`flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50 ${
+                    !subscription.is_daily ? 'border-t border-apple-hairline' : ''
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="text-[15px] text-apple-ink">
+                      {t('subscription.revoke.button')}
+                    </div>
+                    <div className="mt-0.5 text-[13px] text-apple-mute">
+                      {revokeCooldown > 0
+                        ? t('subscription.revoke.cooldown', {
+                            minutes: Math.floor(revokeCooldown / 60),
+                            seconds: revokeCooldown % 60,
+                          })
+                        : t('subscription.revoke.description')}
+                    </div>
+                  </div>
                   {revokeMutation.isPending ? (
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-400/30 border-t-amber-400" />
+                    <div className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-apple-mute/30 border-t-apple-mute" />
                   ) : (
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
-                      />
-                    </svg>
+                    <span className="shrink-0 text-[18px] text-apple-faint">›</span>
                   )}
-                </div>
-              </div>
-            </button>
+                </button>
+              )}
+            </div>
             {revokeMutation.error && (
-              <p className="mt-2 text-sm text-red-400">{getErrorMessage(revokeMutation.error)}</p>
+              <p className="mt-2 px-1.5 text-[13px] text-apple-red">
+                {getErrorMessage(revokeMutation.error)}
+              </p>
             )}
           </div>
         )}
 
-      {/* My Devices Section */}
+      {/* ─── Подключённые устройства ─── */}
       {subscription && (
-        <div
-          className={`relative overflow-hidden rounded-2xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
-          style={{
-            background: isDark ? 'transparent' : g.cardBg,
-            border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
-            boxShadow: isDark ? 'none' : g.shadow,
-            padding: '24px 28px',
-          }}
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-bold tracking-tight text-apple-ink">
+        <div>
+          <div className="mb-2.5 flex items-center justify-between px-1.5">
+            <span className="text-[13px] font-semibold text-apple-mute">
               {t('subscription.myDevices')}
-            </h2>
+              {devicesData && devicesData.devices.length > 0 && (
+                <span className="ml-1.5 text-apple-faint">
+                  {devicesData.device_limit === 0
+                    ? `· ${devicesData.total}`
+                    : `· ${devicesData.total}/${devicesData.device_limit}`}
+                </span>
+              )}
+            </span>
             {devicesData && devicesData.devices.length > 0 && (
               <button
                 onClick={() => {
@@ -2256,69 +2276,48 @@ export default function Subscription() {
                   }
                 }}
                 disabled={deleteAllDevicesMutation.isPending}
-                className="text-[11px] font-medium transition-colors"
-                style={{ color: '#ff453a' }}
+                className="text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
               >
                 {t('subscription.deleteAllDevices')}
               </button>
             )}
           </div>
 
-          {devicesLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div
-                className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
-                style={{
-                  borderColor: 'rgb(10, 132, 255)',
-                  borderTopColor: 'transparent',
-                }}
-              />
-            </div>
-          ) : devicesData && devicesData.devices.length > 0 ? (
-            <div className="space-y-2">
-              <div className="mb-2 font-mono text-[11px] text-apple-ink/30">
-                {devicesData.device_limit === 0
-                  ? `${devicesData.total} · ∞`
-                  : `${devicesData.total} / ${t('subscription.devices', { count: devicesData.device_limit })}`}
+          <div className="overflow-hidden rounded-2xl bg-apple-card">
+            {devicesLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="h-7 w-7 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
               </div>
-              {devicesData.devices.map((device) => (
+            ) : devicesData && devicesData.devices.length > 0 ? (
+              devicesData.devices.map((device, i) => (
                 <div
                   key={device.hwid}
-                  className={`flex items-center justify-between rounded-[12px] p-3.5 ${isDark ? 'bg-apple-elevated' : ''}`}
-                  style={{
-                    background: isDark ? 'transparent' : g.innerBg,
-                    border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
-                  }}
+                  className={`flex items-center gap-3 p-4 ${
+                    i !== devicesData.devices.length - 1 ? 'border-b border-apple-hairline' : ''
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-9 w-9 items-center justify-center rounded-[10px]"
-                      style={{ background: g.trackBg }}
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#0a84ff"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke={g.textSecondary}
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                      </svg>
+                      <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[15px] text-apple-ink">
+                      {device.device_model || device.platform}
                     </div>
-                    <div>
-                      <div className="text-sm font-semibold text-apple-ink">
-                        {device.device_model || device.platform}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] text-apple-ink/30">
-                        <span>{device.platform}</span>
-                        <span className="font-mono text-apple-ink/20">
-                          {device.hwid.slice(0, 8).toUpperCase()}
-                        </span>
-                      </div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-apple-faint">
+                      <span>{device.platform}</span>
+                      <span className="font-mono">{device.hwid.slice(0, 8).toUpperCase()}</span>
                     </div>
                   </div>
                   <button
@@ -2328,32 +2327,18 @@ export default function Subscription() {
                       }
                     }}
                     disabled={deleteDeviceMutation.isPending}
-                    className="p-2 transition-colors"
-                    style={{ color: g.textFaint }}
-                    title={t('subscription.deleteDevice')}
+                    className="shrink-0 text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
+                    {t('subscription.deleteDevice')}
                   </button>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-8 text-center text-[12px] text-apple-ink/25">
-              {t('subscription.noDevices')}
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="py-10 text-center text-[13px] text-apple-mute">
+                {t('subscription.noDevices')}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
