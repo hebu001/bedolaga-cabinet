@@ -6,7 +6,6 @@ import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform';
-import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
 import { useTrafficZone } from '../hooks/useTrafficZone';
 import { formatTraffic } from '../utils/formatTraffic';
 import { getGlassColors } from '../utils/glassTheme';
@@ -787,13 +786,15 @@ export default function Subscription() {
                           {t(`subscription.trafficReset.${subscription.traffic_reset_mode}`)}
                         </div>
                       )}
-                    <TrafficProgressBar
-                      usedGb={usedGb}
-                      limitGb={subscription.traffic_limit_gb}
-                      percent={usedPercent}
-                      isUnlimited={isUnlimited}
-                      compact
-                    />
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full transition-[width] duration-500"
+                        style={{
+                          width: `${isUnlimited ? 100 : Math.min(100, Math.max(2, usedPercent))}%`,
+                          background: '#0a84ff',
+                        }}
+                      />
+                    </div>
                   </div>
                   {/* Devices row → connection */}
                   <button
@@ -1049,7 +1050,7 @@ export default function Subscription() {
       {/* Daily Subscription Pause */}
       {subscription && subscription.is_daily && !subscription.is_trial && (
         <div
-          className={`relative overflow-hidden rounded-3xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
+          className={`relative overflow-hidden rounded-2xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
           style={{
             background: isDark ? 'transparent' : g.cardBg,
             border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -1320,7 +1321,7 @@ export default function Subscription() {
         !subscription.is_trial &&
         subscription.device_limit !== 0 && (
           <div
-            className={`relative overflow-hidden rounded-3xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
+            className={`relative overflow-hidden rounded-2xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
             style={{
               background: isDark ? 'transparent' : g.cardBg,
               border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
@@ -1339,7 +1340,9 @@ export default function Subscription() {
                   haptic.buttonPressMedium();
                   setShowDeviceTopup(true);
                 }}
-                className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                className={
+                  'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
+                }
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -1364,9 +1367,7 @@ export default function Subscription() {
                 </div>
               </button>
             ) : (
-              <div
-                className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
-              >
+              <div className={'rounded-xl bg-apple-elevated p-5'}>
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-medium text-apple-ink">{t('subscription.buyDevices')}</h3>
                   <button
@@ -1540,7 +1541,9 @@ export default function Subscription() {
                     haptic.buttonPressMedium();
                     setShowDeviceReduction(true);
                   }}
-                  className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                  className={
+                    'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
+                  }
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -1563,9 +1566,7 @@ export default function Subscription() {
                   </div>
                 </button>
               ) : (
-                <div
-                  className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
-                >
+                <div className={'rounded-xl bg-apple-elevated p-5'}>
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-medium text-apple-ink">
                       {t('subscription.additionalOptions.reduceDevicesTitle')}
@@ -1721,7 +1722,9 @@ export default function Subscription() {
                       haptic.buttonPressMedium();
                       setShowTrafficTopup(true);
                     }}
-                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                    className={
+                      'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
+                    }
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -1747,9 +1750,7 @@ export default function Subscription() {
                     </div>
                   </button>
                 ) : (
-                  <div
-                    className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
-                  >
+                  <div className={'rounded-xl bg-apple-elevated p-5'}>
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.buyTrafficTitle')}
@@ -1895,7 +1896,9 @@ export default function Subscription() {
                       haptic.buttonPressMedium();
                       setShowServerManagement(true);
                     }}
-                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                    className={
+                      'w-full rounded-xl bg-apple-elevated p-4 text-left transition-colors hover:opacity-80'
+                    }
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -1918,9 +1921,7 @@ export default function Subscription() {
                     </div>
                   </button>
                 ) : (
-                  <div
-                    className={`rounded-xl border p-5 ${isDark ? 'border-apple-hairline/50 bg-apple-card/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
-                  >
+                  <div className={'rounded-xl bg-apple-elevated p-5'}>
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-medium text-apple-ink">
                         {t('subscription.additionalOptions.manageServersTitle')}
@@ -2235,7 +2236,7 @@ export default function Subscription() {
       {/* My Devices Section */}
       {subscription && (
         <div
-          className={`relative overflow-hidden rounded-3xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
+          className={`relative overflow-hidden rounded-2xl ${isDark ? 'bg-apple-card' : 'bg-white'}`}
           style={{
             background: isDark ? 'transparent' : g.cardBg,
             border: isDark ? 'none' : `1px solid ${g.cardBorder}`,

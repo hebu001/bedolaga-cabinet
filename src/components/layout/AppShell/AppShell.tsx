@@ -285,10 +285,13 @@ export function AppShell({ children }: AppShellProps) {
   const isFullscreenContent = isDashboard || isConnection;
   const isPurchasePage = location.pathname === '/subscription/purchase';
 
+  // Apple-dark pages use a solid black canvas instead of the animated background
+  const isAppleDarkPage = isBalance || isSubscription;
+
   return (
-    <div className="min-h-screen">
+    <div className={cn('min-h-screen', isAppleDarkPage && 'bg-black')}>
       {/* Animated background renders via portal on document.body at z-index: -1 */}
-      <BackgroundRenderer />
+      {!isAppleDarkPage && <BackgroundRenderer />}
 
       {/* Global components */}
       <WebSocketNotifications />
