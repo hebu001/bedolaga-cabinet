@@ -668,6 +668,9 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       queryClient.invalidateQueries({ queryKey: ['connection-link', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+      // RemnaWave resets device HWIDs on revoke — make sure the cabinet
+      // re-reads the now-empty device list instead of showing the stale cache.
+      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       haptic.notification('success');
       localStorage.setItem(`revoke_ts_${subscriptionId ?? 'default'}`, Date.now().toString());
       setRevokeCooldown(900);
