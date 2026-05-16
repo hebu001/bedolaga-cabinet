@@ -635,48 +635,48 @@ export default function Subscription() {
                 aria-hidden="true"
               />
 
-              {/* ─── Header ─── */}
-              <div className="mb-6 flex items-start justify-between">
-                <div>
+              {/* ─── Hero header ─── */}
+              <div className="mb-5 flex items-start justify-between">
+                <div className="min-w-0">
                   {/* Zone indicator */}
-                  <div className="mb-1 flex items-center gap-2">
+                  <div className="mb-2 flex items-center gap-1.5">
                     <div
-                      className="h-2 w-2 rounded-full"
+                      className="h-1.5 w-1.5 rounded-full"
                       style={{
-                        background: 'var(--figma-green)',
-                        boxShadow: '0 0 8px rgba(0,183,131,0.5)',
+                        background: zone.mainHex,
+                        boxShadow: `0 0 8px ${zone.mainHex}`,
                         transition: 'all 0.6s ease',
                       }}
                       aria-hidden="true"
                     />
                     <span
-                      className="font-mono text-[11px] font-semibold uppercase tracking-widest"
-                      style={{ color: 'var(--figma-green)', transition: 'color 0.6s ease' }}
+                      className="text-[11px] font-semibold uppercase tracking-widest"
+                      style={{ color: zone.mainHex, transition: 'color 0.6s ease' }}
                     >
                       {isUnlimited ? t('dashboard.unlimited') : t(zone.labelKey)}
                     </span>
                   </div>
 
-                  {/* Plan name */}
-                  <h2 className="text-lg font-bold tracking-tight text-apple-ink">
+                  {/* Plan name — prominent */}
+                  <h2 className="text-[26px] font-bold tracking-tight text-apple-ink">
                     {subscription.tariff_name || t('subscription.currentPlan')}
                   </h2>
                 </div>
 
                 {/* Status badge */}
                 <span
-                  className="max-w-[55%] shrink-0 rounded-full px-3 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-wider"
+                  className="max-w-[45%] shrink-0 rounded-full px-3 py-1 text-center text-[10px] font-semibold uppercase tracking-wider"
                   style={{
                     background: subscription.is_active
                       ? `${zone.mainHex}15`
                       : subscription.is_limited
-                        ? 'rgba(255,184,0,0.12)'
-                        : 'rgba(255,59,92,0.12)',
+                        ? 'rgba(255,159,10,0.12)'
+                        : 'rgba(255,69,58,0.12)',
                     border: subscription.is_active
                       ? `1px solid ${zone.mainHex}30`
                       : subscription.is_limited
-                        ? '1px solid rgba(255,184,0,0.25)'
-                        : '1px solid rgba(255,59,92,0.25)',
+                        ? '1px solid rgba(255,159,10,0.25)'
+                        : '1px solid rgba(255,69,58,0.25)',
                     color: subscription.is_active
                       ? zone.mainHex
                       : subscription.is_limited
@@ -694,6 +694,15 @@ export default function Subscription() {
                         ? t('subscription.pause.suspended')
                         : t('subscription.expired')}
                 </span>
+              </div>
+
+              {/* ─── Countdown — promoted directly under status ─── */}
+              <div className="mb-5">
+                <CountdownTimer
+                  endDate={subscription.end_date}
+                  isActive={subscription.is_active || subscription.is_limited}
+                  glassColors={g}
+                />
               </div>
 
               {/* ─── Traffic Limited Banner ─── */}
@@ -1003,15 +1012,6 @@ export default function Subscription() {
                   </button>
                 </div>
               )}
-
-              {/* ─── Countdown ─── */}
-              <div className="mb-5">
-                <CountdownTimer
-                  endDate={subscription.end_date}
-                  isActive={subscription.is_active || subscription.is_limited}
-                  glassColors={g}
-                />
-              </div>
 
               {/* ─── Locations ─── */}
               {subscription.servers && subscription.servers.length > 0 && (
