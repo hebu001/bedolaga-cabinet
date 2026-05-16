@@ -903,6 +903,471 @@ export default function Subscription() {
                         </div>
                       )}
                   </div>
+                  {/* Buy Devices */}
+                  {showDeviceTopup && (
+                    <div className="border-t border-apple-hairline p-5">
+                      <div className="mb-4 flex items-center justify-between">
+                        <h3 className="font-medium text-apple-ink">
+                          {t('subscription.buyDevices')}
+                        </h3>
+                        <button
+                          onClick={() => {
+                            haptic.buttonPressMedium();
+                            setShowDeviceTopup(false);
+                          }}
+                          className="text-sm text-apple-mute hover:text-apple-ink"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Check if completely unavailable (no subscription, price not set, etc.) */}
+                      {devicePriceData?.available === false ? (
+                        <div className="py-4 text-center text-sm text-apple-mute">
+                          {devicePriceData.reason ||
+                            t('subscription.additionalOptions.devicesUnavailable')}
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Device selector — slider */}
+                          {(() => {
+                            const maxAdd = devicePriceData?.max_device_limit
+                              ? Math.max(
+                                  1,
+                                  devicePriceData.max_device_limit -
+                                    (devicePriceData.current_device_limit ||
+                                      subscription.device_limit),
+                                )
+                              : 20;
+                            return (
+                              <div>
+                                <div className="mb-2 text-center">
+                                  <span className="text-[34px] font-bold tabular-nums text-apple-ink">
+                                    +{devicesToAdd}
+                                  </span>
+                                  <span className="ml-1.5 text-sm text-apple-mute">
+                                    {t('subscription.additionalOptions.devicesUnit')}
+                                  </span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={1}
+                                  max={maxAdd}
+                                  value={Math.min(devicesToAdd, maxAdd)}
+                                  onChange={(e) => {
+                                    haptic.buttonPressMedium();
+                                    setDevicesToAdd(Number(e.target.value));
+                                  }}
+                                  className="w-full accent-apple-blue"
+                                />
+                              </div>
+                            );
+                          })()}
+
+                          {/* Show limit info when at or near max */}
+                          {devicePriceData?.max_device_limit && (
+                            <div className="text-center text-sm text-apple-mute">
+                              {t('subscription.additionalOptions.currentDeviceLimit', {
+                                count:
+                                  devicePriceData.current_device_limit || subscription.device_limit,
+                              })}{' '}
+                              /{' '}
+                              {t('subscription.additionalOptions.maxDevices', {
+                                count: devicePriceData.max_device_limit,
+                              })}
+                            </div>
+                          )}
+
+                          {/* Price info - only when available */}
+                          {devicePriceData?.available && devicePriceData.price_per_device_label && (
+                            <div className="text-center">
+                              <div className="mb-2 text-sm text-apple-mute">
+                                {/* Show original price with strikethrough if discount */}
+                                {devicePriceData.discount_percent &&
+                                devicePriceData.discount_percent > 0 ? (
+                                  <span>
+                                    <span className="text-apple-mute line-through">
+                                      {formatPrice(
+                                        devicePriceData.original_price_per_device_kopeks || 0,
+                                      )}
+                                    </span>
+                                    <span className="mx-1">
+                                      {devicePriceData.price_per_device_label}
+                                    </span>
+                                  </span>
+                                ) : (
+                                  devicePriceData.price_per_device_label
+                                )}
+                                /{t('subscription.perDevice').replace('/ ', '')} (
+                                {t('subscription.days', { count: devicePriceData.days_left })})
+                              </div>
+                              {/* Discount badge */}
+                              {devicePriceData.discount_percent &&
+                                devicePriceData.discount_percent > 0 && (
+                                  <div className="mb-2">
+                                    <span className="inline-block rounded-full bg-apple-green/20 px-2.5 py-0.5 text-sm font-medium text-apple-green">
+                                      -{devicePriceData.discount_percent}%
+                                    </span>
+                                  </div>
+                                )}
+                              {/* Total price - show as free if 100% discount or 0 */}
+                              {devicePriceData.total_price_kopeks === 0 ? (
+                                <div className="text-2xl font-bold text-apple-green">
+                                  {t('subscription.switchTariff.free')}
+                                </div>
+                              ) : (
+                                <div className="text-2xl font-bold text-apple-blue">
+                                  {/* Show original total with strikethrough if discount */}
+                                  {devicePriceData.discount_percent &&
+                                    devicePriceData.discount_percent > 0 &&
+                                    devicePriceData.base_total_price_kopeks && (
+                                      <span className="mr-2 text-lg text-apple-mute line-through">
+                                        {formatPrice(devicePriceData.base_total_price_kopeks)}
+                                      </span>
+                                    )}
+                                  {devicePriceData.total_price_label}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {devicePriceData?.available &&
+                            purchaseOptions &&
+                            devicePriceData.total_price_kopeks &&
+                            devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks && (
+                              <InsufficientBalancePrompt
+                                missingAmountKopeks={
+                                  devicePriceData.total_price_kopeks -
+                                  purchaseOptions.balance_kopeks
+                                }
+                                compact
+                                onBeforeTopUp={async () => {
+                                  await subscriptionApi.saveDevicesCart(
+                                    devicesToAdd,
+                                    subscriptionId,
+                                  );
+                                }}
+                              />
+                            )}
+
+                          <button
+                            onClick={() => {
+                              haptic.buttonPressMedium();
+                              devicePurchaseMutation.mutate();
+                            }}
+                            disabled={
+                              devicePurchaseMutation.isPending ||
+                              !devicePriceData?.available ||
+                              !!(
+                                devicePriceData?.total_price_kopeks &&
+                                purchaseOptions &&
+                                devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks
+                              )
+                            }
+                            className="btn-primary w-full py-3"
+                          >
+                            {devicePurchaseMutation.isPending ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                              </span>
+                            ) : (
+                              t('subscription.additionalOptions.buy')
+                            )}
+                          </button>
+
+                          {devicePurchaseMutation.isError && (
+                            <div className="text-center text-sm text-apple-red">
+                              {getErrorMessage(devicePurchaseMutation.error)}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Reduce Devices */}
+                  <div>
+                    {showDeviceReduction && (
+                      <div className="border-t border-apple-hairline p-5">
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="font-medium text-apple-ink">
+                            {t('subscription.additionalOptions.reduceDevicesTitle')}
+                          </h3>
+                          <button
+                            onClick={() => setShowDeviceReduction(false)}
+                            className="text-sm text-apple-mute hover:text-apple-ink"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {deviceReductionInfo?.available === false ? (
+                          <div className="py-4 text-center text-sm text-apple-mute">
+                            {deviceReductionInfo.reason ||
+                              t('subscription.additionalOptions.reduceUnavailable')}
+                          </div>
+                        ) : deviceReductionInfo ? (
+                          <div className="space-y-4">
+                            {/* Device limit selector — slider */}
+                            <div>
+                              <div className="mb-2 text-center">
+                                <span className="text-[34px] font-bold tabular-nums text-apple-ink">
+                                  {targetDeviceLimit}
+                                </span>
+                                <span className="ml-1.5 text-sm text-apple-mute">
+                                  {t('subscription.additionalOptions.devicesUnit')}
+                                </span>
+                              </div>
+                              <input
+                                type="range"
+                                min={Math.max(
+                                  deviceReductionInfo.min_device_limit,
+                                  deviceReductionInfo.connected_devices_count,
+                                )}
+                                max={Math.max(
+                                  Math.max(
+                                    deviceReductionInfo.min_device_limit,
+                                    deviceReductionInfo.connected_devices_count,
+                                  ),
+                                  deviceReductionInfo.current_device_limit - 1,
+                                )}
+                                value={targetDeviceLimit}
+                                onChange={(e) => {
+                                  haptic.buttonPressMedium();
+                                  setTargetDeviceLimit(Number(e.target.value));
+                                }}
+                                className="w-full accent-apple-blue"
+                              />
+                            </div>
+
+                            {/* Info */}
+                            <div className="space-y-1 text-center text-sm text-apple-mute">
+                              <div>
+                                {t('subscription.additionalOptions.currentDeviceLimit', {
+                                  count: deviceReductionInfo.current_device_limit,
+                                })}
+                              </div>
+                              <div>
+                                {t('subscription.additionalOptions.minDeviceLimit', {
+                                  count: deviceReductionInfo.min_device_limit,
+                                })}
+                              </div>
+                              <div>
+                                {t('subscription.additionalOptions.connectedDevices', {
+                                  count: deviceReductionInfo.connected_devices_count,
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Warning if connected devices block reduction */}
+                            {deviceReductionInfo.connected_devices_count >
+                              deviceReductionInfo.min_device_limit && (
+                              <div className="rounded-lg bg-apple-amber/10 p-3 text-center text-sm text-apple-amber">
+                                {t('subscription.additionalOptions.disconnectDevicesFirst', {
+                                  count: deviceReductionInfo.connected_devices_count,
+                                })}
+                              </div>
+                            )}
+
+                            {/* New limit preview */}
+                            <div className="text-center">
+                              <div className="text-sm text-apple-mute">
+                                {t('subscription.additionalOptions.newDeviceLimit', {
+                                  count: targetDeviceLimit,
+                                })}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                haptic.buttonPressMedium();
+                                deviceReductionMutation.mutate();
+                              }}
+                              disabled={
+                                deviceReductionMutation.isPending ||
+                                targetDeviceLimit >= deviceReductionInfo.current_device_limit ||
+                                targetDeviceLimit < deviceReductionInfo.min_device_limit ||
+                                targetDeviceLimit < deviceReductionInfo.connected_devices_count
+                              }
+                              className="btn-primary w-full py-3"
+                            >
+                              {deviceReductionMutation.isPending ? (
+                                <span className="flex items-center justify-center gap-2">
+                                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                  {t('subscription.additionalOptions.reducing')}
+                                </span>
+                              ) : (
+                                t('subscription.additionalOptions.reduce')
+                              )}
+                            </button>
+
+                            {deviceReductionMutation.isError && (
+                              <div className="text-center text-sm text-apple-red">
+                                {getErrorMessage(deviceReductionMutation.error)}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center py-4">
+                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-apple-blue/30 border-t-apple-blue" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Buy Traffic */}
+                  {subscription.traffic_limit_gb > 0 && (
+                    <div>
+                      {showTrafficTopup && (
+                        <div className="border-t border-apple-hairline p-5">
+                          <div className="mb-4 flex items-center justify-between">
+                            <h3 className="font-medium text-apple-ink">
+                              {t('subscription.additionalOptions.buyTrafficTitle')}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                setShowTrafficTopup(false);
+                                setSelectedTrafficPackage(null);
+                              }}
+                              className="text-sm text-apple-mute hover:text-apple-ink"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          <div
+                            className={`mb-4 rounded-lg p-2 text-xs ${isDark ? 'bg-apple-elevated/30 text-apple-mute' : 'bg-champagne-300/40 text-champagne-600'}`}
+                          >
+                            ⚠️ {t('subscription.additionalOptions.trafficWarning')}
+                          </div>
+
+                          {!trafficPackages || trafficPackages.length === 0 ? (
+                            <div className="py-4 text-center text-sm text-apple-mute">
+                              {t('subscription.additionalOptions.trafficUnavailable')}
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              {/* Traffic package selector — slider */}
+                              {(() => {
+                                const foundIdx = trafficPackages.findIndex(
+                                  (p) => p.gb === selectedTrafficPackage,
+                                );
+                                const idx = foundIdx >= 0 ? foundIdx : 0;
+                                const pkg = trafficPackages[idx];
+                                return (
+                                  <div>
+                                    <div className="mb-1 text-center">
+                                      <span className="text-[34px] font-bold tabular-nums text-apple-ink">
+                                        {pkg.is_unlimited ? '∞' : pkg.gb}
+                                      </span>
+                                      {!pkg.is_unlimited && (
+                                        <span className="ml-1.5 text-sm text-apple-mute">
+                                          {t('common.units.gb')}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {trafficPackages.length > 1 && (
+                                      <input
+                                        type="range"
+                                        min={0}
+                                        max={trafficPackages.length - 1}
+                                        value={idx}
+                                        onChange={(e) => {
+                                          haptic.buttonPressMedium();
+                                          setSelectedTrafficPackage(
+                                            trafficPackages[Number(e.target.value)].gb,
+                                          );
+                                        }}
+                                        className="w-full accent-apple-blue"
+                                      />
+                                    )}
+                                    <div className="mt-2 text-center font-medium text-apple-blue">
+                                      {pkg.discount_percent &&
+                                      pkg.discount_percent > 0 &&
+                                      pkg.base_price_kopeks ? (
+                                        <>
+                                          <span className="mr-1 text-sm text-apple-mute line-through">
+                                            {formatPrice(pkg.base_price_kopeks)}
+                                          </span>
+                                          {formatPrice(pkg.price_kopeks)}
+                                          <span className="ml-1.5 inline-block rounded-full bg-apple-green/20 px-2 py-0.5 text-xs font-medium text-apple-green">
+                                            -{pkg.discount_percent}%
+                                          </span>
+                                        </>
+                                      ) : (
+                                        formatPrice(pkg.price_kopeks)
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
+                              {selectedTrafficPackage !== null &&
+                                (() => {
+                                  const selectedPkg = trafficPackages.find(
+                                    (p) => p.gb === selectedTrafficPackage,
+                                  );
+                                  const hasEnoughBalance =
+                                    !selectedPkg ||
+                                    !purchaseOptions ||
+                                    selectedPkg.price_kopeks <= purchaseOptions.balance_kopeks;
+                                  const missingAmount =
+                                    selectedPkg && purchaseOptions
+                                      ? selectedPkg.price_kopeks - purchaseOptions.balance_kopeks
+                                      : 0;
+
+                                  return (
+                                    <>
+                                      {!hasEnoughBalance && missingAmount > 0 && (
+                                        <InsufficientBalancePrompt
+                                          missingAmountKopeks={missingAmount}
+                                          compact
+                                          className="mb-3"
+                                          onBeforeTopUp={async () => {
+                                            await subscriptionApi.saveTrafficCart(
+                                              selectedTrafficPackage,
+                                              subscriptionId,
+                                            );
+                                          }}
+                                        />
+                                      )}
+                                      <button
+                                        onClick={() =>
+                                          trafficPurchaseMutation.mutate(selectedTrafficPackage)
+                                        }
+                                        disabled={
+                                          trafficPurchaseMutation.isPending || !hasEnoughBalance
+                                        }
+                                        className="btn-primary w-full py-3"
+                                      >
+                                        {trafficPurchaseMutation.isPending ? (
+                                          <span className="flex items-center justify-center gap-2">
+                                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                          </span>
+                                        ) : selectedPkg?.is_unlimited ? (
+                                          t('subscription.additionalOptions.buyUnlimited')
+                                        ) : (
+                                          t('subscription.additionalOptions.buyTrafficGb', {
+                                            gb: selectedTrafficPackage,
+                                          })
+                                        )}
+                                      </button>
+                                    </>
+                                  );
+                                })()}
+
+                              {trafficPurchaseMutation.isError && (
+                                <div className="text-center text-sm text-apple-red">
+                                  {getErrorMessage(trafficPurchaseMutation.error)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1370,460 +1835,8 @@ export default function Subscription() {
         (subscription.is_active || subscription.is_limited) &&
         !subscription.is_trial &&
         subscription.device_limit !== 0 &&
-        (showDeviceTopup || showDeviceReduction || showTrafficTopup || showServerManagement) && (
+        showServerManagement && (
           <div className="space-y-3">
-            {/* Buy Devices */}
-            {showDeviceTopup && (
-              <div className="rounded-2xl bg-apple-card p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-medium text-apple-ink">{t('subscription.buyDevices')}</h3>
-                  <button
-                    onClick={() => {
-                      haptic.buttonPressMedium();
-                      setShowDeviceTopup(false);
-                    }}
-                    className="text-sm text-apple-mute hover:text-apple-ink"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                {/* Check if completely unavailable (no subscription, price not set, etc.) */}
-                {devicePriceData?.available === false ? (
-                  <div className="py-4 text-center text-sm text-apple-mute">
-                    {devicePriceData.reason ||
-                      t('subscription.additionalOptions.devicesUnavailable')}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Device selector — slider */}
-                    {(() => {
-                      const maxAdd = devicePriceData?.max_device_limit
-                        ? Math.max(
-                            1,
-                            devicePriceData.max_device_limit -
-                              (devicePriceData.current_device_limit || subscription.device_limit),
-                          )
-                        : 20;
-                      return (
-                        <div>
-                          <div className="mb-2 text-center">
-                            <span className="text-[34px] font-bold tabular-nums text-apple-ink">
-                              +{devicesToAdd}
-                            </span>
-                            <span className="ml-1.5 text-sm text-apple-mute">
-                              {t('subscription.additionalOptions.devicesUnit')}
-                            </span>
-                          </div>
-                          <input
-                            type="range"
-                            min={1}
-                            max={maxAdd}
-                            value={Math.min(devicesToAdd, maxAdd)}
-                            onChange={(e) => {
-                              haptic.buttonPressMedium();
-                              setDevicesToAdd(Number(e.target.value));
-                            }}
-                            className="w-full accent-apple-blue"
-                          />
-                        </div>
-                      );
-                    })()}
-
-                    {/* Show limit info when at or near max */}
-                    {devicePriceData?.max_device_limit && (
-                      <div className="text-center text-sm text-apple-mute">
-                        {t('subscription.additionalOptions.currentDeviceLimit', {
-                          count: devicePriceData.current_device_limit || subscription.device_limit,
-                        })}{' '}
-                        /{' '}
-                        {t('subscription.additionalOptions.maxDevices', {
-                          count: devicePriceData.max_device_limit,
-                        })}
-                      </div>
-                    )}
-
-                    {/* Price info - only when available */}
-                    {devicePriceData?.available && devicePriceData.price_per_device_label && (
-                      <div className="text-center">
-                        <div className="mb-2 text-sm text-apple-mute">
-                          {/* Show original price with strikethrough if discount */}
-                          {devicePriceData.discount_percent &&
-                          devicePriceData.discount_percent > 0 ? (
-                            <span>
-                              <span className="text-apple-mute line-through">
-                                {formatPrice(devicePriceData.original_price_per_device_kopeks || 0)}
-                              </span>
-                              <span className="mx-1">{devicePriceData.price_per_device_label}</span>
-                            </span>
-                          ) : (
-                            devicePriceData.price_per_device_label
-                          )}
-                          /{t('subscription.perDevice').replace('/ ', '')} (
-                          {t('subscription.days', { count: devicePriceData.days_left })})
-                        </div>
-                        {/* Discount badge */}
-                        {devicePriceData.discount_percent &&
-                          devicePriceData.discount_percent > 0 && (
-                            <div className="mb-2">
-                              <span className="inline-block rounded-full bg-apple-green/20 px-2.5 py-0.5 text-sm font-medium text-apple-green">
-                                -{devicePriceData.discount_percent}%
-                              </span>
-                            </div>
-                          )}
-                        {/* Total price - show as free if 100% discount or 0 */}
-                        {devicePriceData.total_price_kopeks === 0 ? (
-                          <div className="text-2xl font-bold text-apple-green">
-                            {t('subscription.switchTariff.free')}
-                          </div>
-                        ) : (
-                          <div className="text-2xl font-bold text-apple-blue">
-                            {/* Show original total with strikethrough if discount */}
-                            {devicePriceData.discount_percent &&
-                              devicePriceData.discount_percent > 0 &&
-                              devicePriceData.base_total_price_kopeks && (
-                                <span className="mr-2 text-lg text-apple-mute line-through">
-                                  {formatPrice(devicePriceData.base_total_price_kopeks)}
-                                </span>
-                              )}
-                            {devicePriceData.total_price_label}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {devicePriceData?.available &&
-                      purchaseOptions &&
-                      devicePriceData.total_price_kopeks &&
-                      devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks && (
-                        <InsufficientBalancePrompt
-                          missingAmountKopeks={
-                            devicePriceData.total_price_kopeks - purchaseOptions.balance_kopeks
-                          }
-                          compact
-                          onBeforeTopUp={async () => {
-                            await subscriptionApi.saveDevicesCart(devicesToAdd, subscriptionId);
-                          }}
-                        />
-                      )}
-
-                    <button
-                      onClick={() => {
-                        haptic.buttonPressMedium();
-                        devicePurchaseMutation.mutate();
-                      }}
-                      disabled={
-                        devicePurchaseMutation.isPending ||
-                        !devicePriceData?.available ||
-                        !!(
-                          devicePriceData?.total_price_kopeks &&
-                          purchaseOptions &&
-                          devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks
-                        )
-                      }
-                      className="btn-primary w-full py-3"
-                    >
-                      {devicePurchaseMutation.isPending ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        </span>
-                      ) : (
-                        t('subscription.additionalOptions.buy')
-                      )}
-                    </button>
-
-                    {devicePurchaseMutation.isError && (
-                      <div className="text-center text-sm text-apple-red">
-                        {getErrorMessage(devicePurchaseMutation.error)}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Reduce Devices */}
-            <div>
-              {showDeviceReduction && (
-                <div className="rounded-2xl bg-apple-card p-5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-medium text-apple-ink">
-                      {t('subscription.additionalOptions.reduceDevicesTitle')}
-                    </h3>
-                    <button
-                      onClick={() => setShowDeviceReduction(false)}
-                      className="text-sm text-apple-mute hover:text-apple-ink"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {deviceReductionInfo?.available === false ? (
-                    <div className="py-4 text-center text-sm text-apple-mute">
-                      {deviceReductionInfo.reason ||
-                        t('subscription.additionalOptions.reduceUnavailable')}
-                    </div>
-                  ) : deviceReductionInfo ? (
-                    <div className="space-y-4">
-                      {/* Device limit selector — slider */}
-                      <div>
-                        <div className="mb-2 text-center">
-                          <span className="text-[34px] font-bold tabular-nums text-apple-ink">
-                            {targetDeviceLimit}
-                          </span>
-                          <span className="ml-1.5 text-sm text-apple-mute">
-                            {t('subscription.additionalOptions.devicesUnit')}
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min={Math.max(
-                            deviceReductionInfo.min_device_limit,
-                            deviceReductionInfo.connected_devices_count,
-                          )}
-                          max={Math.max(
-                            Math.max(
-                              deviceReductionInfo.min_device_limit,
-                              deviceReductionInfo.connected_devices_count,
-                            ),
-                            deviceReductionInfo.current_device_limit - 1,
-                          )}
-                          value={targetDeviceLimit}
-                          onChange={(e) => {
-                            haptic.buttonPressMedium();
-                            setTargetDeviceLimit(Number(e.target.value));
-                          }}
-                          className="w-full accent-apple-blue"
-                        />
-                      </div>
-
-                      {/* Info */}
-                      <div className="space-y-1 text-center text-sm text-apple-mute">
-                        <div>
-                          {t('subscription.additionalOptions.currentDeviceLimit', {
-                            count: deviceReductionInfo.current_device_limit,
-                          })}
-                        </div>
-                        <div>
-                          {t('subscription.additionalOptions.minDeviceLimit', {
-                            count: deviceReductionInfo.min_device_limit,
-                          })}
-                        </div>
-                        <div>
-                          {t('subscription.additionalOptions.connectedDevices', {
-                            count: deviceReductionInfo.connected_devices_count,
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Warning if connected devices block reduction */}
-                      {deviceReductionInfo.connected_devices_count >
-                        deviceReductionInfo.min_device_limit && (
-                        <div className="rounded-lg bg-apple-amber/10 p-3 text-center text-sm text-apple-amber">
-                          {t('subscription.additionalOptions.disconnectDevicesFirst', {
-                            count: deviceReductionInfo.connected_devices_count,
-                          })}
-                        </div>
-                      )}
-
-                      {/* New limit preview */}
-                      <div className="text-center">
-                        <div className="text-sm text-apple-mute">
-                          {t('subscription.additionalOptions.newDeviceLimit', {
-                            count: targetDeviceLimit,
-                          })}
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          haptic.buttonPressMedium();
-                          deviceReductionMutation.mutate();
-                        }}
-                        disabled={
-                          deviceReductionMutation.isPending ||
-                          targetDeviceLimit >= deviceReductionInfo.current_device_limit ||
-                          targetDeviceLimit < deviceReductionInfo.min_device_limit ||
-                          targetDeviceLimit < deviceReductionInfo.connected_devices_count
-                        }
-                        className="btn-primary w-full py-3"
-                      >
-                        {deviceReductionMutation.isPending ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                            {t('subscription.additionalOptions.reducing')}
-                          </span>
-                        ) : (
-                          t('subscription.additionalOptions.reduce')
-                        )}
-                      </button>
-
-                      {deviceReductionMutation.isError && (
-                        <div className="text-center text-sm text-apple-red">
-                          {getErrorMessage(deviceReductionMutation.error)}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center py-4">
-                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-apple-blue/30 border-t-apple-blue" />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Buy Traffic */}
-            {subscription.traffic_limit_gb > 0 && (
-              <div>
-                {showTrafficTopup && (
-                  <div className="rounded-2xl bg-apple-card p-5">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-medium text-apple-ink">
-                        {t('subscription.additionalOptions.buyTrafficTitle')}
-                      </h3>
-                      <button
-                        onClick={() => {
-                          setShowTrafficTopup(false);
-                          setSelectedTrafficPackage(null);
-                        }}
-                        className="text-sm text-apple-mute hover:text-apple-ink"
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    <div
-                      className={`mb-4 rounded-lg p-2 text-xs ${isDark ? 'bg-apple-elevated/30 text-apple-mute' : 'bg-champagne-300/40 text-champagne-600'}`}
-                    >
-                      ⚠️ {t('subscription.additionalOptions.trafficWarning')}
-                    </div>
-
-                    {!trafficPackages || trafficPackages.length === 0 ? (
-                      <div className="py-4 text-center text-sm text-apple-mute">
-                        {t('subscription.additionalOptions.trafficUnavailable')}
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {/* Traffic package selector — slider */}
-                        {(() => {
-                          const foundIdx = trafficPackages.findIndex(
-                            (p) => p.gb === selectedTrafficPackage,
-                          );
-                          const idx = foundIdx >= 0 ? foundIdx : 0;
-                          const pkg = trafficPackages[idx];
-                          return (
-                            <div>
-                              <div className="mb-1 text-center">
-                                <span className="text-[34px] font-bold tabular-nums text-apple-ink">
-                                  {pkg.is_unlimited ? '∞' : pkg.gb}
-                                </span>
-                                {!pkg.is_unlimited && (
-                                  <span className="ml-1.5 text-sm text-apple-mute">
-                                    {t('common.units.gb')}
-                                  </span>
-                                )}
-                              </div>
-                              {trafficPackages.length > 1 && (
-                                <input
-                                  type="range"
-                                  min={0}
-                                  max={trafficPackages.length - 1}
-                                  value={idx}
-                                  onChange={(e) => {
-                                    haptic.buttonPressMedium();
-                                    setSelectedTrafficPackage(
-                                      trafficPackages[Number(e.target.value)].gb,
-                                    );
-                                  }}
-                                  className="w-full accent-apple-blue"
-                                />
-                              )}
-                              <div className="mt-2 text-center font-medium text-apple-blue">
-                                {pkg.discount_percent &&
-                                pkg.discount_percent > 0 &&
-                                pkg.base_price_kopeks ? (
-                                  <>
-                                    <span className="mr-1 text-sm text-apple-mute line-through">
-                                      {formatPrice(pkg.base_price_kopeks)}
-                                    </span>
-                                    {formatPrice(pkg.price_kopeks)}
-                                    <span className="ml-1.5 inline-block rounded-full bg-apple-green/20 px-2 py-0.5 text-xs font-medium text-apple-green">
-                                      -{pkg.discount_percent}%
-                                    </span>
-                                  </>
-                                ) : (
-                                  formatPrice(pkg.price_kopeks)
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                        {selectedTrafficPackage !== null &&
-                          (() => {
-                            const selectedPkg = trafficPackages.find(
-                              (p) => p.gb === selectedTrafficPackage,
-                            );
-                            const hasEnoughBalance =
-                              !selectedPkg ||
-                              !purchaseOptions ||
-                              selectedPkg.price_kopeks <= purchaseOptions.balance_kopeks;
-                            const missingAmount =
-                              selectedPkg && purchaseOptions
-                                ? selectedPkg.price_kopeks - purchaseOptions.balance_kopeks
-                                : 0;
-
-                            return (
-                              <>
-                                {!hasEnoughBalance && missingAmount > 0 && (
-                                  <InsufficientBalancePrompt
-                                    missingAmountKopeks={missingAmount}
-                                    compact
-                                    className="mb-3"
-                                    onBeforeTopUp={async () => {
-                                      await subscriptionApi.saveTrafficCart(
-                                        selectedTrafficPackage,
-                                        subscriptionId,
-                                      );
-                                    }}
-                                  />
-                                )}
-                                <button
-                                  onClick={() =>
-                                    trafficPurchaseMutation.mutate(selectedTrafficPackage)
-                                  }
-                                  disabled={trafficPurchaseMutation.isPending || !hasEnoughBalance}
-                                  className="btn-primary w-full py-3"
-                                >
-                                  {trafficPurchaseMutation.isPending ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                    </span>
-                                  ) : selectedPkg?.is_unlimited ? (
-                                    t('subscription.additionalOptions.buyUnlimited')
-                                  ) : (
-                                    t('subscription.additionalOptions.buyTrafficGb', {
-                                      gb: selectedTrafficPackage,
-                                    })
-                                  )}
-                                </button>
-                              </>
-                            );
-                          })()}
-
-                        {trafficPurchaseMutation.isError && (
-                          <div className="text-center text-sm text-apple-red">
-                            {getErrorMessage(trafficPurchaseMutation.error)}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Server Management - only in classic mode */}
             {!isTariffsMode && (
               <div>
