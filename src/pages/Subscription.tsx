@@ -95,6 +95,35 @@ const CountdownTimer = memo(function CountdownTimer({
   );
 });
 
+// Apple-style leading icon tile for list rows
+const ROW_ICON = {
+  link: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71',
+  device: 'M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 18h.01',
+  autopay:
+    'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+  server:
+    'M5 2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 14h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zM7 6h.01M7 18h.01',
+  reissue: 'M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10',
+} as const;
+
+const RowIcon = ({ d }: { d: string }) => (
+  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#0a84ff"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={d} />
+    </svg>
+  </span>
+);
+
 export default function Subscription() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -202,6 +231,23 @@ export default function Subscription() {
   });
 
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
+
+  // Price of the selected tariff (per-month / daily) — best-effort across modes
+  const tariffPriceLabel: string | null = (() => {
+    if (!subscription) return null;
+    if (subscription.daily_price_kopeks) return formatPrice(subscription.daily_price_kopeks);
+    if (purchaseOptions?.sales_mode === 'tariffs') {
+      const cur = purchaseOptions.tariffs?.find((tr) => tr.is_current);
+      return cur?.periods?.[0]?.price_per_month_label ?? null;
+    }
+    if (purchaseOptions?.sales_mode === 'classic') {
+      const per = purchaseOptions.periods?.find(
+        (p) => p.id === purchaseOptions.selection?.period_id,
+      );
+      return per?.per_month_price_label ?? per?.price_label ?? null;
+    }
+    return null;
+  })();
 
   const autopayMutation = useMutation({
     mutationFn: (enabled: boolean) =>
@@ -599,6 +645,9 @@ export default function Subscription() {
                       <h2 className="truncate text-[28px] font-bold tracking-tight text-apple-ink">
                         {subscription.tariff_name || t('subscription.currentPlan')}
                       </h2>
+                      {tariffPriceLabel && (
+                        <div className="mt-0.5 text-[14px] text-apple-mute">{tariffPriceLabel}</div>
+                      )}
                     </div>
                     <span
                       className="shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold"
@@ -1380,29 +1429,28 @@ export default function Subscription() {
                   </div>
                   <div className="overflow-hidden rounded-2xl bg-apple-card">
                     {displayedConnectionUrl && !shouldHideConnectionLink && (
-                      <div className="p-4">
-                        <div className="flex gap-2">
-                          <code
-                            className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
-                            title={displayedConnectionUrl}
-                          >
-                            {displayedConnectionUrl}
-                          </code>
-                          <button
-                            onClick={() => {
-                              haptic.buttonPressMedium();
-                              copyUrl();
-                            }}
-                            className="flex items-center rounded-[10px] px-3.5 transition-colors"
-                            style={{
-                              background: copied ? 'rgba(10,132,255,0.15)' : '#2c2c2e',
-                              color: copied ? '#0a84ff' : '#98989d',
-                            }}
-                            title={t('subscription.copyLink')}
-                          >
-                            {copied ? <CheckIcon /> : <CopyIcon />}
-                          </button>
-                        </div>
+                      <div className="flex items-center gap-2.5 p-4">
+                        <RowIcon d={ROW_ICON.link} />
+                        <code
+                          className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
+                          title={displayedConnectionUrl}
+                        >
+                          {displayedConnectionUrl}
+                        </code>
+                        <button
+                          onClick={() => {
+                            haptic.buttonPressMedium();
+                            copyUrl();
+                          }}
+                          className="flex items-center rounded-[10px] px-3.5 transition-colors"
+                          style={{
+                            background: copied ? 'rgba(10,132,255,0.15)' : '#2c2c2e',
+                            color: copied ? '#0a84ff' : '#98989d',
+                          }}
+                          title={t('subscription.copyLink')}
+                        >
+                          {copied ? <CheckIcon /> : <CopyIcon />}
+                        </button>
                       </div>
                     )}
                     {subscription.subscription_url && (
@@ -1419,13 +1467,14 @@ export default function Subscription() {
                             subscriptionId ? `/connection?sub=${subscriptionId}` : '/connection',
                           );
                         }}
-                        className={`flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-apple-elevated disabled:cursor-not-allowed disabled:opacity-50 ${
+                        className={`flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-apple-elevated disabled:cursor-not-allowed disabled:opacity-50 ${
                           displayedConnectionUrl && !shouldHideConnectionLink
                             ? 'border-t border-apple-hairline'
                             : ''
                         }`}
                       >
-                        <div className="min-w-0">
+                        <RowIcon d={ROW_ICON.device} />
+                        <div className="min-w-0 flex-1">
                           <div className="text-[15px] text-apple-ink">
                             {t('dashboard.connectDevice')}
                           </div>
@@ -2105,15 +2154,21 @@ export default function Subscription() {
             <div className="overflow-hidden rounded-2xl bg-apple-card">
               {/* Autopay */}
               {!subscription.is_daily && (
-                <div className="flex items-center justify-between gap-3 p-4">
-                  <div>
+                <div className="flex items-center gap-3 p-4">
+                  <RowIcon d={ROW_ICON.autopay} />
+                  <div className="min-w-0 flex-1">
                     <div className="text-[15px] text-apple-ink">
                       {t('subscription.autoRenewal')}
                     </div>
                     <div className="mt-0.5 text-[13px] text-apple-mute">
-                      {t('subscription.daysBeforeExpiry', {
-                        count: subscription.autopay_days_before,
-                      })}
+                      {tariffPriceLabel
+                        ? t('subscription.autopayChargeHint', {
+                            price: tariffPriceLabel,
+                            defaultValue: `Списывать ${tariffPriceLabel} с баланса`,
+                          })
+                        : t('subscription.daysBeforeExpiry', {
+                            count: subscription.autopay_days_before,
+                          })}
                     </div>
                   </div>
                   <button
@@ -2148,9 +2203,10 @@ export default function Subscription() {
                     setShowTrafficTopup(false);
                     setShowServerManagement(true);
                   }}
-                  className="flex w-full items-center justify-between gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated"
+                  className="flex w-full items-center gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated"
                 >
-                  <div className="min-w-0">
+                  <RowIcon d={ROW_ICON.server} />
+                  <div className="min-w-0 flex-1">
                     <div className="text-[15px] text-apple-ink">
                       {t('subscription.additionalOptions.manageServers', 'Управление серверами')}
                     </div>
@@ -2168,9 +2224,10 @@ export default function Subscription() {
                 <button
                   onClick={handleRevoke}
                   disabled={revokeMutation.isPending || revokeCooldown > 0}
-                  className="flex w-full items-center justify-between gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50"
+                  className="flex w-full items-center gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50"
                 >
-                  <div className="min-w-0">
+                  <RowIcon d={ROW_ICON.reissue} />
+                  <div className="min-w-0 flex-1">
                     <div className="text-[15px] text-apple-ink">
                       {t('subscription.revoke.button')}
                     </div>
