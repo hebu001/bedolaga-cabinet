@@ -110,7 +110,7 @@ export default {
           mute: '#98989d',
           faint: '#5a5a5e',
           hairline: 'rgba(255,255,255,0.08)',
-          blue: '#0a84ff',
+          blue: '#F97315',
           green: '#30d158',
           red: '#ff453a',
           amber: '#ff9f0a',

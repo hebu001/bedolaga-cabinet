@@ -92,7 +92,7 @@ export function MobileBottomNav({
               <motion.div
                 layoutId="bottom-nav-pill"
                 className="absolute inset-0 rounded-full"
-                style={{ background: '#0a84ff' }}
+                style={{ background: '#F97315' }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
             )}

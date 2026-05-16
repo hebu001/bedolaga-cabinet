@@ -6,7 +6,6 @@ import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform';
-import { useTrafficZone } from '../hooks/useTrafficZone';
 import { formatTraffic } from '../utils/formatTraffic';
 import { getGlassColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
@@ -104,6 +103,7 @@ const ROW_ICON = {
   server:
     'M5 2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 14h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zM7 6h.01M7 18h.01',
   reissue: 'M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10',
+  traffic: 'M7 16a4 4 0 0 1-.88-7.9A5 5 0 0 1 15.9 6 5 5 0 0 1 17 15.9M15 13l-3-3-3 3M12 10v8',
 } as const;
 
 const RowIcon = ({ d }: { d: string }) => (
@@ -113,7 +113,7 @@ const RowIcon = ({ d }: { d: string }) => (
       height="17"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#0a84ff"
+      stroke="#F97315"
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -218,9 +218,7 @@ export default function Subscription() {
   const shouldHideConnectionLink =
     subscription?.hide_subscription_link || connectionLink?.hide_link;
 
-  // Traffic zone (theme-aware) — called unconditionally at top level
   const usedPercent = trafficData?.traffic_used_percent ?? subscription?.traffic_used_percent ?? 0;
-  const zone = useTrafficZone(usedPercent);
 
   // Purchase options (needed for balance_kopeks in device/traffic/server management)
   const { data: purchaseOptions } = useQuery({
@@ -613,7 +611,7 @@ export default function Subscription() {
                     height: 230,
                     borderRadius: '50%',
                     background:
-                      'radial-gradient(circle, rgba(10,132,255,0.30) 0%, transparent 70%)',
+                      'radial-gradient(circle, rgba(249, 115, 21,0.30) 0%, transparent 70%)',
                   }}
                   aria-hidden="true"
                 />
@@ -654,11 +652,11 @@ export default function Subscription() {
                       style={{
                         background: subscription.is_trial
                           ? 'rgba(255,159,10,0.14)'
-                          : 'rgba(10,132,255,0.14)',
+                          : 'rgba(249, 115, 21,0.14)',
                         border: subscription.is_trial
                           ? '1px solid rgba(255,159,10,0.3)'
-                          : '1px solid rgba(10,132,255,0.3)',
-                        color: subscription.is_trial ? '#ff9f0a' : '#0a84ff',
+                          : '1px solid rgba(249, 115, 21,0.3)',
+                        color: subscription.is_trial ? '#ff9f0a' : '#F97315',
                       }}
                     >
                       {subscription.is_trial
@@ -750,21 +748,21 @@ export default function Subscription() {
                   className="mb-6 rounded-[14px] p-4"
                   style={{
                     background:
-                      'linear-gradient(135deg, rgba(10, 132, 255, 0.08), rgba(10, 132, 255, 0.03))',
-                    border: '1px solid rgba(10, 132, 255, 0.12)',
+                      'linear-gradient(135deg, rgba(249, 115, 21, 0.08), rgba(249, 115, 21, 0.03))',
+                    border: '1px solid rgba(249, 115, 21, 0.12)',
                   }}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
-                      style={{ background: 'rgba(10, 132, 255, 0.12)' }}
+                      style={{ background: 'rgba(249, 115, 21, 0.12)' }}
                     >
                       <svg
                         width="16"
                         height="16"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="rgb(10, 132, 255)"
+                        stroke="rgb(249, 115, 21)"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -774,7 +772,7 @@ export default function Subscription() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-semibold" style={{ color: 'rgb(10, 132, 255)' }}>
+                      <div className="text-sm font-semibold" style={{ color: 'rgb(249, 115, 21)' }}>
                         {t('subscription.trialInfo.title')}
                       </div>
                       <div className="mt-1 text-[12px] text-apple-ink/40">
@@ -784,7 +782,7 @@ export default function Subscription() {
                         <div className="flex items-center gap-1.5">
                           <span
                             className="font-mono text-[12px] font-semibold"
-                            style={{ color: 'rgb(10, 132, 255)' }}
+                            style={{ color: 'rgb(249, 115, 21)' }}
                           >
                             {subscription.days_left > 0
                               ? t('subscription.days', { count: subscription.days_left })
@@ -797,7 +795,7 @@ export default function Subscription() {
                         <div className="flex items-center gap-1.5">
                           <span
                             className="font-mono text-[12px] font-semibold"
-                            style={{ color: 'rgb(10, 132, 255)' }}
+                            style={{ color: 'rgb(249, 115, 21)' }}
                           >
                             {subscription.traffic_limit_gb || '∞'} {t('common.units.gb')}
                           </span>
@@ -808,7 +806,7 @@ export default function Subscription() {
                         <div className="flex items-center gap-1.5">
                           <span
                             className="font-mono text-[12px] font-semibold"
-                            style={{ color: 'rgb(10, 132, 255)' }}
+                            style={{ color: 'rgb(249, 115, 21)' }}
                           >
                             {subscription.device_limit === 0 ? '∞' : subscription.device_limit}
                           </span>
@@ -896,7 +894,7 @@ export default function Subscription() {
                         className="h-full rounded-full transition-[width] duration-500"
                         style={{
                           width: `${isUnlimited ? 100 : Math.min(100, Math.max(2, usedPercent))}%`,
-                          background: '#0a84ff',
+                          background: '#F97315',
                         }}
                       />
                     </div>
@@ -1113,7 +1111,7 @@ export default function Subscription() {
                                 devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks
                               )
                             }
-                            className="btn-primary w-full py-3"
+                            className="btn-primary w-full !rounded-full py-3"
                           >
                             {devicePurchaseMutation.isPending ? (
                               <span className="flex items-center justify-center gap-2">
@@ -1388,7 +1386,7 @@ export default function Subscription() {
                                         disabled={
                                           trafficPurchaseMutation.isPending || !hasEnoughBalance
                                         }
-                                        className="btn-primary w-full py-3"
+                                        className="btn-primary w-full !rounded-full py-3"
                                       >
                                         {trafficPurchaseMutation.isPending ? (
                                           <span className="flex items-center justify-center gap-2">
@@ -1444,8 +1442,8 @@ export default function Subscription() {
                           }}
                           className="flex items-center rounded-[10px] px-3.5 transition-colors"
                           style={{
-                            background: copied ? 'rgba(10,132,255,0.15)' : '#2c2c2e',
-                            color: copied ? '#0a84ff' : '#98989d',
+                            background: copied ? 'rgba(249, 115, 21,0.15)' : '#2c2c2e',
+                            color: copied ? '#F97315' : '#98989d',
                           }}
                           title={t('subscription.copyLink')}
                         >
@@ -1489,80 +1487,44 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* ─── Purchased Traffic Packages ─── */}
+              {/* ─── Докупленный трафик ─── */}
               {subscription.traffic_purchases && subscription.traffic_purchases.length > 0 && (
-                <div className="mb-5">
-                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-apple-ink/35">
+                <div>
+                  <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
                     {t('subscription.purchasedTraffic')}
                   </div>
-                  <div className="space-y-2">
-                    {subscription.traffic_purchases.map((purchase) => (
+                  <div className="overflow-hidden rounded-2xl bg-apple-card">
+                    {subscription.traffic_purchases.map((purchase, i) => (
                       <div
                         key={purchase.id}
-                        className={`rounded-[12px] p-3 ${isDark ? 'bg-apple-elevated' : ''}`}
-                        style={{
-                          background: isDark ? 'transparent' : g.innerBg,
-                          border: isDark ? 'none' : `1px solid ${g.innerBorder}`,
-                        }}
+                        className={`p-4 ${i > 0 ? 'border-t border-apple-hairline' : ''}`}
                       >
-                        <div className="mb-2 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="flex h-7 w-7 items-center justify-center rounded-[8px]"
-                              style={{ background: `${zone.mainHex}12` }}
-                            >
-                              <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke={zone.mainHex}
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                aria-hidden="true"
-                              >
-                                <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                              </svg>
-                            </div>
-                            <span className="text-sm font-semibold text-apple-ink">
-                              {purchase.traffic_gb} {t('common.units.gb')}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <div
-                              className="text-[11px] font-medium"
-                              style={{
-                                color: purchase.days_remaining === 0 ? '#ff9f0a' : g.textSecondary,
-                              }}
-                            >
-                              {purchase.days_remaining === 0
-                                ? t('subscription.expired')
-                                : t('subscription.days', { count: purchase.days_remaining })}
-                            </div>
-                            <div className="mt-0.5 font-mono text-[9px] text-apple-ink/20">
-                              {t('subscription.trafficResetAt')}:{' '}
-                              {new Date(purchase.expires_at).toLocaleDateString(undefined, {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                              })}
-                            </div>
-                          </div>
+                        <div className="mb-2.5 flex items-center gap-3">
+                          <RowIcon d={ROW_ICON.traffic} />
+                          <span className="flex-1 text-[15px] font-medium text-apple-ink">
+                            {purchase.traffic_gb} {t('common.units.gb')}
+                          </span>
+                          <span
+                            className="text-[13px] font-medium"
+                            style={{
+                              color: purchase.days_remaining === 0 ? '#ff9f0a' : '#98989d',
+                            }}
+                          >
+                            {purchase.days_remaining === 0
+                              ? t('subscription.expired')
+                              : t('subscription.days', { count: purchase.days_remaining })}
+                          </span>
                         </div>
-                        <div
-                          className="relative h-1.5 overflow-hidden rounded-full"
-                          style={{ background: g.trackBg }}
-                        >
+                        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                           <div
-                            className="absolute inset-0 rounded-full transition-[width] duration-500"
+                            className="h-full rounded-full transition-[width] duration-500"
                             style={{
                               width: `${purchase.progress_percent}%`,
-                              background: `linear-gradient(90deg, ${zone.mainHex}, ${zone.mainHex}80)`,
+                              background: '#F97315',
                             }}
                           />
                         </div>
-                        <div className="mt-1 flex justify-between font-mono text-[9px] text-apple-ink/20">
+                        <div className="mt-1.5 flex justify-between text-[11px] text-apple-faint">
                           <span>{new Date(purchase.created_at).toLocaleDateString()}</span>
                           <span>{new Date(purchase.expires_at).toLocaleDateString()}</span>
                         </div>
@@ -1643,15 +1605,15 @@ export default function Subscription() {
               style={{
                 background:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgba(10, 132, 255, 0.12)'
+                    ? 'rgba(249, 115, 21, 0.12)'
                     : 'rgba(255,184,0,0.12)',
                 border:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? '1px solid rgba(10, 132, 255, 0.2)'
+                    ? '1px solid rgba(249, 115, 21, 0.2)'
                     : '1px solid rgba(255,184,0,0.2)',
                 color:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgb(10, 132, 255)'
+                    ? 'rgb(249, 115, 21)'
                     : '#ff9f0a',
               }}
             >
@@ -1758,7 +1720,7 @@ export default function Subscription() {
                       className="absolute inset-0 rounded-full transition-[width] duration-500"
                       style={{
                         width: `${progress}%`,
-                        background: 'linear-gradient(90deg, rgb(10, 132, 255), rgb(10, 132, 255))',
+                        background: 'linear-gradient(90deg, rgb(249, 115, 21), rgb(249, 115, 21))',
                       }}
                     />
                   </div>
@@ -2304,7 +2266,7 @@ export default function Subscription() {
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#0a84ff"
+                      stroke="#F97315"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
