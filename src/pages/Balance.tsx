@@ -13,6 +13,7 @@ import type { PaginatedResponse, Transaction } from '../types';
 import { ChevronDownIcon, ChevronRightIcon } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import { isPaidStatus, isFailedStatus } from '../utils/paymentStatus';
+import TopUpPanel from '@/components/balance/TopUpPanel';
 
 const WalletIcon = ({ className = 'h-8 w-8' }: { className?: string }) => (
   <svg
@@ -90,6 +91,14 @@ export default function Balance() {
   const [promoSelectCode, setPromoSelectCode] = useState<string | null>(null);
   const [transactionsPage, setTransactionsPage] = useState(1);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [topUpMethodId, setTopUpMethodId] = useState<string | null>(null);
+
+  const handleTopUpSuccess = async () => {
+    setTopUpMethodId(null);
+    await refetchBalance();
+    await refreshUser();
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+  };
 
   const { data: transactions, isLoading } = useQuery<PaginatedResponse<Transaction>>({
     queryKey: ['transactions', transactionsPage],
@@ -316,7 +325,7 @@ export default function Balance() {
         </div>
       </motion.div>
 
-      {/* Payment Methods */}
+      {/* Payment Methods — top-up flow folded inline */}
       {paymentMethods && paymentMethods.length > 0 && (
         <motion.div variants={staggerItem}>
           <div className={sectionTitleCls}>{t('balance.topUpBalance')}</div>
@@ -329,40 +338,54 @@ export default function Balance() {
               const translatedDesc = t(`balance.paymentMethods.${methodKey}.description`, {
                 defaultValue: '',
               });
+              const isOpen = topUpMethodId === method.id;
 
               return (
-                <button
+                <div
                   key={method.id}
-                  type="button"
-                  disabled={!method.is_available}
-                  onClick={() => method.is_available && navigate(`/balance/top-up/${method.id}`)}
-                  className={`flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors ${
+                  className={
                     idx !== paymentMethods.length - 1 ? 'border-b border-apple-hairline' : ''
-                  } ${
-                    method.is_available
-                      ? 'hover:bg-apple-elevated active:bg-apple-elevated'
-                      : 'cursor-not-allowed opacity-50'
-                  }`}
+                  }
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated text-apple-blue">
-                    ◉
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[15px] font-medium text-apple-ink">
-                      {translatedName || method.name}
-                    </div>
-                    {(translatedDesc || method.description) && (
-                      <div className="mt-0.5 truncate text-[13px] text-apple-mute">
-                        {translatedDesc || method.description}
+                  <button
+                    type="button"
+                    disabled={!method.is_available}
+                    onClick={() =>
+                      method.is_available && setTopUpMethodId(isOpen ? null : method.id)
+                    }
+                    className={`flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors ${
+                      method.is_available
+                        ? 'hover:bg-apple-elevated active:bg-apple-elevated'
+                        : 'cursor-not-allowed opacity-50'
+                    }`}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated text-apple-blue">
+                      ◉
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[15px] font-medium text-apple-ink">
+                        {translatedName || method.name}
                       </div>
-                    )}
-                    <div className="mt-0.5 text-xs tabular-nums text-apple-faint">
-                      {formatAmount(method.min_amount_kopeks / 100, 0)} –{' '}
-                      {formatAmount(method.max_amount_kopeks / 100, 0)} {currencySymbol}
+                      {(translatedDesc || method.description) && (
+                        <div className="mt-0.5 truncate text-[13px] text-apple-mute">
+                          {translatedDesc || method.description}
+                        </div>
+                      )}
+                      <div className="mt-0.5 text-xs tabular-nums text-apple-faint">
+                        {formatAmount(method.min_amount_kopeks / 100, 0)} –{' '}
+                        {formatAmount(method.max_amount_kopeks / 100, 0)} {currencySymbol}
+                      </div>
                     </div>
-                  </div>
-                  <ChevronRightIcon className="h-5 w-5 shrink-0 text-apple-faint" />
-                </button>
+                    <ChevronDownIcon
+                      className={`h-5 w-5 shrink-0 text-apple-faint transition-transform duration-200 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && <TopUpPanel method={method} onSuccess={handleTopUpSuccess} />}
+                  </AnimatePresence>
+                </div>
               );
             })}
           </div>

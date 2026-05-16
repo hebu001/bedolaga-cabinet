@@ -65,8 +65,6 @@ const QuickPurchase = lazyWithRetry(() => import('./pages/QuickPurchase'));
 const PurchaseSuccess = lazyWithRetry(() => import('./pages/PurchaseSuccess'));
 const RenewSubscription = lazyWithRetry(() => import('./pages/RenewSubscription'));
 const AutoLogin = lazyWithRetry(() => import('./pages/AutoLogin'));
-const TopUpMethodSelect = lazyWithRetry(() => import('./pages/TopUpMethodSelect'));
-const TopUpAmount = lazyWithRetry(() => import('./pages/TopUpAmount'));
 const TopUpResult = lazyWithRetry(() => import('./pages/TopUpResult'));
 const ConnectedAccounts = lazyWithRetry(() => import('./pages/ConnectedAccounts'));
 const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCallback'));
@@ -83,7 +81,9 @@ const LinearSubscription = lazyWithRetry(() => import('./pages/preview/LinearSub
 const SupabaseBalance = lazyWithRetry(() => import('./pages/preview/SupabaseBalance'));
 const SupabaseSubscription = lazyWithRetry(() => import('./pages/preview/SupabaseSubscription'));
 const LamborghiniBalance = lazyWithRetry(() => import('./pages/preview/LamborghiniBalance'));
-const LamborghiniSubscription = lazyWithRetry(() => import('./pages/preview/LamborghiniSubscription'));
+const LamborghiniSubscription = lazyWithRetry(
+  () => import('./pages/preview/LamborghiniSubscription'),
+);
 const BugattiBalance = lazyWithRetry(() => import('./pages/preview/BugattiBalance'));
 const BugattiSubscription = lazyWithRetry(() => import('./pages/preview/BugattiSubscription'));
 const BinanceBalance = lazyWithRetry(() => import('./pages/preview/BinanceBalance'));
@@ -303,23 +303,142 @@ function App() {
         />
 
         {/* Design previews — public, no auth, mobile mockups */}
-        <Route path="/preview" element={<LazyPage><PreviewIndex /></LazyPage>} />
-        <Route path="/preview/stripe/balance" element={<LazyPage><StripeBalance /></LazyPage>} />
-        <Route path="/preview/stripe/subscription" element={<LazyPage><StripeSubscription /></LazyPage>} />
-        <Route path="/preview/revolut/balance" element={<LazyPage><RevolutBalance /></LazyPage>} />
-        <Route path="/preview/revolut/subscription" element={<LazyPage><RevolutSubscription /></LazyPage>} />
-        <Route path="/preview/linear/balance" element={<LazyPage><LinearBalance /></LazyPage>} />
-        <Route path="/preview/linear/subscription" element={<LazyPage><LinearSubscription /></LazyPage>} />
-        <Route path="/preview/supabase/balance" element={<LazyPage><SupabaseBalance /></LazyPage>} />
-        <Route path="/preview/supabase/subscription" element={<LazyPage><SupabaseSubscription /></LazyPage>} />
-        <Route path="/preview/lamborghini/balance" element={<LazyPage><LamborghiniBalance /></LazyPage>} />
-        <Route path="/preview/lamborghini/subscription" element={<LazyPage><LamborghiniSubscription /></LazyPage>} />
-        <Route path="/preview/bugatti/balance" element={<LazyPage><BugattiBalance /></LazyPage>} />
-        <Route path="/preview/bugatti/subscription" element={<LazyPage><BugattiSubscription /></LazyPage>} />
-        <Route path="/preview/binance/balance" element={<LazyPage><BinanceBalance /></LazyPage>} />
-        <Route path="/preview/binance/subscription" element={<LazyPage><BinanceSubscription /></LazyPage>} />
-        <Route path="/preview/apple/balance" element={<LazyPage><AppleBalance /></LazyPage>} />
-        <Route path="/preview/apple/subscription" element={<LazyPage><AppleSubscription /></LazyPage>} />
+        <Route
+          path="/preview"
+          element={
+            <LazyPage>
+              <PreviewIndex />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/stripe/balance"
+          element={
+            <LazyPage>
+              <StripeBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/stripe/subscription"
+          element={
+            <LazyPage>
+              <StripeSubscription />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/revolut/balance"
+          element={
+            <LazyPage>
+              <RevolutBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/revolut/subscription"
+          element={
+            <LazyPage>
+              <RevolutSubscription />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/linear/balance"
+          element={
+            <LazyPage>
+              <LinearBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/linear/subscription"
+          element={
+            <LazyPage>
+              <LinearSubscription />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/supabase/balance"
+          element={
+            <LazyPage>
+              <SupabaseBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/supabase/subscription"
+          element={
+            <LazyPage>
+              <SupabaseSubscription />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/lamborghini/balance"
+          element={
+            <LazyPage>
+              <LamborghiniBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/lamborghini/subscription"
+          element={
+            <LazyPage>
+              <LamborghiniSubscription />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/bugatti/balance"
+          element={
+            <LazyPage>
+              <BugattiBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/bugatti/subscription"
+          element={
+            <LazyPage>
+              <BugattiSubscription />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/binance/balance"
+          element={
+            <LazyPage>
+              <BinanceBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/binance/subscription"
+          element={
+            <LazyPage>
+              <BinanceSubscription />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/apple/balance"
+          element={
+            <LazyPage>
+              <AppleBalance />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/preview/apple/subscription"
+          element={
+            <LazyPage>
+              <AppleSubscription />
+            </LazyPage>
+          }
+        />
 
         {/* Protected routes */}
         <Route
@@ -402,16 +521,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/balance/top-up"
-          element={
-            <ProtectedRoute>
-              <LazyPage>
-                <TopUpMethodSelect />
-              </LazyPage>
-            </ProtectedRoute>
-          }
-        />
+        {/* Top-up flow folded into /balance — legacy routes redirect */}
+        <Route path="/balance/top-up" element={<Navigate to="/balance" replace />} />
         <Route
           path="/balance/top-up/result"
           element={
@@ -424,16 +535,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/balance/top-up/:methodId"
-          element={
-            <ProtectedRoute>
-              <LazyPage>
-                <TopUpAmount />
-              </LazyPage>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/balance/top-up/:methodId" element={<Navigate to="/balance" replace />} />
         <Route
           path="/referral"
           element={

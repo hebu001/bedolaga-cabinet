@@ -26,10 +26,11 @@ function AmountDisplay({ amountKopeks, label }: { amountKopeks: number; label: s
   const amountRubles = amountKopeks / 100;
 
   return (
-    <div className="mt-4 rounded-xl bg-dark-800/50 px-6 py-4">
-      <p className="text-xs text-dark-400">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-dark-50">
-        {formatAmount(amountRubles)} <span className="text-lg text-dark-400">{currencySymbol}</span>
+    <div className="mt-4 rounded-xl bg-apple-elevated px-6 py-4">
+      <p className="text-xs text-apple-mute">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-apple-ink">
+        {formatAmount(amountRubles)}{' '}
+        <span className="text-lg text-apple-mute">{currencySymbol}</span>
       </p>
     </div>
   );
@@ -46,10 +47,12 @@ function PendingState({ amountKopeks }: { amountKopeks: number | null }) {
     >
       <Spinner className="h-16 w-16 border-[3px]" />
       <div>
-        <h1 className="text-xl font-bold text-dark-50">
+        <h1 className="text-xl font-bold text-apple-ink">
           {t('balance.topUpResult.awaitingPayment')}
         </h1>
-        <p className="mt-2 text-sm text-dark-400">{t('balance.topUpResult.awaitingPaymentDesc')}</p>
+        <p className="mt-2 text-sm text-apple-mute">
+          {t('balance.topUpResult.awaitingPaymentDesc')}
+        </p>
       </div>
       {amountKopeks != null && amountKopeks > 0 && (
         <AmountDisplay amountKopeks={amountKopeks} label={t('balance.topUpResult.topUpAmount')} />
@@ -92,8 +95,8 @@ function SuccessState({ amountKopeks }: { amountKopeks: number | null }) {
       <AnimatedCheckmark />
 
       <div>
-        <h1 className="text-xl font-bold text-dark-50">{t('balance.topUpResult.success')}</h1>
-        <p className="mt-2 text-sm text-dark-400">
+        <h1 className="text-xl font-bold text-apple-ink">{t('balance.topUpResult.success')}</h1>
+        <p className="mt-2 text-sm text-apple-mute">
           {intent
             ? t('balance.topUpResult.activatingSubscription', 'Activating subscription...')
             : t('balance.topUpResult.successDesc')}
@@ -108,7 +111,7 @@ function SuccessState({ amountKopeks }: { amountKopeks: number | null }) {
         <button
           type="button"
           onClick={handleGoToSubscription}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
         >
           {t('balance.topUpResult.goToSubscription', 'Activate subscription')}
         </button>
@@ -116,7 +119,7 @@ function SuccessState({ amountKopeks }: { amountKopeks: number | null }) {
         <button
           type="button"
           onClick={handleGoToBalance}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
         >
           {t('balance.topUpResult.goToBalance')}
         </button>
@@ -142,8 +145,8 @@ function FailedState({ amountKopeks }: { amountKopeks: number | null }) {
       <AnimatedCrossmark />
 
       <div>
-        <h1 className="text-xl font-bold text-dark-50">{t('balance.topUpResult.failed')}</h1>
-        <p className="mt-2 text-sm text-dark-400">{t('balance.topUpResult.failedDesc')}</p>
+        <h1 className="text-xl font-bold text-apple-ink">{t('balance.topUpResult.failed')}</h1>
+        <p className="mt-2 text-sm text-apple-mute">{t('balance.topUpResult.failedDesc')}</p>
       </div>
 
       {amountKopeks != null && amountKopeks > 0 && (
@@ -153,7 +156,7 @@ function FailedState({ amountKopeks }: { amountKopeks: number | null }) {
       <button
         type="button"
         onClick={handleTryAgain}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-dark-800/50 px-6 py-3 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-700/50"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-elevated px-6 py-3 text-sm font-medium text-apple-ink transition-colors hover:bg-apple-elevated"
       >
         {t('balance.topUpResult.tryAgain')}
       </button>
@@ -170,9 +173,9 @@ function TimeoutState({ onRetry, onGoBack }: { onRetry: () => void; onGoBack: ()
       animate={{ opacity: 1, scale: 1 }}
       className="flex flex-col items-center gap-6 text-center"
     >
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-dark-800/50">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-apple-elevated">
         <svg
-          className="h-10 w-10 text-dark-400"
+          className="h-10 w-10 text-apple-mute"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -187,21 +190,21 @@ function TimeoutState({ onRetry, onGoBack }: { onRetry: () => void; onGoBack: ()
         </svg>
       </div>
       <div>
-        <h1 className="text-xl font-bold text-dark-50">{t('balance.topUpResult.timeout')}</h1>
-        <p className="mt-2 text-sm text-dark-400">{t('balance.topUpResult.timeoutDesc')}</p>
+        <h1 className="text-xl font-bold text-apple-ink">{t('balance.topUpResult.timeout')}</h1>
+        <p className="mt-2 text-sm text-apple-mute">{t('balance.topUpResult.timeoutDesc')}</p>
       </div>
       <div className="flex w-full flex-col gap-3">
         <button
           type="button"
           onClick={onRetry}
-          className="w-full rounded-xl bg-accent-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-400"
+          className="w-full rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
         >
           {t('common.retry')}
         </button>
         <button
           type="button"
           onClick={onGoBack}
-          className="w-full rounded-xl bg-dark-800/50 px-6 py-3 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-700/50"
+          className="w-full rounded-xl bg-apple-elevated px-6 py-3 text-sm font-medium text-apple-ink transition-colors hover:bg-apple-elevated"
         >
           {t('balance.topUpResult.goToBalance')}
         </button>
@@ -362,9 +365,9 @@ export default function TopUpResult() {
   }, [resolvedPaid, resolvedFailed, haptic]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-apple-bg px-4">
       <div
-        className="w-full max-w-md rounded-2xl border border-dark-800/50 bg-dark-900/50 p-8"
+        className="w-full max-w-md rounded-2xl border border-apple-hairline bg-apple-card p-8"
         aria-live="polite"
         aria-atomic="true"
       >

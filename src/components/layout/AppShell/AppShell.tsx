@@ -280,7 +280,8 @@ export function AppShell({ children }: AppShellProps) {
   const isDashboard = location.pathname === '/';
   const isConnection = location.pathname.startsWith('/connection');
   const isSubscription = location.pathname.startsWith('/subscription');
-  const isHeaderHidden = isDashboard || isConnection || isSubscription;
+  const isBalance = location.pathname.startsWith('/balance');
+  const isHeaderHidden = isDashboard || isConnection || isSubscription || isBalance;
   const isFullscreenContent = isDashboard || isConnection;
   const isPurchasePage = location.pathname === '/subscription/purchase';
 
@@ -455,14 +456,18 @@ export function AppShell({ children }: AppShellProps) {
       {!isHeaderHidden && <div className="lg:hidden" style={{ height: headerHeight }} />}
 
       {/* Main content */}
-      <main className={cn(
-        'mx-auto max-w-6xl lg:px-6',
-        isFullscreenContent
-          ? 'px-5 py-0 pb-0 h-[calc(100vh-80px)] overflow-hidden'
-          : isPurchasePage
-            ? 'px-4 py-6 pb-6 overflow-y-auto h-[calc(100vh-0px)]'
-            : 'px-4 py-6 pb-28 lg:pb-8'
-      )}>{children}</main>
+      <main
+        className={cn(
+          'mx-auto max-w-6xl lg:px-6',
+          isFullscreenContent
+            ? 'h-[calc(100vh-80px)] overflow-hidden px-5 py-0 pb-0'
+            : isPurchasePage
+              ? 'h-[calc(100vh-0px)] overflow-y-auto px-4 py-6 pb-6'
+              : 'px-4 py-6 pb-28 lg:pb-8',
+        )}
+      >
+        {children}
+      </main>
 
       {/* Mobile Bottom Navigation */}
       {!isPurchasePage && (
