@@ -1452,7 +1452,7 @@ export default function Subscription() {
                             haptic.buttonPressMedium();
                             copyUrl();
                           }}
-                          className="flex items-center rounded-[10px] px-3.5 transition-colors"
+                          className="flex shrink-0 items-center justify-center self-stretch rounded-[10px] px-3.5 transition-colors"
                           style={{
                             background: copied ? 'rgba(249, 115, 21,0.15)' : '#2c2c2e',
                             color: copied ? '#F97315' : '#98989d',
