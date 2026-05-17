@@ -65,7 +65,7 @@ export function MobileBottomNav({
         isKeyboardOpen ? 'pointer-events-none translate-y-full opacity-0' : 'opacity-100',
       )}
       style={{
-        bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+        bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))',
         left: '20px',
         right: '20px',
         height: '64px',
@@ -76,7 +76,7 @@ export function MobileBottomNav({
         backdropFilter: 'blur(12px)',
       }}
     >
-      <div className="flex h-full gap-2">
+      <div className="flex h-full gap-2" style={{ transform: 'translateY(-2px)' }}>
         {coreItems.map((item) => (
           <Link
             key={item.path}
