@@ -283,7 +283,6 @@ export function AppShell({ children }: AppShellProps) {
   const isBalance = location.pathname.startsWith('/balance');
   const isHeaderHidden = isDashboard || isConnection || isSubscription || isBalance;
   const isFullscreenContent = isDashboard || isConnection;
-  const isPurchasePage = location.pathname === '/subscription/purchase';
 
   // Apple-dark pages use a solid black canvas instead of the animated background
   const isAppleDarkPage = isBalance || isSubscription;
@@ -464,22 +463,18 @@ export function AppShell({ children }: AppShellProps) {
           'mx-auto max-w-6xl lg:px-6',
           isFullscreenContent
             ? 'h-[calc(100vh-80px)] overflow-hidden px-5 py-0 pb-0'
-            : isPurchasePage
-              ? 'h-[calc(100vh-0px)] overflow-y-auto px-4 py-6 pb-6'
-              : 'px-4 py-6 pb-28 lg:pb-8',
+            : 'px-4 py-6 pb-28 lg:pb-8',
         )}
       >
         {children}
       </main>
 
       {/* Mobile Bottom Navigation */}
-      {!isPurchasePage && (
-        <MobileBottomNav
-          isKeyboardOpen={isKeyboardOpen}
-          referralEnabled={referralEnabled}
-          wheelEnabled={wheelEnabled}
-        />
-      )}
+      <MobileBottomNav
+        isKeyboardOpen={isKeyboardOpen}
+        referralEnabled={referralEnabled}
+        wheelEnabled={wheelEnabled}
+      />
     </div>
   );
 }

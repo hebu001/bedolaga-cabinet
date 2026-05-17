@@ -47,7 +47,18 @@ const RingAnimation = () => (
 
 /* ─── Icons ─── */
 const GlobeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <circle cx="12" cy="12" r="10" />
     <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
     <path d="M2 12h20" />
@@ -55,7 +66,18 @@ const GlobeIcon = () => (
 );
 
 const UnplugIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <path d="m19 5 3-3" />
     <path d="m2 22 3-3" />
     <path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z" />
@@ -66,12 +88,22 @@ const UnplugIcon = () => (
 );
 
 const LaptopIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
     <rect width="18" height="12" x="3" y="4" rx="2" ry="2" />
     <line x1="2" x2="22" y1="20" y2="20" />
   </svg>
 );
-
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -254,19 +286,19 @@ export default function Dashboard() {
       description: string;
       placement: Placement;
     }> = [
-        {
-          target: 'welcome',
-          title: t('onboarding.steps.welcome.title'),
-          description: t('onboarding.steps.welcome.description'),
-          placement: 'bottom',
-        },
-        {
-          target: 'balance',
-          title: t('onboarding.steps.balance.title'),
-          description: t('onboarding.steps.balance.description'),
-          placement: 'bottom',
-        },
-      ];
+      {
+        target: 'welcome',
+        title: t('onboarding.steps.welcome.title'),
+        description: t('onboarding.steps.welcome.description'),
+        placement: 'bottom',
+      },
+      {
+        target: 'balance',
+        title: t('onboarding.steps.balance.title'),
+        description: t('onboarding.steps.balance.description'),
+        placement: 'bottom',
+      },
+    ];
 
     if (subscription?.subscription_url) {
       steps.splice(1, 0, {
@@ -300,10 +332,10 @@ export default function Dashboard() {
 
   const formattedDate = subscription
     ? new Date(subscription.end_date).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
     : '';
 
   const deviceCount = devicesData?.total ?? 0;
@@ -347,7 +379,10 @@ export default function Dashboard() {
         : 'ПОДПИСКА ОТКЛЮЧЕНА';
 
     return (
-      <div className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5" style={{ touchAction: 'none', overscrollBehavior: 'none' }}>
+      <div
+        className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5"
+        style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+      >
         {/* Hero area — large status text replaces logo */}
         <div className="relative flex flex-1 items-center justify-center">
           <RingAnimation />
@@ -355,16 +390,16 @@ export default function Dashboard() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="relative z-10 text-center px-4"
+            className="relative z-10 px-4 text-center"
           >
             <h1
-              className="text-4xl sm:text-5xl font-black text-white leading-tight"
+              className="text-4xl font-black leading-tight text-white sm:text-5xl"
               style={{ letterSpacing: '0.12em', fontStretch: 'expanded' }}
             >
               {statusLabel}
             </h1>
             <p
-              className="mt-4 text-2xl sm:text-3xl text-white/60 font-semibold"
+              className="mt-4 text-2xl font-semibold text-white/60 sm:text-3xl"
               style={{ letterSpacing: '0.08em', fontStretch: 'expanded' }}
             >
               {expiredDate}
@@ -380,9 +415,9 @@ export default function Dashboard() {
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <Link
-              to="/subscription/purchase"
+              to="/subscription/purchase?renew=1"
               onClick={() => haptic.buttonPressMedium()}
-              className="flex h-14 w-full items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 transform-gpu hover:brightness-110 active:scale-[0.97] active:brightness-90"
+              className="flex h-14 w-full transform-gpu items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
               style={{ background: 'var(--figma-green)' }}
             >
               <GlobeIcon />
@@ -400,7 +435,7 @@ export default function Dashboard() {
             <Link
               to="/connection"
               onClick={() => haptic.buttonPressMedium()}
-              className="flex h-14 w-full items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 transform-gpu hover:brightness-95 active:scale-[0.97] active:brightness-90"
+              className="flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
             >
               <UnplugIcon />
               <span>{t('dashboard.connectDevice')}</span>
@@ -415,7 +450,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5" style={{ touchAction: 'none', overscrollBehavior: 'none' }} data-onboarding="welcome">
+    <div
+      className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5"
+      style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+      data-onboarding="welcome"
+    >
       {/* Pending Gift Activations */}
       {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
 
@@ -428,7 +467,7 @@ export default function Dashboard() {
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
           <div style={{ transform: 'translateX(-5%)' }}>
-            <ShieldLogo className="w-[288px] sm:w-[384px] opacity-90" />
+            <ShieldLogo className="w-[288px] opacity-90 sm:w-[384px]" />
           </div>
         </motion.div>
       </div>
@@ -444,19 +483,38 @@ export default function Dashboard() {
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <div className="flex flex-col text-lg leading-5">
-              <span className="text-xl font-black" style={{ letterSpacing: '0.04em', fontStretch: 'expanded', textShadow: '0.5px 0 0 currentColor' }}>{t('dashboard.validUntil', { date: formattedDate })}</span>
-              <span className="mt-1 text-base font-medium" style={{ color: subscriptionStatus.color }}>
-                {subscriptionStatus.label}  ·  {formatTraffic(usedGb)}/{subscription.traffic_limit_gb > 0 ? formatTraffic(subscription.traffic_limit_gb) : '∞'}
+              <span
+                className="text-xl font-black"
+                style={{
+                  letterSpacing: '0.04em',
+                  fontStretch: 'expanded',
+                  textShadow: '0.5px 0 0 currentColor',
+                }}
+              >
+                {t('dashboard.validUntil', { date: formattedDate })}
+              </span>
+              <span
+                className="mt-1 text-base font-medium"
+                style={{ color: subscriptionStatus.color }}
+              >
+                {subscriptionStatus.label} · {formatTraffic(usedGb)}/
+                {subscription.traffic_limit_gb > 0
+                  ? formatTraffic(subscription.traffic_limit_gb)
+                  : '∞'}
               </span>
             </div>
 
             {/* Device count pill */}
             <button
-              onClick={() => { haptic.buttonPressMedium(); setShowDevicePanel(!showDevicePanel); }}
+              onClick={() => {
+                haptic.buttonPressMedium();
+                setShowDevicePanel(!showDevicePanel);
+              }}
               className="flex h-9 items-center gap-2 rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               data-onboarding="connect-devices"
             >
-              {t('dashboard.devicesLabel', 'Устройства')} {deviceCount}/{subscription?.device_limit ?? 0}
+              {t('dashboard.devicesLabel', 'Устройства')} {deviceCount}/
+              {subscription?.device_limit ?? 0}
             </button>
           </motion.div>
         )}
@@ -471,49 +529,73 @@ export default function Dashboard() {
               transition={{ type: 'tween', duration: 0.15, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="space-y-2 rounded-2xl bg-black/40 p-3 backdrop-blur-2xl border border-white/10">
+              <div className="space-y-2 rounded-2xl border border-white/10 bg-black/40 p-3 backdrop-blur-2xl">
                 <div className="mb-1 font-mono text-[11px] text-white/30">
                   {devicesData.device_limit === 0
                     ? `${devicesData.total} · ∞`
                     : `${devicesData.total} / ${devicesData.device_limit}`}
                 </div>
-                {devicesData.devices.length > 0 ? devicesData.devices.map((device) => (
-                  <div
-                    key={device.hwid}
-                    className="flex items-center justify-between rounded-xl bg-white/5 p-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white/5">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-white">
-                          {device.device_model || device.platform}
-                        </div>
-                        <div className="text-[11px] text-white/30">{device.platform}</div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        haptic.buttonPressMedium();
-                        if (confirm(t('subscription.confirmDeleteDevice'))) {
-                          deleteDeviceMutation.mutate(device.hwid);
-                        }
-                      }}
-                      disabled={deleteDeviceMutation.isPending}
-                      className="p-2 text-white/20 transition-colors hover:text-red-400"
-                      title={t('subscription.deleteDevice')}
+                {devicesData.devices.length > 0 ? (
+                  devicesData.devices.map((device) => (
+                    <div
+                      key={device.hwid}
+                      className="flex items-center justify-between rounded-xl bg-white/5 p-3"
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                      </svg>
-                    </button>
-                  </div>
-                )) : (
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white/5">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="rgba(255,255,255,0.4)"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-white">
+                            {device.device_model || device.platform}
+                          </div>
+                          <div className="text-[11px] text-white/30">{device.platform}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          haptic.buttonPressMedium();
+                          if (confirm(t('subscription.confirmDeleteDevice'))) {
+                            deleteDeviceMutation.mutate(device.hwid);
+                          }
+                        }}
+                        disabled={deleteDeviceMutation.isPending}
+                        className="p-2 text-white/20 transition-colors hover:text-red-400"
+                        title={t('subscription.deleteDevice')}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))
+                ) : (
                   <div className="py-3 text-center text-sm text-white/30">
-                    {t('subscription.noDevicesConnected', { defaultValue: 'Нет подключенных устройств' })}
+                    {t('subscription.noDevicesConnected', {
+                      defaultValue: 'Нет подключенных устройств',
+                    })}
                   </div>
                 )}
               </div>
@@ -550,9 +632,9 @@ export default function Dashboard() {
           transition={{ duration: 0.4, delay: 0.3 }}
         >
           <Link
-            to="/subscription/purchase"
+            to="/subscription/purchase?renew=1"
             onClick={() => haptic.buttonPressMedium()}
-            className="flex h-14 w-full items-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 transform-gpu hover:brightness-110 active:scale-[0.97] active:brightness-90"
+            className="flex h-14 w-full transform-gpu items-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
             style={{ background: 'var(--figma-green)' }}
           >
             <GlobeIcon />
@@ -572,7 +654,7 @@ export default function Dashboard() {
           <Link
             to="/connection"
             onClick={() => haptic.buttonPressMedium()}
-            className="flex h-14 w-full items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 transform-gpu hover:brightness-95 active:scale-[0.97] active:brightness-90"
+            className="flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
           >
             <UnplugIcon />
             <span>{t('dashboard.connectDevice')}</span>
@@ -581,7 +663,6 @@ export default function Dashboard() {
             </span>
           </Link>
         </motion.div>
-
       </div>
 
       {/* Onboarding Tutorial */}

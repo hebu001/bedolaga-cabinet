@@ -724,7 +724,7 @@ export default function Subscription() {
             ? '/subscription/purchase'
             : isMultiTariff
               ? `/subscriptions/${subscription.id}/renew`
-              : '/subscription/purchase';
+              : '/subscription/purchase?renew=1';
 
           return (
             <>
@@ -802,7 +802,7 @@ export default function Subscription() {
                   type="button"
                   onClick={() => {
                     haptic.buttonPressMedium();
-                    navigate(renewLink);
+                    navigate('/subscription/purchase');
                   }}
                   className="flex flex-1 items-center justify-center rounded-full bg-apple-elevated py-3 text-[15px] font-medium text-apple-blue transition-opacity hover:opacity-80"
                 >
