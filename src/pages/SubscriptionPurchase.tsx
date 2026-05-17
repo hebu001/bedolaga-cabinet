@@ -1127,7 +1127,7 @@ export default function SubscriptionPurchase() {
               <div className="apple-card-grad flex items-center justify-between gap-3 rounded-2xl bg-apple-card p-4">
                 <div className="min-w-0">
                   <div className="text-[15px] font-semibold text-apple-ink">
-                    Тариф — {selectedTariff.name}
+                    Тариф {selectedTariff.name}
                   </div>
                   <div className="mt-0.5 truncate text-[13px] text-apple-mute">
                     {selectedTariff.description?.split('\n')[0] ||
@@ -1438,7 +1438,7 @@ export default function SubscriptionPurchase() {
                                   btn.appendChild(ripple);
                                   setTimeout(() => ripple.remove(), 600);
                                 }}
-                                className="relative overflow-hidden rounded-2xl bg-apple-elevated p-4 text-left transition-transform active:scale-[0.97]"
+                                className="apple-card-grad relative overflow-hidden rounded-2xl bg-apple-elevated p-4 text-left transition-transform active:scale-[0.97]"
                                 style={
                                   isSelected
                                     ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
