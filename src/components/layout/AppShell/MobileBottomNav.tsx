@@ -76,7 +76,7 @@ export function MobileBottomNav({
         backdropFilter: 'blur(12px)',
       }}
     >
-      <div className="flex h-full gap-2" style={{ transform: 'translateY(-2px)' }}>
+      <div className="flex h-full gap-2" style={{ transform: 'translateY(-1px)' }}>
         {coreItems.map((item) => (
           <Link
             key={item.path}
