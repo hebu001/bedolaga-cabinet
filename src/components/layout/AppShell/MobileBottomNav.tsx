@@ -83,7 +83,7 @@ export function MobileBottomNav({
             to={item.path}
             onClick={handleNavClick}
             className={cn(
-              'relative flex flex-1 items-center justify-center rounded-full transition-all duration-200',
+              'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full transition-all duration-200',
               isActive(item.path) ? 'text-white' : 'text-[#98989d] hover:text-white',
             )}
             style={{ height: '56px' }}
@@ -96,7 +96,10 @@ export function MobileBottomNav({
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
             )}
-            <item.icon className="relative z-10 h-5 w-5" />
+            <item.icon className="relative z-10 h-[18px] w-[18px]" />
+            <span className="relative z-10 max-w-full truncate px-1 text-[9px] font-medium leading-none">
+              {item.label}
+            </span>
           </Link>
         ))}
       </div>
