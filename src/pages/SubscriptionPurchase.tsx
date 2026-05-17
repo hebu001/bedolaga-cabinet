@@ -876,7 +876,7 @@ export default function SubscriptionPurchase() {
           to={subscriptionId ? `/subscriptions/${subscriptionId}` : '/subscriptions'}
         />
         <h1 className="text-2xl font-bold tracking-tight text-apple-ink sm:text-3xl">
-          {t('subscription.selectTariff', 'Выберите тариф')}
+          {t('subscription.purchaseTitle', 'Покупка подписки')}
         </h1>
       </div>
 
@@ -1127,7 +1127,7 @@ export default function SubscriptionPurchase() {
               <div className="apple-card-grad flex items-center justify-between gap-3 rounded-2xl bg-apple-card p-4">
                 <div className="min-w-0">
                   <div className="text-[15px] font-semibold text-apple-ink">
-                    {selectedTariff.name}
+                    Тариф — {selectedTariff.name}
                   </div>
                   <div className="mt-0.5 truncate text-[13px] text-apple-mute">
                     {selectedTariff.description?.split('\n')[0] ||
@@ -1155,7 +1155,7 @@ export default function SubscriptionPurchase() {
                 {/* Daily Tariff Purchase */}
                 {selectedTariff.is_daily ||
                 (selectedTariff.daily_price_kopeks && selectedTariff.daily_price_kopeks > 0) ? (
-                  <div className="rounded-2xl bg-apple-card p-5">
+                  <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
                     <div className="mb-4 text-center">
                       <div className="mb-2 text-sm text-apple-mute">
                         {t('subscription.dailyPurchase.costPerDay')}
@@ -1268,7 +1268,7 @@ export default function SubscriptionPurchase() {
                                 onClick={() => setShowPaymentSheet(false)}
                               />
                               <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
-                                <div className="mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
+                                <div className="apple-card-grad mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
                                   <div className="flex items-center justify-between px-7 pb-0 pt-5">
                                     <h3 className="text-[22px] font-semibold text-white">
                                       {t('subscription.selectPaymentMethod', 'Способ оплаты')}
@@ -1510,7 +1510,7 @@ export default function SubscriptionPurchase() {
                       {/* Custom days option */}
                       {selectedTariff.custom_days_enabled &&
                         (selectedTariff.price_per_day_kopeks ?? 0) > 0 && (
-                          <div className="rounded-2xl bg-apple-card p-4">
+                          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
                             <div className="mb-3 flex items-center justify-between">
                               <span className="font-medium text-apple-ink">
                                 {t('subscription.customDays.title')}
@@ -1626,7 +1626,7 @@ export default function SubscriptionPurchase() {
                           <div className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-apple-mute">
                             {t('subscription.customTraffic.label')}
                           </div>
-                          <div className="rounded-2xl bg-apple-card p-4">
+                          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
                             <div className="mb-3 flex items-center justify-between">
                               <span className="font-medium text-apple-ink">
                                 {t('subscription.customTraffic.selectVolume')}
@@ -1709,7 +1709,7 @@ export default function SubscriptionPurchase() {
 
                     {/* Summary & Purchase */}
                     {(selectedTariffPeriod || useCustomDays) && (
-                      <div className="rounded-2xl bg-apple-card p-5">
+                      <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
                         {(() => {
                           const basePeriodPrice = useCustomDays
                             ? customDays * (selectedTariff.price_per_day_kopeks ?? 0)
@@ -1916,7 +1916,7 @@ export default function SubscriptionPurchase() {
                                             onClick={() => setShowPaymentSheet(false)}
                                           />
                                           <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
-                                            <div className="mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
+                                            <div className="apple-card-grad mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
                                               <div className="flex items-center justify-between px-7 pb-0 pt-5">
                                                 <h3 className="text-[22px] font-semibold text-white">
                                                   {t(
@@ -2063,7 +2063,7 @@ export default function SubscriptionPurchase() {
                 onClick={() => setShowTariffListModal(false)}
               >
                 <div
-                  className="apple-sheet-panel relative m-2.5 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
+                  className="apple-card-grad apple-sheet-panel relative m-2.5 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -2085,7 +2085,7 @@ export default function SubscriptionPurchase() {
                     </svg>
                   </button>
                   <div className="px-7 pb-2 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
-                    {t('subscription.selectTariff', 'Выберите тариф')}
+                    {t('subscription.purchaseTitle', 'Покупка подписки')}
                   </div>
                   <div className="px-7 pb-7 pt-2">{tariffListBody}</div>
                 </div>
