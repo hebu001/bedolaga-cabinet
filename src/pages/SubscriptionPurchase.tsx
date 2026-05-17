@@ -168,6 +168,7 @@ export default function SubscriptionPurchase() {
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
   const [selectedTariffPeriod, setSelectedTariffPeriod] = useState<TariffPeriod | null>(null);
   const [showTariffPurchase, setShowTariffPurchase] = useState(false);
+  const [showTariffListModal, setShowTariffListModal] = useState(false);
   const [customDays, setCustomDays] = useState<number>(30);
   const [customTrafficGb, setCustomTrafficGb] = useState<number>(50);
   const [useCustomDays, setUseCustomDays] = useState(false);
@@ -493,28 +494,20 @@ export default function SubscriptionPurchase() {
     }
   }, [switchTariffId]);
 
-  // Close the tariff-purchase bottom-sheet modal
-  const closeTariffPurchase = useCallback(() => {
-    haptic.buttonPressMedium();
-    setShowTariffPurchase(false);
-    setSelectedTariff(null);
-    setSelectedTariffPeriod(null);
-  }, [haptic]);
-
-  // Lock body scroll + Escape-to-close while the tariff modal is open
+  // Lock body scroll + Escape-to-close while the tariff-list modal is open
   useEffect(() => {
-    if (!showTariffPurchase || !selectedTariff) return;
+    if (!showTariffListModal) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeTariffPurchase();
+      if (e.key === 'Escape') setShowTariffListModal(false);
     };
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', onKey);
     };
-  }, [showTariffPurchase, selectedTariff, closeTariffPurchase]);
+  }, [showTariffListModal]);
 
   // ?renew=1 — jump straight into the current tariff's payment modal.
   // If there is no current tariff, fall through to the tariff list.
@@ -604,6 +597,276 @@ export default function SubscriptionPurchase() {
       </div>
     );
   }
+
+  const tariffListBody = (
+    <>
+      {/* All tariffs purchased */}
+      {isMultiTariff &&
+        purchaseOptions &&
+        'all_tariffs_purchased' in purchaseOptions &&
+        purchaseOptions.all_tariffs_purchased && (
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-6 text-center">
+            <div className="mb-2 text-3xl">✅</div>
+            <h3 className="mb-1 text-lg font-semibold text-apple-ink">
+              {t('subscription.allTariffsPurchased', 'Все тарифы подключены')}
+            </h3>
+            <p className="mb-4 text-sm text-apple-mute">
+              {t(
+                'subscription.allTariffsPurchasedDesc',
+                'Вы уже приобрели все доступные тарифы. Продлить подписку можно на странице тарифа.',
+              )}
+            </p>
+            <button
+              onClick={() => navigate('/subscriptions')}
+              className="rounded-full bg-[#F97315] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            >
+              {t('subscription.backToList', 'Мои подписки')}
+            </button>
+          </div>
+        )}
+
+      {/* Tariff Grid */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[...tariffs]
+          .filter((tariff) => {
+            if (isMultiTariff && tariff.is_purchased) return false;
+            if (subscription?.is_trial && tariff.name.toLowerCase().includes('trial')) {
+              return false;
+            }
+            return true;
+          })
+          .sort((a, b) => {
+            const aIsCurrent = a.is_current || a.id === subscription?.tariff_id;
+            const bIsCurrent = b.is_current || b.id === subscription?.tariff_id;
+            if (aIsCurrent && !bIsCurrent) return -1;
+            if (!aIsCurrent && bIsCurrent) return 1;
+            return 0;
+          })
+          .map((tariff) => {
+            const isCurrentTariff = tariff.is_current || tariff.id === subscription?.tariff_id;
+            const isSubscriptionExpired =
+              isTariffsMode &&
+              purchaseOptions &&
+              'subscription_is_expired' in purchaseOptions &&
+              purchaseOptions.subscription_is_expired === true;
+            const canSwitch =
+              !isMultiTariff &&
+              subscription &&
+              subscription.tariff_id &&
+              !isCurrentTariff &&
+              !subscription.is_trial &&
+              !isSubscriptionExpired &&
+              (subscription.is_active || subscription.is_limited);
+            const isLegacySubscription =
+              subscription && !subscription.is_trial && !subscription.tariff_id;
+            const openTariff = () => {
+              haptic.buttonPressMedium();
+              setSelectedTariff(tariff);
+              setSelectedTariffPeriod(tariff.periods[0] || null);
+              setShowTariffPurchase(true);
+              setShowTariffListModal(false);
+            };
+
+            return (
+              <div
+                key={tariff.id}
+                className="apple-card-grad flex flex-col rounded-2xl bg-apple-card p-5 text-left"
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[17px] font-semibold text-apple-ink">{tariff.name}</div>
+                    {tariff.description && (
+                      <div className="mt-1 whitespace-pre-line text-[13px] text-apple-mute">
+                        {tariff.description}
+                      </div>
+                    )}
+                  </div>
+                  {isCurrentTariff && (
+                    <div className="flex shrink-0 items-center gap-1.5 pt-1">
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ background: '#30d158' }}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="text-[13px] font-semibold uppercase tracking-widest"
+                        style={{ color: '#30d158' }}
+                      >
+                        {t('subscription.currentTariff')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px]">
+                  <div className="flex items-center gap-1.5">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="#F97315"
+                      strokeWidth={1.7}
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                      />
+                    </svg>
+                    <span className="font-medium text-apple-ink">{tariff.traffic_limit_label}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-apple-mute">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
+                      />
+                    </svg>
+                    <span>
+                      {tariff.device_limit === 0
+                        ? '∞'
+                        : t('subscription.devices', { count: tariff.device_limit })}
+                    </span>
+                  </div>
+                  {tariff.traffic_reset_mode && tariff.traffic_reset_mode !== 'NO_RESET' && (
+                    <div className="flex items-center gap-1.5 text-apple-mute">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.7}
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182"
+                        />
+                      </svg>
+                      <span>{t(`subscription.trafficReset.${tariff.traffic_reset_mode}`)}</span>
+                    </div>
+                  )}
+                </div>
+                {/* Price info */}
+                <div className="mt-3 border-t border-apple-hairline pt-3 text-[13px] text-apple-mute">
+                  {(() => {
+                    const dailyPrice =
+                      tariff.daily_price_kopeks ?? tariff.price_per_day_kopeks ?? 0;
+                    const originalDailyPrice = tariff.original_daily_price_kopeks || 0;
+                    if (dailyPrice > 0 || originalDailyPrice > 0) {
+                      const promoDaily = applyPromoDiscount(
+                        dailyPrice,
+                        originalDailyPrice > dailyPrice ? originalDailyPrice : undefined,
+                      );
+                      return (
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="text-[15px] font-semibold" style={{ color: '#F97315' }}>
+                            {formatPrice(promoDaily.price)}
+                          </span>
+                          {promoDaily.original && promoDaily.original > promoDaily.price && (
+                            <span className="text-xs text-apple-faint line-through">
+                              {formatPrice(promoDaily.original)}
+                            </span>
+                          )}
+                          <span>{t('subscription.tariff.perDay')}</span>
+                          {promoDaily.percent && promoDaily.percent > 0 && (
+                            <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
+                              -{promoDaily.percent}%
+                            </span>
+                          )}
+                        </span>
+                      );
+                    }
+                    if (tariff.periods.length > 0) {
+                      const firstPeriod = tariff.periods[0];
+                      const promoPeriod = applyPromoDiscount(
+                        firstPeriod?.price_kopeks || 0,
+                        firstPeriod?.original_price_kopeks,
+                      );
+                      return (
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span>{t('subscription.from')}</span>
+                          <span className="text-[15px] font-semibold" style={{ color: '#F97315' }}>
+                            {formatPrice(promoPeriod.price)}
+                          </span>
+                          {promoPeriod.original && promoPeriod.original > promoPeriod.price && (
+                            <span className="text-xs text-apple-faint line-through">
+                              {formatPrice(promoPeriod.original)}
+                            </span>
+                          )}
+                          {promoPeriod.percent && promoPeriod.percent > 0 && (
+                            <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
+                              -{promoPeriod.percent}%
+                            </span>
+                          )}
+                        </span>
+                      );
+                    }
+                    return (
+                      <span className="text-[15px] font-semibold" style={{ color: '#F97315' }}>
+                        {t('subscription.tariff.flexiblePayment')}
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                {/* Action Button */}
+                <div className="mt-4">
+                  {isCurrentTariff ? (
+                    subscription?.is_daily ? (
+                      <div className="py-2 text-center text-sm text-apple-faint">
+                        {t('subscription.currentTariff')}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={openTariff}
+                        className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+                      >
+                        {t('subscription.extend')}
+                      </button>
+                    )
+                  ) : isLegacySubscription ? (
+                    <button
+                      onClick={openTariff}
+                      className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+                    >
+                      {t('subscription.tariff.selectForRenewal')}
+                    </button>
+                  ) : canSwitch ? (
+                    <button
+                      onClick={() => {
+                        setSwitchTariffId(tariff.id);
+                        setShowTariffListModal(false);
+                      }}
+                      className="w-full rounded-full bg-apple-elevated py-3 text-[15px] font-medium transition-opacity hover:opacity-80"
+                      style={{ color: '#F97315' }}
+                    >
+                      {t('subscription.switchTariff.switch')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={openTariff}
+                      className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+                    >
+                      {t('subscription.purchase')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+      </div>
+    </>
+  );
 
   return (
     <div className="space-y-4" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
@@ -858,296 +1121,946 @@ export default function SubscriptionPurchase() {
             </div>
           )}
 
-          {!showTariffPurchase ? (
+          {showTariffPurchase && selectedTariff ? (
             <>
-              {/* All tariffs purchased */}
-              {isMultiTariff &&
-                purchaseOptions &&
-                'all_tariffs_purchased' in purchaseOptions &&
-                purchaseOptions.all_tariffs_purchased && (
-                  <div className="apple-card-grad rounded-2xl bg-apple-card p-6 text-center">
-                    <div className="mb-2 text-3xl">✅</div>
-                    <h3 className="mb-1 text-lg font-semibold text-apple-ink">
-                      {t('subscription.allTariffsPurchased', 'Все тарифы подключены')}
-                    </h3>
-                    <p className="mb-4 text-sm text-apple-mute">
-                      {t(
-                        'subscription.allTariffsPurchasedDesc',
-                        'Вы уже приобрели все доступные тарифы. Продлить подписку можно на странице тарифа.',
-                      )}
-                    </p>
-                    <button
-                      onClick={() => navigate('/subscriptions')}
-                      className="rounded-full bg-[#F97315] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
-                    >
-                      {t('subscription.backToList', 'Мои подписки')}
-                    </button>
+              {/* Current tariff — name, summary, change button */}
+              <div className="apple-card-grad flex items-center justify-between gap-3 rounded-2xl bg-apple-card p-4">
+                <div className="min-w-0">
+                  <div className="text-[15px] font-semibold text-apple-ink">
+                    {selectedTariff.name}
                   </div>
-                )}
+                  <div className="mt-0.5 truncate text-[13px] text-apple-mute">
+                    {selectedTariff.description?.split('\n')[0] ||
+                      `${selectedTariff.traffic_limit_label} · ${
+                        selectedTariff.device_limit === 0
+                          ? '∞'
+                          : t('subscription.devices', { count: selectedTariff.device_limit })
+                      }`}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptic.buttonPressMedium();
+                    setShowTariffListModal(true);
+                  }}
+                  className="shrink-0 rounded-full bg-apple-elevated px-4 py-2 text-[13px] font-medium transition-opacity hover:opacity-80"
+                  style={{ color: '#F97315' }}
+                >
+                  {t('subscription.changeTariff', 'Изменить')}
+                </button>
+              </div>
 
-              {/* Tariff Grid */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {[...tariffs]
-                  .filter((tariff) => {
-                    if (isMultiTariff && tariff.is_purchased) return false;
-                    if (subscription?.is_trial && tariff.name.toLowerCase().includes('trial')) {
-                      return false;
-                    }
-                    return true;
-                  })
-                  .sort((a, b) => {
-                    const aIsCurrent = a.is_current || a.id === subscription?.tariff_id;
-                    const bIsCurrent = b.is_current || b.id === subscription?.tariff_id;
-                    if (aIsCurrent && !bIsCurrent) return -1;
-                    if (!aIsCurrent && bIsCurrent) return 1;
-                    return 0;
-                  })
-                  .map((tariff) => {
-                    const isCurrentTariff =
-                      tariff.is_current || tariff.id === subscription?.tariff_id;
-                    const isSubscriptionExpired =
-                      isTariffsMode &&
-                      purchaseOptions &&
-                      'subscription_is_expired' in purchaseOptions &&
-                      purchaseOptions.subscription_is_expired === true;
-                    const canSwitch =
-                      !isMultiTariff &&
-                      subscription &&
-                      subscription.tariff_id &&
-                      !isCurrentTariff &&
-                      !subscription.is_trial &&
-                      !isSubscriptionExpired &&
-                      (subscription.is_active || subscription.is_limited);
-                    const isLegacySubscription =
-                      subscription && !subscription.is_trial && !subscription.tariff_id;
-                    const openTariff = () => {
-                      haptic.buttonPressMedium();
-                      setSelectedTariff(tariff);
-                      setSelectedTariffPeriod(tariff.periods[0] || null);
-                      setShowTariffPurchase(true);
-                    };
-
-                    return (
-                      <div
-                        key={tariff.id}
-                        className="apple-card-grad flex flex-col rounded-2xl bg-apple-card p-5 text-left"
-                      >
-                        <div className="mb-3 flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="text-[17px] font-semibold text-apple-ink">
-                              {tariff.name}
-                            </div>
-                            {tariff.description && (
-                              <div className="mt-1 whitespace-pre-line text-[13px] text-apple-mute">
-                                {tariff.description}
-                              </div>
-                            )}
-                          </div>
-                          {isCurrentTariff && (
-                            <div className="flex shrink-0 items-center gap-1.5 pt-1">
-                              <span
-                                className="h-2 w-2 rounded-full"
-                                style={{ background: '#30d158' }}
-                                aria-hidden="true"
-                              />
-                              <span
-                                className="text-[13px] font-semibold uppercase tracking-widest"
-                                style={{ color: '#30d158' }}
-                              >
-                                {t('subscription.currentTariff')}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px]">
-                          <div className="flex items-center gap-1.5">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="#F97315"
-                              strokeWidth={1.7}
-                              aria-hidden="true"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                              />
-                            </svg>
-                            <span className="font-medium text-apple-ink">
-                              {tariff.traffic_limit_label}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-apple-mute">
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={1.7}
-                              aria-hidden="true"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
-                              />
-                            </svg>
-                            <span>
-                              {tariff.device_limit === 0
-                                ? '∞'
-                                : t('subscription.devices', { count: tariff.device_limit })}
-                            </span>
-                          </div>
-                          {tariff.traffic_reset_mode &&
-                            tariff.traffic_reset_mode !== 'NO_RESET' && (
-                              <div className="flex items-center gap-1.5 text-apple-mute">
-                                <svg
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={1.7}
-                                  aria-hidden="true"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.182"
-                                  />
-                                </svg>
-                                <span>
-                                  {t(`subscription.trafficReset.${tariff.traffic_reset_mode}`)}
-                                </span>
-                              </div>
-                            )}
-                        </div>
-                        {/* Price info */}
-                        <div className="mt-3 border-t border-apple-hairline pt-3 text-[13px] text-apple-mute">
-                          {(() => {
-                            const dailyPrice =
-                              tariff.daily_price_kopeks ?? tariff.price_per_day_kopeks ?? 0;
-                            const originalDailyPrice = tariff.original_daily_price_kopeks || 0;
-                            if (dailyPrice > 0 || originalDailyPrice > 0) {
-                              const promoDaily = applyPromoDiscount(
-                                dailyPrice,
-                                originalDailyPrice > dailyPrice ? originalDailyPrice : undefined,
-                              );
-                              return (
-                                <span className="flex flex-wrap items-center gap-2">
-                                  <span
-                                    className="text-[15px] font-semibold"
-                                    style={{ color: '#F97315' }}
-                                  >
-                                    {formatPrice(promoDaily.price)}
-                                  </span>
-                                  {promoDaily.original &&
-                                    promoDaily.original > promoDaily.price && (
-                                      <span className="text-xs text-apple-faint line-through">
-                                        {formatPrice(promoDaily.original)}
-                                      </span>
-                                    )}
-                                  <span>{t('subscription.tariff.perDay')}</span>
-                                  {promoDaily.percent && promoDaily.percent > 0 && (
-                                    <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
-                                      -{promoDaily.percent}%
-                                    </span>
-                                  )}
-                                </span>
-                              );
-                            }
-                            if (tariff.periods.length > 0) {
-                              const firstPeriod = tariff.periods[0];
-                              const promoPeriod = applyPromoDiscount(
-                                firstPeriod?.price_kopeks || 0,
-                                firstPeriod?.original_price_kopeks,
-                              );
-                              return (
-                                <span className="flex flex-wrap items-center gap-2">
-                                  <span>{t('subscription.from')}</span>
-                                  <span
-                                    className="text-[15px] font-semibold"
-                                    style={{ color: '#F97315' }}
-                                  >
-                                    {formatPrice(promoPeriod.price)}
-                                  </span>
-                                  {promoPeriod.original &&
-                                    promoPeriod.original > promoPeriod.price && (
-                                      <span className="text-xs text-apple-faint line-through">
-                                        {formatPrice(promoPeriod.original)}
-                                      </span>
-                                    )}
-                                  {promoPeriod.percent && promoPeriod.percent > 0 && (
-                                    <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
-                                      -{promoPeriod.percent}%
-                                    </span>
-                                  )}
-                                </span>
-                              );
-                            }
-                            return (
-                              <span
-                                className="text-[15px] font-semibold"
-                                style={{ color: '#F97315' }}
-                              >
-                                {t('subscription.tariff.flexiblePayment')}
-                              </span>
-                            );
-                          })()}
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="mt-4">
-                          {isCurrentTariff ? (
-                            subscription?.is_daily ? (
-                              <div className="py-2 text-center text-sm text-apple-faint">
-                                {t('subscription.currentTariff')}
-                              </div>
-                            ) : (
-                              <button
-                                onClick={openTariff}
-                                className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
-                              >
-                                {t('subscription.extend')}
-                              </button>
-                            )
-                          ) : isLegacySubscription ? (
-                            <button
-                              onClick={openTariff}
-                              className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
-                            >
-                              {t('subscription.tariff.selectForRenewal')}
-                            </button>
-                          ) : canSwitch ? (
-                            <button
-                              onClick={() => setSwitchTariffId(tariff.id)}
-                              className="w-full rounded-full bg-apple-elevated py-3 text-[15px] font-medium transition-opacity hover:opacity-80"
-                              style={{ color: '#F97315' }}
-                            >
-                              {t('subscription.switchTariff.switch')}
-                            </button>
-                          ) : (
-                            <button
-                              onClick={openTariff}
-                              className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
-                            >
-                              {t('subscription.purchase')}
-                            </button>
-                          )}
-                        </div>
+              <div className="space-y-5">
+                {/* Daily Tariff Purchase */}
+                {selectedTariff.is_daily ||
+                (selectedTariff.daily_price_kopeks && selectedTariff.daily_price_kopeks > 0) ? (
+                  <div className="rounded-2xl bg-apple-card p-5">
+                    <div className="mb-4 text-center">
+                      <div className="mb-2 text-sm text-apple-mute">
+                        {t('subscription.dailyPurchase.costPerDay')}
                       </div>
-                    );
-                  })}
+                      <div className="text-3xl font-bold" style={{ color: '#F97315' }}>
+                        {formatPrice(selectedTariff.daily_price_kopeks || 0)}
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-sm text-apple-mute">
+                      <div className="flex items-start gap-2">
+                        <span style={{ color: '#F97315' }}>•</span>
+                        <span>{t('subscription.dailyPurchase.chargedDaily')}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span style={{ color: '#F97315' }}>•</span>
+                        <span>{t('subscription.dailyPurchase.canPause')}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span style={{ color: '#F97315' }}>•</span>
+                        <span>{t('subscription.dailyPurchase.pausedOnLowBalance')}</span>
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const dailyPrice = selectedTariff.daily_price_kopeks || 0;
+                      const hasEnoughBalance =
+                        purchaseOptions && dailyPrice <= purchaseOptions.balance_kopeks;
+                      const missingAmount = purchaseOptions
+                        ? dailyPrice - purchaseOptions.balance_kopeks
+                        : dailyPrice;
+                      const availableMethods = getAvailablePaymentMethods(missingAmount);
+
+                      return (
+                        <div className="mt-6">
+                          {/* Balance info */}
+                          {purchaseOptions && (
+                            <div
+                              className="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-sm"
+                              style={{
+                                background: hasEnoughBalance
+                                  ? 'rgba(48,209,88,0.1)'
+                                  : 'rgba(255,255,255,0.05)',
+                              }}
+                            >
+                              <div className="flex w-full justify-between">
+                                <div className="flex flex-col items-start">
+                                  <span className="text-[10px] uppercase tracking-wider text-apple-faint">
+                                    Ваш баланс
+                                  </span>
+                                  <span
+                                    className="font-semibold"
+                                    style={{ color: hasEnoughBalance ? '#30d158' : '#f5f5f7' }}
+                                  >
+                                    {formatPrice(purchaseOptions.balance_kopeks)}
+                                  </span>
+                                </div>
+                                {!hasEnoughBalance && missingAmount > 0 && (
+                                  <div className="flex flex-col items-start">
+                                    <span className="text-[10px] uppercase tracking-wider text-apple-faint">
+                                      Не хватает
+                                    </span>
+                                    <span className="font-semibold" style={{ color: '#ff453a' }}>
+                                      {formatPrice(missingAmount)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => {
+                              haptic.buttonPressMedium();
+                              if (
+                                hasEnoughBalance ||
+                                !purchaseOptions ||
+                                availableMethods.length === 0
+                              ) {
+                                tariffPurchaseMutation.mutate();
+                              } else {
+                                setShowPaymentSheet(true);
+                              }
+                            }}
+                            disabled={tariffPurchaseMutation.isPending || isDirectPaying}
+                            className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                          >
+                            {tariffPurchaseMutation.isPending || isDirectPaying ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                {t('common.loading')}
+                              </span>
+                            ) : (
+                              <>
+                                {t('subscription.paySubscription', 'Оплатить')}
+                                {!hasEnoughBalance && missingAmount > 0 ? (
+                                  <span className="text-white/90">
+                                    {formatPrice(missingAmount)}
+                                  </span>
+                                ) : (
+                                  <span className="text-white/90">{formatPrice(dailyPrice)}</span>
+                                )}
+                              </>
+                            )}
+                          </button>
+
+                          {/* Payment Method Bottom Sheet for Daily */}
+                          {showPaymentSheet && !hasEnoughBalance && availableMethods.length > 0 && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-[999] animate-[backdropFadeIn_0.2s_ease-out] bg-black/60"
+                                onClick={() => setShowPaymentSheet(false)}
+                              />
+                              <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
+                                <div className="mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
+                                  <div className="flex items-center justify-between px-7 pb-0 pt-5">
+                                    <h3 className="text-[22px] font-semibold text-white">
+                                      {t('subscription.selectPaymentMethod', 'Способ оплаты')}
+                                    </h3>
+                                    <button
+                                      onClick={() => setShowPaymentSheet(false)}
+                                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
+                                      aria-label="Close"
+                                    >
+                                      <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                      >
+                                        <path d="M6 6l12 12M18 6 6 18" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  <div className="px-7 pb-7 pt-4">
+                                    <div className="mb-5 space-y-2">
+                                      {availableMethods.map((method) => (
+                                        <button
+                                          key={method.id}
+                                          onClick={() => {
+                                            setSelectedPaymentMethod(method.id);
+                                            setSelectedPaymentOption(
+                                              method.options?.[0]?.id ?? null,
+                                            );
+                                            setDirectPayError(null);
+                                          }}
+                                          className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
+                                          style={
+                                            selectedPaymentMethod === method.id
+                                              ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
+                                              : {
+                                                  boxShadow:
+                                                    'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                                }
+                                          }
+                                        >
+                                          <div className="flex items-center gap-3 font-medium text-white">
+                                            <img
+                                              src="/SBP.svg"
+                                              alt=""
+                                              className="h-[30px] w-[24px] flex-shrink-0"
+                                            />
+                                            {method.name}
+                                          </div>
+                                          {method.description && (
+                                            <div className="mt-1 text-xs text-apple-mute">
+                                              {method.description}
+                                            </div>
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    {selectedPaymentMethod && (
+                                      <button
+                                        onClick={() => {
+                                          handleDirectPay(
+                                            missingAmount,
+                                            selectedTariff.id,
+                                            selectedTariff.name,
+                                            1,
+                                            dailyPrice,
+                                          );
+                                          setShowPaymentSheet(false);
+                                        }}
+                                        disabled={isDirectPaying}
+                                        className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                      >
+                                        {isDirectPaying ? (
+                                          <span className="flex items-center justify-center gap-2">
+                                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                            {t('common.loading')}
+                                          </span>
+                                        ) : (
+                                          t(
+                                            'subscription.payAndActivate',
+                                            'Оплатить и активировать',
+                                          )
+                                        )}
+                                      </button>
+                                    )}
+                                    {directPayError && (
+                                      <div className="mt-3 text-center text-sm text-apple-red">
+                                        {directPayError}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {purchaseOptions &&
+                            !hasEnoughBalance &&
+                            availableMethods.length === 0 && (
+                              <InsufficientBalancePrompt
+                                missingAmountKopeks={missingAmount}
+                                compact
+                                className="mt-4"
+                              />
+                            )}
+
+                          {tariffPurchaseMutation.isError &&
+                            !getInsufficientBalanceError(tariffPurchaseMutation.error) && (
+                              <div className="mt-3 text-center text-sm text-apple-red">
+                                {getErrorMessage(tariffPurchaseMutation.error)}
+                              </div>
+                            )}
+                          {tariffPurchaseMutation.isError &&
+                            getInsufficientBalanceError(tariffPurchaseMutation.error) && (
+                              <div className="mt-3 text-center text-sm text-apple-red">
+                                {t(
+                                  'subscription.directPayError',
+                                  'Payment error. Please try again.',
+                                )}
+                              </div>
+                            )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <>
+                    {/* Period Selection for non-daily tariffs */}
+                    <div>
+                      <div className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-apple-mute">
+                        {t('subscription.selectPeriod')}
+                      </div>
+
+                      {selectedTariff.periods.length > 0 && !useCustomDays && (
+                        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          {selectedTariff.periods.map((period) => {
+                            const promoPeriod = applyPromoDiscount(
+                              period.price_kopeks,
+                              period.original_price_kopeks,
+                            );
+                            const displayDiscount = promoPeriod.percent;
+                            const displayOriginal = promoPeriod.original;
+                            const displayPrice = promoPeriod.price;
+                            const displayPerMonth =
+                              displayPrice !== period.price_kopeks
+                                ? Math.round(displayPrice / Math.max(1, period.days / 30))
+                                : period.price_per_month_kopeks;
+                            const isSelected =
+                              selectedTariffPeriod?.days === period.days && !useCustomDays;
+
+                            return (
+                              <button
+                                key={period.days}
+                                onClick={(e) => {
+                                  haptic.buttonPressMedium();
+                                  setSelectedTariffPeriod(period);
+                                  setUseCustomDays(false);
+                                  // Ripple effect
+                                  const btn = e.currentTarget;
+                                  const ripple = document.createElement('span');
+                                  const rect = btn.getBoundingClientRect();
+                                  const size = Math.max(rect.width, rect.height) * 2;
+                                  ripple.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.15);width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px;transform:scale(0);animation:ripple-wave 0.5s ease-out forwards;pointer-events:none;z-index:0;`;
+                                  btn.appendChild(ripple);
+                                  setTimeout(() => ripple.remove(), 600);
+                                }}
+                                className="relative overflow-hidden rounded-2xl bg-apple-elevated p-4 text-left transition-transform active:scale-[0.97]"
+                                style={
+                                  isSelected
+                                    ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
+                                    : undefined
+                                }
+                              >
+                                {displayDiscount && displayDiscount > 0 && (
+                                  <div
+                                    className="absolute -right-2 -top-2 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                                    style={{
+                                      background: promoPeriod.isPromoGroup ? '#30d158' : '#F97315',
+                                    }}
+                                  >
+                                    -{displayDiscount}%
+                                  </div>
+                                )}
+                                <div className="mb-auto flex w-full items-center justify-between text-base text-apple-ink">
+                                  {period.label}
+                                </div>
+                                <div className="flex flex-col text-2xl font-medium leading-6 tracking-tight">
+                                  <span className="font-semibold" style={{ color: '#F97315' }}>
+                                    {formatPrice(displayPrice)}
+                                  </span>
+                                  {displayOriginal && displayOriginal > displayPrice && (
+                                    <span className="text-sm text-apple-faint line-through">
+                                      {formatPrice(displayOriginal)}
+                                    </span>
+                                  )}
+                                </div>
+                                <small className="text-xs font-normal tracking-normal text-apple-faint">
+                                  {formatPrice(displayPerMonth)}/{t('subscription.month')}
+                                </small>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* No periods available fallback */}
+                      {selectedTariff.periods.length === 0 &&
+                        !useCustomDays &&
+                        !(
+                          selectedTariff.custom_days_enabled &&
+                          (selectedTariff.price_per_day_kopeks ?? 0) > 0
+                        ) && (
+                          <div
+                            className="rounded-2xl p-4 text-center"
+                            style={{ background: 'rgba(255,159,10,0.12)' }}
+                          >
+                            <div className="mb-2 text-sm font-medium" style={{ color: '#ff9f0a' }}>
+                              {t('subscription.noPeriodsAvailable')}
+                            </div>
+                            <div className="text-xs text-apple-mute">
+                              {t('subscription.noPeriodsAvailableHint')}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setShowTariffPurchase(false);
+                                setSelectedTariff(null);
+                                setSelectedTariffPeriod(null);
+                              }}
+                              className="mt-3 rounded-full bg-apple-elevated px-4 py-2 text-sm font-medium text-apple-ink transition-opacity hover:opacity-80"
+                            >
+                              {t('subscription.chooseDifferentTariff')}
+                            </button>
+                          </div>
+                        )}
+
+                      {/* Custom days option */}
+                      {selectedTariff.custom_days_enabled &&
+                        (selectedTariff.price_per_day_kopeks ?? 0) > 0 && (
+                          <div className="rounded-2xl bg-apple-card p-4">
+                            <div className="mb-3 flex items-center justify-between">
+                              <span className="font-medium text-apple-ink">
+                                {t('subscription.customDays.title')}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setUseCustomDays(!useCustomDays)}
+                                className="relative h-6 w-10 rounded-full transition-colors"
+                                style={{
+                                  background: useCustomDays ? '#F97315' : '#39393d',
+                                }}
+                              >
+                                <span
+                                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                                    useCustomDays ? 'left-5' : 'left-1'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                            {useCustomDays && (
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-4">
+                                  <input
+                                    type="range"
+                                    min={selectedTariff.min_days ?? 1}
+                                    max={selectedTariff.max_days ?? 365}
+                                    value={customDays}
+                                    onChange={(e) => setCustomDays(parseInt(e.target.value))}
+                                    className="flex-1 accent-[#F97315]"
+                                  />
+                                  <input
+                                    type="number"
+                                    value={customDays}
+                                    min={selectedTariff.min_days ?? 1}
+                                    max={selectedTariff.max_days ?? 365}
+                                    onChange={(e) =>
+                                      setCustomDays(
+                                        Math.max(
+                                          selectedTariff.min_days ?? 1,
+                                          Math.min(
+                                            selectedTariff.max_days ?? 365,
+                                            parseInt(e.target.value) ||
+                                              (selectedTariff.min_days ?? 1),
+                                          ),
+                                        ),
+                                      )
+                                    }
+                                    className="w-20 rounded-lg bg-apple-elevated px-3 py-2 text-center text-apple-ink outline-none"
+                                  />
+                                </div>
+                                {(() => {
+                                  const basePrice =
+                                    customDays * (selectedTariff.price_per_day_kopeks ?? 0);
+                                  const existingOriginal =
+                                    selectedTariff.original_price_per_day_kopeks &&
+                                    selectedTariff.original_price_per_day_kopeks >
+                                      (selectedTariff.price_per_day_kopeks ?? 0)
+                                      ? customDays * selectedTariff.original_price_per_day_kopeks
+                                      : undefined;
+                                  const promoCustom = applyPromoDiscount(
+                                    basePrice,
+                                    existingOriginal,
+                                  );
+                                  return (
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-apple-mute">
+                                        {t('subscription.days', { count: customDays })} ×{' '}
+                                        {formatPrice(selectedTariff.price_per_day_kopeks ?? 0)}/
+                                        {t('subscription.customDays.perDay')}
+                                      </span>
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className="font-semibold"
+                                          style={{ color: '#F97315' }}
+                                        >
+                                          {formatPrice(promoCustom.price)}
+                                        </span>
+                                        {promoCustom.original &&
+                                          promoCustom.original > promoCustom.price && (
+                                            <>
+                                              <span className="text-xs text-apple-faint line-through">
+                                                {formatPrice(promoCustom.original)}
+                                              </span>
+                                              <span
+                                                className="rounded px-1.5 py-0.5 text-xs"
+                                                style={{
+                                                  background: promoCustom.isPromoGroup
+                                                    ? 'rgba(48,209,88,0.18)'
+                                                    : 'rgba(249,115,21,0.18)',
+                                                  color: promoCustom.isPromoGroup
+                                                    ? '#30d158'
+                                                    : '#F97315',
+                                                }}
+                                              >
+                                                -{promoCustom.percent}%
+                                              </span>
+                                            </>
+                                          )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                    </div>
+
+                    {/* Custom traffic option */}
+                    {selectedTariff.custom_traffic_enabled &&
+                      (selectedTariff.traffic_price_per_gb_kopeks ?? 0) > 0 && (
+                        <div>
+                          <div className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-apple-mute">
+                            {t('subscription.customTraffic.label')}
+                          </div>
+                          <div className="rounded-2xl bg-apple-card p-4">
+                            <div className="mb-3 flex items-center justify-between">
+                              <span className="font-medium text-apple-ink">
+                                {t('subscription.customTraffic.selectVolume')}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setUseCustomTraffic(!useCustomTraffic)}
+                                className="relative h-6 w-10 rounded-full transition-colors"
+                                style={{
+                                  background: useCustomTraffic ? '#F97315' : '#39393d',
+                                }}
+                              >
+                                <span
+                                  className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                                    useCustomTraffic ? 'left-5' : 'left-1'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                            {!useCustomTraffic && (
+                              <div className="text-sm text-apple-mute">
+                                {t('subscription.customTraffic.default', {
+                                  label: selectedTariff.traffic_limit_label,
+                                })}
+                              </div>
+                            )}
+                            {useCustomTraffic && (
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-4">
+                                  <input
+                                    type="range"
+                                    min={selectedTariff.min_traffic_gb ?? 1}
+                                    max={selectedTariff.max_traffic_gb ?? 1000}
+                                    value={customTrafficGb}
+                                    onChange={(e) => setCustomTrafficGb(parseInt(e.target.value))}
+                                    className="flex-1 accent-[#F97315]"
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="number"
+                                      value={customTrafficGb}
+                                      min={selectedTariff.min_traffic_gb ?? 1}
+                                      max={selectedTariff.max_traffic_gb ?? 1000}
+                                      onChange={(e) =>
+                                        setCustomTrafficGb(
+                                          Math.max(
+                                            selectedTariff.min_traffic_gb ?? 1,
+                                            Math.min(
+                                              selectedTariff.max_traffic_gb ?? 1000,
+                                              parseInt(e.target.value) ||
+                                                (selectedTariff.min_traffic_gb ?? 1),
+                                            ),
+                                          ),
+                                        )
+                                      }
+                                      className="w-20 rounded-lg bg-apple-elevated px-3 py-2 text-center text-apple-ink outline-none"
+                                    />
+                                    <span className="text-apple-mute">{t('common.units.gb')}</span>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-apple-mute">
+                                    {customTrafficGb} {t('common.units.gb')} ×{' '}
+                                    {formatPrice(selectedTariff.traffic_price_per_gb_kopeks ?? 0)}/
+                                    {t('common.units.gb')}
+                                  </span>
+                                  <span className="font-semibold" style={{ color: '#F97315' }}>
+                                    +
+                                    {formatPrice(
+                                      customTrafficGb *
+                                        (selectedTariff.traffic_price_per_gb_kopeks ?? 0),
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Summary & Purchase */}
+                    {(selectedTariffPeriod || useCustomDays) && (
+                      <div className="rounded-2xl bg-apple-card p-5">
+                        {(() => {
+                          const basePeriodPrice = useCustomDays
+                            ? customDays * (selectedTariff.price_per_day_kopeks ?? 0)
+                            : selectedTariffPeriod?.price_kopeks || 0;
+                          const existingPeriodOriginal = useCustomDays
+                            ? selectedTariff.original_price_per_day_kopeks &&
+                              selectedTariff.original_price_per_day_kopeks >
+                                (selectedTariff.price_per_day_kopeks ?? 0)
+                              ? customDays * selectedTariff.original_price_per_day_kopeks
+                              : undefined
+                            : selectedTariffPeriod?.original_price_kopeks &&
+                                selectedTariffPeriod.original_price_kopeks >
+                                  selectedTariffPeriod.price_kopeks
+                              ? selectedTariffPeriod.original_price_kopeks
+                              : undefined;
+                          const promoPeriod = applyPromoDiscount(
+                            basePeriodPrice,
+                            existingPeriodOriginal,
+                          );
+
+                          const trafficPrice =
+                            useCustomTraffic && selectedTariff.custom_traffic_enabled
+                              ? customTrafficGb * (selectedTariff.traffic_price_per_gb_kopeks ?? 0)
+                              : 0;
+
+                          const totalPrice = promoPeriod.price + trafficPrice;
+                          const originalTotal = promoPeriod.original
+                            ? promoPeriod.original + trafficPrice
+                            : null;
+
+                          return (
+                            <>
+                              <div className="mb-4 space-y-2">
+                                {useCustomDays
+                                  ? null
+                                  : selectedTariffPeriod && (
+                                      <>
+                                        {(selectedTariffPeriod.extra_devices_count ?? 0) > 0 &&
+                                        selectedTariffPeriod.base_tariff_price_kopeks ? (
+                                          <>
+                                            <div className="flex justify-between text-sm text-apple-mute">
+                                              <span>
+                                                {t('subscription.baseTariff')}:{' '}
+                                                {selectedTariffPeriod.label}
+                                              </span>
+                                              <span className="text-apple-ink">
+                                                {formatPrice(
+                                                  selectedTariffPeriod.base_tariff_price_kopeks,
+                                                )}
+                                              </span>
+                                            </div>
+                                            <div className="flex justify-between text-sm text-apple-mute">
+                                              <span>
+                                                {t('subscription.extraDevices')} (
+                                                {selectedTariffPeriod.extra_devices_count})
+                                              </span>
+                                              <span className="text-apple-ink">
+                                                +
+                                                {formatPrice(
+                                                  selectedTariffPeriod.extra_devices_cost_kopeks ??
+                                                    0,
+                                                )}
+                                              </span>
+                                            </div>
+                                          </>
+                                        ) : null}
+                                      </>
+                                    )}
+                                {useCustomTraffic && selectedTariff.custom_traffic_enabled && (
+                                  <div className="flex justify-between text-sm text-apple-mute">
+                                    <span>
+                                      {t('subscription.summary.traffic', {
+                                        gb: customTrafficGb,
+                                      })}
+                                    </span>
+                                    <span className="text-apple-ink">
+                                      +{formatPrice(trafficPrice)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {promoPeriod.percent && (
+                                <div
+                                  className="mb-4 flex items-center justify-center gap-2 rounded-xl p-2"
+                                  style={{ background: 'rgba(249,115,21,0.12)' }}
+                                >
+                                  <span
+                                    className="text-sm font-medium"
+                                    style={{ color: '#F97315' }}
+                                  >
+                                    {t('promo.discountApplied')} -{promoPeriod.percent}%
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="mb-4 flex items-center justify-between border-t border-apple-hairline pt-3">
+                                <span className="font-semibold text-apple-ink">
+                                  {t('subscription.total')}
+                                </span>
+                                <div className="text-right">
+                                  <span className="text-2xl font-bold" style={{ color: '#F97315' }}>
+                                    {formatPrice(totalPrice)}
+                                  </span>
+                                  {originalTotal && (
+                                    <div className="text-sm text-apple-faint line-through">
+                                      {formatPrice(originalTotal)}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Payment CTA Button */}
+                              {(() => {
+                                const hasEnoughBalance =
+                                  purchaseOptions && totalPrice <= purchaseOptions.balance_kopeks;
+                                const missingAmount = purchaseOptions
+                                  ? totalPrice - purchaseOptions.balance_kopeks
+                                  : totalPrice;
+                                const methods = getAvailablePaymentMethods(missingAmount);
+
+                                return (
+                                  <>
+                                    {/* Balance info */}
+                                    {purchaseOptions && (
+                                      <div
+                                        className="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-sm"
+                                        style={{
+                                          background: hasEnoughBalance
+                                            ? 'rgba(48,209,88,0.1)'
+                                            : 'rgba(255,255,255,0.05)',
+                                        }}
+                                      >
+                                        <div className="flex w-full justify-between">
+                                          <div className="flex flex-col items-start">
+                                            <span className="text-[10px] uppercase tracking-wider text-apple-faint">
+                                              Ваш баланс
+                                            </span>
+                                            <span
+                                              className="font-semibold"
+                                              style={{
+                                                color: hasEnoughBalance ? '#30d158' : '#f5f5f7',
+                                              }}
+                                            >
+                                              {formatPrice(purchaseOptions.balance_kopeks)}
+                                            </span>
+                                          </div>
+                                          {!hasEnoughBalance && missingAmount > 0 && (
+                                            <div className="flex flex-col items-start">
+                                              <span className="text-[10px] uppercase tracking-wider text-apple-faint">
+                                                Не хватает
+                                              </span>
+                                              <span
+                                                className="font-semibold"
+                                                style={{ color: '#ff453a' }}
+                                              >
+                                                {formatPrice(missingAmount)}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        haptic.buttonPressMedium();
+                                        if (
+                                          hasEnoughBalance ||
+                                          !purchaseOptions ||
+                                          methods.length === 0
+                                        ) {
+                                          tariffPurchaseMutation.mutate();
+                                        } else {
+                                          setShowPaymentSheet(true);
+                                        }
+                                      }}
+                                      disabled={tariffPurchaseMutation.isPending || isDirectPaying}
+                                      className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                    >
+                                      {tariffPurchaseMutation.isPending || isDirectPaying ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                          {t('common.loading')}
+                                        </span>
+                                      ) : (
+                                        <>
+                                          {t('subscription.paySubscription', 'Оплатить')}
+                                          <span className="text-white/90">
+                                            {hasEnoughBalance
+                                              ? formatPrice(totalPrice)
+                                              : formatPrice(missingAmount)}
+                                          </span>
+                                        </>
+                                      )}
+                                    </button>
+
+                                    {/* Payment Method Bottom Sheet */}
+                                    {showPaymentSheet &&
+                                      !hasEnoughBalance &&
+                                      methods.length > 0 && (
+                                        <>
+                                          <div
+                                            className="fixed inset-0 z-[999] animate-[backdropFadeIn_0.2s_ease-out] bg-black/60"
+                                            onClick={() => setShowPaymentSheet(false)}
+                                          />
+                                          <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
+                                            <div className="mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
+                                              <div className="flex items-center justify-between px-7 pb-0 pt-5">
+                                                <h3 className="text-[22px] font-semibold text-white">
+                                                  {t(
+                                                    'subscription.selectPaymentMethod',
+                                                    'Способ оплаты',
+                                                  )}
+                                                </h3>
+                                                <button
+                                                  onClick={() => setShowPaymentSheet(false)}
+                                                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
+                                                  aria-label="Close"
+                                                >
+                                                  <svg
+                                                    width="18"
+                                                    height="18"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                  >
+                                                    <path d="M6 6l12 12M18 6 6 18" />
+                                                  </svg>
+                                                </button>
+                                              </div>
+                                              <div className="px-7 pb-7 pt-4">
+                                                <div className="mb-5 space-y-2">
+                                                  {methods.map((method) => (
+                                                    <button
+                                                      key={method.id}
+                                                      onClick={() => {
+                                                        setSelectedPaymentMethod(method.id);
+                                                        setSelectedPaymentOption(
+                                                          method.options?.[0]?.id ?? null,
+                                                        );
+                                                        setDirectPayError(null);
+                                                      }}
+                                                      className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
+                                                      style={
+                                                        selectedPaymentMethod === method.id
+                                                          ? {
+                                                              boxShadow:
+                                                                'inset 0 0 0 1.5px #F97315',
+                                                            }
+                                                          : {
+                                                              boxShadow:
+                                                                'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                                            }
+                                                      }
+                                                    >
+                                                      <div className="flex items-center gap-3 font-medium text-white">
+                                                        <img
+                                                          src="/SBP.svg"
+                                                          alt=""
+                                                          className="h-[30px] w-[24px] flex-shrink-0"
+                                                        />
+                                                        {method.name}
+                                                      </div>
+                                                      {method.description && (
+                                                        <div className="mt-1 text-xs text-apple-mute">
+                                                          {method.description}
+                                                        </div>
+                                                      )}
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                                {selectedPaymentMethod && (
+                                                  <button
+                                                    onClick={() => {
+                                                      handleDirectPay(
+                                                        missingAmount,
+                                                        selectedTariff.id,
+                                                        selectedTariff.name,
+                                                        useCustomDays
+                                                          ? customDays
+                                                          : selectedTariffPeriod?.days || 30,
+                                                        totalPrice,
+                                                        useCustomTraffic &&
+                                                          selectedTariff.custom_traffic_enabled
+                                                          ? customTrafficGb
+                                                          : undefined,
+                                                      );
+                                                      setShowPaymentSheet(false);
+                                                    }}
+                                                    disabled={isDirectPaying}
+                                                    className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                                  >
+                                                    {isDirectPaying ? (
+                                                      <span className="flex items-center justify-center gap-2">
+                                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                                        {t('common.loading')}
+                                                      </span>
+                                                    ) : (
+                                                      t(
+                                                        'subscription.payAndActivate',
+                                                        'Оплатить и активировать',
+                                                      )
+                                                    )}
+                                                  </button>
+                                                )}
+                                                {directPayError && (
+                                                  <div className="mt-3 text-center text-sm text-apple-red">
+                                                    {directPayError}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </>
+                                      )}
+                                  </>
+                                );
+                              })()}
+                            </>
+                          );
+                        })()}
+
+                        {tariffPurchaseMutation.isError &&
+                          !getInsufficientBalanceError(tariffPurchaseMutation.error) && (
+                            <div className="mt-3 text-center text-sm text-apple-red">
+                              {getErrorMessage(tariffPurchaseMutation.error)}
+                            </div>
+                          )}
+                        {tariffPurchaseMutation.isError &&
+                          getInsufficientBalanceError(tariffPurchaseMutation.error) && (
+                            <div className="mt-3 text-center text-sm text-apple-red">
+                              {t('subscription.directPayError', 'Payment error. Please try again.')}
+                            </div>
+                          )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </>
           ) : (
-            selectedTariff &&
+            tariffListBody
+          )}
+          {showTariffListModal &&
             createPortal(
               <div
                 className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
                 style={{ background: 'rgba(0,0,0,0.5)' }}
-                onClick={closeTariffPurchase}
+                onClick={() => setShowTariffListModal(false)}
               >
                 <div
                   className="apple-sheet-panel relative m-2.5 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
@@ -1155,7 +2068,7 @@ export default function SubscriptionPurchase() {
                 >
                   <button
                     type="button"
-                    onClick={closeTariffPurchase}
+                    onClick={() => setShowTariffListModal(false)}
                     aria-label={t('common.close', 'Закрыть')}
                     className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                   >
@@ -1172,942 +2085,13 @@ export default function SubscriptionPurchase() {
                     </svg>
                   </button>
                   <div className="px-7 pb-2 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
-                    {selectedTariff.name}
+                    {t('subscription.selectTariff', 'Выберите тариф')}
                   </div>
-                  <div className="flex flex-col gap-5 px-7 pb-7 pt-2">
-                    {/* Daily Tariff Purchase */}
-                    {selectedTariff.is_daily ||
-                    (selectedTariff.daily_price_kopeks && selectedTariff.daily_price_kopeks > 0) ? (
-                      <div className="rounded-2xl bg-apple-card p-5">
-                        <div className="mb-4 text-center">
-                          <div className="mb-2 text-sm text-apple-mute">
-                            {t('subscription.dailyPurchase.costPerDay')}
-                          </div>
-                          <div className="text-3xl font-bold" style={{ color: '#F97315' }}>
-                            {formatPrice(selectedTariff.daily_price_kopeks || 0)}
-                          </div>
-                        </div>
-                        <div className="space-y-2 text-sm text-apple-mute">
-                          <div className="flex items-start gap-2">
-                            <span style={{ color: '#F97315' }}>•</span>
-                            <span>{t('subscription.dailyPurchase.chargedDaily')}</span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <span style={{ color: '#F97315' }}>•</span>
-                            <span>{t('subscription.dailyPurchase.canPause')}</span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <span style={{ color: '#F97315' }}>•</span>
-                            <span>{t('subscription.dailyPurchase.pausedOnLowBalance')}</span>
-                          </div>
-                        </div>
-
-                        {(() => {
-                          const dailyPrice = selectedTariff.daily_price_kopeks || 0;
-                          const hasEnoughBalance =
-                            purchaseOptions && dailyPrice <= purchaseOptions.balance_kopeks;
-                          const missingAmount = purchaseOptions
-                            ? dailyPrice - purchaseOptions.balance_kopeks
-                            : dailyPrice;
-                          const availableMethods = getAvailablePaymentMethods(missingAmount);
-
-                          return (
-                            <div className="mt-6">
-                              {/* Balance info */}
-                              {purchaseOptions && (
-                                <div
-                                  className="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-sm"
-                                  style={{
-                                    background: hasEnoughBalance
-                                      ? 'rgba(48,209,88,0.1)'
-                                      : 'rgba(255,255,255,0.05)',
-                                  }}
-                                >
-                                  <div className="flex w-full justify-between">
-                                    <div className="flex flex-col items-start">
-                                      <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                        Ваш баланс
-                                      </span>
-                                      <span
-                                        className="font-semibold"
-                                        style={{ color: hasEnoughBalance ? '#30d158' : '#f5f5f7' }}
-                                      >
-                                        {formatPrice(purchaseOptions.balance_kopeks)}
-                                      </span>
-                                    </div>
-                                    {!hasEnoughBalance && missingAmount > 0 && (
-                                      <div className="flex flex-col items-start">
-                                        <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                          Не хватает
-                                        </span>
-                                        <span
-                                          className="font-semibold"
-                                          style={{ color: '#ff453a' }}
-                                        >
-                                          {formatPrice(missingAmount)}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              <button
-                                onClick={() => {
-                                  haptic.buttonPressMedium();
-                                  if (
-                                    hasEnoughBalance ||
-                                    !purchaseOptions ||
-                                    availableMethods.length === 0
-                                  ) {
-                                    tariffPurchaseMutation.mutate();
-                                  } else {
-                                    setShowPaymentSheet(true);
-                                  }
-                                }}
-                                disabled={tariffPurchaseMutation.isPending || isDirectPaying}
-                                className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                              >
-                                {tariffPurchaseMutation.isPending || isDirectPaying ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                    {t('common.loading')}
-                                  </span>
-                                ) : (
-                                  <>
-                                    {t('subscription.paySubscription', 'Оплатить')}
-                                    {!hasEnoughBalance && missingAmount > 0 ? (
-                                      <span className="text-white/90">
-                                        {formatPrice(missingAmount)}
-                                      </span>
-                                    ) : (
-                                      <span className="text-white/90">
-                                        {formatPrice(dailyPrice)}
-                                      </span>
-                                    )}
-                                  </>
-                                )}
-                              </button>
-
-                              {/* Payment Method Bottom Sheet for Daily */}
-                              {showPaymentSheet &&
-                                !hasEnoughBalance &&
-                                availableMethods.length > 0 && (
-                                  <>
-                                    <div
-                                      className="fixed inset-0 z-[999] animate-[backdropFadeIn_0.2s_ease-out] bg-black/60"
-                                      onClick={() => setShowPaymentSheet(false)}
-                                    />
-                                    <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
-                                      <div className="mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
-                                        <div className="flex items-center justify-between px-7 pb-0 pt-5">
-                                          <h3 className="text-[22px] font-semibold text-white">
-                                            {t('subscription.selectPaymentMethod', 'Способ оплаты')}
-                                          </h3>
-                                          <button
-                                            onClick={() => setShowPaymentSheet(false)}
-                                            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                            aria-label="Close"
-                                          >
-                                            <svg
-                                              width="18"
-                                              height="18"
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              stroke="currentColor"
-                                              strokeWidth="2"
-                                              strokeLinecap="round"
-                                            >
-                                              <path d="M6 6l12 12M18 6 6 18" />
-                                            </svg>
-                                          </button>
-                                        </div>
-                                        <div className="px-7 pb-7 pt-4">
-                                          <div className="mb-5 space-y-2">
-                                            {availableMethods.map((method) => (
-                                              <button
-                                                key={method.id}
-                                                onClick={() => {
-                                                  setSelectedPaymentMethod(method.id);
-                                                  setSelectedPaymentOption(
-                                                    method.options?.[0]?.id ?? null,
-                                                  );
-                                                  setDirectPayError(null);
-                                                }}
-                                                className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
-                                                style={
-                                                  selectedPaymentMethod === method.id
-                                                    ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
-                                                    : {
-                                                        boxShadow:
-                                                          'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                                      }
-                                                }
-                                              >
-                                                <div className="flex items-center gap-3 font-medium text-white">
-                                                  <img
-                                                    src="/SBP.svg"
-                                                    alt=""
-                                                    className="h-[30px] w-[24px] flex-shrink-0"
-                                                  />
-                                                  {method.name}
-                                                </div>
-                                                {method.description && (
-                                                  <div className="mt-1 text-xs text-apple-mute">
-                                                    {method.description}
-                                                  </div>
-                                                )}
-                                              </button>
-                                            ))}
-                                          </div>
-                                          {selectedPaymentMethod && (
-                                            <button
-                                              onClick={() => {
-                                                handleDirectPay(
-                                                  missingAmount,
-                                                  selectedTariff.id,
-                                                  selectedTariff.name,
-                                                  1,
-                                                  dailyPrice,
-                                                );
-                                                setShowPaymentSheet(false);
-                                              }}
-                                              disabled={isDirectPaying}
-                                              className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                            >
-                                              {isDirectPaying ? (
-                                                <span className="flex items-center justify-center gap-2">
-                                                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                                  {t('common.loading')}
-                                                </span>
-                                              ) : (
-                                                t(
-                                                  'subscription.payAndActivate',
-                                                  'Оплатить и активировать',
-                                                )
-                                              )}
-                                            </button>
-                                          )}
-                                          {directPayError && (
-                                            <div className="mt-3 text-center text-sm text-apple-red">
-                                              {directPayError}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-
-                              {purchaseOptions &&
-                                !hasEnoughBalance &&
-                                availableMethods.length === 0 && (
-                                  <InsufficientBalancePrompt
-                                    missingAmountKopeks={missingAmount}
-                                    compact
-                                    className="mt-4"
-                                  />
-                                )}
-
-                              {tariffPurchaseMutation.isError &&
-                                !getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                                  <div className="mt-3 text-center text-sm text-apple-red">
-                                    {getErrorMessage(tariffPurchaseMutation.error)}
-                                  </div>
-                                )}
-                              {tariffPurchaseMutation.isError &&
-                                getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                                  <div className="mt-3 text-center text-sm text-apple-red">
-                                    {t(
-                                      'subscription.directPayError',
-                                      'Payment error. Please try again.',
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    ) : (
-                      <>
-                        {/* Period Selection for non-daily tariffs */}
-                        <div>
-                          <div className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-apple-mute">
-                            {t('subscription.selectPeriod')}
-                          </div>
-
-                          {selectedTariff.periods.length > 0 && !useCustomDays && (
-                            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                              {selectedTariff.periods.map((period) => {
-                                const promoPeriod = applyPromoDiscount(
-                                  period.price_kopeks,
-                                  period.original_price_kopeks,
-                                );
-                                const displayDiscount = promoPeriod.percent;
-                                const displayOriginal = promoPeriod.original;
-                                const displayPrice = promoPeriod.price;
-                                const displayPerMonth =
-                                  displayPrice !== period.price_kopeks
-                                    ? Math.round(displayPrice / Math.max(1, period.days / 30))
-                                    : period.price_per_month_kopeks;
-                                const isSelected =
-                                  selectedTariffPeriod?.days === period.days && !useCustomDays;
-
-                                return (
-                                  <button
-                                    key={period.days}
-                                    onClick={(e) => {
-                                      haptic.buttonPressMedium();
-                                      setSelectedTariffPeriod(period);
-                                      setUseCustomDays(false);
-                                      // Ripple effect
-                                      const btn = e.currentTarget;
-                                      const ripple = document.createElement('span');
-                                      const rect = btn.getBoundingClientRect();
-                                      const size = Math.max(rect.width, rect.height) * 2;
-                                      ripple.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.15);width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px;transform:scale(0);animation:ripple-wave 0.5s ease-out forwards;pointer-events:none;z-index:0;`;
-                                      btn.appendChild(ripple);
-                                      setTimeout(() => ripple.remove(), 600);
-                                    }}
-                                    className="relative overflow-hidden rounded-2xl bg-apple-elevated p-4 text-left transition-transform active:scale-[0.97]"
-                                    style={
-                                      isSelected
-                                        ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
-                                        : undefined
-                                    }
-                                  >
-                                    {displayDiscount && displayDiscount > 0 && (
-                                      <div
-                                        className="absolute -right-2 -top-2 rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                                        style={{
-                                          background: promoPeriod.isPromoGroup
-                                            ? '#30d158'
-                                            : '#F97315',
-                                        }}
-                                      >
-                                        -{displayDiscount}%
-                                      </div>
-                                    )}
-                                    <div className="mb-auto flex w-full items-center justify-between text-base text-apple-ink">
-                                      {period.label}
-                                    </div>
-                                    <div className="flex flex-col text-2xl font-medium leading-6 tracking-tight">
-                                      <span className="font-semibold" style={{ color: '#F97315' }}>
-                                        {formatPrice(displayPrice)}
-                                      </span>
-                                      {displayOriginal && displayOriginal > displayPrice && (
-                                        <span className="text-sm text-apple-faint line-through">
-                                          {formatPrice(displayOriginal)}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <small className="text-xs font-normal tracking-normal text-apple-faint">
-                                      {formatPrice(displayPerMonth)}/{t('subscription.month')}
-                                    </small>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {/* No periods available fallback */}
-                          {selectedTariff.periods.length === 0 &&
-                            !useCustomDays &&
-                            !(
-                              selectedTariff.custom_days_enabled &&
-                              (selectedTariff.price_per_day_kopeks ?? 0) > 0
-                            ) && (
-                              <div
-                                className="rounded-2xl p-4 text-center"
-                                style={{ background: 'rgba(255,159,10,0.12)' }}
-                              >
-                                <div
-                                  className="mb-2 text-sm font-medium"
-                                  style={{ color: '#ff9f0a' }}
-                                >
-                                  {t('subscription.noPeriodsAvailable')}
-                                </div>
-                                <div className="text-xs text-apple-mute">
-                                  {t('subscription.noPeriodsAvailableHint')}
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    setShowTariffPurchase(false);
-                                    setSelectedTariff(null);
-                                    setSelectedTariffPeriod(null);
-                                  }}
-                                  className="mt-3 rounded-full bg-apple-elevated px-4 py-2 text-sm font-medium text-apple-ink transition-opacity hover:opacity-80"
-                                >
-                                  {t('subscription.chooseDifferentTariff')}
-                                </button>
-                              </div>
-                            )}
-
-                          {/* Custom days option */}
-                          {selectedTariff.custom_days_enabled &&
-                            (selectedTariff.price_per_day_kopeks ?? 0) > 0 && (
-                              <div className="rounded-2xl bg-apple-card p-4">
-                                <div className="mb-3 flex items-center justify-between">
-                                  <span className="font-medium text-apple-ink">
-                                    {t('subscription.customDays.title')}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => setUseCustomDays(!useCustomDays)}
-                                    className="relative h-6 w-10 rounded-full transition-colors"
-                                    style={{
-                                      background: useCustomDays ? '#F97315' : '#39393d',
-                                    }}
-                                  >
-                                    <span
-                                      className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
-                                        useCustomDays ? 'left-5' : 'left-1'
-                                      }`}
-                                    />
-                                  </button>
-                                </div>
-                                {useCustomDays && (
-                                  <div className="space-y-3">
-                                    <div className="flex items-center gap-4">
-                                      <input
-                                        type="range"
-                                        min={selectedTariff.min_days ?? 1}
-                                        max={selectedTariff.max_days ?? 365}
-                                        value={customDays}
-                                        onChange={(e) => setCustomDays(parseInt(e.target.value))}
-                                        className="flex-1 accent-[#F97315]"
-                                      />
-                                      <input
-                                        type="number"
-                                        value={customDays}
-                                        min={selectedTariff.min_days ?? 1}
-                                        max={selectedTariff.max_days ?? 365}
-                                        onChange={(e) =>
-                                          setCustomDays(
-                                            Math.max(
-                                              selectedTariff.min_days ?? 1,
-                                              Math.min(
-                                                selectedTariff.max_days ?? 365,
-                                                parseInt(e.target.value) ||
-                                                  (selectedTariff.min_days ?? 1),
-                                              ),
-                                            ),
-                                          )
-                                        }
-                                        className="w-20 rounded-lg bg-apple-elevated px-3 py-2 text-center text-apple-ink outline-none"
-                                      />
-                                    </div>
-                                    {(() => {
-                                      const basePrice =
-                                        customDays * (selectedTariff.price_per_day_kopeks ?? 0);
-                                      const existingOriginal =
-                                        selectedTariff.original_price_per_day_kopeks &&
-                                        selectedTariff.original_price_per_day_kopeks >
-                                          (selectedTariff.price_per_day_kopeks ?? 0)
-                                          ? customDays *
-                                            selectedTariff.original_price_per_day_kopeks
-                                          : undefined;
-                                      const promoCustom = applyPromoDiscount(
-                                        basePrice,
-                                        existingOriginal,
-                                      );
-                                      return (
-                                        <div className="flex justify-between text-sm">
-                                          <span className="text-apple-mute">
-                                            {t('subscription.days', { count: customDays })} ×{' '}
-                                            {formatPrice(selectedTariff.price_per_day_kopeks ?? 0)}/
-                                            {t('subscription.customDays.perDay')}
-                                          </span>
-                                          <div className="flex items-center gap-2">
-                                            <span
-                                              className="font-semibold"
-                                              style={{ color: '#F97315' }}
-                                            >
-                                              {formatPrice(promoCustom.price)}
-                                            </span>
-                                            {promoCustom.original &&
-                                              promoCustom.original > promoCustom.price && (
-                                                <>
-                                                  <span className="text-xs text-apple-faint line-through">
-                                                    {formatPrice(promoCustom.original)}
-                                                  </span>
-                                                  <span
-                                                    className="rounded px-1.5 py-0.5 text-xs"
-                                                    style={{
-                                                      background: promoCustom.isPromoGroup
-                                                        ? 'rgba(48,209,88,0.18)'
-                                                        : 'rgba(249,115,21,0.18)',
-                                                      color: promoCustom.isPromoGroup
-                                                        ? '#30d158'
-                                                        : '#F97315',
-                                                    }}
-                                                  >
-                                                    -{promoCustom.percent}%
-                                                  </span>
-                                                </>
-                                              )}
-                                          </div>
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                        </div>
-
-                        {/* Custom traffic option */}
-                        {selectedTariff.custom_traffic_enabled &&
-                          (selectedTariff.traffic_price_per_gb_kopeks ?? 0) > 0 && (
-                            <div>
-                              <div className="mb-3 text-[13px] font-semibold uppercase tracking-wider text-apple-mute">
-                                {t('subscription.customTraffic.label')}
-                              </div>
-                              <div className="rounded-2xl bg-apple-card p-4">
-                                <div className="mb-3 flex items-center justify-between">
-                                  <span className="font-medium text-apple-ink">
-                                    {t('subscription.customTraffic.selectVolume')}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => setUseCustomTraffic(!useCustomTraffic)}
-                                    className="relative h-6 w-10 rounded-full transition-colors"
-                                    style={{
-                                      background: useCustomTraffic ? '#F97315' : '#39393d',
-                                    }}
-                                  >
-                                    <span
-                                      className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
-                                        useCustomTraffic ? 'left-5' : 'left-1'
-                                      }`}
-                                    />
-                                  </button>
-                                </div>
-                                {!useCustomTraffic && (
-                                  <div className="text-sm text-apple-mute">
-                                    {t('subscription.customTraffic.default', {
-                                      label: selectedTariff.traffic_limit_label,
-                                    })}
-                                  </div>
-                                )}
-                                {useCustomTraffic && (
-                                  <div className="space-y-3">
-                                    <div className="flex items-center gap-4">
-                                      <input
-                                        type="range"
-                                        min={selectedTariff.min_traffic_gb ?? 1}
-                                        max={selectedTariff.max_traffic_gb ?? 1000}
-                                        value={customTrafficGb}
-                                        onChange={(e) =>
-                                          setCustomTrafficGb(parseInt(e.target.value))
-                                        }
-                                        className="flex-1 accent-[#F97315]"
-                                      />
-                                      <div className="flex items-center gap-2">
-                                        <input
-                                          type="number"
-                                          value={customTrafficGb}
-                                          min={selectedTariff.min_traffic_gb ?? 1}
-                                          max={selectedTariff.max_traffic_gb ?? 1000}
-                                          onChange={(e) =>
-                                            setCustomTrafficGb(
-                                              Math.max(
-                                                selectedTariff.min_traffic_gb ?? 1,
-                                                Math.min(
-                                                  selectedTariff.max_traffic_gb ?? 1000,
-                                                  parseInt(e.target.value) ||
-                                                    (selectedTariff.min_traffic_gb ?? 1),
-                                                ),
-                                              ),
-                                            )
-                                          }
-                                          className="w-20 rounded-lg bg-apple-elevated px-3 py-2 text-center text-apple-ink outline-none"
-                                        />
-                                        <span className="text-apple-mute">
-                                          {t('common.units.gb')}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                      <span className="text-apple-mute">
-                                        {customTrafficGb} {t('common.units.gb')} ×{' '}
-                                        {formatPrice(
-                                          selectedTariff.traffic_price_per_gb_kopeks ?? 0,
-                                        )}
-                                        /{t('common.units.gb')}
-                                      </span>
-                                      <span className="font-semibold" style={{ color: '#F97315' }}>
-                                        +
-                                        {formatPrice(
-                                          customTrafficGb *
-                                            (selectedTariff.traffic_price_per_gb_kopeks ?? 0),
-                                        )}
-                                      </span>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                        {/* Summary & Purchase */}
-                        {(selectedTariffPeriod || useCustomDays) && (
-                          <div className="rounded-2xl bg-apple-card p-5">
-                            {(() => {
-                              const basePeriodPrice = useCustomDays
-                                ? customDays * (selectedTariff.price_per_day_kopeks ?? 0)
-                                : selectedTariffPeriod?.price_kopeks || 0;
-                              const existingPeriodOriginal = useCustomDays
-                                ? selectedTariff.original_price_per_day_kopeks &&
-                                  selectedTariff.original_price_per_day_kopeks >
-                                    (selectedTariff.price_per_day_kopeks ?? 0)
-                                  ? customDays * selectedTariff.original_price_per_day_kopeks
-                                  : undefined
-                                : selectedTariffPeriod?.original_price_kopeks &&
-                                    selectedTariffPeriod.original_price_kopeks >
-                                      selectedTariffPeriod.price_kopeks
-                                  ? selectedTariffPeriod.original_price_kopeks
-                                  : undefined;
-                              const promoPeriod = applyPromoDiscount(
-                                basePeriodPrice,
-                                existingPeriodOriginal,
-                              );
-
-                              const trafficPrice =
-                                useCustomTraffic && selectedTariff.custom_traffic_enabled
-                                  ? customTrafficGb *
-                                    (selectedTariff.traffic_price_per_gb_kopeks ?? 0)
-                                  : 0;
-
-                              const totalPrice = promoPeriod.price + trafficPrice;
-                              const originalTotal = promoPeriod.original
-                                ? promoPeriod.original + trafficPrice
-                                : null;
-
-                              return (
-                                <>
-                                  <div className="mb-4 space-y-2">
-                                    {useCustomDays
-                                      ? null
-                                      : selectedTariffPeriod && (
-                                          <>
-                                            {(selectedTariffPeriod.extra_devices_count ?? 0) > 0 &&
-                                            selectedTariffPeriod.base_tariff_price_kopeks ? (
-                                              <>
-                                                <div className="flex justify-between text-sm text-apple-mute">
-                                                  <span>
-                                                    {t('subscription.baseTariff')}:{' '}
-                                                    {selectedTariffPeriod.label}
-                                                  </span>
-                                                  <span className="text-apple-ink">
-                                                    {formatPrice(
-                                                      selectedTariffPeriod.base_tariff_price_kopeks,
-                                                    )}
-                                                  </span>
-                                                </div>
-                                                <div className="flex justify-between text-sm text-apple-mute">
-                                                  <span>
-                                                    {t('subscription.extraDevices')} (
-                                                    {selectedTariffPeriod.extra_devices_count})
-                                                  </span>
-                                                  <span className="text-apple-ink">
-                                                    +
-                                                    {formatPrice(
-                                                      selectedTariffPeriod.extra_devices_cost_kopeks ??
-                                                        0,
-                                                    )}
-                                                  </span>
-                                                </div>
-                                              </>
-                                            ) : null}
-                                          </>
-                                        )}
-                                    {useCustomTraffic && selectedTariff.custom_traffic_enabled && (
-                                      <div className="flex justify-between text-sm text-apple-mute">
-                                        <span>
-                                          {t('subscription.summary.traffic', {
-                                            gb: customTrafficGb,
-                                          })}
-                                        </span>
-                                        <span className="text-apple-ink">
-                                          +{formatPrice(trafficPrice)}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {promoPeriod.percent && (
-                                    <div
-                                      className="mb-4 flex items-center justify-center gap-2 rounded-xl p-2"
-                                      style={{ background: 'rgba(249,115,21,0.12)' }}
-                                    >
-                                      <span
-                                        className="text-sm font-medium"
-                                        style={{ color: '#F97315' }}
-                                      >
-                                        {t('promo.discountApplied')} -{promoPeriod.percent}%
-                                      </span>
-                                    </div>
-                                  )}
-
-                                  <div className="mb-4 flex items-center justify-between border-t border-apple-hairline pt-3">
-                                    <span className="font-semibold text-apple-ink">
-                                      {t('subscription.total')}
-                                    </span>
-                                    <div className="text-right">
-                                      <span
-                                        className="text-2xl font-bold"
-                                        style={{ color: '#F97315' }}
-                                      >
-                                        {formatPrice(totalPrice)}
-                                      </span>
-                                      {originalTotal && (
-                                        <div className="text-sm text-apple-faint line-through">
-                                          {formatPrice(originalTotal)}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {/* Payment CTA Button */}
-                                  {(() => {
-                                    const hasEnoughBalance =
-                                      purchaseOptions &&
-                                      totalPrice <= purchaseOptions.balance_kopeks;
-                                    const missingAmount = purchaseOptions
-                                      ? totalPrice - purchaseOptions.balance_kopeks
-                                      : totalPrice;
-                                    const methods = getAvailablePaymentMethods(missingAmount);
-
-                                    return (
-                                      <>
-                                        {/* Balance info */}
-                                        {purchaseOptions && (
-                                          <div
-                                            className="mb-3 flex items-center justify-between rounded-xl px-4 py-3 text-sm"
-                                            style={{
-                                              background: hasEnoughBalance
-                                                ? 'rgba(48,209,88,0.1)'
-                                                : 'rgba(255,255,255,0.05)',
-                                            }}
-                                          >
-                                            <div className="flex w-full justify-between">
-                                              <div className="flex flex-col items-start">
-                                                <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                                  Ваш баланс
-                                                </span>
-                                                <span
-                                                  className="font-semibold"
-                                                  style={{
-                                                    color: hasEnoughBalance ? '#30d158' : '#f5f5f7',
-                                                  }}
-                                                >
-                                                  {formatPrice(purchaseOptions.balance_kopeks)}
-                                                </span>
-                                              </div>
-                                              {!hasEnoughBalance && missingAmount > 0 && (
-                                                <div className="flex flex-col items-start">
-                                                  <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                                    Не хватает
-                                                  </span>
-                                                  <span
-                                                    className="font-semibold"
-                                                    style={{ color: '#ff453a' }}
-                                                  >
-                                                    {formatPrice(missingAmount)}
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        )}
-                                        <button
-                                          onClick={() => {
-                                            haptic.buttonPressMedium();
-                                            if (
-                                              hasEnoughBalance ||
-                                              !purchaseOptions ||
-                                              methods.length === 0
-                                            ) {
-                                              tariffPurchaseMutation.mutate();
-                                            } else {
-                                              setShowPaymentSheet(true);
-                                            }
-                                          }}
-                                          disabled={
-                                            tariffPurchaseMutation.isPending || isDirectPaying
-                                          }
-                                          className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                        >
-                                          {tariffPurchaseMutation.isPending || isDirectPaying ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                              {t('common.loading')}
-                                            </span>
-                                          ) : (
-                                            <>
-                                              {t('subscription.paySubscription', 'Оплатить')}
-                                              <span className="text-white/90">
-                                                {hasEnoughBalance
-                                                  ? formatPrice(totalPrice)
-                                                  : formatPrice(missingAmount)}
-                                              </span>
-                                            </>
-                                          )}
-                                        </button>
-
-                                        {/* Payment Method Bottom Sheet */}
-                                        {showPaymentSheet &&
-                                          !hasEnoughBalance &&
-                                          methods.length > 0 && (
-                                            <>
-                                              <div
-                                                className="fixed inset-0 z-[999] animate-[backdropFadeIn_0.2s_ease-out] bg-black/60"
-                                                onClick={() => setShowPaymentSheet(false)}
-                                              />
-                                              <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-[sheetSlideUp_0.3s_ease-out]">
-                                                <div className="mx-auto max-w-xl overflow-hidden rounded-t-[32px] bg-black text-white sm:rounded-[32px]">
-                                                  <div className="flex items-center justify-between px-7 pb-0 pt-5">
-                                                    <h3 className="text-[22px] font-semibold text-white">
-                                                      {t(
-                                                        'subscription.selectPaymentMethod',
-                                                        'Способ оплаты',
-                                                      )}
-                                                    </h3>
-                                                    <button
-                                                      onClick={() => setShowPaymentSheet(false)}
-                                                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                                      aria-label="Close"
-                                                    >
-                                                      <svg
-                                                        width="18"
-                                                        height="18"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                      >
-                                                        <path d="M6 6l12 12M18 6 6 18" />
-                                                      </svg>
-                                                    </button>
-                                                  </div>
-                                                  <div className="px-7 pb-7 pt-4">
-                                                    <div className="mb-5 space-y-2">
-                                                      {methods.map((method) => (
-                                                        <button
-                                                          key={method.id}
-                                                          onClick={() => {
-                                                            setSelectedPaymentMethod(method.id);
-                                                            setSelectedPaymentOption(
-                                                              method.options?.[0]?.id ?? null,
-                                                            );
-                                                            setDirectPayError(null);
-                                                          }}
-                                                          className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
-                                                          style={
-                                                            selectedPaymentMethod === method.id
-                                                              ? {
-                                                                  boxShadow:
-                                                                    'inset 0 0 0 1.5px #F97315',
-                                                                }
-                                                              : {
-                                                                  boxShadow:
-                                                                    'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                                                }
-                                                          }
-                                                        >
-                                                          <div className="flex items-center gap-3 font-medium text-white">
-                                                            <img
-                                                              src="/SBP.svg"
-                                                              alt=""
-                                                              className="h-[30px] w-[24px] flex-shrink-0"
-                                                            />
-                                                            {method.name}
-                                                          </div>
-                                                          {method.description && (
-                                                            <div className="mt-1 text-xs text-apple-mute">
-                                                              {method.description}
-                                                            </div>
-                                                          )}
-                                                        </button>
-                                                      ))}
-                                                    </div>
-                                                    {selectedPaymentMethod && (
-                                                      <button
-                                                        onClick={() => {
-                                                          handleDirectPay(
-                                                            missingAmount,
-                                                            selectedTariff.id,
-                                                            selectedTariff.name,
-                                                            useCustomDays
-                                                              ? customDays
-                                                              : selectedTariffPeriod?.days || 30,
-                                                            totalPrice,
-                                                            useCustomTraffic &&
-                                                              selectedTariff.custom_traffic_enabled
-                                                              ? customTrafficGb
-                                                              : undefined,
-                                                          );
-                                                          setShowPaymentSheet(false);
-                                                        }}
-                                                        disabled={isDirectPaying}
-                                                        className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                                      >
-                                                        {isDirectPaying ? (
-                                                          <span className="flex items-center justify-center gap-2">
-                                                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                                            {t('common.loading')}
-                                                          </span>
-                                                        ) : (
-                                                          t(
-                                                            'subscription.payAndActivate',
-                                                            'Оплатить и активировать',
-                                                          )
-                                                        )}
-                                                      </button>
-                                                    )}
-                                                    {directPayError && (
-                                                      <div className="mt-3 text-center text-sm text-apple-red">
-                                                        {directPayError}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </>
-                                          )}
-                                      </>
-                                    );
-                                  })()}
-                                </>
-                              );
-                            })()}
-
-                            {tariffPurchaseMutation.isError &&
-                              !getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                                <div className="mt-3 text-center text-sm text-apple-red">
-                                  {getErrorMessage(tariffPurchaseMutation.error)}
-                                </div>
-                              )}
-                            {tariffPurchaseMutation.isError &&
-                              getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                                <div className="mt-3 text-center text-sm text-apple-red">
-                                  {t(
-                                    'subscription.directPayError',
-                                    'Payment error. Please try again.',
-                                  )}
-                                </div>
-                              )}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+                  <div className="px-7 pb-7 pt-2">{tariffListBody}</div>
                 </div>
               </div>,
               document.body,
-            )
-          )}
+            )}
         </div>
       )}
 
