@@ -1021,11 +1021,6 @@ export default function Subscription() {
                               max: subscription.device_limit,
                             })}
                       </div>
-                      {isAtDeviceLimit && (
-                        <div className="mt-1 text-[11px] font-medium" style={{ color: '#ff9f0a' }}>
-                          {t('dashboard.deviceLimitReached')}
-                        </div>
-                      )}
                     </div>
                     {(subscription.is_active || subscription.is_limited) &&
                       !subscription.is_trial &&
@@ -1488,8 +1483,14 @@ export default function Subscription() {
                           <div className="text-[15px] text-apple-ink">
                             {t('dashboard.connectDevice')}
                           </div>
-                          <div className="mt-0.5 text-[13px] text-apple-faint">
-                            {t('connection.openHint', 'Открыть в приложении · QR-код')}
+                          <div
+                            className={`mt-0.5 text-[13px] ${
+                              isAtDeviceLimit ? 'text-apple-red' : 'text-apple-faint'
+                            }`}
+                          >
+                            {isAtDeviceLimit
+                              ? t('dashboard.deviceLimitReached')
+                              : t('connection.openHint', 'Открыть в приложении · QR-код')}
                           </div>
                         </div>
                         <span className="shrink-0 text-[18px] text-apple-faint">›</span>
@@ -2117,6 +2118,94 @@ export default function Subscription() {
           </div>
         )}
 
+      {/* ─── Подключённые устройства ─── */}
+      {subscription && (
+        <div>
+          <div className="mb-2.5 flex items-center justify-between px-1.5">
+            <span className="text-[13px] font-semibold text-apple-mute">
+              {t('subscription.myDevices')}
+              {devicesData && devicesData.devices.length > 0 && (
+                <span className="ml-1.5 text-apple-faint">
+                  {devicesData.device_limit === 0
+                    ? `· ${devicesData.total}`
+                    : `· ${devicesData.total}/${devicesData.device_limit}`}
+                </span>
+              )}
+            </span>
+            {devicesData && devicesData.devices.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(t('subscription.confirmDeleteAllDevices'))) {
+                    deleteAllDevicesMutation.mutate();
+                  }
+                }}
+                disabled={deleteAllDevicesMutation.isPending}
+                className="text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
+              >
+                {t('subscription.deleteAllDevices')}
+              </button>
+            )}
+          </div>
+
+          <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
+            {devicesLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="h-7 w-7 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
+              </div>
+            ) : devicesData && devicesData.devices.length > 0 ? (
+              devicesData.devices.map((device, i) => (
+                <div
+                  key={device.hwid}
+                  className={`flex items-center gap-3 p-4 ${
+                    i !== devicesData.devices.length - 1 ? 'border-b border-apple-hairline' : ''
+                  }`}
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#F97315"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[15px] text-apple-ink">
+                      {device.device_model || device.platform}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-apple-faint">
+                      <span>{device.platform}</span>
+                      <span className="font-mono">{device.hwid.slice(0, 8).toUpperCase()}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (confirm(t('subscription.confirmDeleteDevice'))) {
+                        deleteDeviceMutation.mutate(device.hwid);
+                      }
+                    }}
+                    disabled={deleteDeviceMutation.isPending}
+                    className="shrink-0 text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
+                  >
+                    {t('subscription.deleteDevice')}
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="py-10 text-center text-[13px] text-apple-mute">
+                {t('subscription.noDevices')}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ─── Управление ─── */}
       {subscription &&
         !subscription.is_trial &&
@@ -2228,94 +2317,6 @@ export default function Subscription() {
             )}
           </div>
         )}
-
-      {/* ─── Подключённые устройства ─── */}
-      {subscription && (
-        <div>
-          <div className="mb-2.5 flex items-center justify-between px-1.5">
-            <span className="text-[13px] font-semibold text-apple-mute">
-              {t('subscription.myDevices')}
-              {devicesData && devicesData.devices.length > 0 && (
-                <span className="ml-1.5 text-apple-faint">
-                  {devicesData.device_limit === 0
-                    ? `· ${devicesData.total}`
-                    : `· ${devicesData.total}/${devicesData.device_limit}`}
-                </span>
-              )}
-            </span>
-            {devicesData && devicesData.devices.length > 0 && (
-              <button
-                onClick={() => {
-                  if (confirm(t('subscription.confirmDeleteAllDevices'))) {
-                    deleteAllDevicesMutation.mutate();
-                  }
-                }}
-                disabled={deleteAllDevicesMutation.isPending}
-                className="text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
-              >
-                {t('subscription.deleteAllDevices')}
-              </button>
-            )}
-          </div>
-
-          <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
-            {devicesLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <div className="h-7 w-7 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
-              </div>
-            ) : devicesData && devicesData.devices.length > 0 ? (
-              devicesData.devices.map((device, i) => (
-                <div
-                  key={device.hwid}
-                  className={`flex items-center gap-3 p-4 ${
-                    i !== devicesData.devices.length - 1 ? 'border-b border-apple-hairline' : ''
-                  }`}
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#F97315"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[15px] text-apple-ink">
-                      {device.device_model || device.platform}
-                    </div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-apple-faint">
-                      <span>{device.platform}</span>
-                      <span className="font-mono">{device.hwid.slice(0, 8).toUpperCase()}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (confirm(t('subscription.confirmDeleteDevice'))) {
-                        deleteDeviceMutation.mutate(device.hwid);
-                      }
-                    }}
-                    disabled={deleteDeviceMutation.isPending}
-                    className="shrink-0 text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
-                  >
-                    {t('subscription.deleteDevice')}
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="py-10 text-center text-[13px] text-apple-mute">
-                {t('subscription.noDevices')}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
