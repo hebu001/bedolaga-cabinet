@@ -1271,7 +1271,7 @@ export default function SubscriptionPurchase() {
                                 onClick={() => setShowPaymentSheet(false)}
                               >
                                 <div
-                                  className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] min-h-[62vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                                  className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
@@ -1922,7 +1922,7 @@ export default function SubscriptionPurchase() {
                                           onClick={() => setShowPaymentSheet(false)}
                                         >
                                           <div
-                                            className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] min-h-[62vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                                            className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
                                             onClick={(e) => e.stopPropagation()}
                                           >
                                             <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
