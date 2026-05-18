@@ -32,7 +32,7 @@ const WalletIcon = ({ className = 'h-8 w-8' }: { className?: string }) => (
 );
 
 // Apple-dark surface helpers
-const cardCls = 'rounded-2xl bg-apple-card';
+const cardCls = 'apple-card-grad rounded-2xl bg-apple-card';
 const sectionTitleCls = 'mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute';
 
 export default function Balance() {
