@@ -884,47 +884,6 @@ export default function SubscriptionPurchase() {
       {/* Tariffs Section */}
       {isTariffsMode && tariffs.length > 0 && (
         <div className="space-y-3">
-          {/* Trial upgrade prompt — hidden when expired banner is active */}
-          {subscription?.is_trial &&
-            !(
-              isTariffsMode &&
-              purchaseOptions &&
-              'subscription_is_expired' in purchaseOptions &&
-              purchaseOptions.subscription_is_expired
-            ) && (
-              <div
-                className="flex items-start gap-3 rounded-2xl p-4"
-                style={{ background: 'rgba(255,159,10,0.12)' }}
-              >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-                  style={{ background: 'rgba(255,159,10,0.16)' }}
-                >
-                  <svg
-                    width="17"
-                    height="17"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#ff9f0a"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <div className="text-[14px] font-semibold" style={{ color: '#ff9f0a' }}>
-                    {t('subscription.trialUpgrade.title')}
-                  </div>
-                  <div className="mt-0.5 text-[12px] text-apple-mute">
-                    {t('subscription.trialUpgrade.description')}
-                  </div>
-                </div>
-              </div>
-            )}
-
           {/* Expired subscription notice */}
           {isTariffsMode &&
             purchaseOptions &&

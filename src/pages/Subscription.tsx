@@ -67,12 +67,17 @@ const CountdownTimer = memo(function CountdownTimer({
   return (
     <div className="rounded-[14px] p-4" style={{ background: 'rgba(0,0,0,0.35)' }}>
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-apple-faint">
-        {t('dashboard.remaining')}
+        {isExpired ? t('subscription.statusShort', 'Статус') : t('dashboard.remaining')}
       </div>
       {isExpired ? (
-        <div className="text-[20px] font-bold tracking-tight" style={{ color: '#ff453a' }}>
-          {t('subscription.expired')}
-        </div>
+        <>
+          <div className="text-[20px] font-bold tracking-tight" style={{ color: '#ff453a' }}>
+            {t('subscription.expired')}
+          </div>
+          <div className="mt-1.5 text-[12px] text-apple-mute">
+            {t('subscription.endedOn', 'Срок действия истёк')}: {formattedDate}
+          </div>
+        </>
       ) : (
         <>
           <div className="flex items-baseline gap-2">
