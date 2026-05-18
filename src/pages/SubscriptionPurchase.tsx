@@ -177,6 +177,7 @@ export default function SubscriptionPurchase() {
   // Direct payment state
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [selectedPaymentOption, setSelectedPaymentOption] = useState<string | null>(null);
+  const [paymentMethodsExpanded, setPaymentMethodsExpanded] = useState(false);
   const [isDirectPaying, setIsDirectPaying] = useState(false);
   const [directPayError, setDirectPayError] = useState<string | null>(null);
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
@@ -1235,6 +1236,11 @@ export default function SubscriptionPurchase() {
                               ) {
                                 tariffPurchaseMutation.mutate();
                               } else {
+                                setSelectedPaymentMethod(availableMethods[0]?.id ?? null);
+                                setSelectedPaymentOption(
+                                  availableMethods[0]?.options?.[0]?.id ?? null,
+                                );
+                                setPaymentMethodsExpanded(false);
                                 setShowPaymentSheet(true);
                               }
                             }}
@@ -1276,13 +1282,13 @@ export default function SubscriptionPurchase() {
                                 >
                                   <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
                                     <h3 className="text-[22px] font-semibold text-white">
-                                      {t('subscription.selectPaymentMethod', 'Способ оплаты')}
+                                      {t('subscription.paymentConfirm', 'Подтверждение оплаты')}
                                     </h3>
                                     <button
                                       type="button"
                                       onClick={() => setShowPaymentSheet(false)}
-                                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                                       aria-label="Close"
+                                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                                     >
                                       <svg
                                         width="18"
@@ -1297,40 +1303,108 @@ export default function SubscriptionPurchase() {
                                       </svg>
                                     </button>
                                   </div>
-                                  <div className="flex-1 space-y-2 overflow-y-auto px-7 pb-2">
-                                    {availableMethods.map((method) => (
-                                      <button
-                                        key={method.id}
-                                        type="button"
-                                        onClick={() => {
-                                          setSelectedPaymentMethod(method.id);
-                                          setSelectedPaymentOption(method.options?.[0]?.id ?? null);
-                                          setDirectPayError(null);
-                                        }}
-                                        className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
-                                        style={
-                                          selectedPaymentMethod === method.id
-                                            ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
-                                            : {
-                                                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                              }
-                                        }
-                                      >
-                                        <div className="flex items-center gap-3 font-medium text-white">
-                                          <img
-                                            src="/SBP.svg"
-                                            alt=""
-                                            className="h-[30px] w-[24px] flex-shrink-0"
-                                          />
-                                          {method.name}
-                                        </div>
-                                        {method.description && (
-                                          <div className="mt-1 text-xs text-apple-mute">
-                                            {method.description}
+                                  <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
+                                    <div
+                                      className="rounded-xl p-4"
+                                      style={{ background: 'rgba(249,115,21,0.1)' }}
+                                    >
+                                      <p className="text-[14px] text-apple-ink">
+                                        Подписка · ежедневная оплата
+                                      </p>
+                                      <hr className="my-2.5 border-apple-hairline" />
+                                      <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
+                                    </div>
+                                    {availableMethods.length > 0 &&
+                                      (() => {
+                                        const activeMethod =
+                                          availableMethods.find(
+                                            (m) => m.id === selectedPaymentMethod,
+                                          ) ?? availableMethods[0];
+                                        return paymentMethodsExpanded ? (
+                                          <div className="space-y-2">
+                                            {availableMethods.map((method) => (
+                                              <button
+                                                key={method.id}
+                                                type="button"
+                                                onClick={() => {
+                                                  setSelectedPaymentMethod(method.id);
+                                                  setSelectedPaymentOption(
+                                                    method.options?.[0]?.id ?? null,
+                                                  );
+                                                  setDirectPayError(null);
+                                                  setPaymentMethodsExpanded(false);
+                                                }}
+                                                className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
+                                                style={
+                                                  selectedPaymentMethod === method.id
+                                                    ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
+                                                    : {
+                                                        boxShadow:
+                                                          'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                                      }
+                                                }
+                                              >
+                                                <div className="flex items-center gap-3 font-medium text-white">
+                                                  <img
+                                                    src="/SBP.svg"
+                                                    alt=""
+                                                    className="h-[30px] w-[24px] flex-shrink-0"
+                                                  />
+                                                  {method.name}
+                                                </div>
+                                                {method.description && (
+                                                  <div className="mt-1 text-xs text-apple-mute">
+                                                    {method.description}
+                                                  </div>
+                                                )}
+                                              </button>
+                                            ))}
                                           </div>
-                                        )}
-                                      </button>
-                                    ))}
+                                        ) : activeMethod ? (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (availableMethods.length > 1)
+                                                setPaymentMethodsExpanded(true);
+                                            }}
+                                            className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-4 text-left"
+                                            style={{
+                                              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                            }}
+                                          >
+                                            <img
+                                              src="/SBP.svg"
+                                              alt=""
+                                              className="h-[30px] w-[24px] shrink-0"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                              <div className="truncate text-sm font-medium text-white">
+                                                {activeMethod.name}
+                                              </div>
+                                              {activeMethod.description && (
+                                                <div className="mt-0.5 truncate text-xs text-apple-mute">
+                                                  {activeMethod.description}
+                                                </div>
+                                              )}
+                                            </div>
+                                            {availableMethods.length > 1 && (
+                                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-elevated text-apple-mute">
+                                                <svg
+                                                  width="16"
+                                                  height="16"
+                                                  viewBox="0 0 24 24"
+                                                  fill="currentColor"
+                                                  aria-hidden="true"
+                                                >
+                                                  <circle cx="5" cy="12" r="2" />
+                                                  <circle cx="12" cy="12" r="2" />
+                                                  <circle cx="19" cy="12" r="2" />
+                                                </svg>
+                                              </span>
+                                            )}
+                                          </button>
+                                        ) : null;
+                                      })()}
                                   </div>
                                   <div className="shrink-0 px-7 pb-7 pt-3">
                                     {selectedPaymentMethod && (
@@ -1888,6 +1962,11 @@ export default function SubscriptionPurchase() {
                                         ) {
                                           tariffPurchaseMutation.mutate();
                                         } else {
+                                          setSelectedPaymentMethod(methods[0]?.id ?? null);
+                                          setSelectedPaymentOption(
+                                            methods[0]?.options?.[0]?.id ?? null,
+                                          );
+                                          setPaymentMethodsExpanded(false);
                                           setShowPaymentSheet(true);
                                         }
                                       }}
@@ -1928,15 +2007,15 @@ export default function SubscriptionPurchase() {
                                             <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
                                               <h3 className="text-[22px] font-semibold text-white">
                                                 {t(
-                                                  'subscription.selectPaymentMethod',
-                                                  'Способ оплаты',
+                                                  'subscription.paymentConfirm',
+                                                  'Подтверждение оплаты',
                                                 )}
                                               </h3>
                                               <button
                                                 type="button"
                                                 onClick={() => setShowPaymentSheet(false)}
-                                                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                                                 aria-label="Close"
+                                                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                                               >
                                                 <svg
                                                   width="18"
@@ -1951,43 +2030,115 @@ export default function SubscriptionPurchase() {
                                                 </svg>
                                               </button>
                                             </div>
-                                            <div className="flex-1 space-y-2 overflow-y-auto px-7 pb-2">
-                                              {methods.map((method) => (
-                                                <button
-                                                  key={method.id}
-                                                  type="button"
-                                                  onClick={() => {
-                                                    setSelectedPaymentMethod(method.id);
-                                                    setSelectedPaymentOption(
-                                                      method.options?.[0]?.id ?? null,
-                                                    );
-                                                    setDirectPayError(null);
-                                                  }}
-                                                  className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
-                                                  style={
-                                                    selectedPaymentMethod === method.id
-                                                      ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
-                                                      : {
-                                                          boxShadow:
-                                                            'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                                        }
-                                                  }
-                                                >
-                                                  <div className="flex items-center gap-3 font-medium text-white">
-                                                    <img
-                                                      src="/SBP.svg"
-                                                      alt=""
-                                                      className="h-[30px] w-[24px] flex-shrink-0"
-                                                    />
-                                                    {method.name}
-                                                  </div>
-                                                  {method.description && (
-                                                    <div className="mt-1 text-xs text-apple-mute">
-                                                      {method.description}
+                                            <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
+                                              <div
+                                                className="rounded-xl p-4"
+                                                style={{ background: 'rgba(249,115,21,0.1)' }}
+                                              >
+                                                <p className="text-[14px] text-apple-ink">
+                                                  Подписка ·{' '}
+                                                  {useCustomDays
+                                                    ? `${customDays} дн.`
+                                                    : selectedTariffPeriod?.label}
+                                                </p>
+                                                <hr className="my-2.5 border-apple-hairline" />
+                                                <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
+                                              </div>
+                                              {methods.length > 0 &&
+                                                (() => {
+                                                  const activeMethod =
+                                                    methods.find(
+                                                      (m) => m.id === selectedPaymentMethod,
+                                                    ) ?? methods[0];
+                                                  return paymentMethodsExpanded ? (
+                                                    <div className="space-y-2">
+                                                      {methods.map((method) => (
+                                                        <button
+                                                          key={method.id}
+                                                          type="button"
+                                                          onClick={() => {
+                                                            setSelectedPaymentMethod(method.id);
+                                                            setSelectedPaymentOption(
+                                                              method.options?.[0]?.id ?? null,
+                                                            );
+                                                            setDirectPayError(null);
+                                                            setPaymentMethodsExpanded(false);
+                                                          }}
+                                                          className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
+                                                          style={
+                                                            selectedPaymentMethod === method.id
+                                                              ? {
+                                                                  boxShadow:
+                                                                    'inset 0 0 0 1.5px #F97315',
+                                                                }
+                                                              : {
+                                                                  boxShadow:
+                                                                    'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                                                }
+                                                          }
+                                                        >
+                                                          <div className="flex items-center gap-3 font-medium text-white">
+                                                            <img
+                                                              src="/SBP.svg"
+                                                              alt=""
+                                                              className="h-[30px] w-[24px] flex-shrink-0"
+                                                            />
+                                                            {method.name}
+                                                          </div>
+                                                          {method.description && (
+                                                            <div className="mt-1 text-xs text-apple-mute">
+                                                              {method.description}
+                                                            </div>
+                                                          )}
+                                                        </button>
+                                                      ))}
                                                     </div>
-                                                  )}
-                                                </button>
-                                              ))}
+                                                  ) : activeMethod ? (
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => {
+                                                        if (methods.length > 1)
+                                                          setPaymentMethodsExpanded(true);
+                                                      }}
+                                                      className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-4 text-left"
+                                                      style={{
+                                                        boxShadow:
+                                                          'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                                      }}
+                                                    >
+                                                      <img
+                                                        src="/SBP.svg"
+                                                        alt=""
+                                                        className="h-[30px] w-[24px] shrink-0"
+                                                      />
+                                                      <div className="min-w-0 flex-1">
+                                                        <div className="truncate text-sm font-medium text-white">
+                                                          {activeMethod.name}
+                                                        </div>
+                                                        {activeMethod.description && (
+                                                          <div className="mt-0.5 truncate text-xs text-apple-mute">
+                                                            {activeMethod.description}
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                      {methods.length > 1 && (
+                                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-elevated text-apple-mute">
+                                                          <svg
+                                                            width="16"
+                                                            height="16"
+                                                            viewBox="0 0 24 24"
+                                                            fill="currentColor"
+                                                            aria-hidden="true"
+                                                          >
+                                                            <circle cx="5" cy="12" r="2" />
+                                                            <circle cx="12" cy="12" r="2" />
+                                                            <circle cx="19" cy="12" r="2" />
+                                                          </svg>
+                                                        </span>
+                                                      )}
+                                                    </button>
+                                                  ) : null;
+                                                })()}
                                             </div>
                                             <div className="shrink-0 px-7 pb-7 pt-3">
                                               {selectedPaymentMethod && (
