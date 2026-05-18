@@ -1562,9 +1562,9 @@ export default function SubscriptionPurchase() {
                                   const ripple = document.createElement('span');
                                   const rect = btn.getBoundingClientRect();
                                   const size = Math.max(rect.width, rect.height) * 2;
-                                  ripple.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.12);width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px;transform:scale(0);animation:ripple-wave 9.9s cubic-bezier(0.22,0.61,0.36,1) forwards;pointer-events:none;z-index:0;`;
+                                  ripple.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,0.12);width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px;transform:scale(0);animation:ripple-wave 6s cubic-bezier(0.22,0.61,0.36,1) forwards;pointer-events:none;z-index:0;`;
                                   btn.appendChild(ripple);
-                                  setTimeout(() => ripple.remove(), 10000);
+                                  setTimeout(() => ripple.remove(), 6100);
                                 }}
                                 className="apple-card-grad relative overflow-hidden rounded-2xl bg-apple-elevated p-4 text-left transition-transform active:scale-[0.97]"
                                 style={
