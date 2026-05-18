@@ -9,13 +9,32 @@ import { useAuthStore } from '../store/auth';
 import { logger } from '../utils/logger';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
 import type { TicketDetail } from '../types';
-import { Card } from '@/components/data-display/Card';
-import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import { usePlatform } from '@/platform';
 import { linkifyText } from '../utils/linkify';
 
 const log = logger.createLogger('Support');
+
+// Apple-dark surface helpers
+const cardCls = 'apple-card-grad rounded-2xl bg-apple-card';
+const inputCls =
+  'w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60 disabled:opacity-50';
+
+const ChatBubbleIcon = ({ className = 'h-8 w-8' }: { className?: string }) => (
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
+    />
+  </svg>
+);
 
 const PlusIcon = () => (
   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -48,6 +67,19 @@ const CloseIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
+
+const Spinner = ({ className = 'h-8 w-8' }: { className?: string }) => (
+  <div
+    className={`animate-spin rounded-full border-2 border-[#F97315] border-t-transparent ${className}`}
+  />
+);
+
+const STATUS_TONE: Record<string, string> = {
+  open: 'bg-apple-blue/15 text-apple-blue',
+  answered: 'bg-apple-green/15 text-apple-green',
+  pending: 'bg-apple-amber/15 text-apple-amber',
+  closed: 'bg-apple-elevated text-apple-mute',
+};
 
 // Media attachment state
 interface MediaAttachment {
@@ -197,30 +229,25 @@ export default function Support() {
     },
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'badge-info';
-      case 'answered':
-        return 'badge-success';
-      case 'pending':
-        return 'badge-warning';
-      case 'closed':
-        return 'badge-neutral';
-      default:
-        return 'badge-neutral';
-    }
-  };
-
   const getStatusLabel = (status: string) => {
     return t(`support.status.${status}`) || status;
   };
+
+  const StatusPill = ({ status }: { status: string }) => (
+    <span
+      className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+        STATUS_TONE[status] ?? STATUS_TONE.closed
+      }`}
+    >
+      {getStatusLabel(status)}
+    </span>
+  );
 
   // Show loading while checking configuration
   if (configLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <Spinner />
       </div>
     );
   }
@@ -234,24 +261,15 @@ export default function Support() {
 
       if (supportConfig.support_type === 'profile') {
         const supportUsername = supportConfig.support_username || '@support';
-        log.debug('Opening profile:', supportUsername);
         return {
           title: isAdmin ? t('support.ticketsDisabled') : t('support.title'),
           message: t('support.contactSupport', { username: supportUsername }),
           buttonText: t('support.contactUs'),
           buttonAction: () => {
-            log.debug('Button clicked, opening:', supportUsername);
-
-            // Extract username without @
             const username = supportUsername.startsWith('@')
               ? supportUsername.slice(1)
               : supportUsername;
-
-            const webUrl = `https://t.me/${username}`;
-            log.debug('Web URL:', webUrl);
-
-            // Use platform's openTelegramLink
-            openTelegramLink(webUrl);
+            openTelegramLink(`https://t.me/${username}`);
           },
         };
       }
@@ -267,26 +285,17 @@ export default function Support() {
         };
       }
 
-      // Fallback: contact support (should not normally happen if config is correct)
+      // Fallback: contact support
       const supportUsername = supportConfig.support_username || '@support';
-      log.debug('Fallback: Opening profile:', supportUsername);
       return {
         title: isAdmin ? t('support.ticketsDisabled') : t('support.title'),
         message: t('support.contactSupport', { username: supportUsername }),
         buttonText: t('support.contactUs'),
         buttonAction: () => {
-          log.debug('Fallback button clicked, opening:', supportUsername);
-
-          // Extract username without @
           const username = supportUsername.startsWith('@')
             ? supportUsername.slice(1)
             : supportUsername;
-
-          const webUrl = `https://t.me/${username}`;
-          log.debug('Fallback opening URL:', webUrl);
-
-          // Use platform's openTelegramLink
-          openTelegramLink(webUrl);
+          openTelegramLink(`https://t.me/${username}`);
         },
       };
     };
@@ -294,29 +303,22 @@ export default function Support() {
     const supportMessage = getSupportMessage();
 
     return (
-      <div className="mx-auto mt-12 max-w-md">
-        <Card className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
-            <svg
-              className="h-8 w-8 text-dark-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
-              />
-            </svg>
+      <div className="font-sans text-apple-ink">
+        <h1 className="mb-4 text-[22px] font-bold text-apple-ink">{t('support.title')}</h1>
+        <div className={`${cardCls} p-7 text-center`}>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated text-[#F97315]">
+            <ChatBubbleIcon />
           </div>
-          <h2 className="mb-2 text-xl font-semibold text-dark-100">{supportMessage.title}</h2>
-          <p className="mb-6 text-dark-400">{supportMessage.message}</p>
-          <Button onClick={supportMessage.buttonAction} fullWidth>
+          <h2 className="mb-2 text-[18px] font-semibold text-apple-ink">{supportMessage.title}</h2>
+          <p className="mb-6 text-[15px] text-apple-mute">{supportMessage.message}</p>
+          <button
+            type="button"
+            onClick={supportMessage.buttonAction}
+            className="w-full rounded-full bg-[#F97315] py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
+          >
             {supportMessage.buttonText}
-          </Button>
-        </Card>
+          </button>
+        </div>
       </div>
     );
   }
@@ -337,27 +339,27 @@ export default function Support() {
               <img
                 src={att.preview}
                 alt="Preview"
-                className="h-16 w-16 rounded-lg border border-dark-700 object-cover"
+                className="h-16 w-16 rounded-lg border border-apple-hairline object-cover"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-dark-700 text-xs text-dark-400">
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-apple-elevated text-xs text-apple-mute">
                 {att.file.name.slice(-6)}
               </div>
             )}
             {att.uploading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                <Spinner className="h-4 w-4" />
               </div>
             )}
             {att.error && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-red-500/30">
-                <span className="text-xs text-red-300">!</span>
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-apple-red/30">
+                <span className="text-xs text-apple-red">!</span>
               </div>
             )}
             <button
               type="button"
               onClick={() => onRemove(idx)}
-              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-dark-600 text-dark-300 hover:bg-red-500 hover:text-white"
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-apple-elevated text-apple-mute transition-colors hover:bg-apple-red hover:text-white"
             >
               <CloseIcon />
             </button>
@@ -368,100 +370,96 @@ export default function Support() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-4 font-sans text-apple-ink"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
     >
       <motion.div
         variants={staggerItem}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
-        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('support.title')}</h1>
-        <Button
+        <h1 className="text-[22px] font-bold text-apple-ink">{t('support.title')}</h1>
+        <button
+          type="button"
           onClick={() => {
             setShowCreateForm(true);
             setSelectedTicket(null);
             clearCreateAttachments();
           }}
+          className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
         >
           <PlusIcon />
-          <span className="ml-2">{t('support.newTicket')}</span>
-        </Button>
+          <span>{t('support.newTicket')}</span>
+        </button>
       </motion.div>
 
       {/* Contact support card for "both" mode */}
       {supportConfig?.support_type === 'both' && supportConfig.support_username && (
         <motion.div variants={staggerItem}>
-          <Card className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-dark-800">
-                <svg
-                  className="h-5 w-5 text-dark-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
-                  />
-                </svg>
+          <div className={`${cardCls} flex items-center justify-between p-4`}>
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-apple-elevated text-[#F97315]">
+                <ChatBubbleIcon className="h-5 w-5" />
               </div>
-              <div>
-                <div className="text-sm font-medium text-dark-100">{t('support.contactUs')}</div>
-                <div className="text-xs text-dark-400">{supportConfig.support_username}</div>
+              <div className="min-w-0">
+                <div className="text-[15px] font-medium text-apple-ink">
+                  {t('support.contactUs')}
+                </div>
+                <div className="truncate text-[13px] text-apple-mute">
+                  {supportConfig.support_username}
+                </div>
               </div>
             </div>
-            <Button
-              variant="secondary"
+            <button
+              type="button"
               onClick={() => {
                 const username = supportConfig.support_username!.startsWith('@')
                   ? supportConfig.support_username!.slice(1)
                   : supportConfig.support_username!;
                 openTelegramLink(`https://t.me/${username}`);
               }}
+              className="shrink-0 rounded-full bg-apple-elevated px-4 py-2.5 text-[14px] font-semibold text-apple-ink transition-opacity hover:opacity-80"
             >
               {t('support.contactUs')}
-            </Button>
-          </Card>
+            </button>
+          </div>
         </motion.div>
       )}
 
-      <motion.div variants={staggerItem} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <motion.div variants={staggerItem} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Tickets List */}
-        <Card className="lg:col-span-1">
-          <h2 className="mb-4 text-lg font-semibold text-dark-100">{t('support.yourTickets')}</h2>
+        <div className={`${cardCls} p-5 lg:col-span-1`}>
+          <h2 className="mb-4 text-[17px] font-semibold text-apple-ink">
+            {t('support.yourTickets')}
+          </h2>
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              <Spinner />
             </div>
           ) : tickets?.items && tickets.items.length > 0 ? (
             <div className="space-y-2">
               {tickets.items.map((ticket) => (
                 <button
                   key={ticket.id}
+                  type="button"
                   onClick={() => {
                     setSelectedTicket(ticket as unknown as TicketDetail);
                     setShowCreateForm(false);
                     clearReplyAttachments();
                   }}
-                  className={`w-full rounded-bento border p-4 text-left transition-all ${
+                  className={`w-full rounded-xl p-4 text-left transition-colors ${
                     selectedTicket?.id === ticket.id
-                      ? 'border-accent-500 bg-accent-500/10'
-                      : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600'
+                      ? 'bg-[#F97315]/10 ring-1 ring-[#F97315]/40'
+                      : 'bg-apple-elevated hover:bg-apple-elevated/70'
                   }`}
                 >
                   <div className="mb-2 flex items-start justify-between gap-2">
-                    <div className="truncate font-medium text-dark-100">{ticket.title}</div>
-                    <span className={`${getStatusBadge(ticket.status)} flex-shrink-0`}>
-                      {getStatusLabel(ticket.status)}
-                    </span>
+                    <div className="truncate font-medium text-apple-ink">{ticket.title}</div>
+                    <StatusPill status={ticket.status} />
                   </div>
-                  <div className="text-xs text-dark-500">
+                  <div className="text-xs text-apple-faint">
                     {new Date(ticket.updated_at).toLocaleDateString()}
                   </div>
                 </button>
@@ -469,31 +467,19 @@ export default function Support() {
             </div>
           ) : (
             <div className="py-12 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
-                <svg
-                  className="h-8 w-8 text-dark-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
-                  />
-                </svg>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated text-apple-faint">
+                <ChatBubbleIcon />
               </div>
-              <div className="text-dark-400">{t('support.noTickets')}</div>
+              <div className="text-apple-mute">{t('support.noTickets')}</div>
             </div>
           )}
-        </Card>
+        </div>
 
         {/* Ticket Detail / Create Form */}
-        <Card className="lg:col-span-2">
+        <div className={`${cardCls} p-5 lg:col-span-2`}>
           {showCreateForm ? (
             <div>
-              <h2 className="mb-6 text-lg font-semibold text-dark-100">
+              <h2 className="mb-6 text-[17px] font-semibold text-apple-ink">
                 {t('support.createTicket')}
               </h2>
               <form
@@ -511,10 +497,12 @@ export default function Support() {
                 className="space-y-4"
               >
                 <div>
-                  <label className="label">{t('support.subject')}</label>
+                  <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
+                    {t('support.subject')}
+                  </label>
                   <input
                     type="text"
-                    className="input"
+                    className={inputCls}
                     placeholder={t('support.subjectPlaceholder')}
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
@@ -524,9 +512,11 @@ export default function Support() {
                   />
                 </div>
                 <div>
-                  <label className="label">{t('support.message')}</label>
+                  <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
+                    {t('support.message')}
+                  </label>
                   <textarea
-                    className="input min-h-[150px]"
+                    className={`${inputCls} min-h-[150px]`}
                     placeholder={t('support.messagePlaceholder')}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
@@ -565,7 +555,7 @@ export default function Support() {
                       type="button"
                       onClick={() => createFileInputRef.current?.click()}
                       disabled={createAttachments.some((a) => a.uploading)}
-                      className="mt-2 flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
+                      className="mt-2 flex items-center gap-2 text-sm text-apple-mute transition-colors hover:text-apple-ink disabled:opacity-50"
                     >
                       <ImageIcon />
                       {t('support.attachImage')}{' '}
@@ -575,45 +565,45 @@ export default function Support() {
                 </div>
 
                 {rateLimitError && (
-                  <div className="rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-400">
+                  <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red">
                     {rateLimitError}
                   </div>
                 )}
 
                 <div className="flex gap-3">
-                  <Button
+                  <button
                     type="submit"
-                    disabled={createAttachments.some((a) => a.uploading)}
-                    loading={createMutation.isPending}
+                    disabled={
+                      createAttachments.some((a) => a.uploading) || createMutation.isPending
+                    }
+                    className="flex items-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
-                    <SendIcon />
-                    <span className="ml-2">{t('support.send')}</span>
-                  </Button>
-                  <Button
+                    {createMutation.isPending ? <Spinner className="h-4 w-4" /> : <SendIcon />}
+                    <span>{t('support.send')}</span>
+                  </button>
+                  <button
                     type="button"
-                    variant="secondary"
                     onClick={() => {
                       setShowCreateForm(false);
                       clearCreateAttachments();
                     }}
+                    className="rounded-full bg-apple-elevated px-5 py-2.5 text-[14px] font-semibold text-apple-ink transition-opacity hover:opacity-80"
                   >
                     {t('common.cancel')}
-                  </Button>
+                  </button>
                 </div>
               </form>
             </div>
           ) : selectedTicket ? (
             <div className="flex h-full flex-col">
-              <div className="mb-6 flex flex-col gap-2 border-b border-dark-800/50 pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="mb-6 flex flex-col gap-2 border-b border-apple-hairline pb-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-dark-100">
+                  <h2 className="text-[17px] font-semibold text-apple-ink">
                     {ticketDetail?.title || selectedTicket.title}
                   </h2>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className={getStatusBadge(ticketDetail?.status || selectedTicket.status)}>
-                      {getStatusLabel(ticketDetail?.status || selectedTicket.status)}
-                    </span>
-                    <span className="text-xs text-dark-500">
+                    <StatusPill status={ticketDetail?.status || selectedTicket.status} />
+                    <span className="text-xs text-apple-faint">
                       {t('support.created')}{' '}
                       {new Date(selectedTicket.created_at).toLocaleDateString()}
                     </span>
@@ -624,7 +614,7 @@ export default function Support() {
               {/* Messages */}
               {detailLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                  <Spinner />
                 </div>
               ) : ticketDetail?.messages ? (
                 <div className="scrollbar-hide mb-6 max-h-96 flex-1 space-y-4 overflow-y-auto">
@@ -633,23 +623,25 @@ export default function Support() {
                       key={msg.id}
                       className={`rounded-xl p-4 ${
                         msg.is_from_admin
-                          ? 'ml-4 border border-accent-500/20 bg-accent-500/10'
-                          : 'mr-4 border border-dark-700/30 bg-dark-800/50'
+                          ? 'ml-4 bg-[#F97315]/10 ring-1 ring-[#F97315]/20'
+                          : 'mr-4 bg-apple-elevated'
                       }`}
                     >
                       <div className="mb-2 flex items-center justify-between">
                         <span
-                          className={`text-xs font-medium ${msg.is_from_admin ? 'text-accent-400' : 'text-dark-400'}`}
+                          className={`text-xs font-medium ${
+                            msg.is_from_admin ? 'text-[#F97315]' : 'text-apple-mute'
+                          }`}
                         >
                           {msg.is_from_admin ? t('support.supportTeam') : t('support.you')}
                         </span>
-                        <span className="text-xs text-dark-500">
+                        <span className="text-xs text-apple-faint">
                           {new Date(msg.created_at).toLocaleString()}
                         </span>
                       </div>
                       {msg.message_text && (
                         <div
-                          className="whitespace-pre-wrap text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                          className="whitespace-pre-wrap text-[15px] text-apple-ink [&_a]:text-[#F97315] [&_a]:underline"
                           dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
                         />
                       )}
@@ -677,12 +669,12 @@ export default function Support() {
                     }
                     replyMutation.mutate();
                   }}
-                  className="border-t border-dark-800/50 pt-4"
+                  className="border-t border-apple-hairline pt-4"
                 >
                   <div className="space-y-3">
                     <div className="flex gap-3">
                       <textarea
-                        className="input min-h-[80px] flex-1"
+                        className={`${inputCls} min-h-[80px] flex-1`}
                         placeholder={t('support.replyPlaceholder')}
                         value={replyMessage}
                         onChange={(e) => setReplyMessage(e.target.value)}
@@ -721,7 +713,7 @@ export default function Support() {
                           type="button"
                           onClick={() => replyFileInputRef.current?.click()}
                           disabled={replyAttachments.some((a) => a.uploading)}
-                          className="flex items-center gap-2 text-sm text-dark-400 transition-colors hover:text-dark-200 disabled:opacity-50"
+                          className="flex items-center gap-2 text-sm text-apple-mute transition-colors hover:text-apple-ink disabled:opacity-50"
                         >
                           <ImageIcon />
                           {t('support.attachImage')}{' '}
@@ -729,20 +721,21 @@ export default function Support() {
                         </button>
                       )}
 
-                      <Button
+                      <button
                         type="submit"
                         disabled={
                           (!replyMessage.trim() &&
                             replyAttachments.filter((a) => a.fileId).length === 0) ||
-                          replyAttachments.some((a) => a.uploading)
+                          replyAttachments.some((a) => a.uploading) ||
+                          replyMutation.isPending
                         }
-                        loading={replyMutation.isPending}
+                        className="flex items-center justify-center rounded-full bg-[#F97315] px-5 py-2.5 text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                       >
-                        <SendIcon />
-                      </Button>
+                        {replyMutation.isPending ? <Spinner className="h-4 w-4" /> : <SendIcon />}
+                      </button>
                     </div>
                     {rateLimitError && (
-                      <div className="mt-2 rounded-lg border border-error-500/30 bg-error-500/10 p-2 text-sm text-error-400">
+                      <div className="mt-2 rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red">
                         {rateLimitError}
                       </div>
                     )}
@@ -751,32 +744,20 @@ export default function Support() {
               )}
 
               {ticketDetail?.is_reply_blocked && (
-                <div className="border-t border-dark-800/50 py-4 text-center text-sm text-dark-500">
+                <div className="border-t border-apple-hairline py-4 text-center text-sm text-apple-faint">
                   {t('support.repliesDisabled')}
                 </div>
               )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
-                <svg
-                  className="h-8 w-8 text-dark-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"
-                  />
-                </svg>
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated text-apple-faint">
+                <ChatBubbleIcon />
               </div>
-              <div className="text-dark-400">{t('support.selectTicket')}</div>
+              <div className="text-apple-mute">{t('support.selectTicket')}</div>
             </div>
           )}
-        </Card>
+        </div>
       </motion.div>
     </motion.div>
   );

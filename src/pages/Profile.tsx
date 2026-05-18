@@ -28,6 +28,7 @@ import {
   LinkIcon,
   BellIcon,
   InfoIcon,
+  LogoutIcon,
 } from '@/components/icons';
 import ConnectedAccountsPanel from '@/components/profile/ConnectedAccountsPanel';
 import InfoPanel from '@/components/profile/InfoPanel';
@@ -187,6 +188,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
   const { formatAmount, currencySymbol, formatPositive, formatWithCurrency } = useCurrency();
 
@@ -1462,6 +1464,16 @@ export default function Profile() {
       >
         <InfoPanel />
       </AccordionSection>
+
+      {/* ===== Выход из аккаунта ===== */}
+      <button
+        type="button"
+        onClick={() => logout()}
+        className={`${cardCls} flex w-full items-center justify-center gap-2 px-5 py-4 text-[15px] font-semibold text-apple-red transition-colors hover:bg-apple-elevated`}
+      >
+        <LogoutIcon className="h-5 w-5" />
+        {t('nav.logout', 'Выйти из аккаунта')}
+      </button>
     </div>
   );
 }

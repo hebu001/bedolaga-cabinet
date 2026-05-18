@@ -283,11 +283,19 @@ export function AppShell({ children }: AppShellProps) {
   const isBalance = location.pathname.startsWith('/balance');
   const isProfile =
     location.pathname.startsWith('/profile') || location.pathname.startsWith('/referral');
-  const isHeaderHidden = isDashboard || isConnection || isSubscription || isBalance || isProfile;
+  const isSupport = location.pathname.startsWith('/support');
+  const isHeaderHidden =
+    isDashboard ||
+    isConnection ||
+    isSubscription ||
+    isBalance ||
+    isProfile ||
+    // Support page keeps the top header only for admins
+    (isSupport && !isAdmin);
   const isFullscreenContent = isDashboard || isConnection;
 
   // Apple-dark pages use a solid black canvas instead of the animated background
-  const isAppleDarkPage = isBalance || isSubscription || isProfile;
+  const isAppleDarkPage = isBalance || isSubscription || isProfile || isSupport;
 
   return (
     <div className={cn('min-h-screen', isAppleDarkPage && 'bg-black')}>
