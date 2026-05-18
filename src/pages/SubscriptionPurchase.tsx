@@ -177,7 +177,7 @@ export default function SubscriptionPurchase() {
   // Direct payment state
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [selectedPaymentOption, setSelectedPaymentOption] = useState<string | null>(null);
-  const [paymentMethodsExpanded, setPaymentMethodsExpanded] = useState(false);
+  const [showPaymentMethodPicker, setShowPaymentMethodPicker] = useState(false);
   const [isDirectPaying, setIsDirectPaying] = useState(false);
   const [directPayError, setDirectPayError] = useState<string | null>(null);
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
@@ -1240,7 +1240,7 @@ export default function SubscriptionPurchase() {
                                 setSelectedPaymentOption(
                                   availableMethods[0]?.options?.[0]?.id ?? null,
                                 );
-                                setPaymentMethodsExpanded(false);
+                                setShowPaymentMethodPicker(false);
                                 setShowPaymentSheet(true);
                               }
                             }}
@@ -1271,112 +1271,71 @@ export default function SubscriptionPurchase() {
                             !hasEnoughBalance &&
                             availableMethods.length > 0 &&
                             createPortal(
-                              <div
-                                className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
-                                style={{ background: 'rgba(0,0,0,0.6)' }}
-                                onClick={() => setShowPaymentSheet(false)}
-                              >
+                              <>
                                 <div
-                                  className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
-                                  onClick={(e) => e.stopPropagation()}
+                                  className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
+                                  style={{ background: 'rgba(0,0,0,0.6)' }}
+                                  onClick={() => setShowPaymentSheet(false)}
                                 >
-                                  <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
-                                    <h3 className="text-[22px] font-semibold text-white">
-                                      {t('subscription.paymentConfirm', 'Подтверждение оплаты')}
-                                    </h3>
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowPaymentSheet(false)}
-                                      aria-label="Close"
-                                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                    >
-                                      <svg
-                                        width="18"
-                                        height="18"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
+                                  <div
+                                    className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
+                                      <h3 className="text-[22px] font-semibold text-white">
+                                        {t('subscription.paymentConfirm', 'Подтверждение оплаты')}
+                                      </h3>
+                                      <button
+                                        type="button"
+                                        onClick={() => setShowPaymentSheet(false)}
+                                        aria-label="Close"
+                                        className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                                       >
-                                        <path d="M6 6l12 12M18 6 6 18" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                  <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
-                                    <div
-                                      className="rounded-xl p-4"
-                                      style={{ background: 'rgba(249,115,21,0.1)' }}
-                                    >
-                                      <p className="text-[14px] text-apple-ink">
-                                        Подписка · ежедневная оплата
-                                      </p>
-                                      <hr className="my-2.5 border-apple-hairline" />
-                                      <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
+                                        <svg
+                                          width="18"
+                                          height="18"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                        >
+                                          <path d="M6 6l12 12M18 6 6 18" />
+                                        </svg>
+                                      </button>
                                     </div>
-                                    {availableMethods.length > 0 &&
-                                      (() => {
+                                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
+                                      <div
+                                        className="rounded-xl p-4"
+                                        style={{ background: 'rgba(249,115,21,0.1)' }}
+                                      >
+                                        <p className="text-[14px] text-apple-ink">
+                                          Подписка · ежедневная оплата
+                                        </p>
+                                        <hr className="my-2.5 border-apple-hairline" />
+                                        <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
+                                      </div>
+                                      {(() => {
                                         const activeMethod =
                                           availableMethods.find(
                                             (m) => m.id === selectedPaymentMethod,
                                           ) ?? availableMethods[0];
-                                        return paymentMethodsExpanded ? (
-                                          <div className="space-y-2">
-                                            {availableMethods.map((method) => (
-                                              <button
-                                                key={method.id}
-                                                type="button"
-                                                onClick={() => {
-                                                  setSelectedPaymentMethod(method.id);
-                                                  setSelectedPaymentOption(
-                                                    method.options?.[0]?.id ?? null,
-                                                  );
-                                                  setDirectPayError(null);
-                                                  setPaymentMethodsExpanded(false);
-                                                }}
-                                                className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
-                                                style={
-                                                  selectedPaymentMethod === method.id
-                                                    ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
-                                                    : {
-                                                        boxShadow:
-                                                          'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                                      }
-                                                }
-                                              >
-                                                <div className="flex items-center gap-3 font-medium text-white">
-                                                  <img
-                                                    src="/SBP.svg"
-                                                    alt=""
-                                                    className="h-[30px] w-[24px] flex-shrink-0"
-                                                  />
-                                                  {method.name}
-                                                </div>
-                                                {method.description && (
-                                                  <div className="mt-1 text-xs text-apple-mute">
-                                                    {method.description}
-                                                  </div>
-                                                )}
-                                              </button>
-                                            ))}
-                                          </div>
-                                        ) : activeMethod ? (
+                                        if (!activeMethod) return null;
+                                        return (
                                           <button
                                             type="button"
                                             onClick={() => {
                                               if (availableMethods.length > 1)
-                                                setPaymentMethodsExpanded(true);
+                                                setShowPaymentMethodPicker(true);
                                             }}
-                                            className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-4 text-left"
+                                            className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
                                             style={{
                                               boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
                                             }}
                                           >
-                                            <img
-                                              src="/SBP.svg"
-                                              alt=""
-                                              className="h-[30px] w-[24px] shrink-0"
-                                            />
+                                            <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
+                                              <img src="/SBP.svg" alt="" className="h-6" />
+                                            </span>
                                             <div className="min-w-0 flex-1">
                                               <div className="truncate text-sm font-medium text-white">
                                                 {activeMethod.name}
@@ -1403,47 +1362,140 @@ export default function SubscriptionPurchase() {
                                               </span>
                                             )}
                                           </button>
-                                        ) : null;
+                                        );
                                       })()}
-                                  </div>
-                                  <div className="shrink-0 px-7 pb-7 pt-3">
-                                    {selectedPaymentMethod && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          handleDirectPay(
-                                            missingAmount,
-                                            selectedTariff.id,
-                                            selectedTariff.name,
-                                            1,
-                                            dailyPrice,
-                                          );
-                                          setShowPaymentSheet(false);
-                                        }}
-                                        disabled={isDirectPaying}
-                                        className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                      >
-                                        {isDirectPaying ? (
-                                          <span className="flex items-center justify-center gap-2">
-                                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                            {t('common.loading')}
-                                          </span>
-                                        ) : (
-                                          t(
-                                            'subscription.payAndActivate',
-                                            'Оплатить и активировать',
-                                          )
-                                        )}
-                                      </button>
-                                    )}
-                                    {directPayError && (
-                                      <div className="mt-3 text-center text-sm text-apple-red">
-                                        {directPayError}
-                                      </div>
-                                    )}
+                                    </div>
+                                    <div className="shrink-0 px-7 pb-7 pt-3">
+                                      {selectedPaymentMethod && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            handleDirectPay(
+                                              missingAmount,
+                                              selectedTariff.id,
+                                              selectedTariff.name,
+                                              1,
+                                              dailyPrice,
+                                            );
+                                            setShowPaymentSheet(false);
+                                          }}
+                                          disabled={isDirectPaying}
+                                          className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                        >
+                                          {isDirectPaying ? (
+                                            <span className="flex items-center justify-center gap-2">
+                                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                              {t('common.loading')}
+                                            </span>
+                                          ) : (
+                                            t(
+                                              'subscription.payAndActivate',
+                                              'Оплатить и активировать',
+                                            )
+                                          )}
+                                        </button>
+                                      )}
+                                      {directPayError && (
+                                        <div className="mt-3 text-center text-sm text-apple-red">
+                                          {directPayError}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>,
+                                {showPaymentMethodPicker && (
+                                  <div
+                                    className="apple-sheet-backdrop fixed inset-0 z-[1001] flex items-end justify-center"
+                                    style={{ background: 'rgba(0,0,0,0.6)' }}
+                                    onClick={() => setShowPaymentMethodPicker(false)}
+                                  >
+                                    <div
+                                      className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
+                                        <h3 className="text-[22px] font-semibold text-white">
+                                          {t(
+                                            'subscription.changePaymentMethod',
+                                            'Изменить способ оплаты',
+                                          )}
+                                        </h3>
+                                        <button
+                                          type="button"
+                                          onClick={() => setShowPaymentMethodPicker(false)}
+                                          aria-label="Close"
+                                          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
+                                        >
+                                          <svg
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                          >
+                                            <path d="M6 6l12 12M18 6 6 18" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                      <div className="flex flex-col gap-2 overflow-y-auto px-7 pb-7 pt-1">
+                                        {availableMethods.map((method) => (
+                                          <button
+                                            key={method.id}
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedPaymentMethod(method.id);
+                                              setSelectedPaymentOption(
+                                                method.options?.[0]?.id ?? null,
+                                              );
+                                              setDirectPayError(null);
+                                              setShowPaymentMethodPicker(false);
+                                            }}
+                                            className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
+                                            style={{
+                                              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                            }}
+                                          >
+                                            <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
+                                              <img src="/SBP.svg" alt="" className="h-6" />
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                              <div className="truncate text-sm font-medium text-white">
+                                                {method.name}
+                                              </div>
+                                              {method.description && (
+                                                <div className="mt-0.5 truncate text-xs text-apple-mute">
+                                                  {method.description}
+                                                </div>
+                                              )}
+                                            </div>
+                                            {selectedPaymentMethod === method.id && (
+                                              <span
+                                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                                                style={{ background: '#F97315' }}
+                                              >
+                                                <svg
+                                                  width="14"
+                                                  height="14"
+                                                  viewBox="0 0 24 24"
+                                                  fill="none"
+                                                  stroke="#fff"
+                                                  strokeWidth="3"
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                >
+                                                  <path d="M5 13l4 4L19 7" />
+                                                </svg>
+                                              </span>
+                                            )}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </>,
                               document.body,
                             )}
 
@@ -1966,7 +2018,7 @@ export default function SubscriptionPurchase() {
                                           setSelectedPaymentOption(
                                             methods[0]?.options?.[0]?.id ?? null,
                                           );
-                                          setPaymentMethodsExpanded(false);
+                                          setShowPaymentMethodPicker(false);
                                           setShowPaymentSheet(true);
                                         }
                                       }}
@@ -1995,122 +2047,82 @@ export default function SubscriptionPurchase() {
                                       !hasEnoughBalance &&
                                       methods.length > 0 &&
                                       createPortal(
-                                        <div
-                                          className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
-                                          style={{ background: 'rgba(0,0,0,0.6)' }}
-                                          onClick={() => setShowPaymentSheet(false)}
-                                        >
+                                        <>
                                           <div
-                                            className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
-                                            onClick={(e) => e.stopPropagation()}
+                                            className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
+                                            style={{ background: 'rgba(0,0,0,0.6)' }}
+                                            onClick={() => setShowPaymentSheet(false)}
                                           >
-                                            <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
-                                              <h3 className="text-[22px] font-semibold text-white">
-                                                {t(
-                                                  'subscription.paymentConfirm',
-                                                  'Подтверждение оплаты',
-                                                )}
-                                              </h3>
-                                              <button
-                                                type="button"
-                                                onClick={() => setShowPaymentSheet(false)}
-                                                aria-label="Close"
-                                                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                              >
-                                                <svg
-                                                  width="18"
-                                                  height="18"
-                                                  viewBox="0 0 24 24"
-                                                  fill="none"
-                                                  stroke="currentColor"
-                                                  strokeWidth="2"
-                                                  strokeLinecap="round"
+                                            <div
+                                              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
+                                                <h3 className="text-[22px] font-semibold text-white">
+                                                  {t(
+                                                    'subscription.paymentConfirm',
+                                                    'Подтверждение оплаты',
+                                                  )}
+                                                </h3>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setShowPaymentSheet(false)}
+                                                  aria-label="Close"
+                                                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                                                 >
-                                                  <path d="M6 6l12 12M18 6 6 18" />
-                                                </svg>
-                                              </button>
-                                            </div>
-                                            <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
-                                              <div
-                                                className="rounded-xl p-4"
-                                                style={{ background: 'rgba(249,115,21,0.1)' }}
-                                              >
-                                                <p className="text-[14px] text-apple-ink">
-                                                  Подписка ·{' '}
-                                                  {useCustomDays
-                                                    ? `${customDays} дн.`
-                                                    : selectedTariffPeriod?.label}
-                                                </p>
-                                                <hr className="my-2.5 border-apple-hairline" />
-                                                <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
+                                                  <svg
+                                                    width="18"
+                                                    height="18"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                  >
+                                                    <path d="M6 6l12 12M18 6 6 18" />
+                                                  </svg>
+                                                </button>
                                               </div>
-                                              {methods.length > 0 &&
-                                                (() => {
+                                              <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
+                                                <div
+                                                  className="rounded-xl p-4"
+                                                  style={{ background: 'rgba(249,115,21,0.1)' }}
+                                                >
+                                                  <p className="text-[14px] text-apple-ink">
+                                                    Подписка ·{' '}
+                                                    {useCustomDays
+                                                      ? `${customDays} дн.`
+                                                      : selectedTariffPeriod?.label}
+                                                  </p>
+                                                  <hr className="my-2.5 border-apple-hairline" />
+                                                  <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
+                                                </div>
+                                                {(() => {
                                                   const activeMethod =
                                                     methods.find(
                                                       (m) => m.id === selectedPaymentMethod,
                                                     ) ?? methods[0];
-                                                  return paymentMethodsExpanded ? (
-                                                    <div className="space-y-2">
-                                                      {methods.map((method) => (
-                                                        <button
-                                                          key={method.id}
-                                                          type="button"
-                                                          onClick={() => {
-                                                            setSelectedPaymentMethod(method.id);
-                                                            setSelectedPaymentOption(
-                                                              method.options?.[0]?.id ?? null,
-                                                            );
-                                                            setDirectPayError(null);
-                                                            setPaymentMethodsExpanded(false);
-                                                          }}
-                                                          className="w-full rounded-2xl bg-apple-card p-4 text-left text-sm transition-all"
-                                                          style={
-                                                            selectedPaymentMethod === method.id
-                                                              ? {
-                                                                  boxShadow:
-                                                                    'inset 0 0 0 1.5px #F97315',
-                                                                }
-                                                              : {
-                                                                  boxShadow:
-                                                                    'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                                                }
-                                                          }
-                                                        >
-                                                          <div className="flex items-center gap-3 font-medium text-white">
-                                                            <img
-                                                              src="/SBP.svg"
-                                                              alt=""
-                                                              className="h-[30px] w-[24px] flex-shrink-0"
-                                                            />
-                                                            {method.name}
-                                                          </div>
-                                                          {method.description && (
-                                                            <div className="mt-1 text-xs text-apple-mute">
-                                                              {method.description}
-                                                            </div>
-                                                          )}
-                                                        </button>
-                                                      ))}
-                                                    </div>
-                                                  ) : activeMethod ? (
+                                                  if (!activeMethod) return null;
+                                                  return (
                                                     <button
                                                       type="button"
                                                       onClick={() => {
                                                         if (methods.length > 1)
-                                                          setPaymentMethodsExpanded(true);
+                                                          setShowPaymentMethodPicker(true);
                                                       }}
-                                                      className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-4 text-left"
+                                                      className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
                                                       style={{
                                                         boxShadow:
                                                           'inset 0 0 0 1px rgba(255,255,255,0.08)',
                                                       }}
                                                     >
-                                                      <img
-                                                        src="/SBP.svg"
-                                                        alt=""
-                                                        className="h-[30px] w-[24px] shrink-0"
-                                                      />
+                                                      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
+                                                        <img
+                                                          src="/SBP.svg"
+                                                          alt=""
+                                                          className="h-6"
+                                                        />
+                                                      </span>
                                                       <div className="min-w-0 flex-1">
                                                         <div className="truncate text-sm font-medium text-white">
                                                           {activeMethod.name}
@@ -2137,53 +2149,153 @@ export default function SubscriptionPurchase() {
                                                         </span>
                                                       )}
                                                     </button>
-                                                  ) : null;
+                                                  );
                                                 })()}
-                                            </div>
-                                            <div className="shrink-0 px-7 pb-7 pt-3">
-                                              {selectedPaymentMethod && (
-                                                <button
-                                                  type="button"
-                                                  onClick={() => {
-                                                    handleDirectPay(
-                                                      missingAmount,
-                                                      selectedTariff.id,
-                                                      selectedTariff.name,
-                                                      useCustomDays
-                                                        ? customDays
-                                                        : selectedTariffPeriod?.days || 30,
-                                                      totalPrice,
-                                                      useCustomTraffic &&
-                                                        selectedTariff.custom_traffic_enabled
-                                                        ? customTrafficGb
-                                                        : undefined,
-                                                    );
-                                                    setShowPaymentSheet(false);
-                                                  }}
-                                                  disabled={isDirectPaying}
-                                                  className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                                >
-                                                  {isDirectPaying ? (
-                                                    <span className="flex items-center justify-center gap-2">
-                                                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                                      {t('common.loading')}
-                                                    </span>
-                                                  ) : (
-                                                    t(
-                                                      'subscription.payAndActivate',
-                                                      'Оплатить и активировать',
-                                                    )
-                                                  )}
-                                                </button>
-                                              )}
-                                              {directPayError && (
-                                                <div className="mt-3 text-center text-sm text-apple-red">
-                                                  {directPayError}
-                                                </div>
-                                              )}
+                                              </div>
+                                              <div className="shrink-0 px-7 pb-7 pt-3">
+                                                {selectedPaymentMethod && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      handleDirectPay(
+                                                        missingAmount,
+                                                        selectedTariff.id,
+                                                        selectedTariff.name,
+                                                        useCustomDays
+                                                          ? customDays
+                                                          : selectedTariffPeriod?.days || 30,
+                                                        totalPrice,
+                                                        useCustomTraffic &&
+                                                          selectedTariff.custom_traffic_enabled
+                                                          ? customTrafficGb
+                                                          : undefined,
+                                                      );
+                                                      setShowPaymentSheet(false);
+                                                    }}
+                                                    disabled={isDirectPaying}
+                                                    className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                                  >
+                                                    {isDirectPaying ? (
+                                                      <span className="flex items-center justify-center gap-2">
+                                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                                        {t('common.loading')}
+                                                      </span>
+                                                    ) : (
+                                                      t(
+                                                        'subscription.payAndActivate',
+                                                        'Оплатить и активировать',
+                                                      )
+                                                    )}
+                                                  </button>
+                                                )}
+                                                {directPayError && (
+                                                  <div className="mt-3 text-center text-sm text-apple-red">
+                                                    {directPayError}
+                                                  </div>
+                                                )}
+                                              </div>
                                             </div>
                                           </div>
-                                        </div>,
+                                          {showPaymentMethodPicker && (
+                                            <div
+                                              className="apple-sheet-backdrop fixed inset-0 z-[1001] flex items-end justify-center"
+                                              style={{ background: 'rgba(0,0,0,0.6)' }}
+                                              onClick={() => setShowPaymentMethodPicker(false)}
+                                            >
+                                              <div
+                                                className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
+                                                  <h3 className="text-[22px] font-semibold text-white">
+                                                    {t(
+                                                      'subscription.changePaymentMethod',
+                                                      'Изменить способ оплаты',
+                                                    )}
+                                                  </h3>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      setShowPaymentMethodPicker(false)
+                                                    }
+                                                    aria-label="Close"
+                                                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
+                                                  >
+                                                    <svg
+                                                      width="18"
+                                                      height="18"
+                                                      viewBox="0 0 24 24"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      strokeWidth="2"
+                                                      strokeLinecap="round"
+                                                    >
+                                                      <path d="M6 6l12 12M18 6 6 18" />
+                                                    </svg>
+                                                  </button>
+                                                </div>
+                                                <div className="flex flex-col gap-2 overflow-y-auto px-7 pb-7 pt-1">
+                                                  {methods.map((method) => (
+                                                    <button
+                                                      key={method.id}
+                                                      type="button"
+                                                      onClick={() => {
+                                                        setSelectedPaymentMethod(method.id);
+                                                        setSelectedPaymentOption(
+                                                          method.options?.[0]?.id ?? null,
+                                                        );
+                                                        setDirectPayError(null);
+                                                        setShowPaymentMethodPicker(false);
+                                                      }}
+                                                      className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
+                                                      style={{
+                                                        boxShadow:
+                                                          'inset 0 0 0 1px rgba(255,255,255,0.08)',
+                                                      }}
+                                                    >
+                                                      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
+                                                        <img
+                                                          src="/SBP.svg"
+                                                          alt=""
+                                                          className="h-6"
+                                                        />
+                                                      </span>
+                                                      <div className="min-w-0 flex-1">
+                                                        <div className="truncate text-sm font-medium text-white">
+                                                          {method.name}
+                                                        </div>
+                                                        {method.description && (
+                                                          <div className="mt-0.5 truncate text-xs text-apple-mute">
+                                                            {method.description}
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                      {selectedPaymentMethod === method.id && (
+                                                        <span
+                                                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                                                          style={{ background: '#F97315' }}
+                                                        >
+                                                          <svg
+                                                            width="14"
+                                                            height="14"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="#fff"
+                                                            strokeWidth="3"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                          >
+                                                            <path d="M5 13l4 4L19 7" />
+                                                          </svg>
+                                                        </span>
+                                                      )}
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </>,
                                         document.body,
                                       )}
                                   </>
