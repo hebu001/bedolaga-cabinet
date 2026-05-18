@@ -1568,7 +1568,7 @@ export default function SubscriptionPurchase() {
                                   btn.appendChild(ripple);
                                   setTimeout(() => ripple.remove(), 6100);
                                 }}
-                                className="apple-card-grad relative overflow-hidden rounded-2xl bg-apple-elevated p-4 text-left transition-transform active:scale-[0.97]"
+                                className="apple-card-grad relative overflow-hidden rounded-2xl bg-apple-elevated py-5 pl-[22px] pr-4 text-left transition-transform active:scale-[0.97]"
                                 style={
                                   isSelected
                                     ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
@@ -1588,7 +1588,7 @@ export default function SubscriptionPurchase() {
                                 <div className="mb-auto flex w-full items-center justify-between text-base text-apple-ink">
                                   {period.label}
                                 </div>
-                                <div className="flex flex-col text-2xl font-medium leading-6 tracking-tight">
+                                <div className="mt-2.5 flex flex-col text-2xl font-medium leading-6 tracking-tight">
                                   <span className="font-semibold" style={{ color: '#ffffff' }}>
                                     {formatPrice(displayPrice)}
                                   </span>
