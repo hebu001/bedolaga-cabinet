@@ -1146,7 +1146,7 @@ export default function SubscriptionPurchase() {
                     setShowTariffListModal(true);
                   }}
                   className="shrink-0 rounded-full bg-apple-elevated px-4 py-2 text-[13px] font-medium transition-opacity hover:opacity-80"
-                  style={{ color: '#F97315' }}
+                  style={{ color: '#ffffff' }}
                 >
                   {t('subscription.changeTariff', 'Изменить')}
                 </button>
@@ -1161,21 +1161,21 @@ export default function SubscriptionPurchase() {
                       <div className="mb-2 text-sm text-apple-mute">
                         {t('subscription.dailyPurchase.costPerDay')}
                       </div>
-                      <div className="text-3xl font-bold" style={{ color: '#F97315' }}>
+                      <div className="text-3xl font-bold" style={{ color: '#ffffff' }}>
                         {formatPrice(selectedTariff.daily_price_kopeks || 0)}
                       </div>
                     </div>
                     <div className="space-y-2 text-sm text-apple-mute">
                       <div className="flex items-start gap-2">
-                        <span style={{ color: '#F97315' }}>•</span>
+                        <span style={{ color: '#ffffff' }}>•</span>
                         <span>{t('subscription.dailyPurchase.chargedDaily')}</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span style={{ color: '#F97315' }}>•</span>
+                        <span style={{ color: '#ffffff' }}>•</span>
                         <span>{t('subscription.dailyPurchase.canPause')}</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span style={{ color: '#F97315' }}>•</span>
+                        <span style={{ color: '#ffffff' }}>•</span>
                         <span>{t('subscription.dailyPurchase.pausedOnLowBalance')}</span>
                       </div>
                     </div>
@@ -1587,7 +1587,7 @@ export default function SubscriptionPurchase() {
                                   {period.label}
                                 </div>
                                 <div className="flex flex-col text-2xl font-medium leading-6 tracking-tight">
-                                  <span className="font-semibold" style={{ color: '#F97315' }}>
+                                  <span className="font-semibold" style={{ color: '#ffffff' }}>
                                     {formatPrice(displayPrice)}
                                   </span>
                                   {displayOriginal && displayOriginal > displayPrice && (
@@ -1712,7 +1712,7 @@ export default function SubscriptionPurchase() {
                                       <div className="flex items-center gap-2">
                                         <span
                                           className="font-semibold"
-                                          style={{ color: '#F97315' }}
+                                          style={{ color: '#ffffff' }}
                                         >
                                           {formatPrice(promoCustom.price)}
                                         </span>
@@ -1821,7 +1821,7 @@ export default function SubscriptionPurchase() {
                                     {formatPrice(selectedTariff.traffic_price_per_gb_kopeks ?? 0)}/
                                     {t('common.units.gb')}
                                   </span>
-                                  <span className="font-semibold" style={{ color: '#F97315' }}>
+                                  <span className="font-semibold" style={{ color: '#ffffff' }}>
                                     +
                                     {formatPrice(
                                       customTrafficGb *
@@ -1927,7 +1927,7 @@ export default function SubscriptionPurchase() {
                                 >
                                   <span
                                     className="text-sm font-medium"
-                                    style={{ color: '#F97315' }}
+                                    style={{ color: '#ffffff' }}
                                   >
                                     {t('promo.discountApplied')} -{promoPeriod.percent}%
                                   </span>
@@ -1939,7 +1939,7 @@ export default function SubscriptionPurchase() {
                                   {t('subscription.total')}
                                 </span>
                                 <div className="text-right">
-                                  <span className="text-2xl font-bold" style={{ color: '#F97315' }}>
+                                  <span className="text-2xl font-bold" style={{ color: '#ffffff' }}>
                                     {formatPrice(totalPrice)}
                                   </span>
                                   {originalTotal && (
