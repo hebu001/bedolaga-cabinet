@@ -1305,10 +1305,7 @@ export default function SubscriptionPurchase() {
                                       </button>
                                     </div>
                                     <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
-                                      <div
-                                        className="rounded-xl p-4"
-                                        style={{ background: 'rgba(249,115,21,0.1)' }}
-                                      >
+                                      <div className="apple-card-grad rounded-xl bg-apple-card p-4">
                                         <p className="text-[14px] text-apple-ink">
                                           Подписка · ежедневная оплата
                                         </p>
@@ -2084,10 +2081,7 @@ export default function SubscriptionPurchase() {
                                                 </button>
                                               </div>
                                               <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
-                                                <div
-                                                  className="rounded-xl p-4"
-                                                  style={{ background: 'rgba(249,115,21,0.1)' }}
-                                                >
+                                                <div className="apple-card-grad rounded-xl bg-apple-card p-4">
                                                   <p className="text-[14px] text-apple-ink">
                                                     Подписка ·{' '}
                                                     {useCustomDays
