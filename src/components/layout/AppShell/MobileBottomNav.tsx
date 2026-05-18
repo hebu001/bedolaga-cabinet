@@ -28,15 +28,10 @@ const GlobeNavIcon = ({ className = '' }: { className?: string }) => (
 
 interface MobileBottomNavProps {
   isKeyboardOpen: boolean;
-  referralEnabled?: boolean;
   wheelEnabled?: boolean;
 }
 
-export function MobileBottomNav({
-  isKeyboardOpen,
-  referralEnabled,
-  wheelEnabled,
-}: MobileBottomNavProps) {
+export function MobileBottomNav({ isKeyboardOpen, wheelEnabled }: MobileBottomNavProps) {
   const { t } = useTranslation();
   const location = useLocation();
   const { haptic } = usePlatform();
@@ -48,7 +43,7 @@ export function MobileBottomNav({
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
     { path: '/subscriptions', label: t('nav.subscription'), icon: GlobeNavIcon },
     { path: '/balance', label: t('nav.balance'), icon: WalletIcon },
-    ...(referralEnabled ? [{ path: '/referral', label: t('nav.referral'), icon: UsersIcon }] : []),
+    { path: '/profile', label: t('nav.profile', 'Профиль'), icon: UsersIcon },
     ...(wheelEnabled
       ? [{ path: '/wheel', label: t('nav.wheel'), icon: WheelIcon }]
       : [{ path: '/support', label: t('nav.support'), icon: ChatIcon }]),
@@ -65,7 +60,7 @@ export function MobileBottomNav({
         isKeyboardOpen ? 'pointer-events-none translate-y-full opacity-0' : 'opacity-100',
       )}
       style={{
-        bottom: 'calc(18px + env(safe-area-inset-bottom, 0px))',
+        bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
         left: '20px',
         right: '20px',
         height: '64px',

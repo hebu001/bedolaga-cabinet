@@ -281,11 +281,13 @@ export function AppShell({ children }: AppShellProps) {
   const isConnection = location.pathname.startsWith('/connection');
   const isSubscription = location.pathname.startsWith('/subscription');
   const isBalance = location.pathname.startsWith('/balance');
-  const isHeaderHidden = isDashboard || isConnection || isSubscription || isBalance;
+  const isProfile =
+    location.pathname.startsWith('/profile') || location.pathname.startsWith('/referral');
+  const isHeaderHidden = isDashboard || isConnection || isSubscription || isBalance || isProfile;
   const isFullscreenContent = isDashboard || isConnection;
 
   // Apple-dark pages use a solid black canvas instead of the animated background
-  const isAppleDarkPage = isBalance || isSubscription;
+  const isAppleDarkPage = isBalance || isSubscription || isProfile;
 
   return (
     <div className={cn('min-h-screen', isAppleDarkPage && 'bg-black')}>
@@ -470,11 +472,7 @@ export function AppShell({ children }: AppShellProps) {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        isKeyboardOpen={isKeyboardOpen}
-        referralEnabled={referralEnabled}
-        wheelEnabled={wheelEnabled}
-      />
+      <MobileBottomNav isKeyboardOpen={isKeyboardOpen} wheelEnabled={wheelEnabled} />
     </div>
   );
 }

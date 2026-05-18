@@ -50,7 +50,6 @@ const Subscription = lazyWithRetry(() => import('./pages/Subscription'));
 const SubscriptionPurchase = lazyWithRetry(() => import('./pages/SubscriptionPurchase'));
 const Balance = lazyWithRetry(() => import('./pages/Balance'));
 const SavedCards = lazyWithRetry(() => import('./pages/SavedCards'));
-const Referral = lazyWithRetry(() => import('./pages/Referral'));
 const Support = lazyWithRetry(() => import('./pages/Support'));
 const Profile = lazyWithRetry(() => import('./pages/Profile'));
 const Contests = lazyWithRetry(() => import('./pages/Contests'));
@@ -541,7 +540,7 @@ function App() {
           element={
             <ProtectedRoute>
               <LazyPage>
-                <Referral />
+                <Profile />
               </LazyPage>
             </ProtectedRoute>
           }
