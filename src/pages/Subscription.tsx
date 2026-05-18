@@ -804,7 +804,7 @@ export default function Subscription() {
                     haptic.buttonPressMedium();
                     navigate('/subscription/purchase');
                   }}
-                  className="flex flex-1 items-center justify-center rounded-full bg-apple-elevated py-3 text-[15px] font-medium text-apple-blue transition-opacity hover:opacity-80"
+                  className="flex flex-1 items-center justify-center rounded-full bg-white py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
                 >
                   {t('subscription.switchTariff.title', 'Сменить тариф')}
                 </button>
@@ -986,7 +986,7 @@ export default function Subscription() {
                                 setShowServerManagement(false);
                                 setShowTrafficTopup(true);
                               }}
-                              className="text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
+                              className="rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-80"
                             >
                               Докупить
                             </button>
@@ -1033,7 +1033,7 @@ export default function Subscription() {
                             setShowServerManagement(false);
                             setShowDeviceManage((v) => !v);
                           }}
-                          className="shrink-0 text-[13px] font-medium text-apple-blue transition-opacity hover:opacity-80"
+                          className="shrink-0 rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-80"
                         >
                           Изменить
                         </button>
@@ -2060,7 +2060,7 @@ export default function Subscription() {
                                   <div className="text-sm text-apple-mute">
                                     {t('subscription.serverManagement.paymentProrated')}
                                   </div>
-                                  <div className="text-xl font-bold text-apple-blue">
+                                  <div className="text-xl font-bold text-white">
                                     {formatPrice(totalCost)}
                                   </div>
                                 </div>
