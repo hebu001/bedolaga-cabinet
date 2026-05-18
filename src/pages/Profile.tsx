@@ -20,8 +20,17 @@ import { copyToClipboard } from '../utils/clipboard';
 import { CampaignCard } from '../components/partner/CampaignCard';
 import { useCurrency } from '../hooks/useCurrency';
 import { UI } from '../config/constants';
-import { ChevronDownIcon } from '@/components/icons';
+import {
+  ChevronDownIcon,
+  UserIcon,
+  MailIcon,
+  GiftIcon,
+  LinkIcon,
+  BellIcon,
+  InfoIcon,
+} from '@/components/icons';
 import ConnectedAccountsPanel from '@/components/profile/ConnectedAccountsPanel';
+import InfoPanel from '@/components/profile/InfoPanel';
 
 // Apple-dark surface helper
 const cardCls = 'apple-card-grad rounded-2xl bg-apple-card';
@@ -88,11 +97,13 @@ function AppleToggle({
 // ---------- Accordion section ----------
 function AccordionSection({
   title,
+  icon,
   open,
   onToggle,
   children,
 }: {
   title: string;
+  icon?: React.ReactNode;
   open: boolean;
   onToggle: () => void;
   children: React.ReactNode;
@@ -102,9 +113,14 @@ function AccordionSection({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        className="flex w-full items-center gap-3 px-5 py-4 text-left"
       >
-        <span className="text-[17px] font-semibold text-apple-ink">{title}</span>
+        {icon && (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F97315]/15 text-[#F97315]">
+            {icon}
+          </span>
+        )}
+        <span className="flex-1 text-[17px] font-semibold text-apple-ink">{title}</span>
         <ChevronDownIcon
           className={`h-5 w-5 text-apple-mute transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
@@ -550,6 +566,7 @@ export default function Profile() {
       {/* ===== Аккаунт ===== */}
       <AccordionSection
         title={t('profile.accountInfo')}
+        icon={<UserIcon className="h-[18px] w-[18px]" />}
         open={openSection === 'account'}
         onToggle={() => toggleSection('account')}
       >
@@ -583,6 +600,7 @@ export default function Profile() {
       {isEmailAuthEnabled && (
         <AccordionSection
           title={t('profile.emailAuth')}
+          icon={<MailIcon className="h-[18px] w-[18px]" />}
           open={openSection === 'email'}
           onToggle={() => toggleSection('email')}
         >
@@ -826,6 +844,7 @@ export default function Profile() {
       {isReferralEnabled && (
         <AccordionSection
           title={t('referral.title')}
+          icon={<GiftIcon className="h-[18px] w-[18px]" />}
           open={openSection === 'referral'}
           onToggle={() => toggleSection('referral')}
         >
@@ -1267,6 +1286,7 @@ export default function Profile() {
       {/* ===== Подключённые аккаунты ===== */}
       <AccordionSection
         title={t('profile.accounts.title')}
+        icon={<LinkIcon className="h-[18px] w-[18px]" />}
         open={openSection === 'accounts'}
         onToggle={() => toggleSection('accounts')}
       >
@@ -1276,6 +1296,7 @@ export default function Profile() {
       {/* ===== Уведомления ===== */}
       <AccordionSection
         title={t('profile.notifications.title')}
+        icon={<BellIcon className="h-[18px] w-[18px]" />}
         open={openSection === 'notifications'}
         onToggle={() => toggleSection('notifications')}
       >
@@ -1430,6 +1451,16 @@ export default function Profile() {
         ) : (
           <p className="text-apple-mute">{t('profile.notifications.unavailable')}</p>
         )}
+      </AccordionSection>
+
+      {/* ===== Информация ===== */}
+      <AccordionSection
+        title={t('info.title')}
+        icon={<InfoIcon className="h-[18px] w-[18px]" />}
+        open={openSection === 'info'}
+        onToggle={() => toggleSection('info')}
+      >
+        <InfoPanel />
       </AccordionSection>
     </div>
   );

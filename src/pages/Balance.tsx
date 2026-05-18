@@ -262,8 +262,7 @@ export default function Balance() {
             <button
               type="button"
               onClick={() => setShowPromo(true)}
-              className="flex-1 rounded-full bg-apple-elevated py-3.5 text-[15px] font-semibold transition-opacity hover:opacity-80"
-              style={{ color: '#F97315' }}
+              className="flex-1 rounded-full bg-white py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90"
             >
               {t('balance.promocode.title', 'Промокод')}
             </button>
