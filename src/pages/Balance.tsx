@@ -90,7 +90,7 @@ export default function Balance() {
   }> | null>(null);
   const [promoSelectCode, setPromoSelectCode] = useState<string | null>(null);
   const [transactionsPage, setTransactionsPage] = useState(1);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
   const [showTopUp, setShowTopUp] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
 
