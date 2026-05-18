@@ -1210,7 +1210,9 @@ export default function SubscriptionPurchase() {
                                     className="font-semibold"
                                     style={{ color: hasEnoughBalance ? '#30d158' : '#f5f5f7' }}
                                   >
-                                    {formatPrice(purchaseOptions.balance_kopeks)}
+                                    {purchaseOptions.balance_kopeks === 0
+                                      ? t('subscription.noFunds', 'Нет средств')
+                                      : formatPrice(purchaseOptions.balance_kopeks)}
                                   </span>
                                 </div>
                                 {!hasEnoughBalance && missingAmount > 0 && (
@@ -1934,7 +1936,7 @@ export default function SubscriptionPurchase() {
                                 </div>
                               )}
 
-                              <div className="mb-4 flex items-center justify-between border-t border-apple-hairline pt-3">
+                              <div className="mb-3 flex items-center justify-between">
                                 <span className="font-semibold text-apple-ink">
                                   {t('subscription.total')}
                                 </span>
@@ -1982,7 +1984,9 @@ export default function SubscriptionPurchase() {
                                                 color: hasEnoughBalance ? '#30d158' : '#f5f5f7',
                                               }}
                                             >
-                                              {formatPrice(purchaseOptions.balance_kopeks)}
+                                              {purchaseOptions.balance_kopeks === 0
+                                                ? t('subscription.noFunds', 'Нет средств')
+                                                : formatPrice(purchaseOptions.balance_kopeks)}
                                             </span>
                                           </div>
                                           {!hasEnoughBalance && missingAmount > 0 && (
@@ -2721,7 +2725,9 @@ export default function SubscriptionPurchase() {
                                     : 'font-semibold text-dark-200'
                                 }
                               >
-                                {formatPrice(purchaseOptions.balance_kopeks)}
+                                {purchaseOptions.balance_kopeks === 0
+                                  ? t('subscription.noFunds', 'Нет средств')
+                                  : formatPrice(purchaseOptions.balance_kopeks)}
                               </span>
                             </div>
                             {!preview.can_purchase && preview.missing_amount_kopeks > 0 && (
