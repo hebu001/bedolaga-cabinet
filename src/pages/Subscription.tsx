@@ -746,21 +746,13 @@ export default function Subscription() {
                   />
                 )}
                 <div className="relative">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <span className="mb-1.5 inline-block text-[11px] font-semibold uppercase tracking-widest text-apple-mute">
-                        {subscription.is_trial
-                          ? t('subscription.trialStatus')
-                          : t('subscription.tariffBadge', 'Тариф')}
-                      </span>
-                      <h2 className="truncate text-[28px] font-bold tracking-tight text-apple-ink">
-                        {subscription.tariff_name || t('subscription.currentPlan')}
-                      </h2>
-                      {tariffPriceLabel && (
-                        <div className="mt-0.5 text-[14px] text-apple-mute">{tariffPriceLabel}</div>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1.5 pt-1">
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-apple-mute">
+                      {subscription.is_trial
+                        ? t('subscription.trialStatus')
+                        : t('subscription.tariffBadge', 'Тариф')}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1.5">
                       <span
                         className="h-[7px] w-[7px] rounded-full"
                         style={{ background: statusHex }}
@@ -778,8 +770,14 @@ export default function Subscription() {
                               ? t('subscription.pause.suspended')
                               : t('subscription.expired')}
                       </span>
-                    </div>
+                    </span>
                   </div>
+                  <h2 className="truncate text-[28px] font-bold tracking-tight text-apple-ink">
+                    {subscription.tariff_name || t('subscription.currentPlan')}
+                  </h2>
+                  {tariffPriceLabel && (
+                    <div className="mt-0.5 text-[14px] text-apple-mute">{tariffPriceLabel}</div>
+                  )}
                   <div className="mt-4">
                     <CountdownTimer
                       endDate={subscription.end_date}
