@@ -91,12 +91,10 @@ export default function Balance() {
   const [promoSelectCode, setPromoSelectCode] = useState<string | null>(null);
   const [transactionsPage, setTransactionsPage] = useState(1);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [topUpMethodId, setTopUpMethodId] = useState<string | null>(null);
   const [showTopUp, setShowTopUp] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
 
   const handleTopUpSuccess = async () => {
-    setTopUpMethodId(null);
     setShowTopUp(false);
     await refetchBalance();
     await refreshUser();
@@ -445,77 +443,8 @@ export default function Balance() {
               <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
                 {t('balance.topUpBalance', 'Пополнение баланса')}
               </div>
-              <div className="flex-1 overflow-y-auto px-4 pb-5 pt-1">
-                {paymentMethods && paymentMethods.length > 0 ? (
-                  <div className="overflow-hidden rounded-2xl bg-apple-card">
-                    {paymentMethods.map((method, idx) => {
-                      const methodKey = method.id.toLowerCase().replace(/-/g, '_');
-                      const translatedName = t(`balance.paymentMethods.${methodKey}.name`, {
-                        defaultValue: '',
-                      });
-                      const translatedDesc = t(`balance.paymentMethods.${methodKey}.description`, {
-                        defaultValue: '',
-                      });
-                      const isOpen = topUpMethodId === method.id;
-
-                      return (
-                        <div
-                          key={method.id}
-                          className={
-                            idx !== paymentMethods.length - 1
-                              ? 'border-b border-apple-hairline'
-                              : ''
-                          }
-                        >
-                          <button
-                            type="button"
-                            disabled={!method.is_available}
-                            onClick={() =>
-                              method.is_available && setTopUpMethodId(isOpen ? null : method.id)
-                            }
-                            className={`flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors ${
-                              method.is_available
-                                ? 'hover:bg-apple-elevated active:bg-apple-elevated'
-                                : 'cursor-not-allowed opacity-50'
-                            }`}
-                          >
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated text-apple-blue">
-                              ◉
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-[15px] font-medium text-apple-ink">
-                                {translatedName || method.name}
-                              </div>
-                              {(translatedDesc || method.description) && (
-                                <div className="mt-0.5 truncate text-[13px] text-apple-mute">
-                                  {translatedDesc || method.description}
-                                </div>
-                              )}
-                              <div className="mt-0.5 text-xs tabular-nums text-apple-faint">
-                                {formatAmount(method.min_amount_kopeks / 100, 0)} –{' '}
-                                {formatAmount(method.max_amount_kopeks / 100, 0)} {currencySymbol}
-                              </div>
-                            </div>
-                            <ChevronDownIcon
-                              className={`h-5 w-5 shrink-0 text-apple-faint transition-transform duration-200 ${
-                                isOpen ? 'rotate-180' : ''
-                              }`}
-                            />
-                          </button>
-                          <AnimatePresence initial={false}>
-                            {isOpen && (
-                              <TopUpPanel method={method} onSuccess={handleTopUpSuccess} />
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="py-10 text-center text-sm text-apple-mute">
-                    {t('balance.noPaymentMethods', 'Способы оплаты сейчас недоступны')}
-                  </div>
-                )}
+              <div className="flex-1 overflow-y-auto">
+                <TopUpPanel methods={paymentMethods ?? []} onSuccess={handleTopUpSuccess} />
               </div>
             </div>
           </div>,

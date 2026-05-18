@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
 
 import { balanceApi } from '../../api/balance';
 import { useCurrency } from '../../hooks/useCurrency';
@@ -12,43 +12,40 @@ import type { PaymentMethod, PaymentMethodOption } from '../../types';
 import { saveTopUpPendingInfo } from '../../utils/topUpStorage';
 
 /**
- * Inline top-up panel — folds the former /balance/top-up/:methodId page into
- * the Balance screen. All payment logic (stars invoice, gateway top-up, rate
- * limiting, payment-url display) is preserved; only the container changed from
- * a route to an inline panel. Styled in the Apple-dark token set.
+ * Top-up modal body — amount input on top, a collapsed payment-method row
+ * that opens an "Изменить способ оплаты" picker (id.ultm.in style), and an
+ * orange "Пополнить" button below. All payment logic (stars invoice, gateway
+ * top-up, rate limiting, payment-url display) is preserved.
  */
 
-const getPreferredOptionId = (options?: PaymentMethod['options']) => {
-  if (!options || options.length === 0) return null;
-  const sbpOption = options.find((option) => {
-    const id = option.id.toLowerCase();
-    const name = option.name.toLowerCase();
-    return id.includes('sbp') || name.includes('сбп') || name.includes('sbp');
-  });
-  return sbpOption?.id ?? options[0].id;
+const isSbp = (o: PaymentMethodOption) => {
+  const id = o.id.toLowerCase();
+  const name = o.name.toLowerCase();
+  return id.includes('sbp') || name.includes('сбп') || name.includes('sbp');
 };
 
 const sortOptionsWithSbpFirst = (options?: PaymentMethod['options']) => {
   if (!options || options.length <= 1) return options ?? [];
-  const isPreferred = (option: PaymentMethodOption) => {
-    const id = option.id.toLowerCase();
-    const name = option.name.toLowerCase();
-    return id.includes('sbp') || name.includes('сбп') || name.includes('sbp');
-  };
   return [...options].sort((l, r) => {
-    const lp = isPreferred(l);
-    const rp = isPreferred(r);
+    const lp = isSbp(l);
+    const rp = isSbp(r);
     if (lp === rp) return 0;
     return lp ? -1 : 1;
   });
 };
 
-interface TopUpPanelProps {
+interface Selectable {
+  key: string;
   method: PaymentMethod;
+  option: PaymentMethodOption | null;
+}
+
+interface TopUpPanelProps {
+  methods: PaymentMethod[];
   onSuccess: () => void;
 }
 
-export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
+export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
   const { t } = useTranslation();
   const { formatAmount, currencySymbol, convertAmount, convertToRub, targetCurrency } =
     useCurrency();
@@ -58,22 +55,53 @@ export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
 
   useCloseOnSuccessNotification(onSuccess);
 
+  const methodLabel = useCallback(
+    (m: PaymentMethod) => {
+      const key = m.id.toLowerCase().replace(/-/g, '_');
+      return t(`balance.paymentMethods.${key}.name`, { defaultValue: '' }) || m.name;
+    },
+    [t],
+  );
+  const methodDesc = useCallback(
+    (m: PaymentMethod) => {
+      const key = m.id.toLowerCase().replace(/-/g, '_');
+      return t(`balance.paymentMethods.${key}.description`, { defaultValue: '' }) || m.description;
+    },
+    [t],
+  );
+
+  // Flatten methods + their options into concrete selectable instruments
+  const selectables = useMemo<Selectable[]>(() => {
+    const list: Selectable[] = [];
+    for (const m of methods) {
+      if (m.options && m.options.length > 0) {
+        for (const opt of sortOptionsWithSbpFirst(m.options)) {
+          list.push({ key: `${m.id}:${opt.id}`, method: m, option: opt });
+        }
+      } else {
+        list.push({ key: m.id, method: m, option: null });
+      }
+    }
+    return list;
+  }, [methods]);
+
+  const [selectedKey, setSelectedKey] = useState<string>('');
   const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [selectedOption, setSelectedOption] = useState<string | null>(
-    getPreferredOptionId(method.options),
-  );
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
+  // Default to the first available selectable once the list is known
   useEffect(() => {
-    if (!method.options || method.options.length === 0) {
-      setSelectedOption(null);
-      return;
-    }
-    const exists = method.options.some((o) => o.id === selectedOption);
-    if (!exists) setSelectedOption(getPreferredOptionId(method.options));
-  }, [method.id, method.options, selectedOption]);
+    if (selectables.some((s) => s.key === selectedKey)) return;
+    const first = selectables.find((s) => s.method.is_available) ?? selectables[0];
+    setSelectedKey(first?.key ?? '');
+  }, [selectables, selectedKey]);
+
+  const current = selectables.find((s) => s.key === selectedKey) ?? selectables[0];
+  const method = current?.method;
+  const selectedOption = current?.option?.id ?? null;
 
   const starsPaymentMutation = useMutation({
     mutationFn: (amountKopeks: number) => balanceApi.createStarsInvoice(amountKopeks),
@@ -117,19 +145,16 @@ export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
     number
   >({
     mutationFn: (amountKopeks: number) =>
-      balanceApi.createTopUp(amountKopeks, method.id, selectedOption || undefined),
+      balanceApi.createTopUp(amountKopeks, method!.id, selectedOption || undefined),
     onSuccess: (data) => {
       const redirectUrl = data.payment_url || data.invoice_url;
       if (redirectUrl) {
         setPaymentUrl(redirectUrl);
-        if (data.payment_id) {
-          const methodKey = method.id.toLowerCase().replace(/-/g, '_');
-          const displayName =
-            t(`balance.paymentMethods.${methodKey}.name`, { defaultValue: '' }) || method.name;
+        if (data.payment_id && method) {
           saveTopUpPendingInfo({
             amount_kopeks: data.amount_kopeks,
             method_id: method.id,
-            method_name: displayName,
+            method_name: methodLabel(method),
             payment_id: data.payment_id,
             created_at: Date.now(),
           });
@@ -145,26 +170,20 @@ export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
     },
   });
 
-  const hasOptions = !!method.options && method.options.length > 0;
-  const orderedOptions = sortOptionsWithSbpFirst(method.options);
-  const minRubles = method.min_amount_kopeks / 100;
-  const maxRubles = method.max_amount_kopeks / 100;
-  const methodKey = method.id.toLowerCase().replace(/-/g, '_');
-  const isStarsMethod = methodKey.includes('stars');
+  const minRubles = (method?.min_amount_kopeks ?? 0) / 100;
+  const maxRubles = (method?.max_amount_kopeks ?? 0) / 100;
+  const isStarsMethod = (method?.id ?? '').toLowerCase().includes('stars');
 
   const handleSubmit = useCallback(() => {
     setError(null);
     setPaymentUrl(null);
     inputRef.current?.blur();
 
+    if (!method) return;
     if (!checkRateLimit(RATE_LIMIT_KEYS.PAYMENT, 3, 30000)) {
       setError(
         t('balance.errors.rateLimit', { seconds: getRateLimitResetTime(RATE_LIMIT_KEYS.PAYMENT) }),
       );
-      return;
-    }
-    if (hasOptions && !selectedOption) {
-      setError(t('balance.errors.selectMethod'));
       return;
     }
     const amountCurrency = parseFloat(amount);
@@ -186,11 +205,10 @@ export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
   }, [
     amount,
     convertToRub,
-    hasOptions,
     isStarsMethod,
     maxRubles,
+    method,
     minRubles,
-    selectedOption,
     starsPaymentMutation,
     t,
     topUpMutation,
@@ -221,80 +239,51 @@ export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
     }
   };
 
+  if (!method || !current) {
+    return (
+      <div className="py-10 text-center text-sm text-apple-mute">
+        {t('balance.noPaymentMethods', 'Способы оплаты сейчас недоступны')}
+      </div>
+    );
+  }
+
+  const currentTitle = current.option ? current.option.name : methodLabel(method);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.2 }}
-      className="overflow-hidden"
-    >
-      <div className="space-y-4 border-t border-apple-hairline px-4 pb-4 pt-4">
-        {/* Range hint */}
-        <div className="text-[13px] text-apple-mute">
+    <div className="flex flex-col gap-4 px-7 pb-7 pt-1">
+      {/* Amount */}
+      <div>
+        <div className="mb-2 text-[13px] text-apple-mute">
           {t('balance.enterAmount')} ·{' '}
           <span className="tabular-nums">
             {formatAmount(minRubles, 0)} – {formatAmount(maxRubles, 0)} {currencySymbol}
           </span>
         </div>
-
-        {/* Payment options */}
-        {hasOptions && orderedOptions.length > 0 && (
-          <div className="grid grid-cols-2 gap-2">
-            {orderedOptions.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setSelectedOption(opt.id)}
-                className={`rounded-xl px-4 py-2.5 text-[13px] font-medium transition-colors ${
-                  selectedOption === opt.id
-                    ? 'bg-apple-blue/15 text-apple-blue ring-1 ring-apple-blue/50'
-                    : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
-                }`}
-              >
-                {opt.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Amount input + submit */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <input
-              ref={inputRef}
-              type="number"
-              inputMode="decimal"
-              enterKeyHint="done"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              placeholder="0"
-              className="h-12 w-full rounded-xl bg-apple-elevated px-4 pr-10 text-[17px] font-semibold text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60"
-              autoComplete="off"
-            />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] font-medium text-apple-mute">
-              {currencySymbol}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isPending || !amount || parseFloat(amount) <= 0}
-            className="shrink-0 rounded-full bg-apple-blue px-6 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-          >
-            {isPending ? '…' : t('balance.topUp')}
-          </button>
+        <div className="relative">
+          <input
+            ref={inputRef}
+            type="number"
+            inputMode="decimal"
+            enterKeyHint="done"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
+            placeholder="0"
+            className="h-14 w-full rounded-2xl bg-apple-elevated px-4 pr-11 text-[22px] font-semibold text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60"
+            autoComplete="off"
+            autoFocus
+          />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[17px] font-medium text-apple-mute">
+            {currencySymbol}
+          </span>
         </div>
-
-        {/* Quick amounts */}
         {quickAmounts.length > 0 && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="mt-2 grid grid-cols-4 gap-2">
             {quickAmounts.map((a) => {
               const val = getQuickValue(a);
               const isSelected = amount === val;
@@ -307,10 +296,13 @@ export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
                     inputRef.current?.blur();
                   }}
                   className={`rounded-xl py-2.5 text-[15px] font-medium tabular-nums transition-colors ${
-                    isSelected
-                      ? 'bg-apple-blue/15 text-apple-blue ring-1 ring-apple-blue/50'
-                      : 'bg-apple-elevated text-apple-ink hover:opacity-80'
+                    isSelected ? '' : 'bg-apple-elevated text-apple-ink hover:opacity-80'
                   }`}
+                  style={
+                    isSelected
+                      ? { background: 'rgba(249,115,21,0.16)', color: '#F97315' }
+                      : undefined
+                  }
                 >
                   {formatAmount(a, 0)}
                 </button>
@@ -318,47 +310,171 @@ export default function TopUpPanel({ method, onSuccess }: TopUpPanelProps) {
             })}
           </div>
         )}
+      </div>
 
-        {/* Error */}
-        {error && (
-          <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-[13px] text-apple-red">
-            {error}
-          </div>
+      {/* Payment method — collapsed row */}
+      <button
+        type="button"
+        onClick={() => selectables.length > 1 && setShowPicker(true)}
+        className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3.5 text-left"
+        style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)' }}
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated text-apple-blue">
+          ◉
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[15px] font-medium text-apple-ink">{currentTitle}</div>
+          <div className="truncate text-[12px] text-apple-mute">{methodLabel(method)}</div>
+        </div>
+        {selectables.length > 1 && (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-elevated text-apple-mute">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="5" cy="12" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="19" cy="12" r="2" />
+            </svg>
+          </span>
         )}
+      </button>
 
-        {/* Payment link */}
-        {paymentUrl && (
-          <div className="space-y-3 rounded-xl border border-apple-green/30 bg-apple-green/10 p-3.5">
-            <div className="text-[15px] font-semibold text-apple-green">
-              {t('balance.paymentReady')}
+      {/* Pay button */}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={isPending || !amount || parseFloat(amount) <= 0}
+        className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+      >
+        {isPending ? (
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : (
+          t('balance.topUp', 'Пополнить')
+        )}
+      </button>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-[13px] text-apple-red">
+          {error}
+        </div>
+      )}
+
+      {/* Payment link */}
+      {paymentUrl && (
+        <div className="space-y-3 rounded-xl border border-apple-green/30 bg-apple-green/10 p-3.5">
+          <div className="text-[15px] font-semibold text-apple-green">
+            {t('balance.paymentReady')}
+          </div>
+          <p className="text-[13px] text-apple-mute">{t('balance.clickToOpenPayment')}</p>
+          <button
+            type="button"
+            onClick={handleOpenPayment}
+            className="h-11 w-full rounded-full bg-apple-green text-[15px] font-medium text-black transition-opacity hover:opacity-90"
+          >
+            {t('balance.openPaymentPage')}
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1 rounded-lg bg-apple-elevated px-3 py-2">
+              <p className="truncate text-xs text-apple-faint">{paymentUrl}</p>
             </div>
-            <p className="text-[13px] text-apple-mute">{t('balance.clickToOpenPayment')}</p>
             <button
               type="button"
-              onClick={handleOpenPayment}
-              className="h-11 w-full rounded-full bg-apple-green text-[15px] font-medium text-black transition-opacity hover:opacity-90"
+              onClick={handleCopyUrl}
+              className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                copied
+                  ? 'bg-apple-green/20 text-apple-green'
+                  : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
+              }`}
             >
-              {t('balance.openPaymentPage')}
+              {copied ? '✓' : t('common.copy')}
             </button>
-            <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1 rounded-lg bg-apple-elevated px-3 py-2">
-                <p className="truncate text-xs text-apple-faint">{paymentUrl}</p>
-              </div>
+          </div>
+        </div>
+      )}
+
+      {/* Method picker modal */}
+      {showPicker &&
+        createPortal(
+          <div
+            className="apple-sheet-backdrop fixed inset-0 z-[101] flex items-end justify-center"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            onClick={() => setShowPicker(false)}
+          >
+            <div
+              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
-                onClick={handleCopyUrl}
-                className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                  copied
-                    ? 'bg-apple-green/20 text-apple-green'
-                    : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
-                }`}
+                onClick={() => setShowPicker(false)}
+                aria-label={t('common.close', 'Закрыть')}
+                className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
               >
-                {copied ? '✓' : t('common.copy')}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
               </button>
+              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+                {t('balance.changePaymentMethod', 'Изменить способ оплаты')}
+              </div>
+              <div className="flex flex-col gap-2 overflow-y-auto px-7 pb-7 pt-1">
+                {selectables.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    disabled={!s.method.is_available}
+                    onClick={() => {
+                      setSelectedKey(s.key);
+                      setError(null);
+                      setShowPicker(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3.5 text-left transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)' }}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated text-apple-blue">
+                      ◉
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[15px] font-medium text-white">
+                        {s.option ? s.option.name : methodLabel(s.method)}
+                      </div>
+                      <div className="truncate text-[12px] text-apple-mute">
+                        {s.option ? methodLabel(s.method) : methodDesc(s.method)}
+                      </div>
+                    </div>
+                    {s.key === selectedKey && (
+                      <span
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                        style={{ background: '#F97315' }}
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#fff"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
-      </div>
-    </motion.div>
+    </div>
   );
 }
