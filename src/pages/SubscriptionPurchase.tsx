@@ -1568,7 +1568,7 @@ export default function SubscriptionPurchase() {
                                   btn.appendChild(ripple);
                                   setTimeout(() => ripple.remove(), 6100);
                                 }}
-                                className="apple-card-grad relative overflow-hidden rounded-2xl bg-apple-elevated py-5 pl-[22px] pr-4 text-left transition-transform active:scale-[0.97]"
+                                className="apple-card-grad relative overflow-hidden rounded-2xl bg-apple-elevated py-3.5 pl-[22px] pr-4 text-left transition-transform active:scale-[0.97]"
                                 style={
                                   isSelected
                                     ? { boxShadow: 'inset 0 0 0 1.5px #F97315' }
@@ -1588,7 +1588,7 @@ export default function SubscriptionPurchase() {
                                 <div className="mb-auto flex w-full items-center justify-between text-base text-apple-ink">
                                   {period.label}
                                 </div>
-                                <div className="mt-2.5 flex flex-col text-2xl font-medium leading-6 tracking-tight">
+                                <div className="mt-5 flex flex-col text-2xl font-medium leading-6 tracking-tight">
                                   <span className="font-semibold" style={{ color: '#ffffff' }}>
                                     {formatPrice(displayPrice)}
                                   </span>
@@ -1869,58 +1869,66 @@ export default function SubscriptionPurchase() {
                           const originalTotal = promoPeriod.original
                             ? promoPeriod.original + trafficPrice
                             : null;
+                          const hasBreakdown =
+                            (!useCustomDays &&
+                              !!selectedTariffPeriod &&
+                              (selectedTariffPeriod.extra_devices_count ?? 0) > 0 &&
+                              !!selectedTariffPeriod.base_tariff_price_kopeks) ||
+                            (useCustomTraffic && !!selectedTariff.custom_traffic_enabled);
 
                           return (
                             <>
-                              <div className="mb-4 space-y-2">
-                                {useCustomDays
-                                  ? null
-                                  : selectedTariffPeriod && (
-                                      <>
-                                        {(selectedTariffPeriod.extra_devices_count ?? 0) > 0 &&
-                                        selectedTariffPeriod.base_tariff_price_kopeks ? (
-                                          <>
-                                            <div className="flex justify-between text-sm text-apple-mute">
-                                              <span>
-                                                {t('subscription.baseTariff')}:{' '}
-                                                {selectedTariffPeriod.label}
-                                              </span>
-                                              <span className="text-apple-ink">
-                                                {formatPrice(
-                                                  selectedTariffPeriod.base_tariff_price_kopeks,
-                                                )}
-                                              </span>
-                                            </div>
-                                            <div className="flex justify-between text-sm text-apple-mute">
-                                              <span>
-                                                {t('subscription.extraDevices')} (
-                                                {selectedTariffPeriod.extra_devices_count})
-                                              </span>
-                                              <span className="text-apple-ink">
-                                                +
-                                                {formatPrice(
-                                                  selectedTariffPeriod.extra_devices_cost_kopeks ??
-                                                    0,
-                                                )}
-                                              </span>
-                                            </div>
-                                          </>
-                                        ) : null}
-                                      </>
-                                    )}
-                                {useCustomTraffic && selectedTariff.custom_traffic_enabled && (
-                                  <div className="flex justify-between text-sm text-apple-mute">
-                                    <span>
-                                      {t('subscription.summary.traffic', {
-                                        gb: customTrafficGb,
-                                      })}
-                                    </span>
-                                    <span className="text-apple-ink">
-                                      +{formatPrice(trafficPrice)}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
+                              {hasBreakdown && (
+                                <div className="mb-4 space-y-2">
+                                  {useCustomDays
+                                    ? null
+                                    : selectedTariffPeriod && (
+                                        <>
+                                          {(selectedTariffPeriod.extra_devices_count ?? 0) > 0 &&
+                                          selectedTariffPeriod.base_tariff_price_kopeks ? (
+                                            <>
+                                              <div className="flex justify-between text-sm text-apple-mute">
+                                                <span>
+                                                  {t('subscription.baseTariff')}:{' '}
+                                                  {selectedTariffPeriod.label}
+                                                </span>
+                                                <span className="text-apple-ink">
+                                                  {formatPrice(
+                                                    selectedTariffPeriod.base_tariff_price_kopeks,
+                                                  )}
+                                                </span>
+                                              </div>
+                                              <div className="flex justify-between text-sm text-apple-mute">
+                                                <span>
+                                                  {t('subscription.extraDevices')} (
+                                                  {selectedTariffPeriod.extra_devices_count})
+                                                </span>
+                                                <span className="text-apple-ink">
+                                                  +
+                                                  {formatPrice(
+                                                    selectedTariffPeriod.extra_devices_cost_kopeks ??
+                                                      0,
+                                                  )}
+                                                </span>
+                                              </div>
+                                            </>
+                                          ) : null}
+                                        </>
+                                      )}
+                                  {useCustomTraffic && selectedTariff.custom_traffic_enabled && (
+                                    <div className="flex justify-between text-sm text-apple-mute">
+                                      <span>
+                                        {t('subscription.summary.traffic', {
+                                          gb: customTrafficGb,
+                                        })}
+                                      </span>
+                                      <span className="text-apple-ink">
+                                        +{formatPrice(trafficPrice)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
                               {promoPeriod.percent && (
                                 <div
