@@ -474,7 +474,7 @@
     "pause": {
       "title": "Subscription Pause",
       "paused": "Paused",
-      "suspended": "Suspended (insufficient funds)",
+      "suspended": "Suspended",
       "active": "Active",
       "pauseBtn": "Pause",
       "resumeBtn": "Resume",

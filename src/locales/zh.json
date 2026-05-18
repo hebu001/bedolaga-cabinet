@@ -474,7 +474,7 @@
       "nextCharge": "距下次扣费",
       "pauseBtn": "暂停",
       "paused": "已暂停",
-      "suspended": "已暂停（余额不足）",
+      "suspended": "已暂停",
       "pausedDescription": "扣费已停止。订阅有效期至",
       "pausedInfo": "订阅已暂停",
       "resumeBtn": "恢复",
