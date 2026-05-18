@@ -47,8 +47,7 @@ interface TopUpPanelProps {
 
 export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
   const { t } = useTranslation();
-  const { formatAmount, currencySymbol, convertAmount, convertToRub, targetCurrency } =
-    useCurrency();
+  const { formatAmount, currencySymbol, convertToRub } = useCurrency();
   const { openInvoice, openTelegramLink, openLink } = usePlatform();
   const haptic = useHaptic();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -214,12 +213,6 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
     topUpMutation,
   ]);
 
-  const quickAmounts = [100, 300, 500, 1000].filter((a) => a >= minRubles && a <= maxRubles);
-  const currencyDecimals = targetCurrency === 'IRR' || targetCurrency === 'RUB' ? 0 : 2;
-  const getQuickValue = (rub: number) =>
-    targetCurrency === 'IRR'
-      ? Math.round(convertAmount(rub)).toString()
-      : convertAmount(rub).toFixed(currencyDecimals);
   const isPending = topUpMutation.isPending || starsPaymentMutation.isPending;
 
   const handleOpenPayment = () => {
@@ -266,7 +259,10 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
             inputMode="decimal"
             enterKeyHint="done"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setPaymentUrl(null);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -282,34 +278,6 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
             {currencySymbol}
           </span>
         </div>
-        {quickAmounts.length > 0 && (
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            {quickAmounts.map((a) => {
-              const val = getQuickValue(a);
-              const isSelected = amount === val;
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => {
-                    setAmount(val);
-                    inputRef.current?.blur();
-                  }}
-                  className={`rounded-xl py-2.5 text-[15px] font-medium tabular-nums transition-colors ${
-                    isSelected ? '' : 'bg-apple-elevated text-apple-ink hover:opacity-80'
-                  }`}
-                  style={
-                    isSelected
-                      ? { background: 'rgba(249,115,21,0.16)', color: '#F97315' }
-                      : undefined
-                  }
-                >
-                  {formatAmount(a, 0)}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Payment method — collapsed row */}
@@ -337,15 +305,41 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
         )}
       </button>
 
-      {/* Pay button */}
+      {/* Payment link — appears after submit, above the button */}
+      {paymentUrl && (
+        <div
+          className="flex items-center gap-2 rounded-2xl bg-apple-card p-2.5"
+          style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)' }}
+        >
+          <div className="min-w-0 flex-1 px-2">
+            <p className="truncate text-[13px] text-apple-mute">{paymentUrl}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleCopyUrl}
+            className="shrink-0 rounded-xl px-3.5 py-2 text-[13px] font-medium transition-colors"
+            style={
+              copied
+                ? { background: 'rgba(48,209,88,0.18)', color: '#30d158' }
+                : { background: '#2c2c2e', color: '#98989d' }
+            }
+          >
+            {copied ? '✓' : t('common.copy')}
+          </button>
+        </div>
+      )}
+
+      {/* Pay / open-payment button */}
       <button
         type="button"
-        onClick={handleSubmit}
-        disabled={isPending || !amount || parseFloat(amount) <= 0}
+        onClick={paymentUrl ? handleOpenPayment : handleSubmit}
+        disabled={!paymentUrl && (isPending || !amount || parseFloat(amount) <= 0)}
         className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? (
           <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : paymentUrl ? (
+          t('balance.openPaymentPage', 'Открыть страницу оплаты')
         ) : (
           t('balance.topUp', 'Пополнить')
         )}
@@ -355,39 +349,6 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
       {error && (
         <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-[13px] text-apple-red">
           {error}
-        </div>
-      )}
-
-      {/* Payment link */}
-      {paymentUrl && (
-        <div className="space-y-3 rounded-xl border border-apple-green/30 bg-apple-green/10 p-3.5">
-          <div className="text-[15px] font-semibold text-apple-green">
-            {t('balance.paymentReady')}
-          </div>
-          <p className="text-[13px] text-apple-mute">{t('balance.clickToOpenPayment')}</p>
-          <button
-            type="button"
-            onClick={handleOpenPayment}
-            className="h-11 w-full rounded-full bg-apple-green text-[15px] font-medium text-black transition-opacity hover:opacity-90"
-          >
-            {t('balance.openPaymentPage')}
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="min-w-0 flex-1 rounded-lg bg-apple-elevated px-3 py-2">
-              <p className="truncate text-xs text-apple-faint">{paymentUrl}</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyUrl}
-              className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                copied
-                  ? 'bg-apple-green/20 text-apple-green'
-                  : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
-              }`}
-            >
-              {copied ? '✓' : t('common.copy')}
-            </button>
-          </div>
         </div>
       )}
 
