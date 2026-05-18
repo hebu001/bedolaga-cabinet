@@ -20,7 +20,8 @@ import { copyToClipboard } from '../utils/clipboard';
 import { CampaignCard } from '../components/partner/CampaignCard';
 import { useCurrency } from '../hooks/useCurrency';
 import { UI } from '../config/constants';
-import { ChevronDownIcon, ChevronRightIcon } from '@/components/icons';
+import { ChevronDownIcon } from '@/components/icons';
+import ConnectedAccountsPanel from '@/components/profile/ConnectedAccountsPanel';
 
 // Apple-dark surface helper
 const cardCls = 'apple-card-grad rounded-2xl bg-apple-card';
@@ -796,7 +797,7 @@ export default function Profile() {
               <p className="text-sm text-apple-mute">{t('profile.linkEmailDescription')}</p>
               <button
                 type="button"
-                onClick={() => navigate('/profile/accounts')}
+                onClick={() => setOpenSection('accounts')}
                 className="rounded-full bg-[#F97315] px-5 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
               >
                 {t('profile.linkEmail')}
@@ -1263,20 +1264,14 @@ export default function Profile() {
         </AccordionSection>
       )}
 
-      {/* ===== Подключённые аккаунты (navigation row) ===== */}
-      <button
-        type="button"
-        onClick={() => navigate('/profile/accounts')}
-        className={`${cardCls} flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-apple-elevated`}
+      {/* ===== Подключённые аккаунты ===== */}
+      <AccordionSection
+        title={t('profile.accounts.title')}
+        open={openSection === 'accounts'}
+        onToggle={() => toggleSection('accounts')}
       >
-        <div>
-          <div className="text-[17px] font-semibold text-apple-ink">
-            {t('profile.accounts.goToAccounts')}
-          </div>
-          <div className="text-sm text-apple-mute">{t('profile.accounts.subtitle')}</div>
-        </div>
-        <ChevronRightIcon className="h-5 w-5 text-apple-mute" />
-      </button>
+        <ConnectedAccountsPanel />
+      </AccordionSection>
 
       {/* ===== Уведомления ===== */}
       <AccordionSection
