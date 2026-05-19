@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { initDataUser } from '@telegram-apps/sdk-react';
+import { retrieveLaunchParams, initDataUser } from '@telegram-apps/sdk-react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '@/platform';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -196,15 +196,23 @@ export default function Profile() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Real account photo (parsed from Telegram init data, same as the header menu)
+  // Real account photo from Telegram launch params / init data.
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   useEffect(() => {
+    let photo: string | undefined;
     try {
-      const tgUser = initDataUser();
-      if (tgUser?.photo_url) setPhotoUrl(tgUser.photo_url);
+      photo = retrieveLaunchParams().tgWebAppData?.user?.photo_url;
     } catch {
-      // Not in Telegram or init data unavailable — fall back to the letter avatar
+      // not in Telegram / launch params unavailable
     }
+    if (!photo) {
+      try {
+        photo = initDataUser()?.photo_url;
+      } catch {
+        // init-data signal not ready
+      }
+    }
+    if (photo) setPhotoUrl(photo);
   }, []);
 
   // Accordion open state
@@ -569,7 +577,7 @@ export default function Profile() {
           <img
             src={photoUrl}
             alt=""
-            className="h-16 w-16 rounded-2xl object-cover"
+            className="h-16 w-16 rounded-full object-cover"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
               e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -577,7 +585,7 @@ export default function Profile() {
           />
         ) : null}
         <div
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated text-[30px] font-bold ${
+          className={`flex h-16 w-16 items-center justify-center rounded-full bg-apple-elevated text-[30px] font-bold ${
             photoUrl ? 'hidden' : ''
           }`}
           style={{ color: '#F97315' }}
