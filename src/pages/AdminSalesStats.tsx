@@ -66,10 +66,10 @@ export default function AdminSalesStats() {
       <div className="flex items-center gap-3">
         <AdminBackButton />
         <div>
-          <h1 className="text-xl font-bold text-dark-100 sm:text-2xl">
+          <h1 className="text-xl font-bold text-apple-ink sm:text-2xl">
             {t('admin.salesStats.title')}
           </h1>
-          <p className="text-sm text-dark-400">{t('admin.salesStats.subtitle')}</p>
+          <p className="text-sm text-apple-mute">{t('admin.salesStats.subtitle')}</p>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export default function AdminSalesStats() {
 
       {/* Summary cards */}
       {summaryError && (
-        <div className="rounded-xl bg-error-500/10 px-4 py-3 text-sm text-error-400">
+        <div className="rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red">
           {t('admin.salesStats.loadError')}
         </div>
       )}
@@ -92,12 +92,12 @@ export default function AdminSalesStats() {
                   (summary?.total_revenue_kopeks ?? 0) / SALES_STATS.KOPEKS_DIVISOR,
                 )
           }
-          valueClassName="text-success-400"
+          valueClassName="text-apple-green"
         />
         <StatCard
           label={t('admin.salesStats.summary.activeSubs')}
           value={summaryLoading ? '...' : (summary?.active_subscriptions ?? 0)}
-          valueClassName="text-accent-400"
+          valueClassName="text-[#F97315]"
         />
         <StatCard
           label={t('admin.salesStats.summary.activeTrials')}
@@ -106,17 +106,17 @@ export default function AdminSalesStats() {
         <StatCard
           label={t('admin.salesStats.summary.newTrials')}
           value={summaryLoading ? '...' : (summary?.new_trials ?? 0)}
-          valueClassName="text-blue-400"
+          valueClassName="text-apple-blue"
         />
         <StatCard
           label={t('admin.salesStats.summary.conversion')}
           value={summaryLoading ? '...' : `${summary?.trial_to_paid_conversion ?? 0}%`}
-          valueClassName="text-warning-400"
+          valueClassName="text-apple-amber"
         />
         <StatCard
           label={t('admin.salesStats.summary.renewals')}
           value={summaryLoading ? '...' : (summary?.renewals_count ?? 0)}
-          valueClassName="text-success-400"
+          valueClassName="text-apple-green"
         />
         <StatCard
           label={t('admin.salesStats.summary.addonRevenue')}
@@ -127,7 +127,7 @@ export default function AdminSalesStats() {
                   (summary?.addon_revenue_kopeks ?? 0) / SALES_STATS.KOPEKS_DIVISOR,
                 )
           }
-          valueClassName="text-accent-400"
+          valueClassName="text-[#F97315]"
         />
         <StatCard
           label={t('admin.salesStats.summary.manualTopup')}
@@ -136,13 +136,13 @@ export default function AdminSalesStats() {
               ? '...'
               : formatWithCurrency((summary?.manual_topup_kopeks ?? 0) / SALES_STATS.KOPEKS_DIVISOR)
           }
-          valueClassName="text-warning-400"
+          valueClassName="text-apple-amber"
         />
       </div>
 
       {/* Tabs */}
       <div
-        className="scrollbar-hide flex gap-1 overflow-x-auto rounded-xl bg-dark-800/30 p-1"
+        className="scrollbar-hide flex gap-1 overflow-x-auto rounded-xl bg-apple-card p-1"
         role="tablist"
       >
         {tabs.map((tab) => (
@@ -156,8 +156,8 @@ export default function AdminSalesStats() {
             onClick={() => setActiveTab(tab.id)}
             className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-2.5 text-xs font-medium transition-colors sm:text-sm ${
               activeTab === tab.id
-                ? 'bg-dark-700/60 text-dark-100'
-                : 'text-dark-400 hover:text-dark-300'
+                ? 'bg-apple-elevated text-apple-ink'
+                : 'text-apple-mute hover:text-apple-ink'
             }`}
           >
             {tab.label}

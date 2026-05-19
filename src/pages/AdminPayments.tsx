@@ -10,7 +10,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 // BackIcon
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -48,9 +48,9 @@ interface StatusBadgeProps {
 
 function StatusBadge({ status }: StatusBadgeProps) {
   const styles: Record<string, string> = {
-    paid: 'bg-green-500/20 text-green-400',
-    pending: 'bg-amber-500/20 text-amber-400',
-    cancelled: 'bg-red-500/20 text-red-400',
+    paid: 'bg-apple-green/15 text-apple-green',
+    pending: 'bg-apple-amber/15 text-apple-amber',
+    cancelled: 'bg-apple-red/15 text-apple-red',
   };
 
   const normalized = status.toLowerCase();
@@ -58,7 +58,7 @@ function StatusBadge({ status }: StatusBadgeProps) {
 
   return (
     <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${match ? styles[match] : 'bg-dark-700/50 text-dark-300'}`}
+      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${match ? styles[match] : 'bg-apple-elevated text-apple-mute'}`}
     >
       {status}
     </span>
@@ -75,23 +75,21 @@ interface StatCardProps {
 
 function StatCard({ label, value, color, isActive, onClick }: StatCardProps) {
   const colors: Record<string, string> = {
-    blue: 'border-accent-500/30 bg-accent-500/20 text-accent-400',
-    amber: 'border-amber-500/30 bg-amber-500/20 text-amber-400',
-    green: 'border-green-500/30 bg-green-500/20 text-green-400',
-    red: 'border-red-500/30 bg-red-500/20 text-red-400',
+    blue: 'bg-apple-blue/15 text-apple-blue',
+    amber: 'bg-apple-amber/15 text-apple-amber',
+    green: 'bg-apple-green/15 text-apple-green',
+    red: 'bg-apple-red/15 text-apple-red',
   };
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border p-4 text-left transition-all ${
-        isActive
-          ? colors[color]
-          : 'border-dark-700/50 bg-dark-800/50 text-dark-300 hover:border-dark-600'
+      className={`rounded-2xl p-4 text-left transition-all ${
+        isActive ? colors[color] : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
       }`}
     >
-      <div className={`text-2xl font-bold ${isActive ? '' : 'text-dark-50'}`}>{value}</div>
+      <div className={`text-2xl font-bold ${isActive ? '' : 'text-apple-ink'}`}>{value}</div>
       <div className="text-sm opacity-80">{label}</div>
     </button>
   );
@@ -233,14 +231,14 @@ export default function AdminPayments() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.payments.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.payments.description')}</p>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.payments.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.payments.description')}</p>
           </div>
         </div>
         <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
@@ -264,7 +262,7 @@ export default function AdminPayments() {
       {/* Search bar */}
       <div>
         <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-dark-500">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-apple-faint">
             <SearchIcon />
           </div>
           <input
@@ -272,16 +270,16 @@ export default function AdminPayments() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t('admin.payments.searchPlaceholder')}
-            className="w-full rounded-xl border border-dark-700 bg-dark-800 py-3 pl-10 pr-4 text-dark-100 placeholder-dark-500 transition-colors focus:border-accent-500 focus:outline-none focus:ring-1 focus:ring-accent-500"
+            className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
         </div>
-        <p className="mt-1.5 text-xs text-dark-500">{t('admin.payments.searchHint')}</p>
+        <p className="mt-1.5 text-xs text-apple-faint">{t('admin.payments.searchHint')}</p>
       </div>
 
       {/* Search result banner */}
       {searchQuery && (
-        <div className="flex items-center justify-between rounded-xl border border-accent-500/30 bg-accent-500/10 px-4 py-3">
-          <span className="text-sm text-accent-300">
+        <div className="flex items-center justify-between rounded-xl bg-apple-card px-4 py-3">
+          <span className="text-sm" style={{ color: '#F97315' }}>
             {t('admin.payments.searchResults', {
               query: searchQuery,
               count: payments?.total ?? 0,
@@ -289,7 +287,8 @@ export default function AdminPayments() {
           </span>
           <button
             onClick={handleResetSearch}
-            className="ml-3 rounded-lg px-3 py-1 text-sm text-accent-400 transition-colors hover:bg-accent-500/20"
+            className="ml-3 rounded-lg px-3 py-1 text-sm transition-colors hover:bg-apple-elevated"
+            style={{ color: '#F97315' }}
           >
             {t('admin.payments.resetSearch')}
           </button>
@@ -304,10 +303,10 @@ export default function AdminPayments() {
             <button
               key={option.value}
               onClick={() => setStatusFilter(option.value)}
-              className={`rounded-lg px-3 py-1.5 text-sm transition-all ${
+              className={`rounded-full px-3 py-1.5 text-sm transition-all ${
                 statusFilter === option.value
-                  ? 'bg-accent-500 text-white'
-                  : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                  ? 'bg-[#F97315] text-white'
+                  : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
               }`}
             >
               {option.label}
@@ -321,10 +320,10 @@ export default function AdminPayments() {
             <button
               key={option.value}
               onClick={() => handlePeriodChange(option.value)}
-              className={`rounded-lg px-3 py-1.5 text-sm transition-all ${
+              className={`rounded-full px-3 py-1.5 text-sm transition-all ${
                 periodFilter === option.value
-                  ? 'bg-accent-500 text-white'
-                  : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                  ? 'bg-[#F97315] text-white'
+                  : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
               }`}
             >
               {option.label}
@@ -332,10 +331,10 @@ export default function AdminPayments() {
           ))}
           <button
             onClick={() => handlePeriodChange('custom')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all ${
               periodFilter === 'custom'
-                ? 'bg-accent-500 text-white'
-                : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                ? 'bg-[#F97315] text-white'
+                : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
             }`}
           >
             <CalendarIcon />
@@ -347,7 +346,7 @@ export default function AdminPayments() {
             <select
               value={methodFilter}
               onChange={(e) => setMethodFilter(e.target.value)}
-              className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-300 transition-colors focus:border-accent-500 focus:outline-none"
+              className="rounded-xl bg-apple-elevated px-3 py-1.5 text-sm text-apple-mute outline-none focus:ring-2 focus:ring-[#F97315]/50"
             >
               <option value="">{t('admin.payments.allMethods')}</option>
               {methodOptions.map((method) => (
@@ -362,25 +361,27 @@ export default function AdminPayments() {
 
       {/* Date range panel */}
       {showDateRange && (
-        <div className="flex flex-wrap items-end gap-3 rounded-xl border border-accent-500/30 bg-accent-500/5 p-4">
+        <div className="apple-card-grad flex flex-wrap items-end gap-3 rounded-2xl bg-apple-card p-4">
           <div className="flex-1">
-            <label className="mb-1 block text-xs text-dark-400">
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.payments.dateFrom')}
             </label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 focus:border-accent-500 focus:outline-none"
+              className="w-full rounded-xl bg-apple-elevated px-3 py-2 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           <div className="flex-1">
-            <label className="mb-1 block text-xs text-dark-400">{t('admin.payments.dateTo')}</label>
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+              {t('admin.payments.dateTo')}
+            </label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 focus:border-accent-500 focus:outline-none"
+              className="w-full rounded-xl bg-apple-elevated px-3 py-2 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           <button onClick={() => refetch()} className="btn-primary px-4 py-2 text-sm">
@@ -424,17 +425,17 @@ export default function AdminPayments() {
       )}
 
       {/* Payments list */}
-      <div className="card">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
         {isError ? (
           <div className="py-12 text-center">
-            <div className="text-dark-400">{t('common.error')}</div>
+            <div className="text-apple-mute">{t('common.error')}</div>
             <button onClick={() => refetch()} className="btn-secondary mt-3">
               {t('common.retry')}
             </button>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
           </div>
         ) : payments?.items && payments.items.length > 0 ? (
           <div className="space-y-3">
@@ -444,20 +445,17 @@ export default function AdminPayments() {
               const isCancelled = payment.status.toLowerCase().includes('cancel');
 
               return (
-                <div
-                  key={paymentKey}
-                  className="rounded-xl border border-dark-700/30 bg-dark-800/30 p-4"
-                >
+                <div key={paymentKey} className="rounded-xl bg-apple-elevated p-4">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       {/* Status badge + method */}
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <StatusBadge status={payment.status_text} />
-                        <span className="font-semibold text-dark-100">
+                        <span className="font-semibold text-apple-ink">
                           {payment.method_display}
                         </span>
                         {payment.is_paid && (
-                          <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs font-medium text-green-400">
+                          <span className="rounded-full bg-apple-green/15 px-2 py-0.5 text-xs font-medium text-apple-green">
                             {t('admin.payments.paid')}
                           </span>
                         )}
@@ -466,23 +464,27 @@ export default function AdminPayments() {
                       {/* Amount */}
                       <div
                         className={`text-lg font-semibold ${
-                          isCancelled ? 'text-dark-500 line-through opacity-60' : 'text-dark-50'
+                          isCancelled
+                            ? 'text-apple-faint line-through opacity-60'
+                            : 'text-apple-ink'
                         }`}
                       >
                         {formatAmount(payment.amount_rubles)} {currencySymbol}
                       </div>
 
                       {/* Invoice ID */}
-                      <div className="mt-1 text-sm text-dark-400">
-                        <code className="font-mono text-accent-400">{payment.identifier}</code>
+                      <div className="mt-1 text-sm text-apple-mute">
+                        <code className="font-mono" style={{ color: '#F97315' }}>
+                          {payment.identifier}
+                        </code>
                       </div>
 
                       {/* User info */}
                       {(payment.user_username ||
                         payment.user_telegram_id ||
                         payment.user_email) && (
-                        <div className="mt-2 text-sm text-dark-400">
-                          <span className="text-dark-500">{t('admin.payments.user')}:</span>{' '}
+                        <div className="mt-2 text-sm text-apple-mute">
+                          <span className="text-apple-faint">{t('admin.payments.user')}:</span>{' '}
                           {payment.user_id ? (
                             <button
                               onClick={(e) => {
@@ -492,37 +494,37 @@ export default function AdminPayments() {
                               className="inline-flex items-center gap-1 transition-colors hover:underline"
                             >
                               {payment.user_username && (
-                                <span className="text-accent-400">@{payment.user_username}</span>
+                                <span style={{ color: '#F97315' }}>@{payment.user_username}</span>
                               )}
                               {payment.user_username &&
                                 (payment.user_telegram_id || payment.user_email) && (
-                                  <span className="text-dark-500"> &middot; </span>
+                                  <span className="text-apple-faint"> &middot; </span>
                                 )}
                               {payment.user_telegram_id && (
-                                <span className="text-accent-300">
+                                <span style={{ color: '#F97315' }}>
                                   TG: {payment.user_telegram_id}
                                 </span>
                               )}
                               {!payment.user_telegram_id && payment.user_email && (
-                                <span className="text-accent-300">{payment.user_email}</span>
+                                <span style={{ color: '#F97315' }}>{payment.user_email}</span>
                               )}
                             </button>
                           ) : (
                             <>
                               {payment.user_username && (
-                                <span className="text-dark-200">@{payment.user_username}</span>
+                                <span className="text-apple-ink">@{payment.user_username}</span>
                               )}
                               {payment.user_username &&
                                 (payment.user_telegram_id || payment.user_email) && (
-                                  <span className="text-dark-500"> &middot; </span>
+                                  <span className="text-apple-faint"> &middot; </span>
                                 )}
                               {payment.user_telegram_id && (
-                                <span className="text-dark-300">
+                                <span className="text-apple-mute">
                                   TG: {payment.user_telegram_id}
                                 </span>
                               )}
                               {!payment.user_telegram_id && payment.user_email && (
-                                <span className="text-dark-300">{payment.user_email}</span>
+                                <span className="text-apple-mute">{payment.user_email}</span>
                               )}
                             </>
                           )}
@@ -530,7 +532,7 @@ export default function AdminPayments() {
                       )}
 
                       {/* Timestamp */}
-                      <div className="mt-1 text-xs text-dark-500">
+                      <div className="mt-1 text-xs text-apple-faint">
                         {new Date(payment.created_at).toLocaleString()}
                       </div>
                     </div>
@@ -587,8 +589,8 @@ export default function AdminPayments() {
                       <div
                         className={`mt-3 rounded-lg p-2 text-sm ${
                           checkPaymentMutation.data?.status_changed
-                            ? 'border border-green-500/30 bg-green-500/10 text-green-400'
-                            : 'bg-dark-700/30 text-dark-400'
+                            ? 'bg-apple-green/15 text-apple-green'
+                            : 'bg-apple-card text-apple-mute'
                         }`}
                       >
                         {checkPaymentMutation.data?.message}
@@ -597,7 +599,7 @@ export default function AdminPayments() {
                   {checkPaymentMutation.isError &&
                     checkPaymentMutation.variables?.paymentId === payment.id &&
                     checkPaymentMutation.variables?.method === payment.method && (
-                      <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-400">
+                      <div className="mt-3 rounded-lg bg-apple-red/15 p-2 text-sm text-apple-red">
                         {t('admin.payments.checkError')}
                       </div>
                     )}
@@ -607,9 +609,9 @@ export default function AdminPayments() {
           </div>
         ) : (
           <div className="py-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated">
               <svg
-                className="h-8 w-8 text-dark-500"
+                className="h-8 w-8 text-apple-faint"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -622,13 +624,13 @@ export default function AdminPayments() {
                 />
               </svg>
             </div>
-            <div className="text-dark-400">{t('admin.payments.noPayments')}</div>
+            <div className="text-apple-mute">{t('admin.payments.noPayments')}</div>
           </div>
         )}
 
         {/* Pagination */}
         {payments && payments.pages > 1 && (
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-dark-500">
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-apple-faint">
             <button
               type="button"
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}

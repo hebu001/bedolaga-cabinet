@@ -9,7 +9,7 @@ import Twemoji from 'react-twemoji';
 // BackIcon
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -90,7 +90,7 @@ export default function AdminServers() {
   const servers = serversData?.servers || [];
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in font-sans text-apple-ink">
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
@@ -98,20 +98,20 @@ export default function AdminServers() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.servers.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.servers.subtitle')}</p>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.servers.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.servers.subtitle')}</p>
           </div>
         </div>
         <button
           onClick={() => syncMutation.mutate()}
           disabled={syncMutation.isPending}
-          className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           <SyncIcon />
           {syncMutation.isPending ? t('admin.servers.syncing') : t('admin.servers.sync')}
@@ -121,14 +121,15 @@ export default function AdminServers() {
       {/* Servers List */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : servers.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-dark-400">{t('admin.servers.noServers')}</p>
+          <p className="text-apple-mute">{t('admin.servers.noServers')}</p>
           <button
             onClick={() => syncMutation.mutate()}
-            className="mt-4 text-accent-400 hover:text-accent-300"
+            className="mt-4 transition-opacity hover:opacity-80"
+            style={{ color: '#F97315' }}
           >
             {t('admin.servers.syncNow')}
           </button>
@@ -138,43 +139,43 @@ export default function AdminServers() {
           {servers.map((server: ServerListItem) => (
             <div
               key={server.id}
-              className={`rounded-xl border bg-dark-800 p-4 transition-colors ${
-                server.is_available ? 'border-dark-700' : 'border-dark-700/50 opacity-60'
+              className={`apple-card-grad rounded-2xl bg-apple-card p-4 transition-opacity ${
+                server.is_available ? '' : 'opacity-60'
               }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
                     <span className="text-lg">{getCountryFlag(server.country_code)}</span>
-                    <h3 className="truncate font-medium text-dark-100">
+                    <h3 className="truncate font-medium text-apple-ink">
                       <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
                         {server.display_name}
                       </Twemoji>
                     </h3>
                     {server.is_trial_eligible && (
-                      <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                      <span className="rounded bg-apple-green/15 px-2 py-0.5 text-xs text-apple-green">
                         {t('admin.servers.trial')}
                       </span>
                     )}
                     {!server.is_available && (
-                      <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                      <span className="rounded bg-apple-elevated px-2 py-0.5 text-xs text-apple-mute">
                         {t('admin.servers.unavailable')}
                       </span>
                     )}
                     {server.is_full && (
-                      <span className="rounded bg-warning-500/20 px-2 py-0.5 text-xs text-warning-400">
+                      <span className="rounded bg-apple-amber/15 px-2 py-0.5 text-xs text-apple-amber">
                         {t('admin.servers.full')}
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dark-400">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-apple-mute">
                     <span className="flex items-center gap-1">
                       <UsersIcon className="h-4 w-4" />
                       {server.current_users}
                       {server.max_users ? ` / ${server.max_users}` : ''}
                     </span>
                     <span>{server.price_rubles} ₽</span>
-                    <span className="max-w-[200px] truncate font-mono text-xs text-dark-500">
+                    <span className="max-w-[200px] truncate font-mono text-xs text-apple-faint">
                       {server.squad_uuid}
                     </span>
                   </div>
@@ -184,10 +185,10 @@ export default function AdminServers() {
                   {/* Toggle Available */}
                   <button
                     onClick={() => toggleMutation.mutate(server.id)}
-                    className={`rounded-lg p-2 transition-colors ${
+                    className={`rounded-lg p-2 transition-opacity hover:opacity-80 ${
                       server.is_available
-                        ? 'bg-error-500/20 text-error-400 hover:bg-error-500/30'
-                        : 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
+                        ? 'bg-apple-red/15 text-apple-red'
+                        : 'bg-apple-green/15 text-apple-green'
                     }`}
                     title={
                       server.is_available ? t('admin.servers.disable') : t('admin.servers.enable')
@@ -199,10 +200,10 @@ export default function AdminServers() {
                   {/* Toggle Trial */}
                   <button
                     onClick={() => toggleTrialMutation.mutate(server.id)}
-                    className={`rounded-lg p-2 transition-colors ${
+                    className={`rounded-lg p-2 transition-opacity hover:opacity-80 ${
                       server.is_trial_eligible
-                        ? 'bg-warning-500/20 text-warning-400 hover:bg-warning-500/30'
-                        : 'bg-dark-700 text-dark-400 hover:bg-dark-600'
+                        ? 'bg-apple-amber/15 text-apple-amber'
+                        : 'bg-apple-elevated text-apple-mute'
                     }`}
                     title={t('admin.servers.toggleTrial')}
                   >
@@ -212,7 +213,7 @@ export default function AdminServers() {
                   {/* Edit */}
                   <button
                     onClick={() => navigate(`/admin/servers/${server.id}/edit`)}
-                    className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                    className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink"
                     title={t('admin.servers.edit')}
                   >
                     <EditIcon />

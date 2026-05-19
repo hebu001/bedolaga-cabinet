@@ -284,6 +284,7 @@ export function AppShell({ children }: AppShellProps) {
   const isProfile =
     location.pathname.startsWith('/profile') || location.pathname.startsWith('/referral');
   const isSupport = location.pathname.startsWith('/support');
+  const isAdminPage = location.pathname.startsWith('/admin');
   const isHeaderHidden =
     isDashboard ||
     isConnection ||
@@ -295,7 +296,7 @@ export function AppShell({ children }: AppShellProps) {
   const isFullscreenContent = isDashboard || isConnection;
 
   // Apple-dark pages use a solid black canvas instead of the animated background
-  const isAppleDarkPage = isBalance || isSubscription || isProfile || isSupport;
+  const isAppleDarkPage = isBalance || isSubscription || isProfile || isSupport || isAdminPage;
 
   return (
     <div className={cn('min-h-screen', isAppleDarkPage && 'bg-black')}>

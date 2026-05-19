@@ -73,7 +73,7 @@ const GiftIcon = () => (
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -136,19 +136,19 @@ function SortableTariffCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-xl border bg-dark-800 p-4 transition-colors ${
+      className={`apple-card-grad rounded-2xl bg-apple-card p-4 transition-colors ${
         isDragging
-          ? 'border-accent-500/50 shadow-xl shadow-accent-500/20'
+          ? 'shadow-xl shadow-[#F97315]/20 ring-1 ring-[#F97315]/50'
           : tariff.is_active
-            ? 'border-dark-700'
-            : 'border-dark-700/50 opacity-60'
+            ? ''
+            : 'opacity-60'
       }`}
     >
       <div className="flex gap-3">
         <button
           {...attributes}
           {...listeners}
-          className="mt-1 flex-shrink-0 cursor-grab touch-none rounded-lg p-2.5 text-dark-500 hover:bg-dark-700/50 hover:text-dark-300 active:cursor-grabbing sm:p-1.5"
+          className="mt-1 flex-shrink-0 cursor-grab touch-none rounded-lg p-2.5 text-apple-faint hover:bg-apple-elevated hover:text-apple-mute active:cursor-grabbing sm:p-1.5"
           title={t('admin.tariffs.dragToReorder')}
         >
           <GripIcon />
@@ -158,23 +158,26 @@ function SortableTariffCard({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex flex-wrap items-center gap-2">
-                <h3 className="truncate font-medium text-dark-100">{tariff.name}</h3>
+                <h3 className="truncate font-medium text-apple-ink">{tariff.name}</h3>
                 {tariff.is_daily ? (
-                  <span className="rounded bg-warning-500/20 px-2 py-0.5 text-xs text-warning-400">
+                  <span className="rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold text-apple-amber">
                     {t('admin.tariffs.dailyType')}
                   </span>
                 ) : (
-                  <span className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
+                  <span
+                    className="rounded-full bg-[#F97315]/15 px-2.5 py-1 text-[11px] font-semibold"
+                    style={{ color: '#F97315' }}
+                  >
                     {t('admin.tariffs.periodType')}
                   </span>
                 )}
                 {tariff.is_trial_available && (
-                  <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                  <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                     {t('admin.tariffs.trial')}
                   </span>
                 )}
                 {tariff.show_in_gift && (
-                  <span className="inline-flex items-center gap-1 rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-apple-blue/15 px-2.5 py-1 text-[11px] font-semibold text-apple-blue">
                     <svg
                       className="h-3 w-3"
                       fill="none"
@@ -192,14 +195,14 @@ function SortableTariffCard({
                   </span>
                 )}
                 {!tariff.is_active && (
-                  <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                  <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                     {t('admin.tariffs.inactive')}
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dark-400">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-apple-mute">
                 {tariff.is_daily && tariff.daily_price_kopeks > 0 && (
-                  <span className="text-warning-400">
+                  <span className="text-apple-amber">
                     {(tariff.daily_price_kopeks / 100).toFixed(2)}{' '}
                     {t('admin.tariffs.currencyPerDay')}
                   </span>
@@ -222,8 +225,8 @@ function SortableTariffCard({
                 onClick={onToggle}
                 className={`rounded-lg p-2 transition-colors ${
                   tariff.is_active
-                    ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
-                    : 'bg-dark-700 text-dark-400 hover:bg-dark-600'
+                    ? 'bg-apple-green/15 text-apple-green hover:bg-apple-green/25'
+                    : 'bg-apple-elevated text-apple-mute hover:opacity-90'
                 }`}
                 title={
                   tariff.is_active ? t('admin.tariffs.deactivate') : t('admin.tariffs.activate')
@@ -236,8 +239,8 @@ function SortableTariffCard({
                 onClick={onToggleTrial}
                 className={`rounded-lg p-2 transition-colors ${
                   tariff.is_trial_available
-                    ? 'bg-accent-500/20 text-accent-400 hover:bg-accent-500/30'
-                    : 'bg-dark-700 text-dark-400 hover:bg-dark-600'
+                    ? 'bg-[#F97315]/15 text-[#F97315] hover:bg-[#F97315]/25'
+                    : 'bg-apple-elevated text-apple-mute hover:opacity-90'
                 }`}
                 title={t('admin.tariffs.toggleTrial')}
               >
@@ -246,7 +249,7 @@ function SortableTariffCard({
 
               <button
                 onClick={onEdit}
-                className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
                 title={t('admin.tariffs.edit')}
               >
                 <EditIcon />
@@ -254,7 +257,7 @@ function SortableTariffCard({
 
               <button
                 onClick={onDelete}
-                className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-error-500/20 hover:text-error-400"
+                className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:bg-apple-red/15 hover:text-apple-red"
                 title={t('admin.tariffs.delete')}
               >
                 <TrashIcon />
@@ -383,14 +386,14 @@ export default function AdminTariffs() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.tariffs.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.tariffs.subtitle')}</p>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.tariffs.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.tariffs.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -398,7 +401,7 @@ export default function AdminTariffs() {
             <button
               onClick={handleSaveOrder}
               disabled={saveOrderMutation.isPending}
-              className="flex items-center gap-2 rounded-lg bg-success-500 px-4 py-2 text-white transition-colors hover:bg-success-600"
+              className="flex items-center gap-2 rounded-full bg-apple-green px-4 py-2 text-white transition-colors hover:opacity-90"
             >
               {saveOrderMutation.isPending ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -410,7 +413,7 @@ export default function AdminTariffs() {
           )}
           <button
             onClick={() => navigate('/admin/tariffs/create')}
-            className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+            className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-colors hover:opacity-90"
           >
             <PlusIcon />
             {t('admin.tariffs.create')}
@@ -419,7 +422,7 @@ export default function AdminTariffs() {
       </div>
 
       {/* Drag hint */}
-      <div className="mb-4 flex items-center gap-2 text-sm text-dark-500">
+      <div className="mb-4 flex items-center gap-2 text-sm text-apple-faint">
         <GripIcon />
         {t('admin.tariffs.dragToReorder')}
       </div>
@@ -427,11 +430,11 @@ export default function AdminTariffs() {
       {/* Tariffs List */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : localTariffs.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-dark-400">{t('admin.tariffs.noTariffs')}</p>
+          <p className="text-apple-mute">{t('admin.tariffs.noTariffs')}</p>
         </div>
       ) : (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>

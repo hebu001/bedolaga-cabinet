@@ -7,7 +7,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -64,34 +64,36 @@ interface StatCardProps {
 
 function StatCard({ title, value, subtitle, color }: StatCardProps) {
   const colors = {
-    blue: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
-    green: 'bg-success-500/20 text-success-400 border-success-500/30',
-    yellow: 'bg-warning-500/20 text-warning-400 border-warning-500/30',
-    red: 'bg-error-500/20 text-error-400 border-error-500/30',
-    purple: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
+    blue: 'text-apple-blue',
+    green: 'text-apple-green',
+    yellow: 'text-apple-amber',
+    red: 'text-apple-red',
+    purple: 'text-[#F97315]',
   };
 
   return (
-    <div className={`rounded-xl border p-4 ${colors[color]}`}>
-      <div className="mb-1 text-2xl font-bold">{value}</div>
-      <div className="text-sm opacity-80">{title}</div>
-      {subtitle && <div className="mt-1 text-xs opacity-60">{subtitle}</div>}
+    <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+      <div className={`mb-1 text-2xl font-bold ${colors[color]}`}>{value}</div>
+      <div className="text-sm text-apple-mute">{title}</div>
+      {subtitle && <div className="mt-1 text-xs text-apple-faint">{subtitle}</div>}
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    active: 'bg-success-500/20 text-success-400 border-success-500/30',
-    blocked: 'bg-error-500/20 text-error-400 border-error-500/30',
-    deleted: 'bg-dark-600 text-dark-400 border-dark-500',
-    trial: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
-    expired: 'bg-warning-500/20 text-warning-400 border-warning-500/30',
-    disabled: 'bg-dark-600 text-dark-400 border-dark-500',
+    active: 'bg-apple-green/15 text-apple-green',
+    blocked: 'bg-apple-red/15 text-apple-red',
+    deleted: 'bg-apple-elevated text-apple-mute',
+    trial: 'bg-[#F97315]/15 text-[#F97315]',
+    expired: 'bg-apple-amber/15 text-apple-amber',
+    disabled: 'bg-apple-elevated text-apple-mute',
   };
 
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-xs ${styles[status] || styles.active}`}>
+    <span
+      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles[status] || styles.active}`}
+    >
       {status}
     </span>
   );
@@ -108,10 +110,13 @@ function UserRow({ user, onClick, formatAmount }: UserRowProps) {
   return (
     <div
       onClick={onClick}
-      className="flex cursor-pointer items-start gap-3 rounded-xl border border-dark-700 bg-dark-800/50 p-3 transition-all hover:border-dark-600 hover:bg-dark-800 sm:items-center sm:gap-4 sm:p-4"
+      className="flex cursor-pointer items-start gap-3 rounded-2xl bg-apple-card p-3 transition-all hover:bg-apple-elevated sm:items-center sm:gap-4 sm:p-4"
     >
       {/* Avatar */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-sm font-medium text-white sm:text-base">
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium text-white sm:text-base"
+        style={{ background: 'linear-gradient(to bottom right, #F97315, #C2570A)' }}
+      >
         {user.first_name?.[0] || user.username?.[0] || '?'}
       </div>
 
@@ -119,14 +124,14 @@ function UserRow({ user, onClick, formatAmount }: UserRowProps) {
       <div className="min-w-0 flex-1">
         {/* Name and username */}
         <div className="mb-1 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-          <span className="truncate font-medium text-dark-100">{user.full_name}</span>
+          <span className="truncate font-medium text-apple-ink">{user.full_name}</span>
           {user.username && (
-            <span className="truncate text-xs text-dark-500 sm:text-xs">@{user.username}</span>
+            <span className="truncate text-xs text-apple-faint sm:text-xs">@{user.username}</span>
           )}
         </div>
 
         {/* Telegram ID - full width on mobile */}
-        <div className="mb-1 flex items-center gap-1 text-xs text-dark-400 sm:mb-0">
+        <div className="mb-1 flex items-center gap-1 text-xs text-apple-mute sm:mb-0">
           <TelegramIcon />
           <span className="truncate">{user.telegram_id}</span>
         </div>
@@ -136,14 +141,14 @@ function UserRow({ user, onClick, formatAmount }: UserRowProps) {
           {user.status !== 'active' && <StatusBadge status={user.status} />}
           {user.has_subscription && user.subscription_status && (
             <span
-              className={`rounded-full border px-2 py-0.5 text-xs ${
+              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                 user.subscription_status === 'active'
-                  ? 'border-success-500/30 bg-success-500/20 text-success-400'
+                  ? 'bg-apple-green/15 text-apple-green'
                   : user.subscription_status === 'trial'
-                    ? 'border-accent-500/30 bg-accent-500/20 text-accent-400'
+                    ? 'bg-[#F97315]/15 text-[#F97315]'
                     : user.subscription_status === 'limited'
-                      ? 'border-yellow-500/30 bg-yellow-500/20 text-yellow-400'
-                      : 'border-warning-500/30 bg-warning-500/20 text-warning-400'
+                      ? 'bg-apple-amber/15 text-apple-amber'
+                      : 'bg-apple-amber/15 text-apple-amber'
               }`}
             >
               {user.subscription_status === 'active'
@@ -160,10 +165,10 @@ function UserRow({ user, onClick, formatAmount }: UserRowProps) {
 
       {/* Balance - smaller on mobile, show inline */}
       <div className="shrink-0 text-right">
-        <div className="text-sm font-medium text-dark-100 sm:text-base">
+        <div className="text-sm font-medium text-apple-ink sm:text-base">
           {formatAmount(user.balance_rubles)}
         </div>
-        <div className="hidden text-xs text-dark-500 sm:block">
+        <div className="hidden text-xs text-apple-faint sm:block">
           {user.purchase_count > 0
             ? t('admin.users.purchaseCount', { count: user.purchase_count })
             : t('admin.users.noPurchases')}
@@ -246,14 +251,14 @@ export default function AdminUsers() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-bold text-dark-100">{t('admin.users.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.users.subtitle')}</p>
+            <h1 className="text-xl font-bold text-apple-ink">{t('admin.users.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.users.subtitle')}</p>
           </div>
         </div>
         <button
@@ -261,7 +266,7 @@ export default function AdminUsers() {
             loadUsers();
             loadStats();
           }}
-          className="rounded-lg p-2 transition-colors hover:bg-dark-700"
+          className="rounded-lg p-2 transition-colors hover:bg-apple-elevated"
         >
           <RefreshIcon className={loading ? 'animate-spin' : ''} />
         </button>
@@ -308,9 +313,9 @@ export default function AdminUsers() {
                   setOffset(0);
                 }}
                 placeholder={t('admin.users.search')}
-                className="w-full rounded-xl border border-dark-700 bg-dark-800 py-2 pl-10 pr-4 text-dark-100 placeholder-dark-500 focus:border-dark-600 focus:outline-none"
+                className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-faint">
                 <SearchIcon />
               </div>
             </div>
@@ -325,9 +330,9 @@ export default function AdminUsers() {
                   setOffset(0);
                 }}
                 placeholder={t('admin.users.searchEmail')}
-                className="w-full rounded-xl border border-dark-700 bg-dark-800 py-2 pl-10 pr-4 text-dark-100 placeholder-dark-500 focus:border-dark-600 focus:outline-none"
+                className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-faint">
                 <SearchIcon />
               </div>
             </div>
@@ -341,7 +346,7 @@ export default function AdminUsers() {
               setStatusFilter(e.target.value);
               setOffset(0);
             }}
-            className="rounded-xl border border-dark-700 bg-dark-800 px-3 py-2 text-dark-100"
+            className="rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
           >
             <option value="">{t('admin.users.filters.allStatuses')}</option>
             <option value="active">{t('admin.users.status.active')}</option>
@@ -354,7 +359,7 @@ export default function AdminUsers() {
               setSortBy(e.target.value);
               setOffset(0);
             }}
-            className="rounded-xl border border-dark-700 bg-dark-800 px-3 py-2 text-dark-100"
+            className="rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
           >
             <option value="created_at">{t('admin.users.filters.byDate')}</option>
             <option value="balance">{t('admin.users.filters.byBalance')}</option>
@@ -368,10 +373,10 @@ export default function AdminUsers() {
       <div className="mb-4 space-y-2">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
           </div>
         ) : users.length === 0 ? (
-          <div className="py-12 text-center text-dark-400">{t('admin.users.noData')}</div>
+          <div className="py-12 text-center text-apple-mute">{t('admin.users.noData')}</div>
         ) : (
           users.map((user) => (
             <UserRow
@@ -387,7 +392,7 @@ export default function AdminUsers() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <div className="text-sm text-dark-400">
+          <div className="text-sm text-apple-mute">
             {t('admin.users.pagination.showing', {
               from: offset + 1,
               to: Math.min(offset + limit, total),
@@ -398,17 +403,17 @@ export default function AdminUsers() {
             <button
               onClick={() => setOffset(Math.max(0, offset - limit))}
               disabled={offset === 0}
-              className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+              className="rounded-lg bg-apple-card p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
             >
               <ChevronLeftIcon />
             </button>
-            <span className="px-3 py-2 text-dark-300">
+            <span className="px-3 py-2 text-apple-mute">
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setOffset(offset + limit)}
               disabled={offset + limit >= total}
-              className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+              className="rounded-lg bg-apple-card p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
             >
               <ChevronRightIcon />
             </button>
