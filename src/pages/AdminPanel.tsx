@@ -737,31 +737,6 @@ interface GlassCardProps {
 const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassCardProps) {
   const { t } = useTranslation();
   const hasPermission = usePermissionStore((state) => state.hasPermission);
-  const [hoveredItem, setHoveredItem] = useState<number | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const tiltRef = useRef({ x: 0, y: 0 });
-  const rafRef = useRef(0);
-
-  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
-
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    tiltRef.current = {
-      x: ((e.clientY - rect.top) / rect.height - 0.5) * -2.5,
-      y: ((e.clientX - rect.left) / rect.width - 0.5) * 2.5,
-    };
-    cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      setTilt({ ...tiltRef.current });
-    });
-  }, []);
-
-  const onMouseLeave = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    setTilt({ x: 0, y: 0 });
-  }, []);
 
   const visibleItems = useMemo(
     () =>
@@ -795,68 +770,44 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
 
   return (
     <div
-      ref={cardRef}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      className="apple-card-grad group/card relative overflow-hidden rounded-2xl bg-apple-card transition-all duration-300 hover:shadow-lg"
       style={{
-        transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
         animation: `adminCardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${index * 60}ms both`,
       }}
     >
-      {/* Top glow line */}
-      <div
-        className="absolute left-0 right-0 top-0 h-px opacity-50 transition-all duration-300 group-hover/card:h-0.5 group-hover/card:opacity-100"
-        style={{ background: section.gradient }}
-      />
+      {/* Section caption — sits outside the card, iOS-settings style */}
+      <h2 className="mb-1.5 px-3.5 text-[13px] font-semibold text-apple-mute">
+        {t(section.titleKey)}
+      </h2>
 
-      {/* Header */}
-      <div className="flex items-center gap-2.5 border-b border-apple-hairline px-3.5 py-2.5">
-        <div
-          className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg shadow-md"
-          style={{ background: section.gradient }}
-        >
-          {/* Shine overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-white/25" />
-          <span className="relative text-xs font-bold text-white drop-shadow-sm" aria-hidden="true">
-            {visibleItems.length}
-          </span>
-        </div>
-        <h2 className="truncate text-[13px] font-semibold text-apple-ink">{t(section.titleKey)}</h2>
-      </div>
-
-      {/* Items */}
-      <div className="flex flex-col gap-px p-1.5">
+      {/* Card — plain list of rows */}
+      <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
         {visibleItems.map((item, i) => (
           <Link
             key={item.to}
             to={item.to}
-            className={cn(
-              'group/item flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-all duration-150',
-              hoveredItem === i ? 'bg-apple-elevated' : 'hover:bg-apple-elevated',
-            )}
-            onMouseEnter={() => setHoveredItem(i)}
-            onMouseLeave={() => setHoveredItem(null)}
-            style={{
-              animation: `adminItemEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1) ${index * 60 + i * 20}ms both`,
-            }}
+            className="flex items-center gap-3 pl-3.5 transition-colors hover:bg-apple-elevated"
           >
-            {/* Icon */}
+            {/* Colored icon tile */}
             <div
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-apple-elevated transition-all duration-150 group-hover/item:scale-105 [&>svg]:h-[13px] [&>svg]:w-[13px]"
-              style={{ color: section.accent }}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-white [&>svg]:h-[15px] [&>svg]:w-[15px]"
+              style={{ background: section.accent }}
             >
               {icons[item.icon]}
             </div>
 
-            {/* Label */}
-            <span className="flex-1 truncate text-xs font-medium text-apple-mute transition-colors group-hover/item:text-apple-ink">
-              {highlightMatch(t(item.name))}
-            </span>
-
-            {/* Chevron */}
-            <div className="h-3 w-3 shrink-0 -translate-x-1 text-apple-faint opacity-0 transition-all duration-150 group-hover/item:translate-x-0 group-hover/item:opacity-60 [&>svg]:h-3 [&>svg]:w-3">
-              {icons.chevron}
+            {/* Row body — hairline divider is inset to start after the icon */}
+            <div
+              className={cn(
+                'flex min-w-0 flex-1 items-center gap-3 py-2.5 pr-3.5',
+                i !== visibleItems.length - 1 && 'border-b border-apple-hairline',
+              )}
+            >
+              <span className="flex-1 truncate text-[15px] text-apple-ink">
+                {highlightMatch(t(item.name))}
+              </span>
+              <div className="h-4 w-4 shrink-0 text-apple-faint [&>svg]:h-4 [&>svg]:w-4">
+                {icons.chevron}
+              </div>
             </div>
           </Link>
         ))}
