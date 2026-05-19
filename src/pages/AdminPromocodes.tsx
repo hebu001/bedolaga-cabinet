@@ -10,7 +10,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -86,13 +86,13 @@ const getTypeLabel = (type: PromoCodeType): string => {
 
 const getTypeColor = (type: PromoCodeType): string => {
   const colors: Record<PromoCodeType, string> = {
-    balance: 'bg-success-500/20 text-success-400',
-    subscription_days: 'bg-accent-500/20 text-accent-400',
-    trial_subscription: 'bg-accent-500/20 text-accent-400',
-    promo_group: 'bg-warning-500/20 text-warning-400',
-    discount: 'bg-pink-500/20 text-pink-400',
+    balance: 'bg-apple-green/15 text-apple-green',
+    subscription_days: 'bg-[#F97315]/15 text-[#F97315]',
+    trial_subscription: 'bg-[#F97315]/15 text-[#F97315]',
+    promo_group: 'bg-apple-amber/15 text-apple-amber',
+    discount: 'bg-apple-blue/15 text-apple-blue',
   };
-  return colors[type] || 'bg-dark-600 text-dark-300';
+  return colors[type] || 'bg-apple-elevated text-apple-mute';
 };
 
 const formatDate = (date: string | null): string => {
@@ -147,19 +147,19 @@ export default function AdminPromocodes() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-opacity hover:opacity-90"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.promocodes.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.promocodes.subtitle')}</p>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.promocodes.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.promocodes.subtitle')}</p>
           </div>
         </div>
         <button
           onClick={() => navigate('/admin/promocodes/create')}
-          className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+          className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90"
         >
           <PlusIcon />
           {t('admin.promocodes.addPromocode')}
@@ -169,29 +169,29 @@ export default function AdminPromocodes() {
       {/* Stats Overview */}
       {promocodes.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-dark-100">{promocodes.length}</div>
-            <div className="text-xs text-dark-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{promocodes.length}</div>
+            <div className="text-xs text-apple-mute">
               {t('admin.promocodes.stats.totalPromocodes')}
             </div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-success-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-green">
               {promocodes.filter((p) => p.is_active && p.is_valid).length}
             </div>
-            <div className="text-xs text-dark-400">{t('admin.promocodes.stats.activeCount')}</div>
+            <div className="text-xs text-apple-mute">{t('admin.promocodes.stats.activeCount')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-accent-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
               {promocodes.reduce((sum, p) => sum + p.current_uses, 0)}
             </div>
-            <div className="text-xs text-dark-400">{t('admin.promocodes.stats.usagesCount')}</div>
+            <div className="text-xs text-apple-mute">{t('admin.promocodes.stats.usagesCount')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-warning-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-amber">
               {promocodes.filter((p) => p.uses_left === 0 && p.max_uses > 0).length}
             </div>
-            <div className="text-xs text-dark-400">{t('admin.promocodes.stats.exhausted')}</div>
+            <div className="text-xs text-apple-mute">{t('admin.promocodes.stats.exhausted')}</div>
           </div>
         </div>
       )}
@@ -199,19 +199,19 @@ export default function AdminPromocodes() {
       {/* Promocodes List */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : promocodes.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-dark-400">{t('admin.promocodes.noPromocodes')}</p>
+          <p className="text-apple-mute">{t('admin.promocodes.noPromocodes')}</p>
         </div>
       ) : (
         <div className="space-y-3">
           {promocodes.map((promo: PromoCode) => (
             <div
               key={promo.id}
-              className={`rounded-xl border bg-dark-800 p-4 transition-colors ${
-                promo.is_active ? 'border-dark-700' : 'border-dark-700/50 opacity-60'
+              className={`apple-card-grad rounded-2xl bg-apple-card p-4 ${
+                promo.is_active ? '' : 'opacity-60'
               }`}
             >
               {/* Mobile: stacked layout, Desktop: row layout */}
@@ -221,7 +221,7 @@ export default function AdminPromocodes() {
                   <div className="mb-2 flex items-center gap-2">
                     <button
                       onClick={() => handleCopyCode(promo.code)}
-                      className="flex items-center gap-1.5 font-mono font-medium text-dark-100 transition-colors hover:text-accent-400"
+                      className="flex items-center gap-1.5 font-mono font-medium text-apple-ink transition-colors hover:text-[#F97315]"
                     >
                       {promo.code}
                       {copiedCode === promo.code ? <CheckIcon /> : <CopyIcon />}
@@ -229,35 +229,37 @@ export default function AdminPromocodes() {
                   </div>
                   {/* Badges - wrap on mobile */}
                   <div className="mb-2 flex flex-wrap gap-1.5">
-                    <span className={`rounded px-2 py-0.5 text-xs ${getTypeColor(promo.type)}`}>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getTypeColor(promo.type)}`}
+                    >
                       {getTypeLabel(promo.type)}
                     </span>
                     {!promo.is_active && (
-                      <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                      <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                         {t('admin.promocodes.stats.inactive')}
                       </span>
                     )}
                     {promo.first_purchase_only && (
-                      <span className="rounded bg-warning-500/20 px-2 py-0.5 text-xs text-warning-400">
+                      <span className="rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold text-apple-amber">
                         {t('admin.promocodes.firstPurchase')}
                       </span>
                     )}
                   </div>
                   {/* Info line */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dark-400">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-apple-mute">
                     {promo.type === 'balance' && (
-                      <span className="text-success-400">
+                      <span className="text-apple-green">
                         +{promo.balance_bonus_rubles} {t('admin.promocodes.form.rub')}
                       </span>
                     )}
                     {(promo.type === 'subscription_days' ||
                       promo.type === 'trial_subscription') && (
-                      <span className="text-accent-400">
+                      <span style={{ color: '#F97315' }}>
                         +{promo.subscription_days} {t('admin.promocodes.form.days')}
                       </span>
                     )}
                     {promo.type === 'discount' && (
-                      <span className="text-pink-400">
+                      <span className="text-apple-blue">
                         {t('admin.promocodes.discountForHours', {
                           percent: promo.balance_bonus_kopeks,
                           hours: promo.subscription_days,
@@ -277,24 +279,24 @@ export default function AdminPromocodes() {
                 </div>
 
                 {/* Action buttons - full width on mobile */}
-                <div className="flex items-center gap-2 border-t border-dark-700 pt-3 sm:border-0 sm:pt-0">
+                <div className="flex items-center gap-2 border-t border-apple-hairline pt-3 sm:border-0 sm:pt-0">
                   <button
                     onClick={() => navigate(`/admin/promocodes/${promo.id}/stats`)}
-                    className="flex-1 rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-accent-500/20 hover:text-accent-400 sm:flex-none"
+                    className="flex-1 rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:bg-[#F97315]/15 hover:text-[#F97315] sm:flex-none"
                     title={t('admin.promocodes.actions.stats')}
                   >
                     <ChartIcon />
                   </button>
                   <button
                     onClick={() => navigate(`/admin/promocodes/${promo.id}/edit`)}
-                    className="flex-1 rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100 sm:flex-none"
+                    className="flex-1 rounded-lg bg-apple-elevated p-2 text-apple-mute transition-opacity hover:text-apple-ink hover:opacity-90 sm:flex-none"
                     title={t('admin.promocodes.actions.edit')}
                   >
                     <EditIcon />
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(promo.id)}
-                    className="flex-1 rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-error-500/20 hover:text-error-400 sm:flex-none"
+                    className="flex-1 rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:bg-apple-red/15 hover:text-apple-red sm:flex-none"
                     title={t('admin.promocodes.actions.delete')}
                   >
                     <TrashIcon />
@@ -309,23 +311,23 @@ export default function AdminPromocodes() {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-xl bg-dark-800 p-6">
-            <h3 className="mb-2 text-lg font-semibold text-dark-100">
+          <div className="apple-card-grad w-full max-w-sm rounded-2xl bg-apple-card p-6">
+            <h3 className="mb-2 text-lg font-semibold text-apple-ink">
               {t('admin.promocodes.confirm.deletePromocode')}
             </h3>
-            <p className="mb-6 text-dark-400">
+            <p className="mb-6 text-apple-mute">
               {t('admin.promocodes.confirm.deletePromocodeText')}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-dark-300 transition-colors hover:text-dark-100"
+                className="px-4 py-2 text-apple-mute transition-colors hover:text-apple-ink"
               >
                 {t('admin.promocodes.form.cancel')}
               </button>
               <button
                 onClick={() => deleteMutation.mutate(deleteConfirm)}
-                className="rounded-lg bg-error-500 px-4 py-2 text-white transition-colors hover:bg-error-600"
+                className="rounded-full bg-apple-red px-4 py-2 text-white transition-opacity hover:opacity-90"
               >
                 {t('admin.promocodes.confirm.deleteButton')}
               </button>

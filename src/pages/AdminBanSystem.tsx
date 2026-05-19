@@ -172,21 +172,21 @@ interface StatCardProps {
 
 function StatCard({ title, value, subtitle, icon, color }: StatCardProps) {
   const colorClasses = {
-    accent: 'bg-accent-500/20 text-accent-400',
-    success: 'bg-success-500/20 text-success-400',
-    warning: 'bg-warning-500/20 text-warning-400',
-    error: 'bg-error-500/20 text-error-400',
-    info: 'bg-info-500/20 text-info-400',
+    accent: 'bg-[#F97315]/15 text-[#F97315]',
+    success: 'bg-apple-green/15 text-apple-green',
+    warning: 'bg-apple-amber/15 text-apple-amber',
+    error: 'bg-apple-red/15 text-apple-red',
+    info: 'bg-apple-blue/15 text-apple-blue',
   };
 
   return (
-    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 backdrop-blur transition-colors hover:border-dark-600">
+    <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
       <div className="mb-2 flex items-start justify-between">
         <div className={`rounded-lg p-2 ${colorClasses[color]}`}>{icon}</div>
       </div>
-      <div className="mb-1 text-2xl font-bold text-dark-100">{value}</div>
-      <div className="text-sm text-dark-400">{title}</div>
-      {subtitle && <div className="mt-1 text-xs text-dark-500">{subtitle}</div>}
+      <div className="mb-1 text-2xl font-bold text-apple-ink">{value}</div>
+      <div className="text-sm text-apple-mute">{title}</div>
+      {subtitle && <div className="mt-1 text-xs text-apple-faint">{subtitle}</div>}
     </div>
   );
 }
@@ -449,7 +449,7 @@ export default function AdminBanSystem() {
   if (loading && !status) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -459,13 +459,13 @@ export default function AdminBanSystem() {
       <div className="flex min-h-[60vh] animate-fade-in items-center justify-center">
         <div className="mx-4 w-full max-w-md">
           {/* Card */}
-          <div className="rounded-2xl border border-dark-700 bg-dark-800/50 p-8 text-center shadow-2xl backdrop-blur-xl">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-8 text-center shadow-2xl">
             {/* Icon */}
             <div className="mb-6 flex justify-center">
               <div className="relative">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-error-500/20 to-warning-500/20">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-apple-red/15 to-apple-amber/15">
                   <svg
-                    className="h-10 w-10 text-error-400"
+                    className="h-10 w-10 text-apple-red"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -478,9 +478,9 @@ export default function AdminBanSystem() {
                     />
                   </svg>
                 </div>
-                <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-dark-600 bg-dark-800">
+                <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-apple-elevated">
                   <svg
-                    className="h-3.5 w-3.5 text-dark-400"
+                    className="h-3.5 w-3.5 text-apple-mute"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -497,13 +497,13 @@ export default function AdminBanSystem() {
             </div>
 
             {/* Title */}
-            <h2 className="mb-2 text-xl font-bold text-dark-100">{t('banSystem.title')}</h2>
+            <h2 className="mb-2 text-xl font-bold text-apple-ink">{t('banSystem.title')}</h2>
 
             {/* Error message */}
-            <p className="mb-2 font-medium text-error-400">{error}</p>
+            <p className="mb-2 font-medium text-apple-red">{error}</p>
 
             {/* Hint */}
-            <p className="mb-8 text-sm text-dark-400">{t('banSystem.configureHint')}</p>
+            <p className="mb-8 text-sm text-apple-mute">{t('banSystem.configureHint')}</p>
 
             {/* Buttons */}
             <div className="flex flex-col gap-3">
@@ -523,7 +523,7 @@ export default function AdminBanSystem() {
               {/* Back Button */}
               <button
                 onClick={() => window.history.back()}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dark-600 bg-dark-700 px-4 py-2 text-sm font-medium text-dark-200 transition-all duration-200 hover:border-dark-500 hover:bg-dark-600 hover:text-dark-100"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-apple-elevated px-4 py-2 text-sm font-medium text-apple-ink transition-all duration-200 hover:opacity-90"
               >
                 <svg
                   className="h-5 w-5"
@@ -545,8 +545,8 @@ export default function AdminBanSystem() {
 
           {/* Decorative elements */}
           <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-            <div className="absolute -left-20 top-1/4 h-40 w-40 rounded-full bg-accent-500/5 blur-3xl" />
-            <div className="absolute -right-20 bottom-1/4 h-40 w-40 rounded-full bg-error-500/5 blur-3xl" />
+            <div className="absolute -left-20 top-1/4 h-40 w-40 rounded-full bg-[#F97315]/5 blur-3xl" />
+            <div className="absolute -right-20 bottom-1/4 h-40 w-40 rounded-full bg-apple-red/5 blur-3xl" />
           </div>
         </div>
       </div>
@@ -559,18 +559,18 @@ export default function AdminBanSystem() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton />
-          <div className="rounded-xl bg-error-500/20 p-3">
+          <div className="rounded-xl bg-apple-red/15 p-3">
             <ShieldIcon />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-dark-100">{t('banSystem.title')}</h1>
-            <p className="text-dark-400">{t('banSystem.subtitle')}</p>
+            <h1 className="text-2xl font-bold text-apple-ink">{t('banSystem.title')}</h1>
+            <p className="text-apple-mute">{t('banSystem.subtitle')}</p>
           </div>
         </div>
         <button
           onClick={() => loadTabData(activeTab)}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg bg-dark-800 px-4 py-2 text-dark-300 transition-colors hover:bg-dark-700 hover:text-dark-100 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-full bg-apple-elevated px-4 py-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90 disabled:opacity-50"
         >
           <RefreshIcon />
           {t('common.refresh')}
@@ -578,15 +578,15 @@ export default function AdminBanSystem() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-dark-700 pb-2">
+      <div className="flex flex-wrap gap-2 border-b border-apple-hairline pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-accent-500/20 text-accent-400'
-                : 'text-dark-400 hover:bg-dark-800 hover:text-dark-200'
+                ? 'bg-[#F97315]/15 text-[#F97315]'
+                : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink'
             }`}
           >
             {tab.icon}
@@ -598,10 +598,10 @@ export default function AdminBanSystem() {
       {/* Content */}
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : error ? (
-        <div className="py-8 text-center text-error-400">{error}</div>
+        <div className="py-8 text-center text-apple-red">{error}</div>
       ) : (
         <>
           {/* Dashboard Tab */}
@@ -677,38 +677,38 @@ export default function AdminBanSystem() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder={t('banSystem.users.searchPlaceholder')}
-                    className="input pl-10"
+                    className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   />
                 </div>
                 <button
                   onClick={handleSearch}
-                  className="rounded-lg bg-accent-500/20 px-4 py-2 text-accent-400 transition-colors hover:bg-accent-500/30"
+                  className="rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90"
                 >
                   {t('common.search')}
                 </button>
               </div>
 
               {/* Users Table */}
-              <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+              <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-dark-700">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                    <tr className="border-b border-apple-hairline">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                         {t('banSystem.users.email')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.users.ipCount')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.users.limit')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.users.status')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.users.bans')}
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-apple-faint">
                         {t('common.actions')}
                       </th>
                     </tr>
@@ -717,19 +717,21 @@ export default function AdminBanSystem() {
                     {users?.users.map((user) => (
                       <tr
                         key={user.email}
-                        className="border-b border-dark-700/50 hover:bg-dark-800/50"
+                        className="border-b border-apple-hairline/60 hover:bg-apple-elevated"
                       >
-                        <td className="px-4 py-3 text-dark-100">{user.email}</td>
-                        <td className="px-4 py-3 text-center text-dark-300">
+                        <td className="px-4 py-3 text-apple-ink">{user.email}</td>
+                        <td className="px-4 py-3 text-center text-apple-mute">
                           {user.unique_ip_count}
                         </td>
-                        <td className="px-4 py-3 text-center text-dark-300">{user.limit ?? '-'}</td>
+                        <td className="px-4 py-3 text-center text-apple-mute">
+                          {user.limit ?? '-'}
+                        </td>
                         <td className="px-4 py-3 text-center">
                           <span
                             className={`rounded-full px-2 py-1 text-xs ${
                               user.is_over_limit
-                                ? 'bg-error-500/20 text-error-400'
-                                : 'bg-success-500/20 text-success-400'
+                                ? 'bg-apple-red/15 text-apple-red'
+                                : 'bg-apple-green/15 text-apple-green'
                             }`}
                           >
                             {user.is_over_limit
@@ -737,14 +739,14 @@ export default function AdminBanSystem() {
                               : t('banSystem.users.ok')}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-center text-dark-300">
+                        <td className="px-4 py-3 text-center text-apple-mute">
                           {user.blocked_count}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => handleViewUser(user.email)}
                             disabled={actionLoading === user.email}
-                            className="text-sm text-accent-400 hover:text-accent-300 disabled:opacity-50"
+                            className="text-sm text-[#F97315] hover:opacity-80 disabled:opacity-50"
                           >
                             {t('banSystem.users.viewDetails')}
                           </button>
@@ -754,7 +756,7 @@ export default function AdminBanSystem() {
                   </tbody>
                 </table>
                 {(!users?.users || users.users.length === 0) && (
-                  <div className="py-8 text-center text-dark-500">{t('common.noData')}</div>
+                  <div className="py-8 text-center text-apple-faint">{t('common.noData')}</div>
                 )}
               </div>
             </div>
@@ -762,29 +764,29 @@ export default function AdminBanSystem() {
 
           {/* Punishments Tab */}
           {activeTab === 'punishments' && (
-            <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+            <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-dark-700">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                  <tr className="border-b border-apple-hairline">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                       {t('banSystem.punishments.user')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                       {t('banSystem.punishments.reason')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                       {t('banSystem.punishments.ipCount')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                       {t('banSystem.punishments.limit')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                       {t('banSystem.punishments.bannedAt')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                       {t('banSystem.punishments.enableAt')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-apple-faint">
                       {t('common.actions')}
                     </th>
                   </tr>
@@ -793,26 +795,26 @@ export default function AdminBanSystem() {
                   {punishments?.punishments.map((p) => (
                     <tr
                       key={p.user_id}
-                      className="border-b border-dark-700/50 hover:bg-dark-800/50"
+                      className="border-b border-apple-hairline/60 hover:bg-apple-elevated"
                     >
                       <td className="px-4 py-3">
-                        <div className="text-dark-100">{p.username}</div>
-                        <div className="text-xs text-dark-500">{p.user_id}</div>
+                        <div className="text-apple-ink">{p.username}</div>
+                        <div className="text-xs text-apple-faint">{p.user_id}</div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-dark-300">{p.reason || '-'}</td>
-                      <td className="px-4 py-3 text-center text-error-400">{p.ip_count}</td>
-                      <td className="px-4 py-3 text-center text-dark-300">{p.limit}</td>
-                      <td className="px-4 py-3 text-center text-sm text-dark-300">
+                      <td className="px-4 py-3 text-sm text-apple-mute">{p.reason || '-'}</td>
+                      <td className="px-4 py-3 text-center text-apple-red">{p.ip_count}</td>
+                      <td className="px-4 py-3 text-center text-apple-mute">{p.limit}</td>
+                      <td className="px-4 py-3 text-center text-sm text-apple-mute">
                         {formatDate(p.punished_at)}
                       </td>
-                      <td className="px-4 py-3 text-center text-sm text-dark-300">
+                      <td className="px-4 py-3 text-center text-sm text-apple-mute">
                         {formatDate(p.enable_at)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => handleUnban(p.user_id)}
                           disabled={actionLoading === p.user_id}
-                          className="rounded-lg bg-success-500/20 px-3 py-1 text-sm text-success-400 transition-colors hover:bg-success-500/30 disabled:opacity-50"
+                          className="rounded-full bg-apple-green/15 px-3 py-1 text-sm text-apple-green transition-opacity hover:opacity-80 disabled:opacity-50"
                         >
                           {t('banSystem.punishments.unban')}
                         </button>
@@ -822,7 +824,7 @@ export default function AdminBanSystem() {
                 </tbody>
               </table>
               {(!punishments?.punishments || punishments.punishments.length === 0) && (
-                <div className="py-8 text-center text-dark-500">
+                <div className="py-8 text-center text-apple-faint">
                   {t('banSystem.punishments.noBans')}
                 </div>
               )}
@@ -835,39 +837,39 @@ export default function AdminBanSystem() {
               {nodes?.nodes.map((node) => (
                 <div
                   key={node.name}
-                  className={`rounded-xl border bg-dark-800/50 p-4 ${
-                    node.is_connected ? 'border-success-500/30' : 'border-dark-700'
+                  className={`apple-card-grad rounded-2xl bg-apple-card p-4 ${
+                    node.is_connected ? 'ring-1 ring-apple-green/40' : ''
                   }`}
                 >
                   <div className="mb-3 flex items-center gap-3">
                     <div
-                      className={`h-3 w-3 rounded-full ${node.is_connected ? 'animate-pulse bg-success-500' : 'bg-dark-500'}`}
+                      className={`h-3 w-3 rounded-full ${node.is_connected ? 'animate-pulse bg-apple-green' : 'bg-apple-faint'}`}
                     />
                     <div>
-                      <div className="font-medium text-dark-100">{node.name}</div>
-                      <div className="text-xs text-dark-500">{node.address || '-'}</div>
+                      <div className="font-medium text-apple-ink">{node.name}</div>
+                      <div className="text-xs text-apple-faint">{node.address || '-'}</div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg bg-dark-900/50 p-2.5">
-                      <div className="text-xs text-dark-500">{t('banSystem.nodes.status')}</div>
+                    <div className="rounded-lg bg-apple-elevated p-2.5">
+                      <div className="text-xs text-apple-faint">{t('banSystem.nodes.status')}</div>
                       <div
-                        className={`text-sm font-medium ${node.is_connected ? 'text-success-400' : 'text-dark-400'}`}
+                        className={`text-sm font-medium ${node.is_connected ? 'text-apple-green' : 'text-apple-mute'}`}
                       >
                         {node.is_connected
                           ? t('banSystem.nodes.online')
                           : t('banSystem.nodes.offline')}
                       </div>
                     </div>
-                    <div className="rounded-lg bg-dark-900/50 p-2.5">
-                      <div className="text-xs text-dark-500">{t('banSystem.nodes.users')}</div>
-                      <div className="text-sm font-medium text-dark-100">{node.users_count}</div>
+                    <div className="rounded-lg bg-apple-elevated p-2.5">
+                      <div className="text-xs text-apple-faint">{t('banSystem.nodes.users')}</div>
+                      <div className="text-sm font-medium text-apple-ink">{node.users_count}</div>
                     </div>
                   </div>
                 </div>
               ))}
               {(!nodes?.nodes || nodes.nodes.length === 0) && (
-                <div className="col-span-full py-8 text-center text-dark-500">
+                <div className="col-span-full py-8 text-center text-apple-faint">
                   {t('banSystem.nodes.noNodes')}
                 </div>
               )}
@@ -909,26 +911,26 @@ export default function AdminBanSystem() {
               )}
 
               {/* Agents List */}
-              <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+              <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-dark-700">
-                      <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                    <tr className="border-b border-apple-hairline">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                         {t('banSystem.agents.node')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.agents.status')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.agents.health')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.agents.sent')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.agents.dropped')}
                       </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                         {t('banSystem.agents.queue')}
                       </th>
                     </tr>
@@ -937,15 +939,15 @@ export default function AdminBanSystem() {
                     {agents?.agents.map((agent) => (
                       <tr
                         key={agent.node_name}
-                        className="border-b border-dark-700/50 hover:bg-dark-800/50"
+                        className="border-b border-apple-hairline/60 hover:bg-apple-elevated"
                       >
-                        <td className="px-4 py-3 text-dark-100">{agent.node_name}</td>
+                        <td className="px-4 py-3 text-apple-ink">{agent.node_name}</td>
                         <td className="px-4 py-3 text-center">
                           <span
                             className={`rounded-full px-2 py-1 text-xs ${
                               agent.is_online
-                                ? 'bg-success-500/20 text-success-400'
-                                : 'bg-dark-600 text-dark-400'
+                                ? 'bg-apple-green/15 text-apple-green'
+                                : 'bg-apple-elevated text-apple-mute'
                             }`}
                           >
                             {agent.is_online
@@ -957,24 +959,24 @@ export default function AdminBanSystem() {
                           <span
                             className={`rounded-full px-2 py-1 text-xs ${
                               agent.health === 'healthy'
-                                ? 'bg-success-500/20 text-success-400'
+                                ? 'bg-apple-green/15 text-apple-green'
                                 : agent.health === 'warning'
-                                  ? 'bg-warning-500/20 text-warning-400'
+                                  ? 'bg-apple-amber/15 text-apple-amber'
                                   : agent.health === 'critical'
-                                    ? 'bg-error-500/20 text-error-400'
-                                    : 'bg-dark-600 text-dark-400'
+                                    ? 'bg-apple-red/15 text-apple-red'
+                                    : 'bg-apple-elevated text-apple-mute'
                             }`}
                           >
                             {agent.health}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-center text-dark-300">
+                        <td className="px-4 py-3 text-center text-apple-mute">
                           {agent.sent_total.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-center text-warning-400">
+                        <td className="px-4 py-3 text-center text-apple-amber">
                           {agent.dropped_total.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 text-center text-dark-300">
+                        <td className="px-4 py-3 text-center text-apple-mute">
                           {agent.queue_size}/{agent.queue_max}
                         </td>
                       </tr>
@@ -982,7 +984,7 @@ export default function AdminBanSystem() {
                   </tbody>
                 </table>
                 {(!agents?.agents || agents.agents.length === 0) && (
-                  <div className="py-8 text-center text-dark-500">
+                  <div className="py-8 text-center text-apple-faint">
                     {t('banSystem.agents.noAgents')}
                   </div>
                 )}
@@ -992,45 +994,48 @@ export default function AdminBanSystem() {
 
           {/* Violations Tab */}
           {activeTab === 'violations' && (
-            <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+            <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-dark-700">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                  <tr className="border-b border-apple-hairline">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                       {t('banSystem.violations.user')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                       {t('banSystem.violations.type')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                       {t('banSystem.violations.description')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                       {t('banSystem.violations.detectedAt')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                       {t('banSystem.violations.status')}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {violations?.violations.map((v, idx) => (
-                    <tr key={idx} className="border-b border-dark-700/50 hover:bg-dark-800/50">
+                    <tr
+                      key={idx}
+                      className="border-b border-apple-hairline/60 hover:bg-apple-elevated"
+                    >
                       <td className="px-4 py-3">
-                        <div className="text-dark-100">{v.username}</div>
-                        <div className="text-xs text-dark-500">{v.email || '-'}</div>
+                        <div className="text-apple-ink">{v.username}</div>
+                        <div className="text-xs text-apple-faint">{v.email || '-'}</div>
                       </td>
-                      <td className="px-4 py-3 text-warning-400">{v.violation_type}</td>
-                      <td className="px-4 py-3 text-sm text-dark-300">{v.description || '-'}</td>
-                      <td className="px-4 py-3 text-center text-sm text-dark-300">
+                      <td className="px-4 py-3 text-apple-amber">{v.violation_type}</td>
+                      <td className="px-4 py-3 text-sm text-apple-mute">{v.description || '-'}</td>
+                      <td className="px-4 py-3 text-center text-sm text-apple-mute">
                         {formatDate(v.detected_at)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span
                           className={`rounded-full px-2 py-1 text-xs ${
                             v.resolved
-                              ? 'bg-success-500/20 text-success-400'
-                              : 'bg-warning-500/20 text-warning-400'
+                              ? 'bg-apple-green/15 text-apple-green'
+                              : 'bg-apple-amber/15 text-apple-amber'
                           }`}
                         >
                           {v.resolved
@@ -1043,7 +1048,7 @@ export default function AdminBanSystem() {
                 </tbody>
               </table>
               {(!violations?.violations || violations.violations.length === 0) && (
-                <div className="py-8 text-center text-dark-500">
+                <div className="py-8 text-center text-apple-faint">
                   {t('banSystem.violations.noViolations')}
                 </div>
               )}
@@ -1065,45 +1070,48 @@ export default function AdminBanSystem() {
 
               {/* Top Users by Traffic */}
               {traffic.top_users && traffic.top_users.length > 0 && (
-                <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
-                  <div className="border-b border-dark-700 p-4">
-                    <h3 className="text-sm font-medium text-dark-200">
+                <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
+                  <div className="border-b border-apple-hairline p-4">
+                    <h3 className="text-sm font-medium text-apple-ink">
                       {t('banSystem.traffic.topUsers')}
                     </h3>
                   </div>
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-dark-700">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                      <tr className="border-b border-apple-hairline">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                           {t('banSystem.traffic.username')}
                         </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                           {t('banSystem.traffic.bytesTotal')}
                         </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                           {t('banSystem.traffic.bytesLimit')}
                         </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                           {t('banSystem.traffic.status')}
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {traffic.top_users.map((user, idx) => (
-                        <tr key={idx} className="border-b border-dark-700/50 hover:bg-dark-800/50">
-                          <td className="px-4 py-3 text-dark-100">{user.username}</td>
-                          <td className="px-4 py-3 text-center text-dark-300">
+                        <tr
+                          key={idx}
+                          className="border-b border-apple-hairline/60 hover:bg-apple-elevated"
+                        >
+                          <td className="px-4 py-3 text-apple-ink">{user.username}</td>
+                          <td className="px-4 py-3 text-center text-apple-mute">
                             {formatBytes(user.bytes_total)}
                           </td>
-                          <td className="px-4 py-3 text-center text-dark-300">
+                          <td className="px-4 py-3 text-center text-apple-mute">
                             {user.bytes_limit ? formatBytes(user.bytes_limit) : '-'}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span
                               className={`rounded-full px-2 py-1 text-xs ${
                                 user.over_limit
-                                  ? 'bg-error-500/20 text-error-400'
-                                  : 'bg-success-500/20 text-success-400'
+                                  ? 'bg-apple-red/15 text-apple-red'
+                                  : 'bg-apple-green/15 text-apple-green'
                               }`}
                             >
                               {user.over_limit
@@ -1120,32 +1128,35 @@ export default function AdminBanSystem() {
 
               {/* Recent Violations */}
               {traffic.recent_violations && traffic.recent_violations.length > 0 && (
-                <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
-                  <div className="border-b border-dark-700 p-4">
-                    <h3 className="text-sm font-medium text-dark-200">
+                <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
+                  <div className="border-b border-apple-hairline p-4">
+                    <h3 className="text-sm font-medium text-apple-ink">
                       {t('banSystem.traffic.recentViolations')}
                     </h3>
                   </div>
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-dark-700">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                      <tr className="border-b border-apple-hairline">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                           {t('banSystem.violations.user')}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                           {t('banSystem.violations.type')}
                         </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                           {t('banSystem.violations.detectedAt')}
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {traffic.recent_violations.map((v, idx) => (
-                        <tr key={idx} className="border-b border-dark-700/50 hover:bg-dark-800/50">
-                          <td className="px-4 py-3 text-dark-100">{v.username}</td>
-                          <td className="px-4 py-3 text-warning-400">{v.violation_type}</td>
-                          <td className="px-4 py-3 text-center text-sm text-dark-300">
+                        <tr
+                          key={idx}
+                          className="border-b border-apple-hairline/60 hover:bg-apple-elevated"
+                        >
+                          <td className="px-4 py-3 text-apple-ink">{v.username}</td>
+                          <td className="px-4 py-3 text-apple-amber">{v.violation_type}</td>
+                          <td className="px-4 py-3 text-center text-sm text-apple-mute">
                             {formatDate(v.detected_at)}
                           </td>
                         </tr>
@@ -1157,7 +1168,7 @@ export default function AdminBanSystem() {
 
               {(!traffic.top_users || traffic.top_users.length === 0) &&
                 (!traffic.recent_violations || traffic.recent_violations.length === 0) && (
-                  <div className="py-8 text-center text-dark-500">{t('common.noData')}</div>
+                  <div className="py-8 text-center text-apple-faint">{t('common.noData')}</div>
                 )}
             </div>
           )}
@@ -1167,16 +1178,16 @@ export default function AdminBanSystem() {
             <div className="space-y-4">
               {/* Period Selector */}
               <div className="flex items-center gap-4">
-                <span className="text-dark-400">{t('banSystem.reports.period')}:</span>
+                <span className="text-apple-mute">{t('banSystem.reports.period')}:</span>
                 <div className="flex gap-2">
                   {[6, 12, 24, 48, 72].map((hours) => (
                     <button
                       key={hours}
                       onClick={() => handleReportPeriodChange(hours)}
-                      className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                      className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
                         reportHours === hours
-                          ? 'bg-accent-500/20 text-accent-400'
-                          : 'bg-dark-800 text-dark-400 hover:text-dark-200'
+                          ? 'bg-[#F97315]/15 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
                       }`}
                     >
                       {hours}h
@@ -1205,19 +1216,19 @@ export default function AdminBanSystem() {
 
                   {/* Top Violators */}
                   {report.top_violators && report.top_violators.length > 0 && (
-                    <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
-                      <div className="border-b border-dark-700 p-4">
-                        <h3 className="text-sm font-medium text-dark-200">
+                    <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
+                      <div className="border-b border-apple-hairline p-4">
+                        <h3 className="text-sm font-medium text-apple-ink">
                           {t('banSystem.reports.topViolators')}
                         </h3>
                       </div>
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b border-dark-700">
-                            <th className="px-4 py-3 text-left text-xs font-medium text-dark-500">
+                          <tr className="border-b border-apple-hairline">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-apple-faint">
                               {t('banSystem.reports.username')}
                             </th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-dark-500">
+                            <th className="px-4 py-3 text-center text-xs font-medium text-apple-faint">
                               {t('banSystem.reports.count')}
                             </th>
                           </tr>
@@ -1226,10 +1237,10 @@ export default function AdminBanSystem() {
                           {report.top_violators.map((v, idx) => (
                             <tr
                               key={idx}
-                              className="border-b border-dark-700/50 hover:bg-dark-800/50"
+                              className="border-b border-apple-hairline/60 hover:bg-apple-elevated"
                             >
-                              <td className="px-4 py-3 text-dark-100">{v.username}</td>
-                              <td className="px-4 py-3 text-center text-warning-400">{v.count}</td>
+                              <td className="px-4 py-3 text-apple-ink">{v.username}</td>
+                              <td className="px-4 py-3 text-center text-apple-amber">{v.count}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1289,25 +1300,25 @@ export default function AdminBanSystem() {
                 return sortedCategories.map((category) => (
                   <div
                     key={category}
-                    className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50"
+                    className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card"
                   >
-                    <div className="border-b border-dark-700 p-4">
-                      <h3 className="text-sm font-medium text-dark-200">
+                    <div className="border-b border-apple-hairline p-4">
+                      <h3 className="text-sm font-medium text-apple-ink">
                         {formatCategory(category)}
                       </h3>
                     </div>
-                    <div className="divide-y divide-dark-700">
+                    <div className="divide-y divide-apple-hairline">
                       {grouped[category].map((setting) => (
                         <div
                           key={setting.key}
                           className="flex items-center justify-between gap-4 p-4"
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="font-medium text-dark-100">
+                            <div className="font-medium text-apple-ink">
                               {formatSettingKey(setting.key)}
                             </div>
                             {setting.description && (
-                              <div className="mt-0.5 text-xs text-dark-500">
+                              <div className="mt-0.5 text-xs text-apple-faint">
                                 {setting.description}
                               </div>
                             )}
@@ -1318,7 +1329,7 @@ export default function AdminBanSystem() {
                                 onClick={() => handleToggleSetting(setting.key)}
                                 disabled={!setting.editable || settingLoading === setting.key}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                  setting.value ? 'bg-accent-500' : 'bg-dark-600'
+                                  setting.value ? 'bg-[#F97315]' : 'bg-apple-elevated'
                                 } ${!setting.editable ? 'cursor-not-allowed opacity-50' : ''}`}
                               >
                                 <span
@@ -1335,7 +1346,7 @@ export default function AdminBanSystem() {
                                 min={setting.min_value ?? undefined}
                                 max={setting.max_value ?? undefined}
                                 disabled={!setting.editable || settingLoading === setting.key}
-                                className="input w-24"
+                                className="w-24 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                               />
                             ) : setting.type === 'list' ? (
                               <div className="flex max-w-xs flex-wrap justify-end gap-1.5">
@@ -1343,19 +1354,19 @@ export default function AdminBanSystem() {
                                   setting.value.map((item, idx) => (
                                     <span
                                       key={idx}
-                                      className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400"
+                                      className="rounded bg-[#F97315]/15 px-2 py-0.5 text-xs text-[#F97315]"
                                     >
                                       {String(item)}
                                     </span>
                                   ))
                                 ) : (
-                                  <span className="text-sm text-dark-500">
+                                  <span className="text-sm text-apple-faint">
                                     {t('common.noData')}
                                   </span>
                                 )}
                                 {setting.editable && nodes && setting.key.includes('nodes') && (
                                   <select
-                                    className="input py-1 text-xs"
+                                    className="rounded-xl bg-apple-elevated px-4 py-1 text-xs text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                                     onChange={(e) => {
                                       if (e.target.value) {
                                         const currentList = Array.isArray(setting.value)
@@ -1388,7 +1399,7 @@ export default function AdminBanSystem() {
                                 )}
                               </div>
                             ) : (
-                              <div className="text-sm text-dark-300">{String(setting.value)}</div>
+                              <div className="text-sm text-apple-mute">{String(setting.value)}</div>
                             )}
                           </div>
                         </div>
@@ -1404,29 +1415,29 @@ export default function AdminBanSystem() {
           {activeTab === 'health' && health && (
             <div className="space-y-4">
               {/* Overall Status */}
-              <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4">
+              <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div
                       className={`h-4 w-4 rounded-full ${
                         health.status === 'healthy'
-                          ? 'animate-pulse bg-success-500'
+                          ? 'animate-pulse bg-apple-green'
                           : health.status === 'degraded'
-                            ? 'animate-pulse bg-warning-500'
-                            : 'animate-pulse bg-error-500'
+                            ? 'animate-pulse bg-apple-amber'
+                            : 'animate-pulse bg-apple-red'
                       }`}
                     />
                     <div>
-                      <div className="font-medium text-dark-100">
+                      <div className="font-medium text-apple-ink">
                         {t('banSystem.health.systemStatus')}
                       </div>
                       <div
                         className={`text-sm ${
                           health.status === 'healthy'
-                            ? 'text-success-400'
+                            ? 'text-apple-green'
                             : health.status === 'degraded'
-                              ? 'text-warning-400'
-                              : 'text-error-400'
+                              ? 'text-apple-amber'
+                              : 'text-apple-red'
                         }`}
                       >
                         {health.status.toUpperCase()}
@@ -1435,8 +1446,8 @@ export default function AdminBanSystem() {
                   </div>
                   {health.uptime !== null && (
                     <div className="text-right">
-                      <div className="text-xs text-dark-500">{t('banSystem.stats.uptime')}</div>
-                      <div className="text-dark-100">{formatUptime(health.uptime)}</div>
+                      <div className="text-xs text-apple-faint">{t('banSystem.stats.uptime')}</div>
+                      <div className="text-apple-ink">{formatUptime(health.uptime)}</div>
                     </div>
                   )}
                 </div>
@@ -1448,39 +1459,39 @@ export default function AdminBanSystem() {
                   {health.components.map((comp, idx) => (
                     <div
                       key={idx}
-                      className={`rounded-xl border bg-dark-800/50 p-4 ${
+                      className={`apple-card-grad rounded-2xl bg-apple-card p-4 ${
                         comp.status === 'healthy'
-                          ? 'border-success-500/30'
+                          ? 'ring-1 ring-apple-green/40'
                           : comp.status === 'degraded'
-                            ? 'border-warning-500/30'
-                            : 'border-error-500/30'
+                            ? 'ring-1 ring-apple-amber/40'
+                            : 'ring-1 ring-apple-red/40'
                       }`}
                     >
                       <div className="mb-2 flex items-center gap-3">
                         <div
                           className={`h-3 w-3 rounded-full ${
                             comp.status === 'healthy'
-                              ? 'bg-success-500'
+                              ? 'bg-apple-green'
                               : comp.status === 'degraded'
-                                ? 'bg-warning-500'
-                                : 'bg-error-500'
+                                ? 'bg-apple-amber'
+                                : 'bg-apple-red'
                           }`}
                         />
-                        <div className="font-medium text-dark-100">{comp.name}</div>
+                        <div className="font-medium text-apple-ink">{comp.name}</div>
                       </div>
                       <div
                         className={`text-sm ${
                           comp.status === 'healthy'
-                            ? 'text-success-400'
+                            ? 'text-apple-green'
                             : comp.status === 'degraded'
-                              ? 'text-warning-400'
-                              : 'text-error-400'
+                              ? 'text-apple-amber'
+                              : 'text-apple-red'
                         }`}
                       >
                         {comp.status}
                       </div>
                       {comp.message && (
-                        <div className="mt-1 text-xs text-dark-500">{comp.message}</div>
+                        <div className="mt-1 text-xs text-apple-faint">{comp.message}</div>
                       )}
                     </div>
                   ))}
@@ -1498,16 +1509,16 @@ export default function AdminBanSystem() {
           onClick={() => setSelectedUser(null)}
         >
           <div
-            className="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-dark-700 bg-dark-800"
+            className="apple-card-grad max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-apple-card"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-dark-700 p-4">
-              <h3 className="text-lg font-semibold text-dark-100">
+            <div className="flex items-center justify-between border-b border-apple-hairline p-4">
+              <h3 className="text-lg font-semibold text-apple-ink">
                 {t('banSystem.userDetail.title')}
               </h3>
               <button
                 onClick={() => setSelectedUser(null)}
-                className="text-dark-400 hover:text-dark-200"
+                className="text-apple-mute hover:text-apple-ink"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -1523,55 +1534,55 @@ export default function AdminBanSystem() {
               {/* User Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-xs text-dark-500">{t('banSystem.users.email')}</div>
-                  <div className="text-dark-100">{selectedUser.email}</div>
+                  <div className="text-xs text-apple-faint">{t('banSystem.users.email')}</div>
+                  <div className="text-apple-ink">{selectedUser.email}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-dark-500">{t('banSystem.users.limit')}</div>
-                  <div className="text-dark-100">{selectedUser.limit ?? '-'}</div>
+                  <div className="text-xs text-apple-faint">{t('banSystem.users.limit')}</div>
+                  <div className="text-apple-ink">{selectedUser.limit ?? '-'}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-dark-500">{t('banSystem.users.ipCount')}</div>
-                  <div className="text-dark-100">{selectedUser.unique_ip_count}</div>
+                  <div className="text-xs text-apple-faint">{t('banSystem.users.ipCount')}</div>
+                  <div className="text-apple-ink">{selectedUser.unique_ip_count}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-dark-500">{t('banSystem.users.networkType')}</div>
-                  <div className="text-dark-100">{selectedUser.network_type || '-'}</div>
+                  <div className="text-xs text-apple-faint">{t('banSystem.users.networkType')}</div>
+                  <div className="text-apple-ink">{selectedUser.network_type || '-'}</div>
                 </div>
               </div>
 
               {/* IP History */}
               <div>
-                <h4 className="mb-2 text-sm font-medium text-dark-200">
+                <h4 className="mb-2 text-sm font-medium text-apple-ink">
                   {t('banSystem.userDetail.ipHistory')}
                 </h4>
-                <div className="overflow-hidden rounded-lg bg-dark-900/50">
+                <div className="overflow-hidden rounded-lg bg-apple-elevated">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-dark-700">
-                        <th className="px-3 py-2 text-left text-xs text-dark-500">
+                      <tr className="border-b border-apple-hairline">
+                        <th className="px-3 py-2 text-left text-xs text-apple-faint">
                           {t('banSystem.userDetail.ip')}
                         </th>
-                        <th className="px-3 py-2 text-left text-xs text-dark-500">
+                        <th className="px-3 py-2 text-left text-xs text-apple-faint">
                           {t('banSystem.userDetail.country')}
                         </th>
-                        <th className="px-3 py-2 text-left text-xs text-dark-500">
+                        <th className="px-3 py-2 text-left text-xs text-apple-faint">
                           {t('banSystem.userDetail.node')}
                         </th>
-                        <th className="px-3 py-2 text-center text-xs text-dark-500">
+                        <th className="px-3 py-2 text-center text-xs text-apple-faint">
                           {t('banSystem.userDetail.requests')}
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedUser.ips.map((ip, idx) => (
-                        <tr key={idx} className="border-b border-dark-700/50">
-                          <td className="px-3 py-2 text-dark-100">{ip.ip}</td>
-                          <td className="px-3 py-2 text-dark-300">
+                        <tr key={idx} className="border-b border-apple-hairline/60">
+                          <td className="px-3 py-2 text-apple-ink">{ip.ip}</td>
+                          <td className="px-3 py-2 text-apple-mute">
                             {ip.country_name || ip.country_code || '-'}
                           </td>
-                          <td className="px-3 py-2 text-dark-300">{ip.node || '-'}</td>
-                          <td className="px-3 py-2 text-center text-dark-300">
+                          <td className="px-3 py-2 text-apple-mute">{ip.node || '-'}</td>
+                          <td className="px-3 py-2 text-center text-apple-mute">
                             {ip.request_count}
                           </td>
                         </tr>
@@ -1579,7 +1590,7 @@ export default function AdminBanSystem() {
                     </tbody>
                   </table>
                   {selectedUser.ips.length === 0 && (
-                    <div className="py-4 text-center text-dark-500">{t('common.noData')}</div>
+                    <div className="py-4 text-center text-apple-faint">{t('common.noData')}</div>
                   )}
                 </div>
               </div>

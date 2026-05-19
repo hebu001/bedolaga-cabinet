@@ -9,7 +9,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 // Icons
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -85,12 +85,12 @@ const getActionLabel = (action: string): string => {
 
 const getActionColor = (action: string): string => {
   const colors: Record<string, string> = {
-    created: 'bg-accent-500/20 text-accent-400',
-    claimed: 'bg-success-500/20 text-success-400',
-    consumed: 'bg-accent-500/20 text-accent-400',
-    disabled: 'bg-dark-600 text-dark-400',
+    created: 'bg-[#F97315]/15 text-[#F97315]',
+    claimed: 'bg-apple-green/15 text-apple-green',
+    consumed: 'bg-[#F97315]/15 text-[#F97315]',
+    disabled: 'bg-apple-elevated text-apple-mute',
   };
-  return colors[action] || 'bg-dark-600 text-dark-400';
+  return colors[action] || 'bg-apple-elevated text-apple-mute';
 };
 
 const getOfferTypeIcon = (offerType: string): string => {
@@ -133,19 +133,19 @@ export default function AdminPromoOffers() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.promoOffers.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.promoOffers.subtitle')}</p>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.promoOffers.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.promoOffers.subtitle')}</p>
           </div>
         </div>
         <button
           onClick={() => navigate('/admin/promo-offers/send')}
-          className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+          className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90"
         >
           <SendIcon />
           {t('admin.promoOffers.sendButton')}
@@ -153,21 +153,23 @@ export default function AdminPromoOffers() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex w-fit gap-1 rounded-lg bg-dark-800 p-1">
+      <div className="mb-6 flex w-fit gap-1 rounded-xl bg-apple-card p-1">
         <button
           onClick={() => setActiveTab('templates')}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'templates'
-              ? 'bg-dark-700 text-dark-100'
-              : 'text-dark-400 hover:text-dark-200'
+              ? 'bg-apple-elevated text-apple-ink'
+              : 'text-apple-mute hover:text-apple-ink'
           }`}
         >
           {t('admin.promoOffers.tabs.templates', { count: templates.length })}
         </button>
         <button
           onClick={() => setActiveTab('logs')}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'logs' ? 'bg-dark-700 text-dark-100' : 'text-dark-400 hover:text-dark-200'
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === 'logs'
+              ? 'bg-apple-elevated text-apple-ink'
+              : 'text-apple-mute hover:text-apple-ink'
           }`}
         >
           {t('admin.promoOffers.tabs.logs')}
@@ -179,34 +181,34 @@ export default function AdminPromoOffers() {
         <>
           {templatesLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
             </div>
           ) : templates.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-dark-400">{t('admin.promoOffers.noData.templates')}</p>
+              <p className="text-apple-mute">{t('admin.promoOffers.noData.templates')}</p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className={`rounded-xl border bg-dark-800 p-4 transition-colors ${
-                    template.is_active ? 'border-dark-700' : 'border-dark-700/50 opacity-60'
+                  className={`apple-card-grad rounded-2xl bg-apple-card p-4 ${
+                    template.is_active ? '' : 'opacity-60'
                   }`}
                 >
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl">{getOfferTypeIcon(template.offer_type)}</span>
                       <div>
-                        <h3 className="font-medium text-dark-100">{template.name}</h3>
-                        <span className="text-xs text-dark-500">
+                        <h3 className="font-medium text-apple-ink">{template.name}</h3>
+                        <span className="text-xs text-apple-faint">
                           {getOfferTypeLabel(template.offer_type)}
                         </span>
                       </div>
                     </div>
                     <button
                       onClick={() => navigate(`/admin/promo-offers/templates/${template.id}/edit`)}
-                      className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                      className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink"
                     >
                       <EditIcon />
                     </button>
@@ -215,28 +217,28 @@ export default function AdminPromoOffers() {
                   <div className="space-y-2 text-sm">
                     {template.discount_percent > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.promoOffers.table.discount')}:
                         </span>
-                        <span className="font-medium text-accent-400">
+                        <span className="font-medium" style={{ color: '#F97315' }}>
                           {template.discount_percent}%
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-dark-400">
+                      <span className="text-apple-mute">
                         {t('admin.promoOffers.table.offerDuration')}:
                       </span>
-                      <span className="text-dark-200">
+                      <span className="text-apple-ink">
                         {t('admin.promoOffers.table.hoursShort', { hours: template.valid_hours })}
                       </span>
                     </div>
                     {template.active_discount_hours && (
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.promoOffers.table.discountDuration')}:
                         </span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-ink">
                           {t('admin.promoOffers.table.hoursShort', {
                             hours: template.active_discount_hours,
                           })}
@@ -245,10 +247,10 @@ export default function AdminPromoOffers() {
                     )}
                     {template.test_duration_hours && (
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.promoOffers.table.testAccess')}:
                         </span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-ink">
                           {t('admin.promoOffers.table.hoursShort', {
                             hours: template.test_duration_hours,
                           })}
@@ -257,14 +259,14 @@ export default function AdminPromoOffers() {
                     )}
                   </div>
 
-                  <div className="mt-3 border-t border-dark-700 pt-3">
+                  <div className="mt-3 border-t border-apple-hairline pt-3">
                     <div className="flex items-center gap-2">
                       {template.is_active ? (
-                        <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                        <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                           {t('admin.promoOffers.status.active')}
                         </span>
                       ) : (
-                        <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                        <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                           {t('admin.promoOffers.status.inactive')}
                         </span>
                       )}
@@ -282,41 +284,43 @@ export default function AdminPromoOffers() {
         <>
           {logsLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
             </div>
           ) : logs.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-dark-400">{t('admin.promoOffers.noData.logs')}</p>
+              <p className="text-apple-mute">{t('admin.promoOffers.noData.logs')}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {logs.map((log: PromoOfferLog) => (
-                <div key={log.id} className="rounded-xl border border-dark-700 bg-dark-800 p-4">
+                <div key={log.id} className="apple-card-grad rounded-2xl bg-apple-card p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-dark-700">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-apple-elevated">
                         <UserIcon />
                       </div>
                       <div className="min-w-0">
                         <div className="mb-1 flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-dark-100">
+                          <span className="font-medium text-apple-ink">
                             {log.user?.full_name || log.user?.username || `User #${log.user_id}`}
                           </span>
                           <span
-                            className={`rounded px-2 py-0.5 text-xs ${getActionColor(log.action)}`}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getActionColor(log.action)}`}
                           >
                             {getActionLabel(log.action)}
                           </span>
                         </div>
-                        <div className="text-sm text-dark-400">
+                        <div className="text-sm text-apple-mute">
                           {log.source && <span>{getOfferTypeLabel(log.source)}</span>}
                           {log.percent && log.percent > 0 && (
-                            <span className="ml-2 text-accent-400">{log.percent}%</span>
+                            <span className="ml-2" style={{ color: '#F97315' }}>
+                              {log.percent}%
+                            </span>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="pl-13 flex items-center gap-1 text-xs text-dark-500 sm:pl-0">
+                    <div className="pl-13 flex items-center gap-1 text-xs text-apple-faint sm:pl-0">
                       <ClockIcon />
                       {formatDateTime(log.created_at)}
                     </div>

@@ -41,7 +41,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 // BackIcon
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -222,29 +222,31 @@ export default function AdminTickets() {
     queryClient.invalidateQueries({ queryKey: ['admin-ticket-stats'] });
   };
 
+  const badgeBase = 'rounded-full px-2.5 py-1 text-[11px] font-semibold';
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
-        return 'badge-info';
+        return `${badgeBase} bg-apple-blue/15 text-apple-blue`;
       case 'pending':
-        return 'badge-warning';
+        return `${badgeBase} bg-apple-amber/15 text-apple-amber`;
       case 'answered':
-        return 'badge-success';
+        return `${badgeBase} bg-apple-green/15 text-apple-green`;
       case 'closed':
-        return 'badge-neutral';
+        return `${badgeBase} bg-apple-elevated text-apple-mute`;
       default:
-        return 'badge-neutral';
+        return `${badgeBase} bg-apple-elevated text-apple-mute`;
     }
   };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return 'badge-error';
+        return `${badgeBase} bg-apple-red/15 text-apple-red`;
       case 'high':
-        return 'badge-warning';
+        return `${badgeBase} bg-apple-amber/15 text-apple-amber`;
       default:
-        return 'badge-neutral';
+        return `${badgeBase} bg-apple-elevated text-apple-mute`;
     }
   };
 
@@ -275,18 +277,18 @@ export default function AdminTickets() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
-          <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
+          <h1 className="text-2xl font-bold text-apple-ink sm:text-3xl">
             {t('admin.tickets.title')}
           </h1>
         </div>
         <button
           onClick={() => navigate('/admin/tickets/settings')}
-          className="btn-secondary flex items-center gap-2"
+          className="flex items-center gap-2 rounded-full bg-apple-elevated px-4 py-2 text-[15px] font-medium text-apple-ink transition-colors hover:bg-apple-card"
         >
           <svg
             className="h-5 w-5"
@@ -313,41 +315,49 @@ export default function AdminTickets() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div className="card text-center">
-            <div className="stat-value">{stats.total}</div>
-            <div className="stat-label">{t('admin.tickets.total')}</div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-ink">{stats.total}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">{t('admin.tickets.total')}</div>
           </div>
-          <div className="card text-center">
-            <div className="stat-value text-accent-400">{stats.open}</div>
-            <div className="stat-label">{t('admin.tickets.statusOpen')}</div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {stats.open}
+            </div>
+            <div className="mt-1 text-[13px] text-apple-mute">{t('admin.tickets.statusOpen')}</div>
           </div>
-          <div className="card text-center">
-            <div className="stat-value text-warning-400">{stats.pending}</div>
-            <div className="stat-label">{t('admin.tickets.statusPending')}</div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-amber">{stats.pending}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">
+              {t('admin.tickets.statusPending')}
+            </div>
           </div>
-          <div className="card text-center">
-            <div className="stat-value text-success-400">{stats.answered}</div>
-            <div className="stat-label">{t('admin.tickets.statusAnswered')}</div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-green">{stats.answered}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">
+              {t('admin.tickets.statusAnswered')}
+            </div>
           </div>
-          <div className="card col-span-2 text-center sm:col-span-1">
-            <div className="stat-value text-dark-400">{stats.closed}</div>
-            <div className="stat-label">{t('admin.tickets.statusClosed')}</div>
+          <div className="col-span-2 rounded-2xl bg-apple-card p-4 text-center sm:col-span-1">
+            <div className="text-2xl font-bold text-apple-mute">{stats.closed}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">
+              {t('admin.tickets.statusClosed')}
+            </div>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Ticket List */}
-        <div className="card lg:col-span-1">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4 lg:col-span-1">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-dark-100">{t('admin.tickets.list')}</h2>
+            <h2 className="text-lg font-semibold text-apple-ink">{t('admin.tickets.list')}</h2>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="input w-auto px-3 py-1.5 text-sm"
+              className="w-auto rounded-xl bg-apple-elevated px-3 py-1.5 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
             >
               <option value="">{t('admin.tickets.allStatuses')}</option>
               <option value="open">{t('admin.tickets.statusOpen')}</option>
@@ -359,10 +369,10 @@ export default function AdminTickets() {
 
           {ticketsLoading ? (
             <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
             </div>
           ) : ticketsData?.items.length === 0 ? (
-            <div className="py-12 text-center text-dark-500">{t('admin.tickets.noTickets')}</div>
+            <div className="py-12 text-center text-apple-faint">{t('admin.tickets.noTickets')}</div>
           ) : (
             <div className="scrollbar-hide max-h-[500px] space-y-2 overflow-y-auto">
               {ticketsData?.items.map((ticket) => (
@@ -373,14 +383,14 @@ export default function AdminTickets() {
                     setReplyText('');
                     clearAttachments();
                   }}
-                  className={`w-full rounded-xl border p-4 text-left transition-all ${
+                  className={`w-full rounded-xl p-4 text-left transition-all ${
                     selectedTicketId === ticket.id
-                      ? 'border-accent-500 bg-accent-500/10'
-                      : 'border-dark-700/50 bg-dark-800/30 hover:border-dark-600'
+                      ? 'bg-[#F97315]/10 ring-1 ring-[#F97315]/40'
+                      : 'bg-apple-elevated hover:bg-apple-card'
                   }`}
                 >
                   <div className="mb-2 flex items-start justify-between gap-2">
-                    <span className="truncate font-medium text-dark-100">
+                    <span className="truncate font-medium text-apple-ink">
                       #{ticket.id} {ticket.title}
                     </span>
                     <span className={getStatusBadge(ticket.status)}>
@@ -389,7 +399,7 @@ export default function AdminTickets() {
                       )}
                     </span>
                   </div>
-                  <div className="text-xs text-dark-500">
+                  <div className="text-xs text-apple-faint">
                     {formatUser(ticket)}
                     {ticket.user?.telegram_id && (
                       <button
@@ -397,7 +407,7 @@ export default function AdminTickets() {
                           e.stopPropagation();
                           copyToClipboard(String(ticket.user!.telegram_id));
                         }}
-                        className="ml-1 text-dark-600 transition-colors hover:text-accent-400"
+                        className="ml-1 text-apple-faint transition-colors hover:text-[#F97315]"
                         title={t('admin.tickets.copyTelegramId')}
                       >
                         (TG: {ticket.user!.telegram_id})
@@ -406,7 +416,7 @@ export default function AdminTickets() {
                     | {new Date(ticket.updated_at).toLocaleDateString()}
                   </div>
                   {ticket.last_message && (
-                    <div className="mt-1 truncate text-xs text-dark-600">
+                    <div className="mt-1 truncate text-xs text-apple-faint">
                       {ticket.last_message.is_from_admin
                         ? t('admin.tickets.you')
                         : t('admin.tickets.user')}
@@ -424,21 +434,21 @@ export default function AdminTickets() {
           )}
 
           {ticketsData && ticketsData.pages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-3 border-t border-dark-800/50 pt-4">
+            <div className="mt-4 flex items-center justify-center gap-3 border-t border-apple-hairline pt-4">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="btn-secondary px-3 py-1.5 text-sm disabled:opacity-50"
+                className="rounded-full bg-apple-elevated px-3 py-1.5 text-sm text-apple-ink transition-colors hover:bg-apple-card disabled:opacity-50"
               >
                 {t('common.back')}
               </button>
-              <span className="text-sm text-dark-400">
+              <span className="text-sm text-apple-mute">
                 {page} / {ticketsData.pages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(ticketsData.pages, p + 1))}
                 disabled={page === ticketsData.pages}
-                className="btn-secondary px-3 py-1.5 text-sm disabled:opacity-50"
+                className="rounded-full bg-apple-elevated px-3 py-1.5 text-sm text-apple-ink transition-colors hover:bg-apple-card disabled:opacity-50"
               >
                 {t('common.next')}
               </button>
@@ -447,12 +457,12 @@ export default function AdminTickets() {
         </div>
 
         {/* Ticket Detail */}
-        <div className="card lg:col-span-2">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4 lg:col-span-2">
           {!selectedTicketId ? (
             <div className="flex h-64 flex-col items-center justify-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated">
                 <svg
-                  className="h-8 w-8 text-dark-500"
+                  className="h-8 w-8 text-apple-faint"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -465,18 +475,18 @@ export default function AdminTickets() {
                   />
                 </svg>
               </div>
-              <div className="text-dark-400">{t('admin.tickets.selectTicket')}</div>
+              <div className="text-apple-mute">{t('admin.tickets.selectTicket')}</div>
             </div>
           ) : ticketLoading ? (
             <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
             </div>
           ) : selectedTicket ? (
             <div className="flex h-full flex-col">
               {/* Header */}
-              <div className="mb-4 border-b border-dark-800/50 pb-4">
+              <div className="mb-4 border-b border-apple-hairline pb-4">
                 <div className="mb-3 flex items-start justify-between">
-                  <h3 className="text-lg font-semibold text-dark-100">
+                  <h3 className="text-lg font-semibold text-apple-ink">
                     #{selectedTicket.id} {selectedTicket.title}
                   </h3>
                   <div className="flex gap-2">
@@ -490,13 +500,13 @@ export default function AdminTickets() {
                     </span>
                   </div>
                 </div>
-                <div className="mb-4 flex items-center gap-2 text-sm text-dark-500">
+                <div className="mb-4 flex items-center gap-2 text-sm text-apple-faint">
                   <span>
                     {t('admin.tickets.from')}: {formatUser(selectedTicket)}
                     {selectedTicket.user?.telegram_id && (
                       <button
                         onClick={() => copyToClipboard(String(selectedTicket.user!.telegram_id))}
-                        className="ml-1 rounded bg-dark-700 px-2 py-0.5 text-xs transition-colors hover:bg-dark-600"
+                        className="ml-1 rounded bg-apple-elevated px-2 py-0.5 text-xs transition-colors hover:bg-apple-card"
                         title={t('admin.tickets.copyTelegramId')}
                       >
                         TG: {selectedTicket.user!.telegram_id}
@@ -508,7 +518,7 @@ export default function AdminTickets() {
                   {selectedTicket.user && (
                     <button
                       onClick={() => navigate(`/admin/users/${selectedTicket.user!.id}`)}
-                      className="shrink-0 rounded-lg border border-accent-500/30 bg-accent-500/10 px-2 py-0.5 text-xs text-accent-400 transition-colors hover:bg-accent-500/20"
+                      className="shrink-0 rounded-lg bg-[#F97315]/10 px-2 py-0.5 text-xs text-[#F97315] transition-colors hover:bg-[#F97315]/20"
                     >
                       {t('admin.tickets.viewUser')}
                     </button>
@@ -522,10 +532,10 @@ export default function AdminTickets() {
                         statusMutation.mutate({ ticketId: selectedTicket.id, status: s })
                       }
                       disabled={selectedTicket.status === s || statusMutation.isPending}
-                      className={`rounded-lg border px-3 py-1.5 text-xs transition-all ${
+                      className={`rounded-lg px-3 py-1.5 text-xs transition-all ${
                         selectedTicket.status === s
-                          ? 'border-accent-500/50 bg-accent-500/20 text-accent-400'
-                          : 'border-dark-700/50 text-dark-400 hover:border-dark-600 hover:text-dark-200'
+                          ? 'bg-[#F97315]/20 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute hover:bg-apple-card hover:text-apple-ink'
                       } disabled:opacity-50`}
                     >
                       {t(`admin.tickets.status${s.charAt(0).toUpperCase() + s.slice(1)}`)}
@@ -540,26 +550,24 @@ export default function AdminTickets() {
                   <div
                     key={msg.id}
                     className={`rounded-xl p-4 ${
-                      msg.is_from_admin
-                        ? 'ml-4 border border-accent-500/20 bg-accent-500/10'
-                        : 'mr-4 border border-dark-700/30 bg-dark-800/50'
+                      msg.is_from_admin ? 'ml-4 bg-[#F97315]/10' : 'mr-4 bg-apple-elevated'
                     }`}
                   >
                     <div className="mb-2 flex items-center justify-between">
                       <span
-                        className={`text-xs font-medium ${msg.is_from_admin ? 'text-accent-400' : 'text-dark-400'}`}
+                        className={`text-xs font-medium ${msg.is_from_admin ? 'text-[#F97315]' : 'text-apple-mute'}`}
                       >
                         {msg.is_from_admin
                           ? t('admin.tickets.adminLabel')
                           : t('admin.tickets.userLabel')}
                       </span>
-                      <span className="text-xs text-dark-500">
+                      <span className="text-xs text-apple-faint">
                         {new Date(msg.created_at).toLocaleString()}
                       </span>
                     </div>
                     {msg.message_text && (
                       <p
-                        className="whitespace-pre-wrap text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                        className="whitespace-pre-wrap text-apple-ink [&_a]:text-[#F97315] [&_a]:underline"
                         dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
                       />
                     )}
@@ -570,13 +578,13 @@ export default function AdminTickets() {
 
               {/* Reply form */}
               {selectedTicket.status !== 'closed' && (
-                <form onSubmit={handleReply} className="border-t border-dark-800/50 pt-4">
+                <form onSubmit={handleReply} className="border-t border-apple-hairline pt-4">
                   <textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder={t('admin.tickets.replyPlaceholder')}
                     rows={3}
-                    className="input resize-none"
+                    className="w-full resize-none rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   />
 
                   {/* Attachments preview */}
@@ -591,24 +599,24 @@ export default function AdminTickets() {
                               className="h-16 w-16 rounded-lg object-cover"
                             />
                           ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-dark-700 text-xs text-dark-400">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-apple-elevated text-xs text-apple-mute">
                               {att.file.name.slice(-6)}
                             </div>
                           )}
                           {att.uploading && (
                             <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
-                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                             </div>
                           )}
                           {att.error && (
-                            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-red-500/30">
-                              <span className="text-xs text-red-300">!</span>
+                            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-apple-red/30">
+                              <span className="text-xs text-apple-red">!</span>
                             </div>
                           )}
                           <button
                             type="button"
                             onClick={() => removeAttachment(idx)}
-                            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-dark-600 text-dark-300 hover:bg-red-500 hover:text-white"
+                            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-apple-elevated text-apple-mute hover:bg-apple-red hover:text-white"
                           >
                             <svg
                               className="h-3 w-3"
@@ -639,7 +647,7 @@ export default function AdminTickets() {
                   />
 
                   {replyError && (
-                    <div className="mt-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                    <div className="mt-2 rounded-lg bg-apple-red/10 px-3 py-2 text-sm text-apple-red">
                       {replyError}
                     </div>
                   )}
@@ -649,7 +657,7 @@ export default function AdminTickets() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={attachments.length >= 10 || attachments.some((a) => a.uploading)}
-                      className="flex items-center gap-2 rounded-lg border border-dark-700/50 px-3 py-2 text-sm text-dark-400 transition-colors hover:border-dark-600 hover:text-dark-200 disabled:opacity-50"
+                      className="flex items-center gap-2 rounded-lg bg-apple-elevated px-3 py-2 text-sm text-apple-mute transition-colors hover:bg-apple-card hover:text-apple-ink disabled:opacity-50"
                     >
                       <svg
                         className="h-4 w-4"
@@ -674,7 +682,7 @@ export default function AdminTickets() {
                         isReplying ||
                         attachments.some((a) => a.uploading || a.error)
                       }
-                      className="btn-primary"
+                      className="rounded-full bg-[#F97315] px-4 py-2 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                     >
                       {isReplying ? (
                         <span className="flex items-center gap-2">

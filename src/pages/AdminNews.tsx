@@ -133,7 +133,7 @@ const ArticleRow = memo(function ArticleRow({
   const color = safeColor(article.category_color);
 
   return (
-    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 transition-all hover:border-dark-600">
+    <div className="apple-card-grad rounded-2xl bg-apple-card p-4 transition-all">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
@@ -148,29 +148,29 @@ const ArticleRow = memo(function ArticleRow({
               {article.category}
             </span>
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                 article.is_published
-                  ? 'bg-success-500/20 text-success-400'
-                  : 'bg-dark-500/20 text-dark-400'
+                  ? 'bg-apple-green/15 text-apple-green'
+                  : 'bg-apple-elevated text-apple-mute'
               }`}
             >
               {article.is_published ? t('news.admin.published') : t('news.admin.draft')}
             </span>
             {article.is_featured && (
-              <span className="rounded-full bg-warning-500/20 px-2 py-0.5 text-[10px] font-medium text-warning-400">
+              <span className="rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold text-apple-amber">
                 {t('news.admin.featured')}
               </span>
             )}
-            <span className="text-xs text-dark-500">#{article.id}</span>
+            <span className="text-xs text-apple-faint">#{article.id}</span>
           </div>
 
-          <p className="truncate text-sm font-medium text-dark-100">{article.title}</p>
+          <p className="truncate text-sm font-medium text-apple-ink">{article.title}</p>
 
           {article.excerpt && (
-            <p className="mt-1 truncate text-xs text-dark-400">{article.excerpt}</p>
+            <p className="mt-1 truncate text-xs text-apple-mute">{article.excerpt}</p>
           )}
 
-          <div className="mt-2 flex items-center gap-4 text-xs text-dark-500">
+          <div className="mt-2 flex items-center gap-4 text-xs text-apple-faint">
             <span>
               {article.published_at ? new Date(article.published_at).toLocaleDateString() : '-'}
             </span>
@@ -189,8 +189,8 @@ const ArticleRow = memo(function ArticleRow({
             onClick={onToggleFeatured}
             className={`min-h-[44px] min-w-[44px] rounded-lg p-2.5 transition-colors ${
               article.is_featured
-                ? 'text-warning-400 hover:bg-warning-500/10'
-                : 'text-dark-500 hover:bg-dark-700 hover:text-dark-300'
+                ? 'text-apple-amber hover:bg-apple-amber/10'
+                : 'text-apple-faint hover:bg-apple-elevated hover:text-apple-mute'
             }`}
             title={t('news.admin.featured')}
             aria-label={t('news.admin.featured')}
@@ -205,7 +205,7 @@ const ArticleRow = memo(function ArticleRow({
           <button
             type="button"
             onClick={onEdit}
-            className="min-h-[44px] min-w-[44px] rounded-lg p-2.5 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200"
+            className="min-h-[44px] min-w-[44px] rounded-lg p-2.5 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink"
             title={t('news.admin.edit')}
             aria-label={t('news.admin.edit')}
           >
@@ -214,7 +214,7 @@ const ArticleRow = memo(function ArticleRow({
           <button
             type="button"
             onClick={onDelete}
-            className="min-h-[44px] min-w-[44px] rounded-lg p-2.5 text-dark-400 transition-colors hover:bg-error-500/10 hover:text-error-400"
+            className="min-h-[44px] min-w-[44px] rounded-lg p-2.5 text-apple-mute transition-colors hover:bg-apple-red/10 hover:text-apple-red"
             title={t('news.admin.delete')}
             aria-label={t('news.admin.delete')}
           >
@@ -348,13 +348,13 @@ export default function AdminNews() {
         <div className="flex items-center gap-3">
           <AdminBackButton />
           <div>
-            <h1 className="text-xl font-bold text-dark-100">{t('news.admin.title')}</h1>
+            <h1 className="text-xl font-bold text-apple-ink">{t('news.admin.title')}</h1>
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => refetch()}
-            className="min-h-[44px] min-w-[44px] rounded-lg bg-dark-800 p-2.5 text-dark-400 transition-colors hover:text-dark-100"
+            className="min-h-[44px] min-w-[44px] rounded-lg bg-apple-card p-2.5 text-apple-mute transition-colors hover:text-apple-ink"
             aria-label={t('common.refresh')}
           >
             <RefreshIcon />
@@ -364,7 +364,7 @@ export default function AdminNews() {
               haptic.buttonPress();
               navigate('/admin/news/create');
             }}
-            className="flex min-h-[44px] items-center gap-2 rounded-lg bg-accent-500 px-4 py-2.5 text-white transition-colors hover:bg-accent-600"
+            className="flex min-h-[44px] items-center gap-2 rounded-full bg-[#F97315] px-4 py-2.5 text-white transition-opacity hover:opacity-90"
             aria-label={t('news.admin.create')}
           >
             <PlusIcon />
@@ -377,30 +377,27 @@ export default function AdminNews() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="animate-pulse rounded-xl border border-dark-700 bg-dark-800/50 p-4"
-            >
+            <div key={i} className="apple-card-grad animate-pulse rounded-2xl bg-apple-card p-4">
               <div className="flex items-start gap-4">
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex gap-2">
-                    <div className="h-4 w-16 rounded bg-dark-700" />
-                    <div className="h-4 w-12 rounded bg-dark-700" />
+                    <div className="h-4 w-16 rounded bg-apple-elevated" />
+                    <div className="h-4 w-12 rounded bg-apple-elevated" />
                   </div>
-                  <div className="h-5 w-3/4 rounded bg-dark-700" />
-                  <div className="h-3 w-1/2 rounded bg-dark-700" />
+                  <div className="h-5 w-3/4 rounded bg-apple-elevated" />
+                  <div className="h-3 w-1/2 rounded bg-apple-elevated" />
                 </div>
                 <div className="flex gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-dark-700" />
-                  <div className="h-8 w-14 rounded-full bg-dark-700" />
-                  <div className="h-8 w-8 rounded-lg bg-dark-700" />
+                  <div className="h-8 w-8 rounded-lg bg-apple-elevated" />
+                  <div className="h-8 w-14 rounded-full bg-apple-elevated" />
+                  <div className="h-8 w-8 rounded-lg bg-apple-elevated" />
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : articles.length === 0 ? (
-        <div className="flex flex-col items-center rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+        <div className="apple-card-grad flex flex-col items-center rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
           <NewsIcon />
           <p className="mt-2">{t('news.noNews')}</p>
         </div>
@@ -421,21 +418,21 @@ export default function AdminNews() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-dark-700 bg-dark-800/50 p-4">
+        <div className="apple-card-grad flex items-center justify-center gap-2 rounded-2xl bg-apple-card p-4">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="min-h-[44px] rounded-lg bg-dark-700 px-4 py-2.5 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[44px] rounded-lg bg-apple-elevated px-4 py-2.5 text-apple-mute hover:bg-apple-elevated/70 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('common.back')}
           </button>
-          <span className="text-dark-400">
+          <span className="text-apple-mute">
             {page + 1} / {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            className="min-h-[44px] rounded-lg bg-dark-700 px-4 py-2.5 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[44px] rounded-lg bg-apple-elevated px-4 py-2.5 text-apple-mute hover:bg-apple-elevated/70 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('common.next')}
           </button>

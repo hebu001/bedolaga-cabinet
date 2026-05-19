@@ -8,7 +8,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 // Icons
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -88,19 +88,19 @@ export default function AdminPromoGroups() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-opacity hover:opacity-80"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.promoGroups.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.promoGroups.subtitle')}</p>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.promoGroups.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.promoGroups.subtitle')}</p>
           </div>
         </div>
         <button
           onClick={() => navigate('/admin/promo-groups/create')}
-          className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+          className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90"
         >
           <PlusIcon />
           {t('admin.promoGroups.addGroup')}
@@ -110,21 +110,21 @@ export default function AdminPromoGroups() {
       {/* Stats */}
       {groups.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-dark-100">{groups.length}</div>
-            <div className="text-xs text-dark-400">{t('admin.promoGroups.stats.total')}</div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{groups.length}</div>
+            <div className="text-xs text-apple-mute">{t('admin.promoGroups.stats.total')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-accent-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
               {groups.reduce((sum, g) => sum + g.members_count, 0)}
             </div>
-            <div className="text-xs text-dark-400">{t('admin.promoGroups.stats.members')}</div>
+            <div className="text-xs text-apple-mute">{t('admin.promoGroups.stats.members')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="text-2xl font-bold text-warning-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-amber">
               {groups.filter((g) => g.auto_assign_total_spent_kopeks).length}
             </div>
-            <div className="text-xs text-dark-400">{t('admin.promoGroups.stats.autoAssign')}</div>
+            <div className="text-xs text-apple-mute">{t('admin.promoGroups.stats.autoAssign')}</div>
           </div>
         </div>
       )}
@@ -132,27 +132,30 @@ export default function AdminPromoGroups() {
       {/* List */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : groups.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-dark-400">{t('admin.promoGroups.noGroups')}</p>
+          <p className="text-apple-mute">{t('admin.promoGroups.noGroups')}</p>
         </div>
       ) : (
         <div className="space-y-3">
           {groups.map((group: PromoGroup) => (
-            <div key={group.id} className="rounded-xl border border-dark-700 bg-dark-800 p-4">
+            <div key={group.id} className="apple-card-grad rounded-2xl bg-apple-card p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
-                    <h3 className="font-medium text-dark-100">{group.name}</h3>
+                    <h3 className="font-medium text-apple-ink">{group.name}</h3>
                     {group.is_default && (
-                      <span className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
+                      <span
+                        className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                        style={{ backgroundColor: 'rgba(249,115,21,0.15)', color: '#F97315' }}
+                      >
                         {t('admin.promoGroups.default')}
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-dark-400">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-apple-mute">
                     {group.server_discount_percent > 0 && (
                       <span>
                         {t('admin.promoGroups.servers')}: -{group.server_discount_percent}%
@@ -171,13 +174,13 @@ export default function AdminPromoGroups() {
                     {group.period_discounts &&
                       Object.keys(group.period_discounts).length > 0 &&
                       Object.entries(group.period_discounts).map(([days, percent]) => (
-                        <span key={days} className="text-accent-400">
+                        <span key={days} style={{ color: '#F97315' }}>
                           {t('admin.promoGroups.daysShort', { days })}: -{percent}%
                         </span>
                       ))}
                     {group.auto_assign_total_spent_kopeks &&
                       group.auto_assign_total_spent_kopeks > 0 && (
-                        <span className="text-warning-400">
+                        <span className="text-apple-amber">
                           {t('admin.promoGroups.autoFrom', {
                             amount: group.auto_assign_total_spent_kopeks / 100,
                           })}
@@ -193,14 +196,14 @@ export default function AdminPromoGroups() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => navigate(`/admin/promo-groups/${group.id}/edit`)}
-                    className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                    className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink"
                     title={t('admin.promoGroups.actions.edit')}
                   >
                     <EditIcon />
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(group.id)}
-                    className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-error-500/20 hover:text-error-400"
+                    className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:bg-apple-red/20 hover:text-apple-red"
                     title={t('admin.promoGroups.actions.delete')}
                     disabled={group.is_default}
                   >
@@ -216,21 +219,21 @@ export default function AdminPromoGroups() {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-xl bg-dark-800 p-6">
-            <h3 className="mb-2 text-lg font-semibold text-dark-100">
+          <div className="apple-card-grad w-full max-w-sm rounded-2xl bg-apple-card p-6">
+            <h3 className="mb-2 text-lg font-semibold text-apple-ink">
               {t('admin.promoGroups.confirm.title')}
             </h3>
-            <p className="mb-6 text-dark-400">{t('admin.promoGroups.confirm.text')}</p>
+            <p className="mb-6 text-apple-mute">{t('admin.promoGroups.confirm.text')}</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-dark-300 transition-colors hover:text-dark-100"
+                className="px-4 py-2 text-apple-mute transition-colors hover:text-apple-ink"
               >
                 {t('admin.promoGroups.confirm.cancel')}
               </button>
               <button
                 onClick={() => deleteMutation.mutate(deleteConfirm)}
-                className="rounded-lg bg-error-500 px-4 py-2 text-white transition-colors hover:bg-error-600"
+                className="rounded-full bg-apple-red px-4 py-2 text-white transition-opacity hover:opacity-90"
               >
                 {t('admin.promoGroups.confirm.delete')}
               </button>
