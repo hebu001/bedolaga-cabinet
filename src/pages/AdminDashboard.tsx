@@ -236,7 +236,7 @@ function NodeCard({ node, onRestart, onToggle, isLoading }: NodeCardProps) {
   const hasError = node.last_status_message && !node.is_connected;
 
   return (
-    <div className="rounded-2xl bg-apple-bg p-4 transition-colors">
+    <div className="rounded-2xl bg-[#131315] p-4 transition-colors">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div
