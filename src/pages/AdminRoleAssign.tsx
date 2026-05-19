@@ -12,7 +12,7 @@ import { usePlatform } from '@/platform/hooks/usePlatform';
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -118,20 +118,20 @@ function UserSearchDropdown({
 
   if (selectedUser) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-dark-600 bg-dark-900 px-3 py-2">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-xs font-medium text-white">
+      <div className="flex items-center gap-2 rounded-xl bg-apple-elevated px-3 py-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#F97315] to-[#c9560f] text-xs font-medium text-white">
           {selectedUser.first_name?.[0] || selectedUser.username?.[0] || '?'}
         </div>
         <div className="min-w-0 flex-1">
-          <span className="text-sm text-dark-100">{selectedUser.full_name}</span>
+          <span className="text-sm text-apple-ink">{selectedUser.full_name}</span>
           {selectedUser.username && (
-            <span className="ml-1.5 text-xs text-dark-500">@{selectedUser.username}</span>
+            <span className="ml-1.5 text-xs text-apple-faint">@{selectedUser.username}</span>
           )}
         </div>
         <button
           type="button"
           onClick={onClearUser}
-          className="shrink-0 text-dark-400 transition-colors hover:text-dark-200"
+          className="shrink-0 text-apple-mute transition-colors hover:text-apple-ink"
           aria-label={t('admin.roleAssign.clearUser')}
         >
           <XCircleIcon />
@@ -154,9 +154,9 @@ function UserSearchDropdown({
             if (searchQuery.length >= 2) setIsOpen(true);
           }}
           placeholder={t('admin.roleAssign.searchPlaceholder')}
-          className="w-full rounded-lg border border-dark-600 bg-dark-900 py-2 pl-10 pr-3 text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+          className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
         />
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-faint">
           <SearchIcon />
         </div>
       </div>
@@ -165,13 +165,13 @@ function UserSearchDropdown({
         <>
           {/* Backdrop to close dropdown */}
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} aria-hidden="true" />
-          <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-dark-600 bg-dark-800 shadow-xl">
+          <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-xl bg-apple-card shadow-xl">
             {searching ? (
               <div className="flex items-center justify-center py-4">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
               </div>
             ) : !searchResults || searchResults.users.length === 0 ? (
-              <div className="px-3 py-4 text-center text-sm text-dark-400">
+              <div className="px-3 py-4 text-center text-sm text-apple-mute">
                 {t('admin.roleAssign.noUsersFound')}
               </div>
             ) : (
@@ -180,16 +180,16 @@ function UserSearchDropdown({
                   key={user.id}
                   type="button"
                   onClick={() => handleSelect(user)}
-                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-dark-700"
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-apple-elevated"
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-xs font-medium text-white">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#F97315] to-[#c9560f] text-xs font-medium text-white">
                     {user.first_name?.[0] || user.username?.[0] || '?'}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-dark-100">
+                    <div className="truncate text-sm font-medium text-apple-ink">
                       {user.full_name}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-dark-400">
+                    <div className="flex items-center gap-2 text-xs text-apple-mute">
                       {user.username && <span>@{user.username}</span>}
                       <span>ID: {user.telegram_id}</span>
                     </div>
@@ -399,21 +399,21 @@ export default function AdminRoleAssign() {
         {!capabilities.hasBackButton && (
           <button
             onClick={() => navigate('/admin')}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-colors hover:opacity-90"
           >
             <BackIcon />
           </button>
         )}
         <div>
-          <h1 className="text-xl font-semibold text-dark-100">{t('admin.roleAssign.title')}</h1>
-          <p className="text-sm text-dark-400">{t('admin.roleAssign.subtitle')}</p>
+          <h1 className="text-xl font-semibold text-apple-ink">{t('admin.roleAssign.title')}</h1>
+          <p className="text-sm text-apple-mute">{t('admin.roleAssign.subtitle')}</p>
         </div>
       </div>
 
       {/* Assign Section */}
       <PermissionGate permission="roles:assign">
-        <div className="mb-6 rounded-xl border border-dark-700 bg-dark-800 p-4 sm:p-5">
-          <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-dark-100">
+        <div className="apple-card-grad mb-6 rounded-2xl bg-apple-card p-4 sm:p-5">
+          <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-apple-ink">
             <UserPlusIcon />
             {t('admin.roleAssign.assignSection')}
           </h2>
@@ -421,7 +421,7 @@ export default function AdminRoleAssign() {
           <form onSubmit={handleAssign} className="space-y-4">
             {/* User search */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-dark-200">
+              <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                 {t('admin.roleAssign.userLabel')}
               </label>
               <UserSearchDropdown
@@ -439,7 +439,7 @@ export default function AdminRoleAssign() {
               <div className="flex-1">
                 <label
                   htmlFor="assign-role"
-                  className="mb-1 block text-sm font-medium text-dark-200"
+                  className="mb-1 block text-[13px] font-medium text-apple-mute"
                 >
                   {t('admin.roleAssign.roleLabel')}
                 </label>
@@ -450,7 +450,7 @@ export default function AdminRoleAssign() {
                     onChange={(e) =>
                       setSelectedRoleId(e.target.value ? Number(e.target.value) : null)
                     }
-                    className="w-full appearance-none rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 pr-8 text-dark-100 outline-none transition-colors focus:border-accent-500"
+                    className="w-full appearance-none rounded-xl bg-apple-elevated px-4 py-3 pr-8 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                   >
                     <option value="">{t('admin.roleAssign.selectRole')}</option>
                     {assignableRoles.map((role) => (
@@ -459,7 +459,7 @@ export default function AdminRoleAssign() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-400" />
+                  <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-apple-mute" />
                 </div>
               </div>
 
@@ -467,7 +467,7 @@ export default function AdminRoleAssign() {
               <div className="flex-1">
                 <label
                   htmlFor="assign-expires"
-                  className="mb-1 block text-sm font-medium text-dark-200"
+                  className="mb-1 block text-[13px] font-medium text-apple-mute"
                 >
                   {t('admin.roleAssign.expiresLabel')}
                 </label>
@@ -476,22 +476,22 @@ export default function AdminRoleAssign() {
                   type="datetime-local"
                   value={expiresAt}
                   onChange={(e) => setExpiresAt(e.target.value)}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-dark-100 outline-none transition-colors [color-scheme:dark] focus:border-accent-500"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none [color-scheme:dark] focus:ring-2 focus:ring-[#F97315]/50"
                 />
-                <p className="mt-1 text-xs text-dark-500">{t('admin.roleAssign.expiresHint')}</p>
+                <p className="mt-1 text-xs text-apple-faint">{t('admin.roleAssign.expiresHint')}</p>
               </div>
             </div>
 
             {/* Error / Success */}
-            {formError && <p className="text-sm text-error-400">{formError}</p>}
-            {formSuccess && <p className="text-sm text-success-400">{formSuccess}</p>}
+            {formError && <p className="text-sm text-apple-red">{formError}</p>}
+            {formSuccess && <p className="text-sm text-apple-green">{formSuccess}</p>}
 
             {/* Submit */}
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={assignMutation.isPending || !selectedUser || !selectedRoleId}
-                className="flex items-center gap-2 rounded-lg bg-accent-500 px-5 py-2 text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-2 rounded-full bg-[#F97315] px-5 py-2 text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {assignMutation.isPending
                   ? t('admin.roleAssign.assigning')
@@ -503,13 +503,13 @@ export default function AdminRoleAssign() {
       </PermissionGate>
 
       {/* Current Assignments Table */}
-      <div className="rounded-xl border border-dark-700 bg-dark-800">
-        <div className="border-b border-dark-700 px-4 py-3 sm:px-5">
-          <h2 className="text-base font-semibold text-dark-100">
+      <div className="apple-card-grad rounded-2xl bg-apple-card">
+        <div className="border-b border-apple-hairline px-4 py-3 sm:px-5">
+          <h2 className="text-base font-semibold text-apple-ink">
             {t('admin.roleAssign.currentAssignments')}
           </h2>
           {sortedAssignments.length > 0 && (
-            <p className="text-xs text-dark-400">
+            <p className="text-xs text-apple-mute">
               {t('admin.roleAssign.totalAssignments', { count: sortedAssignments.length })}
             </p>
           )}
@@ -517,38 +517,38 @@ export default function AdminRoleAssign() {
 
         {rolesLoading || assignmentsLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
           </div>
         ) : sortedAssignments.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-dark-400">{t('admin.roleAssign.noAssignments')}</p>
+            <p className="text-apple-mute">{t('admin.roleAssign.noAssignments')}</p>
           </div>
         ) : (
           <>
             {/* Desktop table header */}
-            <div className="hidden border-b border-dark-700 px-4 py-2.5 sm:grid sm:grid-cols-12 sm:gap-4 sm:px-5">
-              <div className="col-span-3 text-xs font-medium uppercase tracking-wider text-dark-500">
+            <div className="hidden border-b border-apple-hairline px-4 py-2.5 sm:grid sm:grid-cols-12 sm:gap-4 sm:px-5">
+              <div className="col-span-3 text-xs font-medium uppercase tracking-wider text-apple-faint">
                 {t('admin.roleAssign.table.user')}
               </div>
-              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-dark-500">
+              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-apple-faint">
                 {t('admin.roleAssign.table.role')}
               </div>
-              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-dark-500">
+              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-apple-faint">
                 {t('admin.roleAssign.table.assignedBy')}
               </div>
-              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-dark-500">
+              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-apple-faint">
                 {t('admin.roleAssign.table.assignedAt')}
               </div>
-              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-dark-500">
+              <div className="col-span-2 text-xs font-medium uppercase tracking-wider text-apple-faint">
                 {t('admin.roleAssign.table.expires')}
               </div>
-              <div className="col-span-1 text-xs font-medium uppercase tracking-wider text-dark-500">
+              <div className="col-span-1 text-xs font-medium uppercase tracking-wider text-apple-faint">
                 {t('admin.roleAssign.table.actions')}
               </div>
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-dark-700/50">
+            <div className="divide-y divide-apple-hairline">
               {paginatedAssignments.map((assignment) => {
                 const role = rolesMap.get(assignment.role_id);
                 const canRevoke = role ? canManageRole(role.level) : false;
@@ -563,14 +563,14 @@ export default function AdminRoleAssign() {
                   >
                     {/* User */}
                     <div className="col-span-3 mb-2 flex items-center gap-2.5 sm:mb-0">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-xs font-medium text-white">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#F97315] to-[#c9560f] text-xs font-medium text-white">
                         {assignment.user_first_name?.[0] || '?'}
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-medium text-dark-100">
+                        <div className="truncate text-sm font-medium text-apple-ink">
                           {assignment.user_first_name || t('admin.roleAssign.unknownUser')}
                         </div>
-                        <div className="truncate text-xs text-dark-500">
+                        <div className="truncate text-xs text-apple-faint">
                           {assignment.user_email ||
                             (assignment.user_telegram_id
                               ? `TG: ${assignment.user_telegram_id}`
@@ -581,15 +581,15 @@ export default function AdminRoleAssign() {
 
                     {/* Role */}
                     <div className="col-span-2 mb-2 sm:mb-0">
-                      <span className="mr-1.5 text-xs text-dark-500 sm:hidden">
+                      <span className="mr-1.5 text-xs text-apple-faint sm:hidden">
                         {t('admin.roleAssign.table.role')}:
                       </span>
                       <RoleBadge name={assignment.role_name} color={assignment.role_color} />
                     </div>
 
                     {/* Assigned by */}
-                    <div className="col-span-2 mb-2 text-sm text-dark-400 sm:mb-0">
-                      <span className="mr-1.5 text-xs text-dark-500 sm:hidden">
+                    <div className="col-span-2 mb-2 text-sm text-apple-mute sm:mb-0">
+                      <span className="mr-1.5 text-xs text-apple-faint sm:hidden">
                         {t('admin.roleAssign.table.assignedBy')}:
                       </span>
                       {assignment.assigned_by
@@ -598,8 +598,8 @@ export default function AdminRoleAssign() {
                     </div>
 
                     {/* Assigned at */}
-                    <div className="col-span-2 mb-2 text-sm text-dark-400 sm:mb-0">
-                      <span className="mr-1.5 text-xs text-dark-500 sm:hidden">
+                    <div className="col-span-2 mb-2 text-sm text-apple-mute sm:mb-0">
+                      <span className="mr-1.5 text-xs text-apple-faint sm:hidden">
                         {t('admin.roleAssign.table.assignedAt')}:
                       </span>
                       {formatDate(assignment.assigned_at)}
@@ -607,12 +607,12 @@ export default function AdminRoleAssign() {
 
                     {/* Expires */}
                     <div className="col-span-2 mb-2 sm:mb-0">
-                      <span className="mr-1.5 text-xs text-dark-500 sm:hidden">
+                      <span className="mr-1.5 text-xs text-apple-faint sm:hidden">
                         {t('admin.roleAssign.table.expires')}:
                       </span>
                       {assignment.expires_at ? (
                         <span
-                          className={`text-sm ${expired ? 'text-error-400' : 'text-warning-400'}`}
+                          className={`text-sm ${expired ? 'text-apple-red' : 'text-apple-amber'}`}
                         >
                           {formatDate(assignment.expires_at)}
                           {expired && (
@@ -620,7 +620,7 @@ export default function AdminRoleAssign() {
                           )}
                         </span>
                       ) : (
-                        <span className="text-sm text-dark-500">
+                        <span className="text-sm text-apple-faint">
                           {t('admin.roleAssign.permanent')}
                         </span>
                       )}
@@ -630,7 +630,7 @@ export default function AdminRoleAssign() {
                     <div className="col-span-1 flex justify-end sm:justify-start">
                       {assignment.role_level >= SUPERADMIN_LEVEL ? (
                         <span
-                          className="rounded px-1.5 py-0.5 text-[10px] font-medium text-dark-500"
+                          className="rounded px-1.5 py-0.5 text-[10px] font-medium text-apple-faint"
                           title={t('admin.roleAssign.envManaged')}
                         >
                           ENV
@@ -640,7 +640,7 @@ export default function AdminRoleAssign() {
                           <button
                             onClick={() => setRevokeConfirm(assignment.id)}
                             disabled={!canRevoke}
-                            className="rounded-lg p-1.5 text-dark-400 transition-colors hover:bg-error-500/20 hover:text-error-400 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="rounded-lg p-1.5 text-apple-mute transition-colors hover:bg-apple-red/20 hover:text-apple-red disabled:cursor-not-allowed disabled:opacity-40"
                             title={t('admin.roleAssign.revoke')}
                             aria-label={t('admin.roleAssign.revokeAriaLabel', {
                               user: assignment.user_first_name || assignment.user_id,
@@ -659,8 +659,8 @@ export default function AdminRoleAssign() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-dark-700 px-4 py-3 sm:px-5">
-                <div className="text-sm text-dark-400">
+              <div className="flex items-center justify-between border-t border-apple-hairline px-4 py-3 sm:px-5">
+                <div className="text-sm text-apple-mute">
                   {t('admin.roleAssign.pagination.showing', {
                     from: page * PAGE_SIZE + 1,
                     to: Math.min((page + 1) * PAGE_SIZE, sortedAssignments.length),
@@ -671,18 +671,18 @@ export default function AdminRoleAssign() {
                   <button
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={page === 0}
-                    className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+                    className="rounded-lg bg-apple-elevated p-2 transition-colors hover:opacity-90 disabled:opacity-50"
                     aria-label={t('admin.roleAssign.pagination.prev')}
                   >
                     <ChevronLeftIcon />
                   </button>
-                  <span className="px-3 py-2 text-sm text-dark-300">
+                  <span className="px-3 py-2 text-sm text-apple-mute">
                     {page + 1} / {totalPages}
                   </span>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                     disabled={page >= totalPages - 1}
-                    className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+                    className="rounded-lg bg-apple-elevated p-2 transition-colors hover:opacity-90 disabled:opacity-50"
                     aria-label={t('admin.roleAssign.pagination.next')}
                   >
                     <ChevronRightIcon />
@@ -696,24 +696,24 @@ export default function AdminRoleAssign() {
 
       {/* Revoke Confirmation */}
       {revokeConfirm !== null && (
-        <div className="mt-4 overflow-hidden rounded-xl border border-error-500/30 bg-dark-800">
-          <div className="border-b border-error-500/20 bg-error-500/5 px-5 py-4">
-            <h3 className="text-sm font-semibold text-error-400">
+        <div className="mt-4 overflow-hidden rounded-2xl bg-apple-card">
+          <div className="border-b border-apple-hairline bg-apple-red/5 px-5 py-4">
+            <h3 className="text-sm font-semibold text-apple-red">
               {t('admin.roleAssign.confirm.title')}
             </h3>
-            <p className="mt-1 text-sm text-dark-400">{t('admin.roleAssign.confirm.text')}</p>
+            <p className="mt-1 text-sm text-apple-mute">{t('admin.roleAssign.confirm.text')}</p>
           </div>
           <div className="flex items-center justify-end gap-3 px-5 py-3">
             <button
               onClick={() => setRevokeConfirm(null)}
-              className="rounded-lg px-4 py-2 text-sm text-dark-300 transition-colors hover:text-dark-100"
+              className="rounded-lg px-4 py-2 text-sm text-apple-mute transition-colors hover:text-apple-ink"
             >
               {t('admin.roleAssign.confirm.cancel')}
             </button>
             <button
               onClick={() => revokeMutation.mutate(revokeConfirm)}
               disabled={revokeMutation.isPending}
-              className="rounded-lg bg-error-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-error-600 disabled:opacity-50"
+              className="rounded-full bg-apple-red px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
             >
               {revokeMutation.isPending
                 ? t('admin.roleAssign.confirm.revoking')

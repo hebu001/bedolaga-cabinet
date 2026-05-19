@@ -137,17 +137,17 @@ function IpTagInput({ values, onChange }: IpTagInputProps) {
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-dark-600 bg-dark-900 px-3 py-2">
+    <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-apple-elevated px-3 py-2">
       {values.map((ip) => (
         <span
           key={ip}
-          className="inline-flex items-center gap-1 rounded-md bg-dark-700 px-2 py-0.5 text-xs text-dark-200"
+          className="inline-flex items-center gap-1 rounded-md bg-apple-card px-2 py-0.5 text-xs text-apple-ink"
         >
           {ip}
           <button
             type="button"
             onClick={() => removeIp(ip)}
-            className="text-dark-400 transition-colors hover:text-dark-200"
+            className="text-apple-mute transition-colors hover:text-apple-ink"
             aria-label={t('admin.policies.conditions.removeIp', { ip })}
           >
             <svg
@@ -167,7 +167,7 @@ function IpTagInput({ values, onChange }: IpTagInputProps) {
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="min-w-[120px] flex-1 bg-transparent text-sm text-dark-100 placeholder-dark-500 outline-none"
+        className="min-w-[120px] flex-1 bg-transparent text-sm text-apple-ink outline-none placeholder:text-apple-faint"
         placeholder={values.length === 0 ? t('admin.policies.conditions.ipPlaceholder') : ''}
       />
     </div>
@@ -183,16 +183,16 @@ interface ConditionToggleProps {
 
 function ConditionToggle({ label, enabled, onToggle, children }: ConditionToggleProps) {
   return (
-    <div className="rounded-lg border border-dark-700/50 bg-dark-800/30">
+    <div className="rounded-xl bg-apple-card">
       <button
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between px-3 py-2"
       >
-        <span className="text-sm font-medium text-dark-200">{label}</span>
+        <span className="text-sm font-medium text-apple-ink">{label}</span>
         <div
           className={`relative h-5 w-9 rounded-full transition-colors ${
-            enabled ? 'bg-accent-500' : 'bg-dark-600'
+            enabled ? 'bg-[#F97315]' : 'bg-apple-elevated'
           }`}
         >
           <div
@@ -202,7 +202,7 @@ function ConditionToggle({ label, enabled, onToggle, children }: ConditionToggle
           />
         </div>
       </button>
-      {enabled && <div className="border-t border-dark-700/50 px-3 py-2.5">{children}</div>}
+      {enabled && <div className="border-t border-apple-hairline px-3 py-2.5">{children}</div>}
     </div>
   );
 }
@@ -377,7 +377,7 @@ export default function AdminPolicyEdit() {
   if (isEdit && isLoadingPolicy) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -388,7 +388,7 @@ export default function AdminPolicyEdit() {
       <div className="flex items-center gap-3">
         <AdminBackButton to="/admin/policies" />
         <div>
-          <h1 className="text-xl font-semibold text-dark-100">
+          <h1 className="text-xl font-semibold text-apple-ink">
             {isEdit ? t('admin.policies.modal.editTitle') : t('admin.policies.modal.createTitle')}
           </h1>
         </div>
@@ -397,11 +397,14 @@ export default function AdminPolicyEdit() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic info */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 sm:p-6">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4 sm:p-6">
           <div className="space-y-4">
             {/* Name */}
             <div>
-              <label htmlFor="policy-name" className="mb-1 block text-sm font-medium text-dark-200">
+              <label
+                htmlFor="policy-name"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.policies.form.name')}
               </label>
               <input
@@ -409,7 +412,7 @@ export default function AdminPolicyEdit() {
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 placeholder={t('admin.policies.form.namePlaceholder')}
                 autoFocus
               />
@@ -419,7 +422,7 @@ export default function AdminPolicyEdit() {
             <div>
               <label
                 htmlFor="policy-description"
-                className="mb-1 block text-sm font-medium text-dark-200"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
               >
                 {t('admin.policies.form.description')}
               </label>
@@ -427,7 +430,7 @@ export default function AdminPolicyEdit() {
                 id="policy-description"
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 placeholder={t('admin.policies.form.descriptionPlaceholder')}
                 rows={2}
               />
@@ -435,17 +438,17 @@ export default function AdminPolicyEdit() {
 
             {/* Effect toggle */}
             <div>
-              <label className="mb-1 block text-sm font-medium text-dark-200">
+              <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                 {t('admin.policies.form.effect')}
               </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setFormData((prev) => ({ ...prev, effect: 'allow' }))}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                     formData.effect === 'allow'
-                      ? 'border-success-500/50 bg-success-500/10 text-success-400'
-                      : 'border-dark-600 bg-dark-900 text-dark-400 hover:border-dark-500'
+                      ? 'bg-apple-green/15 text-apple-green'
+                      : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
                   }`}
                 >
                   {t('admin.policies.effectAllow')}
@@ -453,10 +456,10 @@ export default function AdminPolicyEdit() {
                 <button
                   type="button"
                   onClick={() => setFormData((prev) => ({ ...prev, effect: 'deny' }))}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                     formData.effect === 'deny'
-                      ? 'border-red-500/50 bg-red-500/10 text-red-400'
-                      : 'border-dark-600 bg-dark-900 text-dark-400 hover:border-dark-500'
+                      ? 'bg-apple-red/15 text-apple-red'
+                      : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
                   }`}
                 >
                   {t('admin.policies.effectDeny')}
@@ -467,13 +470,13 @@ export default function AdminPolicyEdit() {
         </div>
 
         {/* Resource & Actions */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 sm:p-6">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4 sm:p-6">
           <div className="space-y-4">
             {/* Resource dropdown */}
             <div>
               <label
                 htmlFor="policy-resource"
-                className="mb-1 block text-sm font-medium text-dark-200"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
               >
                 {t('admin.policies.form.resource')}
               </label>
@@ -481,7 +484,7 @@ export default function AdminPolicyEdit() {
                 id="policy-resource"
                 value={formData.resource}
                 onChange={(e) => handleResourceChange(e.target.value)}
-                className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-dark-100 outline-none transition-colors focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
               >
                 <option value="">{t('admin.policies.form.selectResource')}</option>
                 {permissionRegistry?.map((section) => (
@@ -495,10 +498,10 @@ export default function AdminPolicyEdit() {
             {/* Actions checkboxes */}
             {formData.resource && selectedResourceActions.length > 0 && (
               <div>
-                <label className="mb-1 block text-sm font-medium text-dark-200">
+                <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                   {t('admin.policies.form.actions')}
                 </label>
-                <div className="flex flex-wrap gap-2 rounded-lg border border-dark-600 bg-dark-900/50 p-3">
+                <div className="flex flex-wrap gap-2 rounded-xl bg-apple-elevated p-3">
                   {selectedResourceActions.map((action) => {
                     const selected = formData.actions.includes(action);
                     return (
@@ -508,8 +511,8 @@ export default function AdminPolicyEdit() {
                         onClick={() => handleToggleAction(action)}
                         className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                           selected
-                            ? 'bg-accent-500/20 text-accent-400'
-                            : 'bg-dark-700/50 text-dark-400 hover:bg-dark-700 hover:text-dark-300'
+                            ? 'bg-[#F97315]/15 text-[#F97315]'
+                            : 'bg-apple-card text-apple-mute hover:text-apple-ink'
                         }`}
                         aria-pressed={selected}
                       >
@@ -523,7 +526,10 @@ export default function AdminPolicyEdit() {
 
             {/* Role dropdown */}
             <div>
-              <label htmlFor="policy-role" className="mb-1 block text-sm font-medium text-dark-200">
+              <label
+                htmlFor="policy-role"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.policies.form.role')}
               </label>
               <select
@@ -535,7 +541,7 @@ export default function AdminPolicyEdit() {
                     role_id: e.target.value ? Number(e.target.value) : null,
                   }))
                 }
-                className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-dark-100 outline-none transition-colors focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
               >
                 <option value="">{t('admin.policies.form.globalOption')}</option>
                 {roles?.map((role) => (
@@ -544,14 +550,14 @@ export default function AdminPolicyEdit() {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-dark-500">{t('admin.policies.form.roleHint')}</p>
+              <p className="mt-1 text-xs text-apple-faint">{t('admin.policies.form.roleHint')}</p>
             </div>
 
             {/* Priority */}
             <div>
               <label
                 htmlFor="policy-priority"
-                className="mb-1 block text-sm font-medium text-dark-200"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
               >
                 {t('admin.policies.form.priority')}
               </label>
@@ -567,16 +573,18 @@ export default function AdminPolicyEdit() {
                     priority: Math.min(999, Math.max(0, Number(e.target.value) || 0)),
                   }))
                 }
-                className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-dark-100 outline-none transition-colors focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
-              <p className="mt-1 text-xs text-dark-500">{t('admin.policies.form.priorityHint')}</p>
+              <p className="mt-1 text-xs text-apple-faint">
+                {t('admin.policies.form.priorityHint')}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Conditions */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 sm:p-6">
-          <label className="mb-3 block text-sm font-medium text-dark-200">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4 sm:p-6">
+          <label className="mb-3 block text-[13px] font-medium text-apple-mute">
             {t('admin.policies.form.conditions')}
           </label>
           <div className="space-y-2">
@@ -610,10 +618,10 @@ export default function AdminPolicyEdit() {
                       },
                     }))
                   }
-                  className="rounded-lg border border-dark-600 bg-dark-900 px-2 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+                  className="rounded-lg bg-apple-elevated px-2 py-1.5 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                   aria-label={t('admin.policies.conditions.timeStart')}
                 />
-                <span className="text-dark-500">-</span>
+                <span className="text-apple-faint">-</span>
                 <input
                   type="time"
                   value={formData.conditions.time_range?.end ?? '18:00'}
@@ -629,7 +637,7 @@ export default function AdminPolicyEdit() {
                       },
                     }))
                   }
-                  className="rounded-lg border border-dark-600 bg-dark-900 px-2 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+                  className="rounded-lg bg-apple-elevated px-2 py-1.5 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                   aria-label={t('admin.policies.conditions.timeEnd')}
                 />
               </div>
@@ -692,10 +700,10 @@ export default function AdminPolicyEdit() {
                       },
                     }))
                   }
-                  className="w-24 rounded-lg border border-dark-600 bg-dark-900 px-2 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+                  className="w-24 rounded-lg bg-apple-elevated px-2 py-1.5 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                   aria-label={t('admin.policies.conditions.rateLimitValue')}
                 />
-                <span className="text-xs text-dark-500">
+                <span className="text-xs text-apple-faint">
                   {t('admin.policies.conditions.perHour')}
                 </span>
               </div>
@@ -736,8 +744,8 @@ export default function AdminPolicyEdit() {
                       }
                       className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                         selected
-                          ? 'bg-accent-500/20 text-accent-400'
-                          : 'bg-dark-700/50 text-dark-400 hover:bg-dark-700 hover:text-dark-300'
+                          ? 'bg-[#F97315]/15 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
                       }`}
                       aria-pressed={selected}
                     >
@@ -751,20 +759,20 @@ export default function AdminPolicyEdit() {
         </div>
 
         {/* Error & Submit */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 sm:p-6">
-          {formError && <p className="mb-4 text-sm text-error-400">{formError}</p>}
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4 sm:p-6">
+          {formError && <p className="mb-4 text-sm text-apple-red">{formError}</p>}
           <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={() => navigate('/admin/policies')}
-              className="px-4 py-2 text-dark-300 transition-colors hover:text-dark-100"
+              className="px-4 py-2 text-apple-mute transition-colors hover:text-apple-ink"
             >
               {t('admin.policies.form.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+              className="rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {isSaving ? t('admin.policies.form.saving') : t('admin.policies.form.save')}
             </button>

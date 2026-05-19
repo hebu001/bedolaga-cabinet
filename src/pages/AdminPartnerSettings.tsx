@@ -95,7 +95,7 @@ export default function AdminPartnerSettings() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -105,13 +105,13 @@ export default function AdminPartnerSettings() {
       <div className="animate-fade-in">
         <div className="mb-6 flex items-center gap-3">
           <AdminBackButton to="/admin/partners" />
-          <h1 className="text-xl font-semibold text-dark-100">{t('admin.partners.settings')}</h1>
+          <h1 className="text-xl font-semibold text-apple-ink">{t('admin.partners.settings')}</h1>
         </div>
-        <div className="rounded-xl border border-error-500/30 bg-error-500/10 p-6 text-center">
-          <p className="text-error-400">{t('admin.partners.settingsLoadError')}</p>
+        <div className="rounded-2xl bg-apple-red/10 p-6 text-center">
+          <p className="text-apple-red">{t('admin.partners.settingsLoadError')}</p>
           <button
             onClick={() => navigate('/admin/partners')}
-            className="mt-4 text-sm text-dark-400 hover:text-dark-200"
+            className="mt-4 text-sm text-apple-mute transition-opacity hover:opacity-80"
           >
             {t('common.back')}
           </button>
@@ -125,19 +125,19 @@ export default function AdminPartnerSettings() {
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <AdminBackButton to="/admin/partners" />
-        <div className="rounded-lg bg-accent-500/20 p-2 text-accent-400">
+        <div className="rounded-xl bg-[#F97315]/15 p-2 text-[#F97315]">
           <SettingsIcon />
         </div>
         <div>
-          <h1 className="text-xl font-semibold text-dark-100">{t('admin.partners.settings')}</h1>
-          <p className="text-sm text-dark-400">{t('admin.partners.settingsSubtitle')}</p>
+          <h1 className="text-xl font-semibold text-apple-ink">{t('admin.partners.settings')}</h1>
+          <p className="text-sm text-apple-mute">{t('admin.partners.settingsSubtitle')}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Referral Program Section */}
-        <div className="card">
-          <h3 className="mb-4 text-lg font-semibold text-dark-100">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
+          <h3 className="mb-4 text-lg font-semibold text-apple-ink">
             {t('admin.partners.settingsSection.referralProgram')}
           </h3>
 
@@ -150,13 +150,13 @@ export default function AdminPartnerSettings() {
                 onChange={(e) =>
                   setFormData({ ...formData, referral_program_enabled: e.target.checked })
                 }
-                className="h-5 w-5 rounded border-dark-700 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500 focus:ring-offset-0"
+                className="h-5 w-5 rounded bg-apple-elevated text-[#F97315] focus:ring-2 focus:ring-[#F97315]/50 focus:ring-offset-0"
               />
               <div>
-                <div className="font-medium text-dark-100">
+                <div className="font-medium text-apple-ink">
                   {t('admin.partners.settingsFields.programEnabled')}
                 </div>
-                <div className="text-sm text-dark-500">
+                <div className="text-sm text-apple-faint">
                   {t('admin.partners.settingsFields.programEnabledDesc')}
                 </div>
               </div>
@@ -172,13 +172,13 @@ export default function AdminPartnerSettings() {
                 onChange={(e) =>
                   setFormData({ ...formData, partner_section_visible: e.target.checked })
                 }
-                className="h-5 w-5 rounded border-dark-700 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500 focus:ring-offset-0"
+                className="h-5 w-5 rounded bg-apple-elevated text-[#F97315] focus:ring-2 focus:ring-[#F97315]/50 focus:ring-offset-0"
               />
               <div>
-                <div className="font-medium text-dark-100">
+                <div className="font-medium text-apple-ink">
                   {t('admin.partners.settingsFields.partnerVisible')}
                 </div>
-                <div className="text-sm text-dark-500">
+                <div className="text-sm text-apple-faint">
                   {t('admin.partners.settingsFields.partnerVisibleDesc')}
                 </div>
               </div>
@@ -187,8 +187,8 @@ export default function AdminPartnerSettings() {
         </div>
 
         {/* Withdrawal Settings Section */}
-        <div className="card">
-          <h3 className="mb-4 text-lg font-semibold text-dark-100">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
+          <h3 className="mb-4 text-lg font-semibold text-apple-ink">
             {t('admin.partners.settingsSection.withdrawalSettings')}
           </h3>
 
@@ -199,13 +199,13 @@ export default function AdminPartnerSettings() {
                 type="checkbox"
                 checked={formData.withdrawal_enabled}
                 onChange={(e) => setFormData({ ...formData, withdrawal_enabled: e.target.checked })}
-                className="h-5 w-5 rounded border-dark-700 bg-dark-800 text-accent-500 focus:ring-2 focus:ring-accent-500 focus:ring-offset-0"
+                className="h-5 w-5 rounded bg-apple-elevated text-[#F97315] focus:ring-2 focus:ring-[#F97315]/50 focus:ring-offset-0"
               />
               <div>
-                <div className="font-medium text-dark-100">
+                <div className="font-medium text-apple-ink">
                   {t('admin.partners.settingsFields.withdrawalEnabled')}
                 </div>
-                <div className="text-sm text-dark-500">
+                <div className="text-sm text-apple-faint">
                   {t('admin.partners.settingsFields.withdrawalEnabledDesc')}
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default function AdminPartnerSettings() {
 
           {/* Min Amount */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.partners.settingsFields.minAmount')}
             </label>
             <input
@@ -229,17 +229,17 @@ export default function AdminPartnerSettings() {
                 const num = parseInt(val);
                 if (!isNaN(num)) setFormData({ ...formData, withdrawal_min_amount_kopeks: num });
               }}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
               disabled={!formData.withdrawal_enabled}
             />
-            <p className="mt-1 text-xs text-dark-500">
+            <p className="mt-1 text-xs text-apple-faint">
               {t('admin.partners.settingsFields.minAmountDesc')}
             </p>
           </div>
 
           {/* Cooldown Days */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.partners.settingsFields.cooldownDays')}
             </label>
             <input
@@ -253,17 +253,17 @@ export default function AdminPartnerSettings() {
                 const num = parseInt(val);
                 if (!isNaN(num)) setFormData({ ...formData, withdrawal_cooldown_days: num });
               }}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
               disabled={!formData.withdrawal_enabled}
             />
-            <p className="mt-1 text-xs text-dark-500">
+            <p className="mt-1 text-xs text-apple-faint">
               {t('admin.partners.settingsFields.cooldownDaysDesc')}
             </p>
           </div>
 
           {/* Requisites Text */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.partners.settingsFields.requisitesText')}
             </label>
             <textarea
@@ -271,12 +271,12 @@ export default function AdminPartnerSettings() {
               onChange={(e) =>
                 setFormData({ ...formData, withdrawal_requisites_text: e.target.value })
               }
-              className="input min-h-[80px] w-full"
+              className="min-h-[80px] w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
               maxLength={2000}
               disabled={!formData.withdrawal_enabled}
               placeholder={t('admin.partners.settingsFields.requisitesTextPlaceholder')}
             />
-            <p className="mt-1 text-xs text-dark-500">
+            <p className="mt-1 text-xs text-apple-faint">
               {t('admin.partners.settingsFields.requisitesTextDesc')}
             </p>
           </div>
@@ -287,14 +287,14 @@ export default function AdminPartnerSettings() {
           <button
             type="button"
             onClick={() => navigate('/admin/partners')}
-            className="btn-secondary"
+            className="rounded-full bg-apple-elevated px-5 py-3 font-medium text-apple-mute transition-opacity hover:opacity-90"
           >
             {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={!isValid || updateMutation.isPending}
-            className="btn-primary"
+            className="rounded-full bg-[#F97315] px-5 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {updateMutation.isPending ? (
               <span className="flex items-center gap-2">
@@ -308,7 +308,7 @@ export default function AdminPartnerSettings() {
         </div>
 
         {updateMutation.isError && (
-          <div className="rounded-lg border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-400">
+          <div className="rounded-xl bg-apple-red/10 p-3 text-sm text-apple-red">
             {t('admin.partners.settingsUpdateError')}
           </div>
         )}

@@ -46,21 +46,21 @@ export default function AdminPartnerCommission() {
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
         <AdminBackButton to={`/admin/partners/${userId}`} />
-        <h1 className="text-xl font-semibold text-dark-100">
+        <h1 className="text-xl font-semibold text-apple-ink">
           {t('admin.partnerDetail.commissionDialog.title')}
         </h1>
       </div>
 
-      <div className="rounded-xl border border-dark-700 bg-dark-800 p-6">
-        <p className="mb-4 text-sm text-dark-400">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
+        <p className="mb-4 text-sm text-apple-mute">
           {t('admin.partnerDetail.commissionDialog.description')}
         </p>
 
-        <div className="mb-2 text-sm text-dark-500">
+        <div className="mb-2 text-sm text-apple-faint">
           {t('admin.partnerDetail.commission.title')}: {currentCommission}%
         </div>
 
-        <label className="mb-1 block text-sm font-medium text-dark-300">
+        <label className="mb-1 block text-[13px] font-medium text-apple-mute">
           {t('admin.partnerDetail.commissionDialog.label')}
         </label>
         <input
@@ -69,13 +69,13 @@ export default function AdminPartnerCommission() {
           max="100"
           value={commissionValue}
           onChange={(e) => setCommissionValue(e.target.value)}
-          className="mb-6 w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-dark-100 outline-none focus:border-accent-500"
+          className="mb-6 w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
         />
 
         <div className="flex gap-3">
           <button
             onClick={() => navigate(`/admin/partners/${userId}`)}
-            className="flex-1 rounded-lg bg-dark-700 px-4 py-3 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+            className="flex-1 rounded-full bg-apple-elevated px-4 py-3 text-apple-mute transition-opacity hover:opacity-90"
           >
             {t('common.cancel')}
           </button>
@@ -90,14 +90,14 @@ export default function AdminPartnerCommission() {
               Number(commissionValue) < 1 ||
               Number(commissionValue) > 100
             }
-            className="flex-1 rounded-lg bg-accent-500 px-4 py-3 font-medium text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+            className="flex-1 rounded-full bg-[#F97315] px-4 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {updateMutation.isPending ? t('common.saving') : t('common.save')}
           </button>
         </div>
 
         {updateMutation.isError && (
-          <div className="mt-4 rounded-lg bg-error-500/10 p-3 text-sm text-error-400">
+          <div className="mt-4 rounded-xl bg-apple-red/10 p-3 text-sm text-apple-red">
             {t('common.error')}
           </div>
         )}

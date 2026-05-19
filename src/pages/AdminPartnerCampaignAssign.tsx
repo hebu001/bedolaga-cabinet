@@ -50,25 +50,25 @@ export default function AdminPartnerCampaignAssign() {
       <div className="mb-6 flex items-center gap-3">
         <AdminBackButton to={`/admin/partners/${userId}`} />
         <div>
-          <h1 className="text-xl font-semibold text-dark-100">
+          <h1 className="text-xl font-semibold text-apple-ink">
             {t('admin.partnerDetail.campaigns.assignTitle')}
           </h1>
-          {partnerName && <p className="text-sm text-dark-400">{partnerName}</p>}
+          {partnerName && <p className="text-sm text-apple-mute">{partnerName}</p>}
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : available.length === 0 ? (
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-6">
-          <div className="py-4 text-center text-sm text-dark-500">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
+          <div className="py-4 text-center text-sm text-apple-faint">
             {t('admin.partnerDetail.campaigns.noAvailable')}
           </div>
           <button
             onClick={() => navigate(`/admin/campaigns/create?partnerId=${userId}`)}
-            className="mt-2 w-full rounded-lg bg-accent-500 px-4 py-3 font-medium text-white transition-colors hover:bg-accent-600"
+            className="mt-2 w-full rounded-full bg-[#F97315] px-4 py-3 font-medium text-white transition-opacity hover:opacity-90"
           >
             {t('admin.partnerDetail.campaigns.createNew')}
           </button>
@@ -76,18 +76,18 @@ export default function AdminPartnerCampaignAssign() {
       ) : (
         <div className="space-y-3">
           {available.map((campaign) => (
-            <div key={campaign.id} className="rounded-xl border border-dark-700 bg-dark-800 p-4">
+            <div key={campaign.id} className="rounded-2xl bg-apple-card p-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-dark-100">{campaign.name}</span>
+                    <span className="font-medium text-apple-ink">{campaign.name}</span>
                     {!campaign.is_active && (
-                      <span className="rounded bg-dark-600 px-1.5 py-0.5 text-xs text-dark-400">
+                      <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                         {t('admin.campaigns.table.inactive')}
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-dark-500">
+                  <div className="mt-1 flex items-center gap-3 text-xs text-apple-faint">
                     <span className="font-mono">?start={campaign.start_parameter}</span>
                     <span>
                       {campaign.registrations_count}{' '}
@@ -98,7 +98,7 @@ export default function AdminPartnerCampaignAssign() {
                 <button
                   onClick={() => assignMutation.mutate(campaign.id)}
                   disabled={assignMutation.isPending}
-                  className="shrink-0 rounded-lg bg-accent-500/20 px-4 py-2 text-sm font-medium text-accent-400 transition-colors hover:bg-accent-500/30 disabled:opacity-50"
+                  className="shrink-0 rounded-full bg-[#F97315]/15 px-4 py-2 text-sm font-medium text-[#F97315] transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   {t('admin.partnerDetail.campaigns.assign')}
                 </button>
@@ -108,19 +108,16 @@ export default function AdminPartnerCampaignAssign() {
 
           {/* Show campaigns assigned to other partners as greyed out */}
           {takenByOthers.map((campaign) => (
-            <div
-              key={campaign.id}
-              className="rounded-xl border border-dark-700/50 bg-dark-800 p-4 opacity-50"
-            >
+            <div key={campaign.id} className="rounded-2xl bg-apple-card p-4 opacity-50">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-dark-300">{campaign.name}</span>
-                    <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">
+                    <span className="font-medium text-apple-mute">{campaign.name}</span>
+                    <span className="rounded-full bg-apple-blue/15 px-2.5 py-1 text-[11px] font-semibold text-apple-blue">
                       {campaign.partner_name}
                     </span>
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-dark-500">
+                  <div className="mt-1 flex items-center gap-3 text-xs text-apple-faint">
                     <span className="font-mono">?start={campaign.start_parameter}</span>
                   </div>
                 </div>
@@ -131,7 +128,7 @@ export default function AdminPartnerCampaignAssign() {
       )}
 
       {assignMutation.isError && (
-        <div className="mt-4 rounded-lg bg-error-500/10 p-3 text-sm text-error-400">
+        <div className="mt-4 rounded-xl bg-apple-red/10 p-3 text-sm text-apple-red">
           {t('common.error')}
         </div>
       )}

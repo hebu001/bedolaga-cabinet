@@ -132,11 +132,11 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
       aria-label={title}
       aria-pressed={isActive}
       className={cn(
-        'min-h-[44px] min-w-[44px] rounded p-2.5 transition-colors',
+        'min-h-[44px] min-w-[44px] rounded-lg p-2.5 transition-colors',
         disabled && 'cursor-not-allowed opacity-50',
         isActive
-          ? 'bg-accent-500/20 text-accent-400'
-          : 'text-dark-400 hover:bg-dark-700 hover:text-dark-200',
+          ? 'bg-[#F97315]/15 text-[#F97315]'
+          : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
       )}
     >
       {children}
@@ -388,22 +388,22 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
   if (!editor) return null;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50">
+    <div className="overflow-hidden rounded-xl bg-apple-elevated">
       {/* Upload overlay */}
       {isUploading && (
-        <div className="flex items-center justify-center gap-2 bg-dark-900/60 px-3 py-2">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
-          <span className="text-xs text-dark-300">{t('news.admin.uploading')}</span>
+        <div className="flex items-center justify-center gap-2 bg-apple-card px-3 py-2">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+          <span className="text-xs text-apple-mute">{t('news.admin.uploading')}</span>
         </div>
       )}
       {isDragging && !isUploading && (
-        <div className="flex items-center justify-center border-b border-dashed border-accent-400 bg-accent-400/10 px-3 py-2">
-          <span className="text-xs font-medium text-accent-400">{t('news.admin.dropMedia')}</span>
+        <div className="flex items-center justify-center border-b border-dashed border-[#F97315] bg-[#F97315]/10 px-3 py-2">
+          <span className="text-xs font-medium text-[#F97315]">{t('news.admin.dropMedia')}</span>
         </div>
       )}
 
       {/* Compact toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-dark-700 bg-dark-800 px-1.5 py-1">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-apple-hairline bg-apple-card px-1.5 py-1">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
@@ -432,7 +432,7 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
         >
           <StrikeIcon />
         </ToolbarButton>
-        <div className="mx-0.5 h-4 w-px bg-dark-700" />
+        <div className="mx-0.5 h-4 w-px bg-apple-hairline" />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           isActive={editor.isActive('heading', { level: 2 })}
@@ -461,7 +461,7 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
         >
           <QuoteIcon />
         </ToolbarButton>
-        <div className="mx-0.5 h-4 w-px bg-dark-700" />
+        <div className="mx-0.5 h-4 w-px bg-apple-hairline" />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHighlight().run()}
           isActive={editor.isActive('highlight')}
@@ -478,7 +478,7 @@ function FaqAnswerEditor({ value, onChange }: { value: string; onChange: (html: 
           title={t('news.admin.toolbar.image')}
         >
           {isUploading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
           ) : (
             <ImageIcon />
           )}
@@ -623,16 +623,16 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="label">
+        <label className="text-[13px] font-medium text-apple-mute">
           {t('admin.infoPages.faq.questions')} ({localeLabel})
         </label>
-        <span className="text-xs text-dark-500">
+        <span className="text-xs text-apple-faint">
           {items.length} {t('admin.infoPages.faq.questionsCount')}
         </span>
       </div>
 
       {items.length === 0 && (
-        <div className="rounded-xl border border-dashed border-dark-700 bg-dark-800/30 p-6 text-center text-sm text-dark-500">
+        <div className="rounded-xl border border-dashed border-apple-hairline bg-apple-card p-6 text-center text-sm text-apple-faint">
           {t('admin.infoPages.faq.noQuestions')}
         </div>
       )}
@@ -640,10 +640,10 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
       {items.map((item, index) => (
         <div
           key={itemKeys[index] ?? index}
-          className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 transition-all hover:border-dark-600"
+          className="rounded-2xl bg-apple-card p-4 transition-all"
         >
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-medium text-dark-400">
+            <span className="text-xs font-medium text-apple-mute">
               {t('admin.infoPages.faq.questionNumber', { n: index + 1 })}
             </span>
             <div className="flex items-center gap-1">
@@ -651,7 +651,7 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
                 type="button"
                 onClick={() => handleMoveUp(index)}
                 disabled={index === 0}
-                className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200 disabled:cursor-not-allowed disabled:opacity-30"
+                className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-30"
                 title={t('admin.infoPages.faq.moveUp')}
               >
                 <ChevronUpIcon />
@@ -660,7 +660,7 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
                 type="button"
                 onClick={() => handleMoveDown(index)}
                 disabled={index >= items.length - 1}
-                className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200 disabled:cursor-not-allowed disabled:opacity-30"
+                className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-30"
                 title={t('admin.infoPages.faq.moveDown')}
               >
                 <ChevronDownIcon />
@@ -668,7 +668,7 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-dark-400 transition-colors hover:bg-error-500/10 hover:text-error-400"
+                className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-apple-mute transition-colors hover:bg-apple-red/10 hover:text-apple-red"
                 title={t('admin.infoPages.faq.removeQuestion')}
               >
                 <TrashSmallIcon />
@@ -678,19 +678,19 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
 
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-dark-400">
+              <label className="mb-1 block text-xs font-medium text-apple-mute">
                 {t('admin.infoPages.faq.question')}
               </label>
               <input
                 type="text"
                 value={item.q}
                 onChange={(e) => handleQuestionChange(index, e.target.value)}
-                className="input text-sm"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 placeholder={t('admin.infoPages.faq.questionPlaceholder')}
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-dark-400">
+              <label className="mb-1 block text-xs font-medium text-apple-mute">
                 {t('admin.infoPages.faq.answer')}
               </label>
               <FaqAnswerEditor
@@ -705,7 +705,7 @@ function FaqBuilder({ items, onChange, locale, localeLabel }: FaqBuilderProps) {
       <button
         type="button"
         onClick={handleAdd}
-        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-dark-600 bg-dark-800/30 py-3 text-sm font-medium text-dark-300 transition-colors hover:border-dark-500 hover:bg-dark-800/50 hover:text-dark-100"
+        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-card py-3 text-sm font-medium text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink"
       >
         <PlusSmallIcon />
         {t('admin.infoPages.faq.addQuestion')}
@@ -1099,14 +1099,14 @@ export default function AdminInfoPageEditor() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton to="/admin/info-pages" />
-          <h1 className="text-xl font-bold text-dark-100">
+          <h1 className="text-xl font-bold text-apple-ink">
             {isEdit ? t('admin.infoPages.edit') : t('admin.infoPages.create')}
           </h1>
         </div>
         <button
           onClick={handleSave}
           disabled={saveMutation.isPending || !slug.trim()}
-          className="min-h-[44px] rounded-lg bg-accent-500 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-[44px] rounded-full bg-[#F97315] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saveMutation.isPending ? t('admin.infoPages.saving') : t('admin.infoPages.save')}
         </button>
@@ -1116,7 +1116,9 @@ export default function AdminInfoPageEditor() {
       <div className="space-y-5">
         {/* Slug */}
         <div>
-          <label className="label">{t('admin.infoPages.fields.slug')}</label>
+          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+            {t('admin.infoPages.fields.slug')}
+          </label>
           <input
             type="text"
             value={slug}
@@ -1124,7 +1126,7 @@ export default function AdminInfoPageEditor() {
               setSlug(e.target.value);
               setSlugManuallyEdited(true);
             }}
-            className="input font-mono text-sm"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 font-mono text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             required
           />
         </div>
@@ -1132,23 +1134,27 @@ export default function AdminInfoPageEditor() {
         {/* Icon + Sort Order row */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="label">{t('admin.infoPages.fields.icon')}</label>
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+              {t('admin.infoPages.fields.icon')}
+            </label>
             <input
               type="text"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               placeholder="📄"
             />
           </div>
           <div>
-            <label className="label">{t('admin.infoPages.fields.sortOrder')}</label>
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+              {t('admin.infoPages.fields.sortOrder')}
+            </label>
             <input
               type="number"
               value={sortOrder}
               onChange={(e) => setSortOrder(Number(e.target.value) || 0)}
               min={0}
-              className="input max-w-xs"
+              className="w-full max-w-xs rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
         </div>
@@ -1160,12 +1166,14 @@ export default function AdminInfoPageEditor() {
             onChange={() => setIsActive((v) => !v)}
             aria-label={t('admin.infoPages.fields.isActive')}
           />
-          <span className="text-sm text-dark-300">{t('admin.infoPages.fields.isActive')}</span>
+          <span className="text-sm text-apple-mute">{t('admin.infoPages.fields.isActive')}</span>
         </div>
 
         {/* Page type selector */}
         <div>
-          <label className="label">{t('admin.infoPages.fields.pageType')}</label>
+          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+            {t('admin.infoPages.fields.pageType')}
+          </label>
           <div className="flex gap-1">
             {(['page', 'faq'] as const).map((pt) => (
               <button
@@ -1173,12 +1181,12 @@ export default function AdminInfoPageEditor() {
                 type="button"
                 onClick={() => setPageType(pt)}
                 className={cn(
-                  'min-h-[44px] rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
+                  'min-h-[44px] rounded-full px-4 py-2.5 text-sm font-medium transition-colors',
                   pageType === pt
                     ? pt === 'faq'
-                      ? 'bg-warning-500 text-white'
-                      : 'bg-accent-500 text-white'
-                    : 'bg-dark-700 text-dark-300 hover:bg-dark-600 hover:text-dark-100',
+                      ? 'bg-apple-amber text-white'
+                      : 'bg-[#F97315] text-white'
+                    : 'bg-apple-elevated text-apple-mute hover:text-apple-ink',
                 )}
               >
                 {t(`admin.infoPages.pageTypes.${pt}`)}
@@ -1189,11 +1197,13 @@ export default function AdminInfoPageEditor() {
 
         {/* Replaces tab selector */}
         <div>
-          <label className="label">{t('admin.infoPages.fields.replacesTab')}</label>
+          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+            {t('admin.infoPages.fields.replacesTab')}
+          </label>
           <select
             value={replacesTab ?? ''}
             onChange={(e) => setReplacesTab((e.target.value || null) as ReplacesTab | null)}
-            className="input max-w-xs"
+            className="w-full max-w-xs rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
           >
             <option value="">{t('admin.infoPages.replacesTabNone')}</option>
             {(['faq', 'rules', 'privacy', 'offer'] as const).map((tab) => {
@@ -1210,7 +1220,7 @@ export default function AdminInfoPageEditor() {
           </select>
           {replacesTab &&
             allAdminPages?.some((p) => p.replaces_tab === replacesTab && p.id !== pageId) && (
-              <p className="mt-1 text-xs text-warning-400">
+              <p className="mt-1 text-xs text-apple-amber">
                 {t('admin.infoPages.replacesTabWarning')}
               </p>
             )}
@@ -1218,7 +1228,9 @@ export default function AdminInfoPageEditor() {
 
         {/* Locale tabs */}
         <div>
-          <label className="label">{t('admin.infoPages.localeLabel')}</label>
+          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+            {t('admin.infoPages.localeLabel')}
+          </label>
           <div className="flex flex-wrap gap-1">
             {AVAILABLE_LOCALES.map((loc) => (
               <button
@@ -1226,10 +1238,10 @@ export default function AdminInfoPageEditor() {
                 type="button"
                 onClick={() => switchLocale(loc)}
                 className={cn(
-                  'min-h-[44px] rounded-lg px-4 py-2.5 text-sm font-medium transition-colors',
+                  'min-h-[44px] rounded-full px-4 py-2.5 text-sm font-medium transition-colors',
                   activeLocale === loc
-                    ? 'bg-accent-500 text-white'
-                    : 'bg-dark-700 text-dark-300 hover:bg-dark-600 hover:text-dark-100',
+                    ? 'bg-[#F97315] text-white'
+                    : 'bg-apple-elevated text-apple-mute hover:text-apple-ink',
                 )}
               >
                 {t(`admin.infoPages.locales.${loc}`)}
@@ -1240,14 +1252,14 @@ export default function AdminInfoPageEditor() {
 
         {/* Title for current locale */}
         <div>
-          <label className="label">
+          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
             {t('admin.infoPages.fields.title')} ({t(`admin.infoPages.locales.${activeLocale}`)})
           </label>
           <input
             type="text"
             value={titles[activeLocale] ?? ''}
             onChange={(e) => setTitles((prev) => ({ ...prev, [activeLocale]: e.target.value }))}
-            className="input"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
         </div>
 
@@ -1261,21 +1273,21 @@ export default function AdminInfoPageEditor() {
           />
         ) : (
           <div>
-            <label className="label">
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.infoPages.fields.content')} ({t(`admin.infoPages.locales.${activeLocale}`)})
             </label>
             <div
-              className="relative overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50"
+              className="relative overflow-hidden rounded-xl bg-apple-elevated"
               onDragOver={handleEditorDragOver}
               onDragLeave={handleEditorDragLeave}
               onDrop={handleEditorDrop}
             >
               {/* Upload progress overlay */}
               {isUploading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-dark-900/60 backdrop-blur-sm">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-apple-card/80 backdrop-blur-sm">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
-                    <span className="text-sm font-medium text-dark-200">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+                    <span className="text-sm font-medium text-apple-ink">
                       {t('news.admin.uploading')}
                     </span>
                   </div>
@@ -1284,8 +1296,8 @@ export default function AdminInfoPageEditor() {
 
               {/* Drag overlay */}
               {isDragging && !isUploading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-accent-400 bg-accent-400/10">
-                  <span className="text-sm font-semibold text-accent-400">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-[#F97315] bg-[#F97315]/10">
+                  <span className="text-sm font-semibold text-[#F97315]">
                     {t('news.admin.dropMedia')}
                   </span>
                 </div>
@@ -1293,7 +1305,7 @@ export default function AdminInfoPageEditor() {
 
               {/* Toolbar */}
               {editor && (
-                <div className="flex flex-wrap items-center gap-0.5 border-b border-dark-700 bg-dark-800 p-2">
+                <div className="flex flex-wrap items-center gap-0.5 border-b border-apple-hairline bg-apple-card p-2">
                   <ToolbarButton
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     isActive={editor.isActive('bold')}
@@ -1323,7 +1335,7 @@ export default function AdminInfoPageEditor() {
                     <StrikeIcon />
                   </ToolbarButton>
 
-                  <div className="mx-1 h-5 w-px bg-dark-700" />
+                  <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                   <ToolbarButton
                     onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -1347,7 +1359,7 @@ export default function AdminInfoPageEditor() {
                     <H3Icon />
                   </ToolbarButton>
 
-                  <div className="mx-1 h-5 w-px bg-dark-700" />
+                  <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                   <ToolbarButton
                     onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -1378,7 +1390,7 @@ export default function AdminInfoPageEditor() {
                     <CodeBlockIcon />
                   </ToolbarButton>
 
-                  <div className="mx-1 h-5 w-px bg-dark-700" />
+                  <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                   <ToolbarButton
                     onClick={() => editor.chain().focus().setTextAlign('left').run()}
@@ -1395,7 +1407,7 @@ export default function AdminInfoPageEditor() {
                     <AlignCenterIcon />
                   </ToolbarButton>
 
-                  <div className="mx-1 h-5 w-px bg-dark-700" />
+                  <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                   <ToolbarButton
                     onClick={() => editor.chain().focus().toggleHighlight().run()}
@@ -1413,7 +1425,7 @@ export default function AdminInfoPageEditor() {
                     title={t('news.admin.toolbar.image')}
                   >
                     {isUploading ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                     ) : (
                       <ImageIcon />
                     )}
@@ -1439,7 +1451,7 @@ export default function AdminInfoPageEditor() {
 
         {/* Error feedback */}
         {saveError && (
-          <div className="rounded-lg border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-400">
+          <div className="rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red">
             {saveError}
           </div>
         )}
@@ -1448,7 +1460,7 @@ export default function AdminInfoPageEditor() {
         <button
           onClick={handleSave}
           disabled={saveMutation.isPending || !slug.trim()}
-          className="min-h-[44px] w-full rounded-lg bg-accent-500 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-[44px] w-full rounded-full bg-[#F97315] py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saveMutation.isPending ? t('admin.infoPages.saving') : t('admin.infoPages.save')}
         </button>

@@ -73,15 +73,15 @@ interface SectionProps {
 
 function Section({ title, open, onToggle, children }: SectionProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-dark-700 bg-dark-900/50">
+    <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-dark-100 hover:bg-dark-800/50"
+        className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-apple-ink hover:bg-apple-elevated"
       >
         {title}
         <ChevronDownIcon open={open} />
       </button>
-      {open && <div className="border-t border-dark-700 px-4 py-4">{children}</div>}
+      {open && <div className="border-t border-apple-hairline px-4 py-4">{children}</div>}
     </div>
   );
 }
@@ -572,26 +572,26 @@ export default function AdminLandingEditor() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin/landings')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-colors hover:opacity-90"
             >
               <BackIcon />
             </button>
           )}
-          <h1 className="text-xl font-semibold text-dark-100">
+          <h1 className="text-xl font-semibold text-apple-ink">
             {isEdit ? t('admin.landings.edit') : t('admin.landings.create')}
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/admin/landings')}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-4 py-2 text-sm text-dark-300 transition-colors hover:border-dark-600"
+            className="rounded-full bg-apple-elevated px-4 py-2 text-sm text-apple-mute transition-colors hover:opacity-90"
           >
             {t('admin.landings.back')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isPending || !slug || !Object.values(title).some((v) => v.trim())}
-            className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {isPending && (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -626,7 +626,10 @@ export default function AdminLandingEditor() {
         >
           <div className="space-y-4">
             <div>
-              <label htmlFor="landing-slug" className="mb-1 block text-sm text-dark-400">
+              <label
+                htmlFor="landing-slug"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.landings.slug')}
               </label>
               <input
@@ -636,13 +639,16 @@ export default function AdminLandingEditor() {
                 onChange={(e) => setSlug(e.target.value)}
                 disabled={isEdit}
                 placeholder="my-landing"
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500 disabled:opacity-50"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
               />
-              <p className="mt-1 text-xs text-dark-500">{t('admin.landings.slugHint')}</p>
+              <p className="mt-1 text-xs text-apple-faint">{t('admin.landings.slugHint')}</p>
             </div>
 
             <div>
-              <label htmlFor="landing-title" className="mb-1 block text-sm text-dark-400">
+              <label
+                htmlFor="landing-title"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.landings.pageTitle')}
               </label>
               <LocalizedInput
@@ -654,7 +660,10 @@ export default function AdminLandingEditor() {
             </div>
 
             <div>
-              <label htmlFor="landing-subtitle" className="mb-1 block text-sm text-dark-400">
+              <label
+                htmlFor="landing-subtitle"
+                className="mb-1 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.landings.subtitle')}
               </label>
               <LocalizedInput
@@ -668,16 +677,20 @@ export default function AdminLandingEditor() {
             </div>
 
             <div className="flex items-center justify-between">
-              <label className="text-sm text-dark-400">{t('admin.landings.active')}</label>
+              <label className="text-[13px] font-medium text-apple-mute">
+                {t('admin.landings.active')}
+              </label>
               <Toggle checked={isActive} onChange={() => setIsActive(!isActive)} />
             </div>
 
             {/* SEO */}
-            <div className="border-t border-dark-700 pt-4">
-              <h4 className="mb-3 text-sm font-medium text-dark-300">{t('admin.landings.seo')}</h4>
+            <div className="border-t border-apple-hairline pt-4">
+              <h4 className="mb-3 text-sm font-medium text-apple-mute">
+                {t('admin.landings.seo')}
+              </h4>
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-sm text-dark-400">
+                  <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                     {t('admin.landings.metaTitle')}
                   </label>
                   <LocalizedInput
@@ -687,7 +700,7 @@ export default function AdminLandingEditor() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm text-dark-400">
+                  <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                     {t('admin.landings.metaDesc')}
                   </label>
                   <LocalizedInput
@@ -727,7 +740,7 @@ export default function AdminLandingEditor() {
             </DndContext>
             <button
               onClick={addFeature}
-              className="flex items-center gap-2 rounded-lg border border-dashed border-dark-600 px-4 py-2 text-sm text-dark-400 transition-colors hover:border-dark-500 hover:text-dark-300"
+              className="flex items-center gap-2 rounded-xl border border-dashed border-apple-hairline px-4 py-2 text-sm text-apple-mute transition-colors hover:text-apple-ink"
             >
               <PlusIcon />
               {t('admin.landings.addFeature')}
@@ -742,19 +755,19 @@ export default function AdminLandingEditor() {
           onToggle={() => toggleSection('tariffs')}
         >
           <div className="space-y-3">
-            <p className="text-sm text-dark-500">{t('admin.landings.selectTariffs')}</p>
+            <p className="text-sm text-apple-faint">{t('admin.landings.selectTariffs')}</p>
             {allTariffs.map((tariff: TariffListItem) => (
-              <div key={tariff.id} className="rounded-lg border border-dark-700 bg-dark-800/50 p-3">
+              <div key={tariff.id} className="rounded-xl bg-apple-elevated p-3">
                 <label className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     checked={selectedTariffIds.includes(tariff.id)}
                     onChange={() => toggleTariff(tariff.id)}
-                    className="h-4 w-4 rounded border-dark-600 bg-dark-700 text-accent-500"
+                    className="h-4 w-4 rounded accent-[#F97315]"
                   />
-                  <span className="text-sm font-medium text-dark-100">{tariff.name}</span>
+                  <span className="text-sm font-medium text-apple-ink">{tariff.name}</span>
                   {!tariff.is_active && (
-                    <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                    <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                       {t('admin.landings.inactive')}
                     </span>
                   )}
@@ -762,7 +775,7 @@ export default function AdminLandingEditor() {
                 {/* Period checkboxes from tariff detail */}
                 {selectedTariffIds.includes(tariff.id) && !tariff.is_daily && (
                   <div className="ml-7 mt-2">
-                    <span className="text-xs text-dark-500">{t('admin.landings.periods')}:</span>
+                    <span className="text-xs text-apple-faint">{t('admin.landings.periods')}:</span>
                     {tariffPeriodsMap[tariff.id] ? (
                       <div className="mt-1 flex flex-wrap gap-2">
                         {tariffPeriodsMap[tariff.id].map((period) => {
@@ -781,8 +794,8 @@ export default function AdminLandingEditor() {
                               className={cn(
                                 'rounded-full px-3 py-1 text-xs font-medium transition-colors',
                                 isAllowed
-                                  ? 'bg-accent-500/20 text-accent-400'
-                                  : 'bg-dark-700/50 text-dark-500 line-through',
+                                  ? 'bg-[#F97315]/20 text-[#F97315]'
+                                  : 'bg-apple-elevated text-apple-faint line-through',
                               )}
                             >
                               {period.days}
@@ -793,7 +806,7 @@ export default function AdminLandingEditor() {
                         })}
                       </div>
                     ) : (
-                      <span className="ml-2 text-xs text-dark-600">
+                      <span className="ml-2 text-xs text-apple-faint">
                         {t('admin.landings.loadingPeriods')}
                       </span>
                     )}
@@ -813,7 +826,7 @@ export default function AdminLandingEditor() {
           <div className="space-y-4">
             {/* Enable/disable discount */}
             <div className="flex items-center justify-between">
-              <label className="text-sm text-dark-400">
+              <label className="text-[13px] font-medium text-apple-mute">
                 {t('admin.landings.discountEnabled', 'Enable discount')}
               </label>
               <Toggle
@@ -836,7 +849,7 @@ export default function AdminLandingEditor() {
               <div className="space-y-4">
                 {/* Global percent */}
                 <div>
-                  <label className="mb-1 block text-sm text-dark-400">
+                  <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                     {t('admin.landings.discountPercent', 'Discount %')}
                   </label>
                   <div className="flex items-center gap-3">
@@ -846,9 +859,9 @@ export default function AdminLandingEditor() {
                       max={99}
                       value={discountPercent}
                       onChange={(e) => setDiscountPercent(Number(e.target.value))}
-                      className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-dark-700 accent-accent-500"
+                      className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-apple-elevated accent-[#F97315]"
                     />
-                    <div className="flex w-20 items-center rounded-lg border border-dark-700 bg-dark-800">
+                    <div className="flex w-20 items-center rounded-xl bg-apple-elevated">
                       <input
                         type="number"
                         min={1}
@@ -858,9 +871,9 @@ export default function AdminLandingEditor() {
                           const v = Math.min(99, Math.max(1, Number(e.target.value) || 1));
                           setDiscountPercent(v);
                         }}
-                        className="w-full bg-transparent px-2 py-1.5 text-center text-sm text-dark-100 outline-none"
+                        className="w-full bg-transparent px-2 py-1.5 text-center text-sm text-apple-ink outline-none"
                       />
-                      <span className="pr-2 text-sm text-dark-400">%</span>
+                      <span className="pr-2 text-sm text-apple-mute">%</span>
                     </div>
                   </div>
                 </div>
@@ -868,32 +881,32 @@ export default function AdminLandingEditor() {
                 {/* Date range */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm text-dark-400">
+                    <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                       {t('admin.landings.discountStartsAt', 'Start date')}
                     </label>
                     <input
                       type="datetime-local"
                       value={discountStartsAt}
                       onChange={(e) => setDiscountStartsAt(e.target.value)}
-                      className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500 [&::-webkit-calendar-picker-indicator]:invert"
+                      className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 [&::-webkit-calendar-picker-indicator]:invert"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm text-dark-400">
+                    <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                       {t('admin.landings.discountEndsAt', 'End date')}
                     </label>
                     <input
                       type="datetime-local"
                       value={discountEndsAt}
                       onChange={(e) => setDiscountEndsAt(e.target.value)}
-                      className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500 [&::-webkit-calendar-picker-indicator]:invert"
+                      className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 [&::-webkit-calendar-picker-indicator]:invert"
                     />
                   </div>
                 </div>
 
                 {/* Badge text */}
                 <div>
-                  <label className="mb-1 block text-sm text-dark-400">
+                  <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                     {t('admin.landings.discountBadge', 'Banner text (optional)')}
                   </label>
                   <LocalizedInput
@@ -907,10 +920,10 @@ export default function AdminLandingEditor() {
                 {/* Per-tariff overrides */}
                 {selectedTariffIds.length > 0 && (
                   <div>
-                    <label className="mb-2 block text-sm text-dark-400">
+                    <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                       {t('admin.landings.discountOverrides', 'Per-tariff overrides')}
                     </label>
-                    <p className="mb-2 text-xs text-dark-500">
+                    <p className="mb-2 text-xs text-apple-faint">
                       {t(
                         'admin.landings.discountOverridesHint',
                         'Leave empty to use global discount',
@@ -925,12 +938,12 @@ export default function AdminLandingEditor() {
                         return (
                           <div
                             key={tariffId}
-                            className="flex items-center gap-3 rounded-lg border border-dark-700 bg-dark-800/50 px-3 py-2"
+                            className="flex items-center gap-3 rounded-xl bg-apple-elevated px-3 py-2"
                           >
-                            <span className="min-w-0 flex-1 truncate text-sm text-dark-200">
+                            <span className="min-w-0 flex-1 truncate text-sm text-apple-ink">
                               {tariff.name}
                             </span>
-                            <span className="text-xs text-dark-500">
+                            <span className="text-xs text-apple-faint">
                               {hasOverride ? `${override}%` : `${discountPercent}%`}
                             </span>
                             <input
@@ -952,7 +965,7 @@ export default function AdminLandingEditor() {
                                   };
                                 });
                               }}
-                              className="w-16 rounded border border-dark-600 bg-dark-700 px-2 py-1 text-center text-sm text-dark-100 outline-none focus:border-accent-500"
+                              className="w-16 rounded-lg bg-apple-card px-2 py-1 text-center text-sm text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                             />
                           </div>
                         );
@@ -963,8 +976,8 @@ export default function AdminLandingEditor() {
 
                 {/* Preview */}
                 {selectedTariffIds.length > 0 && (
-                  <div className="rounded-lg border border-dark-600 bg-dark-800/30 p-3">
-                    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-dark-500">
+                  <div className="rounded-xl bg-apple-elevated p-3">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wider text-apple-faint">
                       {t('admin.landings.discountPreview', 'Preview')}
                     </p>
                     {selectedTariffIds.slice(0, 3).map((tariffId) => {
@@ -982,14 +995,14 @@ export default function AdminLandingEditor() {
                       );
                       return (
                         <div key={tariffId} className="flex items-center gap-2 py-1">
-                          <span className="text-sm text-dark-300">{tariff.name}:</span>
-                          <span className="text-xs text-dark-500 line-through">
+                          <span className="text-sm text-apple-mute">{tariff.name}:</span>
+                          <span className="text-xs text-apple-faint line-through">
                             {formatPrice(firstPeriod.price_kopeks)}
                           </span>
-                          <span className="text-sm font-semibold text-accent-400">
+                          <span className="text-sm font-semibold text-[#F97315]">
                             {formatPrice(discounted)}
                           </span>
-                          <span className="rounded-full bg-accent-500/20 px-1.5 py-0.5 text-[10px] font-medium text-accent-400">
+                          <span className="rounded-full bg-[#F97315]/20 px-1.5 py-0.5 text-[10px] font-medium text-[#F97315]">
                             -{pct}%
                           </span>
                         </div>
@@ -1011,7 +1024,7 @@ export default function AdminLandingEditor() {
           <div className="space-y-4">
             {/* Available system methods as toggleable list */}
             <div>
-              <p className="mb-2 text-sm text-dark-500">{t('admin.landings.selectMethods')}</p>
+              <p className="mb-2 text-sm text-apple-faint">{t('admin.landings.selectMethods')}</p>
               <div className="space-y-2">
                 {availablePaymentMethods.map((sysMethod) => {
                   const isSelected = paymentMethods.some(
@@ -1021,23 +1034,23 @@ export default function AdminLandingEditor() {
                     <label
                       key={sysMethod.method_id}
                       className={cn(
-                        'flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors',
+                        'flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-colors',
                         isSelected
-                          ? 'border-accent-500/50 bg-accent-500/5'
-                          : 'border-dark-700 bg-dark-800/50 hover:border-dark-600',
+                          ? 'bg-[#F97315]/10 ring-1 ring-[#F97315]/40'
+                          : 'bg-apple-elevated hover:opacity-90',
                       )}
                     >
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => togglePaymentMethod(sysMethod.method_id)}
-                        className="h-4 w-4 rounded border-dark-600 bg-dark-700 text-accent-500"
+                        className="h-4 w-4 rounded accent-[#F97315]"
                       />
-                      <span className="flex items-center gap-2 text-sm font-medium text-dark-100">
+                      <span className="flex items-center gap-2 text-sm font-medium text-apple-ink">
                         {sysMethod.display_name ?? sysMethod.default_display_name}
                         {sysMethod.available_sub_options &&
                           sysMethod.available_sub_options.length > 0 && (
-                            <span className="rounded-full bg-dark-700 px-1.5 py-0.5 text-[10px] text-dark-400">
+                            <span className="rounded-full bg-apple-card px-1.5 py-0.5 text-[10px] text-apple-mute">
                               {sysMethod.available_sub_options.map((o) => o.name).join(' / ')}
                             </span>
                           )}
@@ -1046,7 +1059,7 @@ export default function AdminLandingEditor() {
                   );
                 })}
                 {availablePaymentMethods.length === 0 && (
-                  <p className="text-sm text-dark-600">{t('admin.landings.noSystemMethods')}</p>
+                  <p className="text-sm text-apple-faint">{t('admin.landings.noSystemMethods')}</p>
                 )}
               </div>
             </div>
@@ -1054,7 +1067,7 @@ export default function AdminLandingEditor() {
             {/* Selected methods with drag-to-reorder */}
             {paymentMethods.length > 0 && (
               <div>
-                <p className="mb-2 text-sm text-dark-500">{t('admin.landings.methodOrder')}</p>
+                <p className="mb-2 text-sm text-apple-faint">{t('admin.landings.methodOrder')}</p>
                 <DndContext sensors={sensors} onDragEnd={handleMethodDragEnd}>
                   <SortableContext items={methodIds} strategy={verticalListSortingStrategy}>
                     <div className="space-y-2">
@@ -1083,7 +1096,9 @@ export default function AdminLandingEditor() {
           onToggle={() => toggleSection('gifts')}
         >
           <div className="flex items-center justify-between">
-            <label className="text-sm text-dark-400">{t('admin.landings.giftEnabled')}</label>
+            <label className="text-[13px] font-medium text-apple-mute">
+              {t('admin.landings.giftEnabled')}
+            </label>
             <Toggle checked={giftEnabled} onChange={() => setGiftEnabled(!giftEnabled)} />
           </div>
         </Section>
@@ -1107,7 +1122,7 @@ export default function AdminLandingEditor() {
             {/* View Goal */}
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <label className="mb-1 block text-sm text-dark-400">
+                <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                   {t('admin.landings.viewGoal', 'View goal')}
                 </label>
                 <input
@@ -1115,7 +1130,7 @@ export default function AdminLandingEditor() {
                   value={analyticsViewGoal}
                   onChange={(e) => setAnalyticsViewGoal(e.target.value)}
                   disabled={!analyticsViewEnabled}
-                  className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500 disabled:opacity-50"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
                   placeholder="landing_view"
                 />
               </div>
@@ -1128,7 +1143,7 @@ export default function AdminLandingEditor() {
             {/* Click Goal */}
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <label className="mb-1 block text-sm text-dark-400">
+                <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                   {t('admin.landings.clickGoal', 'Payment click goal')}
                 </label>
                 <input
@@ -1136,7 +1151,7 @@ export default function AdminLandingEditor() {
                   value={analyticsClickGoal}
                   onChange={(e) => setAnalyticsClickGoal(e.target.value)}
                   disabled={!analyticsClickEnabled}
-                  className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500 disabled:opacity-50"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
                   placeholder="landing_pay"
                 />
               </div>
@@ -1146,12 +1161,12 @@ export default function AdminLandingEditor() {
               />
             </div>
             {/* Sticky pay button on mobile */}
-            <div className="flex items-center justify-between gap-4 border-t border-dark-800 pt-4">
+            <div className="flex items-center justify-between gap-4 border-t border-apple-hairline pt-4">
               <div>
-                <p className="text-sm text-dark-300">
+                <p className="text-sm text-apple-mute">
                   {t('admin.landings.stickyPayButton', 'Sticky pay button (mobile)')}
                 </p>
-                <p className="text-xs text-dark-500">
+                <p className="text-xs text-apple-faint">
                   {t(
                     'admin.landings.stickyPayButtonHint',
                     'Button pinned to bottom of screen on mobile',
@@ -1171,7 +1186,7 @@ export default function AdminLandingEditor() {
         >
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm text-dark-400">
+              <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                 {t('admin.landings.footerText')}
               </label>
               <LocalizedInput
@@ -1183,14 +1198,14 @@ export default function AdminLandingEditor() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm text-dark-400">
+              <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                 {t('admin.landings.customCss')}
               </label>
               <textarea
                 value={customCss}
                 onChange={(e) => setCustomCss(e.target.value)}
                 rows={6}
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 font-mono text-sm text-dark-100 outline-none focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 font-mono text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
             </div>
           </div>

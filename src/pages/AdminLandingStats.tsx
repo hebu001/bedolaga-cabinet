@@ -42,12 +42,12 @@ const TARIFF_PALETTE = ['#818cf8', '#34d399', '#f59e0b', '#ec4899', '#06b6d4', '
 const GIFT_COLOR = '#a855f7';
 
 const PURCHASE_STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-warning-500/20 text-warning-400',
-  paid: 'bg-accent-500/20 text-accent-400',
-  delivered: 'bg-success-500/20 text-success-400',
-  pending_activation: 'bg-accent-500/20 text-accent-400',
-  failed: 'bg-error-500/20 text-error-400',
-  expired: 'bg-dark-500/20 text-dark-400',
+  pending: 'bg-apple-amber/15 text-apple-amber',
+  paid: 'bg-[#F97315]/15 text-[#F97315]',
+  delivered: 'bg-apple-green/15 text-apple-green',
+  pending_activation: 'bg-[#F97315]/15 text-[#F97315]',
+  failed: 'bg-apple-red/15 text-apple-red',
+  expired: 'bg-apple-elevated text-apple-mute',
 };
 
 const PURCHASE_STATUS_OPTIONS: Array<PurchaseItemStatus | 'all'> = [
@@ -88,7 +88,7 @@ const TelegramSmallIcon = () => (
 
 const ArrowRightIcon = () => (
   <svg
-    className="h-3 w-3 shrink-0 text-dark-500"
+    className="h-3 w-3 shrink-0 text-apple-faint"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -129,7 +129,7 @@ const ChevronRightSmall = () => (
 // Contact display helper
 function ContactDisplay({ type, value }: { type: 'email' | 'telegram'; value: string }) {
   return (
-    <span className="flex items-center gap-1 text-dark-300">
+    <span className="flex items-center gap-1 text-apple-mute">
       {type === 'email' ? <EmailIcon /> : <TelegramSmallIcon />}
       <span className="min-w-0 truncate text-xs">{value}</span>
     </span>
@@ -145,7 +145,7 @@ interface PurchaseCardProps {
 }
 
 function PurchaseCard({ item, formatPrice, lang, t }: PurchaseCardProps) {
-  const statusStyle = PURCHASE_STATUS_STYLES[item.status] || 'bg-dark-600 text-dark-300';
+  const statusStyle = PURCHASE_STATUS_STYLES[item.status] || 'bg-apple-elevated text-apple-mute';
   const dateStr = new Date(item.created_at).toLocaleDateString(lang, {
     day: 'numeric',
     month: 'short',
@@ -166,13 +166,13 @@ function PurchaseCard({ item, formatPrice, lang, t }: PurchaseCardProps) {
     : null;
 
   return (
-    <div className="rounded-xl border border-dark-700/50 bg-dark-800/40 p-3 transition-colors hover:border-dark-600 sm:p-4">
+    <div className="rounded-2xl bg-apple-card p-3 transition-colors hover:bg-apple-elevated sm:p-4">
       {/* Mobile: stacked | Desktop: horizontal */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
         {/* Status badge */}
         <div className="shrink-0">
           <span
-            className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusStyle}`}
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusStyle}`}
           >
             {t(`admin.landings.purchases.status_${item.status}`)}
           </span>
@@ -192,26 +192,26 @@ function PurchaseCard({ item, formatPrice, lang, t }: PurchaseCardProps) {
         </div>
 
         {/* Tariff + period */}
-        <div className="shrink-0 text-sm text-dark-200">
+        <div className="shrink-0 text-sm text-apple-ink">
           <span className="font-medium">{item.tariff_name}</span>
-          <span className="text-dark-500">
+          <span className="text-apple-faint">
             {' '}
             &middot; {item.period_days} {t('admin.landings.purchases.days')}
           </span>
         </div>
 
         {/* Price */}
-        <div className="shrink-0 text-sm font-medium text-dark-100">
+        <div className="shrink-0 text-sm font-medium text-apple-ink">
           {formatPrice(item.amount_kopeks)}
         </div>
 
         {/* Payment method */}
-        <div className="shrink-0 text-xs text-dark-500">{item.payment_method}</div>
+        <div className="shrink-0 text-xs text-apple-faint">{item.payment_method}</div>
 
         {/* Gift badge */}
         {item.is_gift && (
           <div className="shrink-0">
-            <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-apple-blue/15 px-2.5 py-1 text-[11px] font-semibold text-apple-blue">
               <GiftIcon />
               {t('admin.landings.purchases.gift')}
             </span>
@@ -221,15 +221,15 @@ function PurchaseCard({ item, formatPrice, lang, t }: PurchaseCardProps) {
         {/* Referrer */}
         {referrerHost && (
           <div
-            className="max-w-[140px] shrink-0 truncate rounded bg-accent-500/20 px-1.5 py-0.5 text-xs font-medium text-accent-400"
+            className="max-w-[140px] shrink-0 truncate rounded-full bg-[#F97315]/15 px-2.5 py-1 text-[11px] font-semibold text-[#F97315]"
             title={item.referrer || ''}
           >
             {referrerHost}
           </div>
         )}
         {/* Date + Time */}
-        <div className="shrink-0 text-xs text-dark-500">
-          {dateStr} <span className="text-dark-600">{timeStr}</span>
+        <div className="shrink-0 text-xs text-apple-faint">
+          {dateStr} <span className="text-apple-faint">{timeStr}</span>
         </div>
       </div>
     </div>
@@ -344,7 +344,7 @@ export default function AdminLandingStats() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -355,13 +355,15 @@ export default function AdminLandingStats() {
       <div className="animate-fade-in">
         <div className="mb-6 flex items-center gap-3">
           <AdminBackButton to="/admin/landings" />
-          <h1 className="text-xl font-semibold text-dark-100">{t('admin.landings.stats.title')}</h1>
+          <h1 className="text-xl font-semibold text-apple-ink">
+            {t('admin.landings.stats.title')}
+          </h1>
         </div>
-        <div className="rounded-xl border border-error-500/30 bg-error-500/10 p-6 text-center">
-          <p className="text-error-400">{t('admin.landings.stats.loadError')}</p>
+        <div className="rounded-2xl bg-apple-red/10 p-6 text-center">
+          <p className="text-apple-red">{t('admin.landings.stats.loadError')}</p>
           <button
             onClick={() => navigate('/admin/landings')}
-            className="mt-4 text-sm text-dark-400 hover:text-dark-200"
+            className="mt-4 text-sm text-apple-mute hover:text-apple-ink"
           >
             {t('common.back')}
           </button>
@@ -378,18 +380,18 @@ export default function AdminLandingStats() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton to="/admin/landings" />
-          <div className="rounded-lg bg-accent-500/20 p-2 text-accent-400">
+          <div className="rounded-xl bg-[#F97315]/15 p-2 text-[#F97315]">
             <ChartIcon />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-dark-100">{landingTitle}</h1>
+            <h1 className="truncate text-xl font-semibold text-apple-ink">{landingTitle}</h1>
             <div className="mt-1 flex items-center gap-2">
               {landing?.is_active ? (
-                <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                   {t('admin.landings.active')}
                 </span>
               ) : (
-                <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                   {t('admin.landings.inactive')}
                 </span>
               )}
@@ -401,44 +403,48 @@ export default function AdminLandingStats() {
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
             <div className="text-xl font-bold sm:text-2xl">
-              <span className="text-warning-400">{stats.total_created}</span>
-              <span className="mx-1 text-dark-600">/</span>
-              <span className="text-success-400">{stats.total_successful}</span>
+              <span className="text-apple-amber">{stats.total_created}</span>
+              <span className="mx-1 text-apple-faint">/</span>
+              <span className="text-apple-green">{stats.total_successful}</span>
             </div>
-            <div className="text-xs text-dark-500">
+            <div className="text-xs text-apple-faint">
               {t('admin.landings.stats.created', 'Created')} /{' '}
               {t('admin.landings.stats.paid', 'paid')}
             </div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="truncate text-xl font-bold text-accent-400 sm:text-2xl">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="truncate text-xl font-bold text-[#F97315] sm:text-2xl">
               {formatWithCurrency(stats.total_revenue_kopeks / CHART_COMMON.KOPEKS_DIVISOR)}
             </div>
-            <div className="text-xs text-dark-500">{t('admin.landings.stats.revenue')}</div>
+            <div className="text-xs text-apple-faint">{t('admin.landings.stats.revenue')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="text-xl font-bold text-purple-400 sm:text-2xl">{stats.total_gifts}</div>
-            <div className="text-xs text-dark-500">{t('admin.landings.stats.giftPurchases')}</div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-xl font-bold text-apple-blue sm:text-2xl">{stats.total_gifts}</div>
+            <div className="text-xs text-apple-faint">
+              {t('admin.landings.stats.giftPurchases')}
+            </div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="text-xl font-bold text-dark-200 sm:text-2xl">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-xl font-bold text-apple-ink sm:text-2xl">
               {stats.conversion_rate}%
             </div>
-            <div className="text-xs text-dark-500">{t('admin.landings.stats.conversionRate')}</div>
+            <div className="text-xs text-apple-faint">
+              {t('admin.landings.stats.conversionRate')}
+            </div>
           </div>
         </div>
 
         {/* Charts */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Daily Purchases & Revenue */}
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <h3 className="mb-4 font-medium text-dark-200">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <h3 className="mb-4 font-medium text-apple-ink">
               {t('admin.landings.stats.dailyChart')}
             </h3>
             {dailyData.length === 0 ? (
-              <div className="flex h-[220px] items-center justify-center text-sm text-dark-500">
+              <div className="flex h-[220px] items-center justify-center text-sm text-apple-faint">
                 {t('admin.landings.stats.noPurchases')}
               </div>
             ) : (
@@ -563,12 +569,12 @@ export default function AdminLandingStats() {
           </div>
 
           {/* Daily Purchases Bar Chart */}
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <h3 className="mb-4 font-medium text-dark-200">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <h3 className="mb-4 font-medium text-apple-ink">
               {t('admin.landings.stats.dailyPurchases', 'Daily purchases')}
             </h3>
             {dailyData.length === 0 ? (
-              <div className="flex h-[220px] items-center justify-center text-sm text-dark-500">
+              <div className="flex h-[220px] items-center justify-center text-sm text-apple-faint">
                 {t('admin.landings.stats.noPurchases')}
               </div>
             ) : (
@@ -583,33 +589,33 @@ export default function AdminLandingStats() {
                         : 0;
                     return (
                       <div key={i} className="flex items-center gap-2">
-                        <span className="w-10 shrink-0 text-right text-xs text-dark-500">
+                        <span className="w-10 shrink-0 text-right text-xs text-apple-faint">
                           {day.label}
                         </span>
                         <div
-                          className="group relative h-5 flex-1 overflow-hidden rounded-full bg-amber-500/80"
+                          className="group relative h-5 flex-1 overflow-hidden rounded-full bg-apple-amber/80"
                           title={`${t('admin.landings.stats.created', 'Created')}: ${day.created || 0}\n${t('admin.landings.stats.paid', 'paid')}: ${day.purchases || 0}\n${t('admin.landings.stats.revenueLabel', 'Revenue')}: ${day.revenue?.toFixed(0) || 0} ${t('common.currency', '\u20BD')}\nCR: ${Math.round(purchasedPct)}%`}
                         >
                           <div
-                            className="absolute inset-y-0 left-0 rounded-full bg-accent-500"
+                            className="absolute inset-y-0 left-0 rounded-full bg-[#F97315]"
                             style={{ width: `${purchasedPct}%` }}
                           />
                         </div>
-                        <span className="w-12 shrink-0 text-xs text-dark-400">
-                          <span className="text-amber-400">{day.created || 0}</span>
-                          <span className="text-dark-600">/</span>
-                          <span className="text-accent-400">{day.purchases || 0}</span>
+                        <span className="w-12 shrink-0 text-xs text-apple-mute">
+                          <span className="text-apple-amber">{day.created || 0}</span>
+                          <span className="text-apple-faint">/</span>
+                          <span className="text-[#F97315]">{day.purchases || 0}</span>
                         </span>
                       </div>
                     );
                   })}
-                <div className="mt-2 flex items-center gap-4 text-xs text-dark-500">
+                <div className="mt-2 flex items-center gap-4 text-xs text-apple-faint">
                   <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-amber-500/80" />
+                    <div className="h-2 w-2 rounded-full bg-apple-amber/80" />
                     <span>{t('admin.landings.stats.created', 'Created')}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-accent-500" />
+                    <div className="h-2 w-2 rounded-full bg-[#F97315]" />
                     <span>{t('admin.landings.stats.paid', 'paid')}</span>
                   </div>
                 </div>
@@ -619,12 +625,12 @@ export default function AdminLandingStats() {
         </div>
 
         {/* Tariff Distribution -- full width */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-          <h3 className="mb-4 font-medium text-dark-200">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+          <h3 className="mb-4 font-medium text-apple-ink">
             {t('admin.landings.stats.tariffChart')}
           </h3>
           {tariffData.length === 0 ? (
-            <div className="flex h-[220px] items-center justify-center text-sm text-dark-500">
+            <div className="flex h-[220px] items-center justify-center text-sm text-apple-faint">
               {t('admin.landings.stats.noPurchases')}
             </div>
           ) : (
@@ -678,28 +684,28 @@ export default function AdminLandingStats() {
 
         {/* Additional Stats Row */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="mb-1 text-sm text-dark-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="mb-1 text-sm text-apple-mute">
               {t('admin.landings.stats.avgPurchase')}
             </div>
-            <div className="text-lg font-medium text-dark-200">
+            <div className="text-lg font-medium text-apple-ink">
               {formatWithCurrency(stats.avg_purchase_kopeks / CHART_COMMON.KOPEKS_DIVISOR)}
             </div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <div className="mb-1 text-sm text-dark-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="mb-1 text-sm text-apple-mute">
               {t('admin.landings.stats.regularPurchases')}
             </div>
-            <div className="text-lg font-medium text-dark-200">{stats.total_regular}</div>
+            <div className="text-lg font-medium text-apple-ink">{stats.total_regular}</div>
           </div>
-          <div className="col-span-2 rounded-xl border border-dark-700 bg-dark-800 p-4 sm:col-span-1">
-            <div className="mb-1 text-sm text-dark-400">{t('admin.landings.stats.funnel')}</div>
-            <div className="text-lg font-medium text-dark-200">
+          <div className="apple-card-grad col-span-2 rounded-2xl bg-apple-card p-4 sm:col-span-1">
+            <div className="mb-1 text-sm text-apple-mute">{t('admin.landings.stats.funnel')}</div>
+            <div className="text-lg font-medium text-apple-ink">
               {stats.total_created}{' '}
-              <span className="text-sm text-dark-500">{t('admin.landings.stats.created')}</span>
+              <span className="text-sm text-apple-faint">{t('admin.landings.stats.created')}</span>
               {' / '}
               {stats.total_successful}{' '}
-              <span className="text-sm text-dark-500">
+              <span className="text-sm text-apple-faint">
                 {t('admin.landings.stats.paid', 'paid')}
               </span>
             </div>
@@ -708,8 +714,8 @@ export default function AdminLandingStats() {
 
         {/* Gift vs Regular Donut */}
         {stats.total_purchases > 0 && (
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-            <h3 className="mb-4 font-medium text-dark-200">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <h3 className="mb-4 font-medium text-apple-ink">
               {t('admin.landings.stats.giftBreakdown')}
             </h3>
             <div className="flex items-center justify-center gap-8">
@@ -743,7 +749,7 @@ export default function AdminLandingStats() {
                 </ResponsiveContainer>
                 {/* Center text */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold text-dark-100">{stats.total_purchases}</span>
+                  <span className="text-lg font-bold text-apple-ink">{stats.total_purchases}</span>
                 </div>
               </div>
               <div className="space-y-3">
@@ -752,13 +758,13 @@ export default function AdminLandingStats() {
                     className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: colors.referrals }}
                   />
-                  <span className="text-sm text-dark-300">
+                  <span className="text-sm text-apple-mute">
                     {t('admin.landings.stats.regular')}: {stats.total_regular}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full" style={{ backgroundColor: GIFT_COLOR }} />
-                  <span className="text-sm text-dark-300">
+                  <span className="text-sm text-apple-mute">
                     {t('admin.landings.stats.gifts')}: {stats.total_gifts}
                   </span>
                 </div>
@@ -768,17 +774,17 @@ export default function AdminLandingStats() {
         )}
 
         {/* Purchases List */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
           {/* Header row: title + status filter */}
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="font-medium text-dark-200">{t('admin.landings.purchases.title')}</h3>
+            <h3 className="font-medium text-apple-ink">{t('admin.landings.purchases.title')}</h3>
             <select
               value={purchaseStatusFilter}
               onChange={(e) => {
                 setPurchaseStatusFilter(e.target.value as PurchaseItemStatus | 'all');
                 setPurchaseOffset(0);
               }}
-              className="rounded-lg border border-dark-600 bg-dark-900 px-3 py-1.5 text-sm text-dark-200 outline-none transition-colors focus:border-accent-500"
+              className="rounded-xl bg-apple-elevated px-3 py-1.5 text-sm text-apple-ink outline-none transition-colors focus:ring-2 focus:ring-[#F97315]/50"
               aria-label={t('admin.landings.purchases.allStatuses')}
             >
               {PURCHASE_STATUS_OPTIONS.map((opt) => (
@@ -794,10 +800,10 @@ export default function AdminLandingStats() {
           {/* Content */}
           {purchasesLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
             </div>
           ) : purchaseItems.length === 0 ? (
-            <div className="py-8 text-center text-sm text-dark-500">
+            <div className="py-8 text-center text-sm text-apple-faint">
               {t('admin.landings.purchases.noPurchases')}
             </div>
           ) : (
@@ -819,7 +825,7 @@ export default function AdminLandingStats() {
               {/* Pagination */}
               {purchaseTotalPages > 1 && (
                 <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-                  <span className="text-xs text-dark-500">
+                  <span className="text-xs text-apple-faint">
                     {t('admin.landings.purchases.showing', {
                       from: purchaseOffset + 1,
                       to: Math.min(purchaseOffset + PURCHASES_PAGE_SIZE, purchaseTotal),
@@ -832,14 +838,14 @@ export default function AdminLandingStats() {
                         setPurchaseOffset((prev) => Math.max(0, prev - PURCHASES_PAGE_SIZE))
                       }
                       disabled={purchaseOffset === 0}
-                      className="flex items-center gap-1 rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex items-center gap-1 rounded-full bg-apple-elevated px-3 py-1.5 text-sm text-apple-mute transition-colors hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label={t('admin.landings.purchases.prev')}
                     >
                       <ChevronLeftSmall />
                       <span className="hidden sm:inline">{t('admin.landings.purchases.prev')}</span>
                     </button>
 
-                    <span className="px-2 text-xs text-dark-400">
+                    <span className="px-2 text-xs text-apple-mute">
                       {t('admin.landings.purchases.page', {
                         current: purchaseCurrentPage,
                         total: purchaseTotalPages,
@@ -849,7 +855,7 @@ export default function AdminLandingStats() {
                     <button
                       onClick={() => setPurchaseOffset((prev) => prev + PURCHASES_PAGE_SIZE)}
                       disabled={purchaseOffset + PURCHASES_PAGE_SIZE >= purchaseTotal}
-                      className="flex items-center gap-1 rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex items-center gap-1 rounded-full bg-apple-elevated px-3 py-1.5 text-sm text-apple-mute transition-colors hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label={t('admin.landings.purchases.next')}
                     >
                       <span className="hidden sm:inline">{t('admin.landings.purchases.next')}</span>
