@@ -953,7 +953,7 @@ export default function AdminPanel() {
           ))}
         </div>
 
-        {/* Hero + Search */}
+        {/* Hero */}
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           <h1 className="bg-gradient-to-r from-white via-apple-mute to-[#F97315] bg-clip-text text-lg font-extrabold tracking-tight text-transparent sm:text-xl">
             {t('admin.panel.title')}
@@ -965,35 +965,36 @@ export default function AdminPanel() {
             />
             {t('admin.panel.statsOnline')}
           </div>
-          {/* Search */}
-          <div className="relative ml-auto min-w-[160px] max-w-[360px] flex-1">
-            <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-apple-faint [&>svg]:h-3.5 [&>svg]:w-3.5">
-              {icons.search}
-            </div>
-            <input
-              ref={inputRef}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('admin.panel.searchPlaceholder')}
-              aria-label={t('admin.panel.searchPlaceholder')}
-              className="w-full rounded-xl bg-apple-card py-2 pl-8 pr-16 font-sans text-xs text-apple-ink outline-none transition-all placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                aria-label={t('admin.panel.searchClear')}
-                className="absolute right-12 top-1/2 -translate-y-1/2 text-apple-faint transition-colors hover:text-apple-ink [&>svg]:h-3.5 [&>svg]:w-3.5"
-              >
-                {icons.x}
-              </button>
-            )}
-            <kbd
-              aria-hidden="true"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md bg-apple-elevated px-1.5 py-0.5 font-mono text-2xs text-apple-faint"
-            >
-              {IS_MAC ? '\u2318' : 'Ctrl+'}K
-            </kbd>
+        </div>
+
+        {/* Search — full window width */}
+        <div className="relative shrink-0">
+          <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-apple-faint [&>svg]:h-3.5 [&>svg]:w-3.5">
+            {icons.search}
           </div>
+          <input
+            ref={inputRef}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('admin.panel.searchPlaceholder')}
+            aria-label={t('admin.panel.searchPlaceholder')}
+            className="w-full rounded-xl bg-apple-card py-2 pl-8 pr-16 font-sans text-xs text-apple-ink outline-none transition-all placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              aria-label={t('admin.panel.searchClear')}
+              className="absolute right-12 top-1/2 -translate-y-1/2 text-apple-faint transition-colors hover:text-apple-ink [&>svg]:h-3.5 [&>svg]:w-3.5"
+            >
+              {icons.x}
+            </button>
+          )}
+          <kbd
+            aria-hidden="true"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md bg-apple-elevated px-1.5 py-0.5 font-mono text-2xs text-apple-faint"
+          >
+            {IS_MAC ? '\u2318' : 'Ctrl+'}K
+          </kbd>
         </div>
 
         {/* Grid */}
