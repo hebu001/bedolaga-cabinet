@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
+import { initDataUser } from '@telegram-apps/sdk-react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '@/platform';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -194,6 +195,17 @@ export default function Profile() {
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Real account photo (parsed from Telegram init data, same as the header menu)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const tgUser = initDataUser();
+      if (tgUser?.photo_url) setPhotoUrl(tgUser.photo_url);
+    } catch {
+      // Not in Telegram or init data unavailable — fall back to the letter avatar
+    }
+  }, []);
 
   // Accordion open state
   const [openSection, setOpenSection] = useState<string | null>('account');
@@ -553,8 +565,21 @@ export default function Profile() {
     <div className="space-y-4 font-sans text-apple-ink">
       {/* ===== Hero header ===== */}
       <div className="flex flex-col items-center pt-2 text-center">
+        {photoUrl ? (
+          <img
+            src={photoUrl}
+            alt=""
+            className="h-16 w-16 rounded-2xl object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+        ) : null}
         <div
-          className="flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated text-[30px] font-bold"
+          className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated text-[30px] font-bold ${
+            photoUrl ? 'hidden' : ''
+          }`}
           style={{ color: '#F97315' }}
         >
           {avatarLetter}
