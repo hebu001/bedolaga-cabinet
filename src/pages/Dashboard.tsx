@@ -5,11 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useAuthStore } from '../store/auth';
-import { useBlockingStore } from '../store/blocking';
 import { subscriptionApi } from '../api/subscription';
 import { referralApi } from '../api/referral';
 import { balanceApi } from '../api/balance';
-import Onboarding, { useOnboarding } from '../components/Onboarding';
 import TrialOfferCard from '../components/dashboard/TrialOfferCard';
 import { giftApi } from '../api/gift';
 import { promoApi } from '../api/promo';
@@ -96,9 +94,6 @@ export default function Dashboard() {
   const haptic = useHapticFeedback();
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const queryClient = useQueryClient();
-  const { isCompleted: isOnboardingCompleted, complete: completeOnboarding } = useOnboarding();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const blockingType = useBlockingStore((state) => state.blockingType);
   const [trialError, setTrialError] = useState<string | null>(null);
   const [showDevicePanel, setShowDevicePanel] = useState(false);
 
@@ -145,7 +140,8 @@ export default function Dashboard() {
     },
   });
 
-  const { isLoading: refLoading } = useQuery({
+  // Warm the referral-info cache for other pages.
+  useQuery({
     queryKey: ['referral-info'],
     queryFn: referralApi.getReferralInfo,
   });
@@ -255,53 +251,6 @@ export default function Dashboard() {
   }, [subscription, refreshTrafficMutation]);
 
   const hasNoSubscription = subscriptionResponse?.has_subscription === false && !subLoading;
-
-  // Show onboarding for new users after data loads
-  useEffect(() => {
-    if (!isOnboardingCompleted && !subLoading && !refLoading && !blockingType) {
-      const timer = setTimeout(() => setShowOnboarding(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isOnboardingCompleted, subLoading, refLoading, blockingType]);
-
-  const onboardingSteps = useMemo(() => {
-    type Placement = 'top' | 'bottom' | 'left' | 'right';
-    const steps: Array<{
-      target: string;
-      title: string;
-      description: string;
-      placement: Placement;
-    }> = [
-      {
-        target: 'welcome',
-        title: t('onboarding.steps.welcome.title'),
-        description: t('onboarding.steps.welcome.description'),
-        placement: 'bottom',
-      },
-      {
-        target: 'balance',
-        title: t('onboarding.steps.balance.title'),
-        description: t('onboarding.steps.balance.description'),
-        placement: 'bottom',
-      },
-    ];
-
-    if (subscription?.subscription_url) {
-      steps.splice(1, 0, {
-        target: 'connect-devices',
-        title: t('onboarding.steps.connectDevices.title'),
-        description: t('onboarding.steps.connectDevices.description'),
-        placement: 'bottom',
-      });
-    }
-
-    return steps;
-  }, [t, subscription]);
-
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false);
-    completeOnboarding();
-  };
 
   // ── Derived display data ──
   const usedGb = trafficData?.traffic_used_gb ?? subscription?.traffic_used_gb ?? 0;
@@ -648,15 +597,6 @@ export default function Dashboard() {
           </Link>
         </motion.div>
       </div>
-
-      {/* Onboarding Tutorial */}
-      {showOnboarding && (
-        <Onboarding
-          steps={onboardingSteps}
-          onComplete={handleOnboardingComplete}
-          onSkip={handleOnboardingComplete}
-        />
-      )}
     </div>
   );
 }
