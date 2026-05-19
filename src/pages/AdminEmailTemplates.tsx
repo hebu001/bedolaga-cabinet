@@ -109,14 +109,12 @@ function TemplateCard({
   return (
     <button
       onClick={onClick}
-      className="group w-full rounded-xl border border-dark-700 bg-dark-800 p-3 text-left transition-all duration-200 hover:border-accent-500/50 sm:p-4"
+      className="apple-card-grad group w-full rounded-2xl bg-apple-card p-3 text-left transition-all duration-200 sm:p-4"
     >
       <div className="flex items-start justify-between gap-2 sm:gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-medium text-dark-100 transition-colors group-hover:text-accent-400">
-            {label}
-          </h3>
-          <p className="mt-1 line-clamp-2 text-xs text-dark-400">{description}</p>
+          <h3 className="truncate text-sm font-medium text-apple-ink">{label}</h3>
+          <p className="mt-1 line-clamp-2 text-xs text-apple-mute">{description}</p>
         </div>
         <div className="mt-0.5 flex flex-shrink-0 items-center gap-1 sm:gap-1.5">
           {Object.entries(template.languages).map(([lang, status]) => (
@@ -124,8 +122,8 @@ function TemplateCard({
               key={lang}
               className={`inline-flex h-5 w-6 items-center justify-center rounded text-2xs font-medium sm:w-7 ${
                 status.has_custom
-                  ? 'bg-accent-500/20 text-accent-400 ring-1 ring-accent-500/30'
-                  : 'bg-dark-700 text-dark-400'
+                  ? 'bg-[#F97315]/20 text-[#F97315]'
+                  : 'bg-apple-elevated text-apple-mute'
               }`}
               title={`${LANG_FULL_LABELS[lang] || lang}: ${status.has_custom ? 'Custom' : 'Default'}`}
             >
@@ -136,8 +134,11 @@ function TemplateCard({
       </div>
       {customCount > 0 && (
         <div className="mt-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent-500/10 px-2 py-0.5 text-2xs text-accent-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-[#F97315]/10 px-2 py-0.5 text-2xs"
+            style={{ color: '#F97315' }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: '#F97315' }} />
             {customCount} custom
           </span>
         </div>
@@ -277,26 +278,29 @@ function TemplateEditor({
         <div className="flex min-w-0 items-start gap-2 sm:items-center sm:gap-3">
           <button
             onClick={onClose}
-            className="mt-0.5 flex-shrink-0 rounded-lg p-1 transition-colors hover:bg-dark-700 sm:mt-0"
+            className="mt-0.5 flex-shrink-0 rounded-lg p-1 transition-colors hover:bg-apple-elevated sm:mt-0"
           >
             <BackIcon />
           </button>
           <div className="min-w-0">
-            <h2 className="truncate text-base font-semibold text-dark-100 sm:text-lg">{label}</h2>
-            <p className="line-clamp-2 text-xs text-dark-400">
+            <h2 className="truncate text-base font-semibold text-apple-ink sm:text-lg">{label}</h2>
+            <p className="line-clamp-2 text-xs text-apple-mute">
               {detail.description[interfaceLang] || detail.description['en'] || ''}
             </p>
           </div>
         </div>
         {langData && !langData.is_default && (
-          <span className="flex-shrink-0 rounded-full bg-accent-500/15 px-2 py-1 text-2xs font-medium text-accent-400 ring-1 ring-accent-500/25 sm:px-2.5 sm:text-xs">
+          <span
+            className="flex-shrink-0 rounded-full bg-[#F97315]/15 px-2 py-1 text-2xs font-medium sm:px-2.5 sm:text-xs"
+            style={{ color: '#F97315' }}
+          >
             Custom
           </span>
         )}
       </div>
 
       {/* Language tabs */}
-      <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-dark-900 p-1">
+      <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-apple-card p-1">
         {Object.keys(detail.languages).map((lang) => {
           const isActive = lang === activeLang;
           const langInfo = detail.languages[lang];
@@ -307,16 +311,19 @@ function TemplateEditor({
                 if (isDirty && !window.confirm(t('admin.emailTemplates.unsavedWarning'))) return;
                 setActiveLang(lang);
               }}
-              className={`flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-md px-2 py-2 text-xs font-medium transition-all duration-150 sm:gap-1.5 sm:px-3 sm:text-sm ${
+              className={`flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium transition-all duration-150 sm:gap-1.5 sm:px-3 sm:text-sm ${
                 isActive
-                  ? 'bg-dark-700 text-dark-100 shadow-sm'
-                  : 'text-dark-400 hover:bg-dark-800 hover:text-dark-200'
+                  ? 'bg-apple-elevated text-apple-ink shadow-sm'
+                  : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink'
               }`}
             >
               <span className="sm:hidden">{LANG_LABELS[lang] || lang}</span>
               <span className="hidden sm:inline">{LANG_FULL_LABELS[lang] || lang}</span>
               {!langInfo.is_default && (
-                <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-accent-400" />
+                <span
+                  className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: '#F97315' }}
+                />
               )}
             </button>
           );
@@ -325,29 +332,30 @@ function TemplateEditor({
 
       {/* Subject */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-dark-300">
+        <label className="mb-2 block text-[13px] font-medium text-apple-mute">
           {t('admin.emailTemplates.subject')}
         </label>
         <input
           type="text"
           value={editSubject}
           onChange={(e) => handleSubjectChange(e.target.value)}
-          className="input"
+          className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           placeholder={t('admin.emailTemplates.subjectPlaceholder')}
         />
       </div>
 
       {/* Context variables hint */}
       {detail.context_vars.length > 0 && (
-        <div className="rounded-lg border border-dark-700 bg-dark-900/60 p-2.5 sm:p-3">
-          <p className="mb-1.5 text-xs font-medium text-dark-300">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-2.5 sm:p-3">
+          <p className="mb-1.5 text-xs font-medium text-apple-mute">
             {t('admin.emailTemplates.variables')}
           </p>
           <div className="flex flex-wrap gap-1 sm:gap-1.5">
             {detail.context_vars.map((v) => (
               <code
                 key={v}
-                className="cursor-pointer rounded bg-dark-700 px-2 py-0.5 font-mono text-xs text-accent-400 transition-colors hover:bg-dark-600"
+                className="cursor-pointer rounded bg-apple-elevated px-2 py-0.5 font-mono text-xs transition-colors hover:opacity-90"
+                style={{ color: '#F97315' }}
                 title={t('admin.emailTemplates.clickToCopy')}
                 onClick={() => {
                   navigator.clipboard.writeText(`{${v}}`);
@@ -363,7 +371,7 @@ function TemplateEditor({
 
       {/* Body HTML editor */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-dark-300">
+        <label className="mb-2 block text-[13px] font-medium text-apple-mute">
           {t('admin.emailTemplates.body')}
         </label>
         <textarea
@@ -371,11 +379,11 @@ function TemplateEditor({
           value={editBody}
           onChange={(e) => handleBodyChange(e.target.value)}
           rows={12}
-          className="input min-h-[200px] resize-y font-mono text-xs leading-relaxed sm:min-h-[300px] sm:text-sm"
+          className="min-h-[200px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 font-mono text-xs leading-relaxed text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 sm:min-h-[300px] sm:text-sm"
           placeholder="<h2>Title</h2><p>Content...</p>"
           spellCheck={false}
         />
-        <p className="mt-1 text-2xs text-dark-500">{t('admin.emailTemplates.bodyHint')}</p>
+        <p className="mt-1 text-2xs text-apple-faint">{t('admin.emailTemplates.bodyHint')}</p>
       </div>
 
       {/* Actions */}
@@ -384,7 +392,7 @@ function TemplateEditor({
           <button
             onClick={() => saveMutation.mutate()}
             disabled={!isDirty || saveMutation.isPending}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent-500 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 sm:py-2"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#F97315] px-3 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 sm:py-2"
           >
             <SaveIcon />
             {saveMutation.isPending ? t('common.loading') : t('common.save')}
@@ -406,7 +414,7 @@ function TemplateEditor({
                 },
               });
             }}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-dark-700 px-3 py-2.5 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-600 sm:px-4 sm:py-2"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-apple-elevated px-3 py-2.5 text-sm font-medium text-apple-ink transition-opacity hover:opacity-90 sm:px-4 sm:py-2"
           >
             <EyeIcon />
             {t('admin.emailTemplates.preview')}
@@ -417,7 +425,7 @@ function TemplateEditor({
           <button
             onClick={() => testMutation.mutate()}
             disabled={testMutation.isPending}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-dark-700 px-3 py-2.5 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-600 disabled:opacity-40 sm:px-4 sm:py-2"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-apple-elevated px-3 py-2.5 text-sm font-medium text-apple-ink transition-opacity hover:opacity-90 disabled:opacity-40 sm:px-4 sm:py-2"
           >
             <SendIcon />
             {testMutation.isPending ? t('common.loading') : t('admin.emailTemplates.sendTest')}
@@ -431,7 +439,7 @@ function TemplateEditor({
                 }
               }}
               disabled={resetMutation.isPending}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-dark-700 px-3 py-2.5 text-sm font-medium text-warning-400 transition-colors hover:bg-dark-600 disabled:opacity-40 sm:ml-auto sm:px-4 sm:py-2"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-apple-elevated px-3 py-2.5 text-sm font-medium text-apple-amber transition-opacity hover:opacity-90 disabled:opacity-40 sm:ml-auto sm:px-4 sm:py-2"
             >
               <ResetIcon />
               <span className="truncate">{t('admin.emailTemplates.resetDefault')}</span>
@@ -467,16 +475,19 @@ export default function AdminEmailTemplates() {
     <div className="mx-auto max-w-4xl space-y-4 px-3 py-4 sm:space-y-6 sm:px-4 sm:py-6">
       {/* Page Header */}
       <div className="flex items-center gap-2 sm:gap-3">
-        <AdminBackButton className="flex-shrink-0 rounded-xl border border-dark-700 bg-dark-800 p-1.5 transition-colors hover:bg-dark-700 sm:p-2" />
+        <AdminBackButton className="flex-shrink-0 rounded-xl bg-apple-card p-1.5 transition-opacity hover:opacity-90 sm:p-2" />
         <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
-          <div className="flex-shrink-0 rounded-xl bg-gradient-to-br from-accent-500/20 to-accent-600/10 p-1.5 text-accent-400 sm:p-2">
+          <div
+            className="flex-shrink-0 rounded-xl bg-[#F97315]/15 p-1.5 sm:p-2"
+            style={{ color: '#F97315' }}
+          >
             <MailIcon />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-bold text-dark-100 sm:text-xl">
+            <h1 className="truncate text-lg font-bold text-apple-ink sm:text-xl">
               {t('admin.emailTemplates.title')}
             </h1>
-            <p className="truncate text-xs text-dark-400">
+            <p className="truncate text-xs text-apple-mute">
               {t('admin.emailTemplates.description')}
             </p>
           </div>
@@ -496,7 +507,7 @@ export default function AdminEmailTemplates() {
           {typesLoading ? (
             <div className="space-y-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-xl bg-dark-800" />
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-apple-card" />
               ))}
             </div>
           ) : (
@@ -517,7 +528,7 @@ export default function AdminEmailTemplates() {
       {/* Detail loading overlay */}
       {selectedType && detailLoading && (
         <div className="flex items-center justify-center py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       )}
     </div>

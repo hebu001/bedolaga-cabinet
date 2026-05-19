@@ -11,7 +11,7 @@ declare const __APP_VERSION__: string;
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -175,16 +175,16 @@ function VersionBadge({ hasUpdate }: { hasUpdate: boolean }) {
 
   if (hasUpdate) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-medium text-amber-400">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
+      <span className="inline-flex items-center gap-1 rounded-full bg-apple-amber/15 px-2.5 py-0.5 text-xs font-semibold text-apple-amber">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-apple-amber" />
         {t('adminUpdates.updateAvailable')}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-success-500/20 px-2.5 py-0.5 text-xs font-medium text-success-400">
-      <span className="h-1.5 w-1.5 rounded-full bg-success-400" />
+    <span className="inline-flex items-center gap-1 rounded-full bg-apple-green/15 px-2.5 py-0.5 text-xs font-semibold text-apple-green">
+      <span className="h-1.5 w-1.5 rounded-full bg-apple-green" />
       {t('adminUpdates.upToDate')}
     </span>
   );
@@ -199,28 +199,28 @@ function ReleaseCard({ release }: { release: ReleaseItem }) {
   );
 
   return (
-    <div className="border-b border-dark-700/30 px-4 py-3 last:border-b-0">
+    <div className="border-b border-apple-hairline px-4 py-3 last:border-b-0">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5 text-dark-200">
+        <div className="flex items-center gap-1.5 text-apple-ink">
           <TagIcon />
           <span className="text-sm font-semibold">{release.tag_name}</span>
         </div>
         {release.name !== release.tag_name && (
-          <span className="text-sm text-dark-400">{release.name}</span>
+          <span className="text-sm text-apple-mute">{release.name}</span>
         )}
         {release.prerelease && (
-          <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-[10px] font-medium text-violet-400">
+          <span className="rounded-full bg-apple-blue/15 px-2 py-0.5 text-[10px] font-semibold text-apple-blue">
             {t('adminUpdates.prerelease')}
           </span>
         )}
-        <div className="flex items-center gap-1 text-dark-500 sm:ml-auto">
+        <div className="flex items-center gap-1 text-apple-faint sm:ml-auto">
           <CalendarIcon />
           <span className="text-xs">{formatDate(release.published_at)}</span>
         </div>
       </div>
       {bodyHtml ? (
         <div
-          className="release-body max-h-48 overflow-auto rounded-lg bg-dark-900/50 p-3 text-xs leading-relaxed text-dark-300 [&_a]:text-accent-400 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-accent-300 [&_code]:rounded [&_code]:bg-dark-700/50 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-dark-200 [&_h2]:mb-1.5 [&_h2]:mt-2 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-dark-200 first:[&_h2]:mt-0 [&_h3]:mb-1 [&_h3]:mt-2 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:text-dark-200 first:[&_h3]:mt-0 [&_h4]:mb-0.5 [&_h4]:mt-1.5 [&_h4]:text-xs [&_h4]:font-medium [&_h4]:text-dark-300 [&_li]:ml-4 [&_li]:list-disc [&_li]:py-0.5 [&_p]:my-1"
+          className="release-body max-h-48 overflow-auto rounded-lg bg-apple-elevated p-3 text-xs leading-relaxed text-apple-mute [&_a]:text-[#F97315] [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:opacity-80 [&_code]:rounded [&_code]:bg-apple-card [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-apple-ink [&_h2]:mb-1.5 [&_h2]:mt-2 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-apple-ink first:[&_h2]:mt-0 [&_h3]:mb-1 [&_h3]:mt-2 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:text-apple-ink first:[&_h3]:mt-0 [&_h4]:mb-0.5 [&_h4]:mt-1.5 [&_h4]:text-xs [&_h4]:font-medium [&_h4]:text-apple-mute [&_li]:ml-4 [&_li]:list-disc [&_li]:py-0.5 [&_p]:my-1"
           dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
       ) : null}
@@ -246,27 +246,27 @@ function ProjectSection({
   const { t } = useTranslation();
 
   return (
-    <div className="overflow-hidden rounded-xl border border-dark-700/50 bg-dark-800/40">
+    <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-dark-700/50 px-4 py-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-dark-700/50 text-dark-300">
+      <div className="flex flex-wrap items-center gap-3 border-b border-apple-hairline px-4 py-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-apple-elevated text-apple-mute">
           {icon}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold text-dark-100">{title}</h2>
+            <h2 className="text-base font-semibold text-apple-ink">{title}</h2>
             <VersionBadge hasUpdate={hasUpdate} />
           </div>
-          <p className="text-xs text-dark-500">
+          <p className="text-xs text-apple-faint">
             {t('adminUpdates.currentVersion')}:{' '}
-            <span className="font-mono font-medium text-dark-300">{currentVersion || '—'}</span>
+            <span className="font-mono font-medium text-apple-mute">{currentVersion || '—'}</span>
           </p>
         </div>
         <a
           href={repoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 rounded-lg border border-dark-700/50 px-2.5 py-1.5 text-xs text-dark-400 transition-colors hover:border-dark-600 hover:text-dark-300"
+          className="flex items-center gap-1 rounded-lg bg-apple-elevated px-2.5 py-1.5 text-xs text-apple-mute transition-colors hover:text-apple-ink"
         >
           GitHub
           <ExternalLinkIcon />
@@ -281,7 +281,7 @@ function ProjectSection({
           ))}
         </div>
       ) : (
-        <div className="px-4 py-8 text-center text-sm text-dark-500">
+        <div className="px-4 py-8 text-center text-sm text-apple-faint">
           {t('adminUpdates.noReleases')}
         </div>
       )}
@@ -319,18 +319,18 @@ export default function AdminUpdates() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/admin')}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-dark-700/50 bg-dark-800/40 transition-colors hover:border-dark-600 hover:bg-dark-800"
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-apple-card transition-colors hover:bg-apple-elevated"
         >
           <BackIcon />
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-bold text-dark-100">{t('adminUpdates.title')}</h1>
-          <p className="text-xs text-dark-500">{t('adminUpdates.subtitle')}</p>
+          <h1 className="text-xl font-bold text-apple-ink">{t('adminUpdates.title')}</h1>
+          <p className="text-xs text-apple-faint">{t('adminUpdates.subtitle')}</p>
         </div>
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="flex items-center gap-1.5 rounded-lg border border-dark-700/50 bg-dark-800/40 px-3 py-2 text-xs text-dark-300 transition-colors hover:border-dark-600 hover:bg-dark-800 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-full bg-apple-card px-3 py-2 text-xs text-apple-mute transition-colors hover:bg-apple-elevated disabled:opacity-50"
         >
           <span className={isFetching ? 'animate-spin' : ''}>
             <RefreshIcon />
@@ -343,10 +343,7 @@ export default function AdminUpdates() {
       {isLoading && (
         <div className="space-y-4">
           {[0, 1].map((i) => (
-            <div
-              key={i}
-              className="h-64 animate-pulse rounded-xl border border-dark-700/50 bg-dark-800/40"
-            />
+            <div key={i} className="h-64 animate-pulse rounded-2xl bg-apple-card" />
           ))}
         </div>
       )}

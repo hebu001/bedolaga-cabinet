@@ -127,12 +127,12 @@ function SortableLandingCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'rounded-xl border bg-dark-800 p-3 transition-colors sm:p-4',
+        'apple-card-grad rounded-2xl bg-apple-card p-3 transition-colors sm:p-4',
         isDragging
-          ? 'border-accent-500/50 shadow-xl shadow-accent-500/20'
+          ? 'shadow-xl shadow-[#F97315]/20 ring-1 ring-[#F97315]/50'
           : landing.is_active
-            ? 'border-dark-700'
-            : 'border-dark-700/50 opacity-60',
+            ? ''
+            : 'opacity-60',
       )}
     >
       <div className="flex items-start gap-2 sm:gap-3">
@@ -140,7 +140,7 @@ function SortableLandingCard({
         <button
           {...attributes}
           {...listeners}
-          className="mt-0.5 flex-shrink-0 cursor-grab touch-none rounded-lg p-2 text-dark-500 hover:bg-dark-700/50 hover:text-dark-300 active:cursor-grabbing sm:mt-1 sm:p-1.5"
+          className="mt-0.5 flex-shrink-0 cursor-grab touch-none rounded-lg p-2 text-apple-faint hover:bg-apple-elevated hover:text-apple-mute active:cursor-grabbing sm:mt-1 sm:p-1.5"
           title={t('admin.tariffs.dragToReorder')}
         >
           <GripIcon />
@@ -152,45 +152,51 @@ function SortableLandingCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h3 className="truncate font-medium text-dark-100">
+                <h3 className="truncate font-medium text-apple-ink">
                   {resolveLocaleDisplay(landing.title)}
                 </h3>
-                <span className="shrink-0 rounded bg-dark-800 px-2 py-0.5 text-xs text-dark-400">
+                <span className="shrink-0 rounded bg-apple-elevated px-2 py-0.5 text-xs text-apple-mute">
                   {landing.slug}
                 </span>
                 {landing.is_active ? (
-                  <span className="shrink-0 rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                  <span className="shrink-0 rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                     {t('admin.landings.active')}
                   </span>
                 ) : (
-                  <span className="shrink-0 rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                  <span className="shrink-0 rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                     {t('admin.landings.inactive')}
                   </span>
                 )}
                 {landing.gift_enabled && (
-                  <span className="shrink-0 rounded bg-accent-500/20 px-1.5 py-0.5 text-xs text-accent-400">
+                  <span
+                    className="shrink-0 rounded-full bg-[#F97315]/15 px-1.5 py-0.5 text-xs"
+                    style={{ color: '#F97315' }}
+                  >
                     <GiftIcon />
                   </span>
                 )}
                 {landing.has_active_discount && (
-                  <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-[10px] font-medium text-accent-400">
+                  <span
+                    className="rounded-full bg-[#F97315]/15 px-2 py-0.5 text-[10px] font-medium"
+                    style={{ color: '#F97315' }}
+                  >
                     {t('admin.landings.discountActive', 'Discount')}
                   </span>
                 )}
               </div>
-              <div className="text-sm text-dark-400">
+              <div className="text-sm text-apple-mute">
                 <span>
                   {landing.purchase_stats.total}
-                  <span className="ml-1 text-dark-600">
+                  <span className="ml-1 text-apple-faint">
                     {t('admin.landings.stats.created', 'created')}
                   </span>
-                  <span className="mx-1 text-dark-600">/</span>
-                  <span className="text-success-400">
+                  <span className="mx-1 text-apple-faint">/</span>
+                  <span className="text-apple-green">
                     {landing.purchase_stats.paid +
                       landing.purchase_stats.delivered +
                       landing.purchase_stats.pending_activation}
                   </span>
-                  <span className="ml-1 text-dark-600">
+                  <span className="ml-1 text-apple-faint">
                     {t('admin.landings.stats.paid', 'paid')}
                   </span>
                 </span>
@@ -201,14 +207,14 @@ function SortableLandingCard({
             <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
               <button
                 onClick={onCopyUrl}
-                className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
                 title={t('admin.landings.copyUrl')}
               >
                 <CopyIcon />
               </button>
               <button
                 onClick={onStats}
-                className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
                 title={t('admin.landings.statistics')}
               >
                 <StatsChartIcon />
@@ -218,8 +224,8 @@ function SortableLandingCard({
                 className={cn(
                   'rounded-lg p-2 transition-colors',
                   landing.is_active
-                    ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
-                    : 'bg-dark-700 text-dark-400 hover:bg-dark-600',
+                    ? 'bg-apple-green/15 text-apple-green hover:bg-apple-green/25'
+                    : 'bg-apple-elevated text-apple-mute hover:opacity-90',
                 )}
                 title={
                   landing.is_active ? t('admin.landings.inactive') : t('admin.landings.active')
@@ -229,7 +235,7 @@ function SortableLandingCard({
               </button>
               <button
                 onClick={onEdit}
-                className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+                className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
                 title={t('admin.landings.edit')}
               >
                 <EditIcon />
@@ -239,8 +245,8 @@ function SortableLandingCard({
                 className={cn(
                   'rounded-lg p-2 transition-colors',
                   isPendingDelete
-                    ? 'bg-error-500/20 text-error-400 ring-1 ring-error-500/30'
-                    : 'bg-dark-700 text-dark-300 hover:bg-error-500/20 hover:text-error-400',
+                    ? 'bg-apple-red/15 text-apple-red ring-1 ring-apple-red/30'
+                    : 'bg-apple-elevated text-apple-mute hover:bg-apple-red/15 hover:text-apple-red',
                 )}
                 title={
                   isPendingDelete
@@ -263,14 +269,14 @@ function SortableLandingCard({
           <div className="mt-2 flex items-center gap-1.5 sm:hidden">
             <button
               onClick={onCopyUrl}
-              className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+              className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
               title={t('admin.landings.copyUrl')}
             >
               <CopyIcon />
             </button>
             <button
               onClick={onStats}
-              className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+              className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
               title={t('admin.landings.statistics')}
             >
               <StatsChartIcon />
@@ -280,8 +286,8 @@ function SortableLandingCard({
               className={cn(
                 'rounded-lg p-2 transition-colors',
                 landing.is_active
-                  ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
-                  : 'bg-dark-700 text-dark-400 hover:bg-dark-600',
+                  ? 'bg-apple-green/15 text-apple-green hover:bg-apple-green/25'
+                  : 'bg-apple-elevated text-apple-mute hover:opacity-90',
               )}
               title={landing.is_active ? t('admin.landings.inactive') : t('admin.landings.active')}
             >
@@ -289,7 +295,7 @@ function SortableLandingCard({
             </button>
             <button
               onClick={onEdit}
-              className="rounded-lg bg-dark-700 p-2 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+              className="rounded-lg bg-apple-elevated p-2 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
               title={t('admin.landings.edit')}
             >
               <EditIcon />
@@ -300,8 +306,8 @@ function SortableLandingCard({
               className={cn(
                 'rounded-lg p-2 transition-colors',
                 isPendingDelete
-                  ? 'bg-error-500/20 text-error-400 ring-1 ring-error-500/30'
-                  : 'bg-dark-700 text-dark-300 hover:bg-error-500/20 hover:text-error-400',
+                  ? 'bg-apple-red/15 text-apple-red ring-1 ring-apple-red/30'
+                  : 'bg-apple-elevated text-apple-mute hover:bg-apple-red/15 hover:text-apple-red',
               )}
               title={
                 isPendingDelete
@@ -449,13 +455,13 @@ export default function AdminLandings() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.landings.title')}</h1>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.landings.title')}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -463,7 +469,7 @@ export default function AdminLandings() {
             <button
               onClick={handleSaveOrder}
               disabled={saveOrderMutation.isPending}
-              className="flex items-center gap-2 rounded-lg bg-success-500 px-4 py-2 text-white transition-colors hover:bg-success-600"
+              className="flex items-center gap-2 rounded-full bg-apple-green px-4 py-2 text-white transition-colors hover:opacity-90"
             >
               {saveOrderMutation.isPending ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -475,7 +481,7 @@ export default function AdminLandings() {
           )}
           <button
             onClick={() => navigate('/admin/landings/create')}
-            className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+            className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-colors hover:opacity-90"
           >
             <PlusIcon />
             {t('admin.landings.create')}
@@ -484,7 +490,7 @@ export default function AdminLandings() {
       </div>
 
       {/* Drag hint */}
-      <div className="mb-4 flex items-center gap-2 text-sm text-dark-500">
+      <div className="mb-4 flex items-center gap-2 text-sm text-apple-faint">
         <GripIcon />
         {t('admin.tariffs.dragToReorder')}
       </div>
@@ -492,11 +498,11 @@ export default function AdminLandings() {
       {/* Landings List */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : localLandings.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-dark-400">{t('common.noData')}</p>
+          <p className="text-apple-mute">{t('common.noData')}</p>
         </div>
       ) : (
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
