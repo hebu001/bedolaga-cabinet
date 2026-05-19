@@ -17,32 +17,18 @@ import PendingGiftCard from '../components/dashboard/PendingGiftCard';
 import { API } from '../config/constants';
 import { formatTraffic } from '../utils/formatTraffic';
 
-/* ─── Shield SVG (Ultima logo) ─── */
+/* ─── Logo (Ultima wordmark) ─── */
 const ShieldLogo = ({ className = '' }: { className?: string }) => (
-  <img src="/logo-main.svg" alt="Logo" className={className} />
-);
-
-/* ─── Ring Animation ─── */
-const RingAnimation = () => (
-  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-    {[1, 2, 3, 4].map((i) => (
-      <motion.div
-        key={i}
-        className="absolute rounded-full border border-white/5"
-        initial={{ width: 120 + i * 70, height: 120 + i * 70, opacity: 0.15 }}
-        animate={{
-          scale: [1, 1.08, 1],
-          opacity: [0.08, 0.15, 0.08],
-        }}
-        transition={{
-          duration: 3 + i * 0.5,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: i * 0.4,
-        }}
-      />
-    ))}
-  </div>
+  <img
+    src="/logo-main.png"
+    alt="Logo"
+    className={className}
+    // The SVG variant could render as a black square when its embedded
+    // pattern failed; hide the image entirely if it ever fails to load.
+    onError={(e) => {
+      e.currentTarget.style.display = 'none';
+    }}
+  />
 );
 
 /* ─── Icons ─── */
@@ -385,7 +371,6 @@ export default function Dashboard() {
       >
         {/* Hero area — large status text replaces logo */}
         <div className="relative flex flex-1 items-center justify-center">
-          <RingAnimation />
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -458,9 +443,8 @@ export default function Dashboard() {
       {/* Pending Gift Activations */}
       {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
 
-      {/* ─── Hero Area: Logo + Rings ─── */}
+      {/* ─── Hero Area: Logo ─── */}
       <div className="relative flex flex-1 items-center justify-center">
-        <RingAnimation />
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
