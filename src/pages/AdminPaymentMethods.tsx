@@ -282,7 +282,7 @@ export default function AdminPaymentMethods() {
       </div>
 
       {/* Methods list */}
-      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+      <div className="rounded-2xl bg-apple-card p-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
