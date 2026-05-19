@@ -17,7 +17,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 // Icons
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -204,7 +204,7 @@ export default function AdminPromocodeCreate() {
   if (isEdit && isLoadingPromocode) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -217,34 +217,34 @@ export default function AdminPromocodeCreate() {
         {!capabilities.hasBackButton && (
           <button
             onClick={() => navigate('/admin/promocodes')}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-opacity hover:opacity-90"
           >
             <BackIcon />
           </button>
         )}
         <div>
-          <h1 className="text-xl font-bold text-dark-100">
+          <h1 className="text-xl font-bold text-apple-ink">
             {isEdit
               ? t('admin.promocodes.modal.editPromocode')
               : t('admin.promocodes.modal.newPromocode')}
           </h1>
-          <p className="text-sm text-dark-400">{t('admin.promocodes.subtitle')}</p>
+          <p className="text-sm text-apple-mute">{t('admin.promocodes.subtitle')}</p>
         </div>
       </div>
 
       {/* Form */}
-      <div className="card space-y-4">
+      <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5 sm:p-6">
         {/* Code */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.promocodes.form.code')}
-            <span className="text-error-400">*</span>
+            <span className="text-apple-red">*</span>
           </label>
           <input
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            className={`input uppercase ${!isCodeValid && code.length > 0 ? 'border-error-500/50' : ''}`}
+            className={`w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] uppercase text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${!isCodeValid && code.length > 0 ? 'ring-2 ring-apple-red/50' : ''}`}
             placeholder="SUMMER2025"
             maxLength={50}
           />
@@ -252,13 +252,13 @@ export default function AdminPromocodeCreate() {
 
         {/* Type */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.promocodes.form.type')}
           </label>
           <select
             value={type}
             onChange={(e) => setType(e.target.value as PromoCodeType)}
-            className="input"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
           >
             <option value="balance">{t('admin.promocodes.form.typeBalance')}</option>
             <option value="subscription_days">
@@ -275,54 +275,54 @@ export default function AdminPromocodeCreate() {
         {/* Type-specific fields */}
         {type === 'balance' && (
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.promocodes.form.bonusAmount')}
-              <span className="text-error-400">*</span>
+              <span className="text-apple-red">*</span>
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 value={balanceBonusRubles}
                 onChange={createNumberInputHandler(setBalanceBonusRubles, 0)}
-                className="input w-32"
+                className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={0}
                 step={1}
                 placeholder="0"
               />
-              <span className="text-dark-400">{t('admin.promocodes.form.rub')}</span>
+              <span className="text-apple-mute">{t('admin.promocodes.form.rub')}</span>
             </div>
           </div>
         )}
 
         {(type === 'subscription_days' || type === 'trial_subscription') && (
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.promocodes.form.daysCount')}
-              <span className="text-error-400">*</span>
+              <span className="text-apple-red">*</span>
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 value={subscriptionDays}
                 onChange={createNumberInputHandler(setSubscriptionDays, 0)}
-                className="input w-32"
+                className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={1}
                 placeholder="0"
               />
-              <span className="text-dark-400">{t('admin.promocodes.form.days')}</span>
+              <span className="text-apple-mute">{t('admin.promocodes.form.days')}</span>
             </div>
           </div>
         )}
 
         {type === 'trial_subscription' && (
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.promocodes.form.tariff', 'Тариф')}
             </label>
             <select
               value={tariffId || ''}
               onChange={(e) => setTariffId(e.target.value ? parseInt(e.target.value) : null)}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
             >
               <option value="">
                 {trialTariff
@@ -338,7 +338,7 @@ export default function AdminPromocodeCreate() {
               ))}
             </select>
             {!tariffId && !trialTariff && (
-              <div className="mt-1 text-xs text-warning-400">
+              <div className="mt-1 text-xs text-apple-amber">
                 {t(
                   'admin.promocodes.form.noTrialTariffHint',
                   'Выберите тариф или отметьте тариф как «доступен для триала» в настройках.',
@@ -350,14 +350,14 @@ export default function AdminPromocodeCreate() {
 
         {type === 'promo_group' && (
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.promocodes.form.discountGroup')}
-              <span className="text-error-400">*</span>
+              <span className="text-apple-red">*</span>
             </label>
             <select
               value={promoGroupId || ''}
               onChange={(e) => setPromoGroupId(e.target.value ? parseInt(e.target.value) : null)}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
             >
               <option value="">{t('admin.promocodes.form.selectGroup')}</option>
               {promoGroups.map((group) => (
@@ -372,9 +372,9 @@ export default function AdminPromocodeCreate() {
         {type === 'discount' && (
           <>
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-300">
+              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                 {t('admin.promocodes.form.discountPercent')}
-                <span className="text-error-400">*</span>
+                <span className="text-apple-red">*</span>
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -388,21 +388,21 @@ export default function AdminPromocodeCreate() {
                       setBalanceBonusRubles(Math.min(100, Math.max(0, parseFloat(val) || 0)));
                     }
                   }}
-                  className="input w-32"
+                  className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   min={1}
                   max={100}
                   placeholder="0"
                 />
-                <span className="text-dark-400">%</span>
+                <span className="text-apple-mute">%</span>
               </div>
-              <p className="mt-1 text-xs text-dark-500">
+              <p className="mt-1 text-xs text-apple-faint">
                 {t('admin.promocodes.form.discountHint')}
               </p>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-300">
+              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                 {t('admin.promocodes.form.validityPeriod')}
-                <span className="text-error-400">*</span>
+                <span className="text-apple-red">*</span>
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -416,13 +416,13 @@ export default function AdminPromocodeCreate() {
                       setSubscriptionDays(Math.max(0, parseInt(val) || 0));
                     }
                   }}
-                  className="input w-32"
+                  className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   min={1}
                   placeholder="0"
                 />
-                <span className="text-dark-400">{t('admin.promocodes.form.hours')}</span>
+                <span className="text-apple-mute">{t('admin.promocodes.form.hours')}</span>
               </div>
-              <p className="mt-1 text-xs text-dark-500">
+              <p className="mt-1 text-xs text-apple-faint">
                 {t('admin.promocodes.form.validityHint')}
               </p>
             </div>
@@ -431,7 +431,7 @@ export default function AdminPromocodeCreate() {
 
         {/* Max Uses */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.promocodes.form.maxUses')}
           </label>
           <div className="flex items-center gap-2">
@@ -439,11 +439,11 @@ export default function AdminPromocodeCreate() {
               type="number"
               value={maxUses}
               onChange={createNumberInputHandler(setMaxUses, 0)}
-              className="input w-32"
+              className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               min={0}
               placeholder="0"
             />
-            <span className="text-xs text-dark-500">
+            <span className="text-xs text-apple-faint">
               {t('admin.promocodes.form.unlimitedHint')}
             </span>
           </div>
@@ -451,16 +451,18 @@ export default function AdminPromocodeCreate() {
 
         {/* Valid Until */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.promocodes.form.validUntil')}
           </label>
           <input
             type="date"
             value={validUntil}
             onChange={(e) => setValidUntil(e.target.value)}
-            className="input"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
-          <p className="mt-1 text-xs text-dark-500">{t('admin.promocodes.form.validUntilHint')}</p>
+          <p className="mt-1 text-xs text-apple-faint">
+            {t('admin.promocodes.form.validUntilHint')}
+          </p>
         </div>
 
         {/* Options */}
@@ -470,7 +472,7 @@ export default function AdminPromocodeCreate() {
               type="button"
               onClick={() => setIsActive(!isActive)}
               className={`relative h-6 w-10 rounded-full transition-colors ${
-                isActive ? 'bg-accent-500' : 'bg-dark-600'
+                isActive ? 'bg-[#F97315]' : 'bg-apple-elevated'
               }`}
             >
               <span
@@ -479,7 +481,7 @@ export default function AdminPromocodeCreate() {
                 }`}
               />
             </button>
-            <span className="text-sm text-dark-200">{t('admin.promocodes.form.active')}</span>
+            <span className="text-sm text-apple-ink">{t('admin.promocodes.form.active')}</span>
           </label>
 
           <label className="flex cursor-pointer items-center gap-3">
@@ -487,7 +489,7 @@ export default function AdminPromocodeCreate() {
               type="button"
               onClick={() => setFirstPurchaseOnly(!firstPurchaseOnly)}
               className={`relative h-6 w-10 rounded-full transition-colors ${
-                firstPurchaseOnly ? 'bg-accent-500' : 'bg-dark-600'
+                firstPurchaseOnly ? 'bg-[#F97315]' : 'bg-apple-elevated'
               }`}
             >
               <span
@@ -496,7 +498,7 @@ export default function AdminPromocodeCreate() {
                 }`}
               />
             </button>
-            <span className="text-sm text-dark-200">
+            <span className="text-sm text-apple-ink">
               {t('admin.promocodes.form.firstPurchaseOnly')}
             </span>
           </label>
@@ -504,13 +506,13 @@ export default function AdminPromocodeCreate() {
       </div>
 
       {/* Footer */}
-      <div className="card space-y-3">
+      <div className="space-y-3 rounded-2xl bg-apple-card p-5 sm:p-6">
         {validationErrors.length > 0 && (
-          <div className="rounded-lg border border-error-500/30 bg-error-500/10 p-3">
-            <p className="mb-1 text-sm font-medium text-error-400">
+          <div className="rounded-xl bg-apple-red/10 p-3">
+            <p className="mb-1 text-sm font-medium text-apple-red">
               {t('admin.tariffs.cannotSave')}
             </p>
-            <ul className="list-inside list-disc space-y-1 text-xs text-error-300">
+            <ul className="list-inside list-disc space-y-1 text-xs text-apple-red">
               {validationErrors.map((error) => (
                 <li key={error}>{t(`admin.promocodes.validation.${error}`)}</li>
               ))}
@@ -520,14 +522,14 @@ export default function AdminPromocodeCreate() {
         <div className="flex justify-end gap-3">
           <button
             onClick={() => navigate('/admin/promocodes')}
-            className="px-4 py-2 text-dark-300 transition-colors hover:text-dark-100"
+            className="px-4 py-2 text-apple-mute transition-colors hover:text-apple-ink"
           >
             {t('admin.promocodes.form.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!isValid() || isLoading}
-            className="btn-primary flex items-center gap-2"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {isLoading && <RefreshIcon />}
             {isLoading ? t('admin.promocodes.form.saving') : t('admin.promocodes.form.save')}

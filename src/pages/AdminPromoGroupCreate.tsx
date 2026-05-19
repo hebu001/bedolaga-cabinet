@@ -170,7 +170,7 @@ export default function AdminPromoGroupCreate() {
   if (isEdit && isLoadingGroup) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -181,43 +181,43 @@ export default function AdminPromoGroupCreate() {
       <div className="flex items-center gap-3">
         <AdminBackButton to="/admin/promo-groups" />
         <div>
-          <h1 className="text-xl font-bold text-dark-100">
+          <h1 className="text-xl font-bold text-apple-ink">
             {isEdit ? t('admin.promoGroups.editTitle') : t('admin.promoGroups.createTitle')}
           </h1>
-          <p className="text-sm text-dark-400">{t('admin.promoGroups.subtitle')}</p>
+          <p className="text-sm text-apple-mute">{t('admin.promoGroups.subtitle')}</p>
         </div>
       </div>
 
       {/* Form */}
-      <div className="card space-y-4">
+      <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5 sm:p-6">
         {/* Name */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.promoGroups.form.name')}
-            <span className="text-error-400">*</span>
+            <span className="text-apple-red">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={`input ${name.length > 0 && name.trim().length === 0 ? 'border-error-500/50' : ''}`}
+            className={`w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${name.length > 0 && name.trim().length === 0 ? 'ring-2 ring-apple-red/50' : ''}`}
             placeholder={t('admin.promoGroups.form.namePlaceholder')}
           />
           {name.length > 0 && name.trim().length === 0 && (
-            <p className="mt-1 text-xs text-error-400">
+            <p className="mt-1 text-xs text-apple-red">
               {t('admin.promoGroups.form.nameRequired')}
             </p>
           )}
         </div>
 
         {/* Category Discounts */}
-        <div className="space-y-3 rounded-lg bg-dark-700/50 p-4">
-          <h4 className="mb-3 text-sm font-medium text-dark-200">
+        <div className="space-y-3 rounded-xl bg-apple-elevated p-4">
+          <h4 className="mb-3 text-sm font-medium text-apple-ink">
             {t('admin.promoGroups.form.categoryDiscounts')}
           </h4>
 
           <div className="flex items-center gap-3">
-            <span className="w-32 text-sm text-dark-400">{t('admin.promoGroups.servers')}:</span>
+            <span className="w-32 text-sm text-apple-mute">{t('admin.promoGroups.servers')}:</span>
             <input
               type="number"
               value={serverDiscount}
@@ -229,16 +229,16 @@ export default function AdminPromoGroupCreate() {
                   setServerDiscount(Math.min(100, Math.max(0, parseInt(val) || 0)));
                 }
               }}
-              className="input w-20"
+              className="w-20 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               min={0}
               max={100}
               placeholder="0"
             />
-            <span className="text-dark-400">%</span>
+            <span className="text-apple-mute">%</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="w-32 text-sm text-dark-400">{t('admin.promoGroups.traffic')}:</span>
+            <span className="w-32 text-sm text-apple-mute">{t('admin.promoGroups.traffic')}:</span>
             <input
               type="number"
               value={trafficDiscount}
@@ -250,16 +250,16 @@ export default function AdminPromoGroupCreate() {
                   setTrafficDiscount(Math.min(100, Math.max(0, parseInt(val) || 0)));
                 }
               }}
-              className="input w-20"
+              className="w-20 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               min={0}
               max={100}
               placeholder="0"
             />
-            <span className="text-dark-400">%</span>
+            <span className="text-apple-mute">%</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="w-32 text-sm text-dark-400">{t('admin.promoGroups.devices')}:</span>
+            <span className="w-32 text-sm text-apple-mute">{t('admin.promoGroups.devices')}:</span>
             <input
               type="number"
               value={deviceDiscount}
@@ -271,34 +271,35 @@ export default function AdminPromoGroupCreate() {
                   setDeviceDiscount(Math.min(100, Math.max(0, parseInt(val) || 0)));
                 }
               }}
-              className="input w-20"
+              className="w-20 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               min={0}
               max={100}
               placeholder="0"
             />
-            <span className="text-dark-400">%</span>
+            <span className="text-apple-mute">%</span>
           </div>
         </div>
 
         {/* Period Discounts */}
-        <div className="space-y-3 rounded-lg bg-dark-700/50 p-4">
+        <div className="space-y-3 rounded-xl bg-apple-elevated p-4">
           <div className="mb-2 flex items-center justify-between">
-            <h4 className="text-sm font-medium text-dark-200">
+            <h4 className="text-sm font-medium text-apple-ink">
               {t('admin.promoGroups.form.periodDiscounts')}
             </h4>
             <button
               type="button"
               onClick={addPeriodDiscount}
-              className="flex items-center gap-1 rounded bg-accent-500/20 px-2 py-1 text-xs text-accent-400 transition-colors hover:bg-accent-500/30"
+              className="flex items-center gap-1 rounded-full bg-[#F97315]/15 px-2.5 py-1 text-xs font-semibold transition-opacity hover:opacity-90"
+              style={{ color: '#F97315' }}
             >
               <PlusIcon />
               {t('admin.promoGroups.form.add')}
             </button>
           </div>
-          <p className="mb-3 text-xs text-dark-500">{t('admin.promoGroups.form.periodHint')}</p>
+          <p className="mb-3 text-xs text-apple-faint">{t('admin.promoGroups.form.periodHint')}</p>
 
           {periodDiscounts.length === 0 ? (
-            <p className="py-2 text-center text-sm text-dark-500">
+            <p className="py-2 text-center text-sm text-apple-faint">
               {t('admin.promoGroups.form.noPeriods')}
             </p>
           ) : (
@@ -314,11 +315,13 @@ export default function AdminPromoGroupCreate() {
                       const num = parseInt(val);
                       if (!isNaN(num)) updatePeriodDiscount(index, 'days', num);
                     }}
-                    className="input w-20"
+                    className="w-20 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     min={1}
                     placeholder={t('admin.promoGroups.form.daysPlaceholder')}
                   />
-                  <span className="text-xs text-dark-400">{t('admin.promoGroups.form.arrow')}</span>
+                  <span className="text-xs text-apple-mute">
+                    {t('admin.promoGroups.form.arrow')}
+                  </span>
                   <input
                     type="number"
                     value={pd.percent}
@@ -328,16 +331,16 @@ export default function AdminPromoGroupCreate() {
                       const num = parseInt(val);
                       if (!isNaN(num)) updatePeriodDiscount(index, 'percent', num);
                     }}
-                    className="input w-20"
+                    className="w-20 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     min={0}
                     max={100}
                     placeholder="%"
                   />
-                  <span className="text-dark-400">%</span>
+                  <span className="text-apple-mute">%</span>
                   <button
                     type="button"
                     onClick={() => removePeriodDiscount(index)}
-                    className="p-1 text-dark-400 transition-colors hover:text-error-400"
+                    className="p-1 text-apple-mute transition-colors hover:text-apple-red"
                   >
                     <TrashIcon />
                   </button>
@@ -349,7 +352,7 @@ export default function AdminPromoGroupCreate() {
 
         {/* Auto-assign */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.promoGroups.form.autoAssign')}
           </label>
           <div className="flex items-center gap-2">
@@ -364,13 +367,15 @@ export default function AdminPromoGroupCreate() {
                   setAutoAssignSpent(Math.max(0, parseFloat(val) || 0));
                 }
               }}
-              className="input w-32"
+              className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               min={0}
               placeholder="0"
             />
-            <span className="text-dark-400">{t('admin.promoGroups.form.rub')}</span>
+            <span className="text-apple-mute">{t('admin.promoGroups.form.rub')}</span>
           </div>
-          <p className="mt-1 text-xs text-dark-500">{t('admin.promoGroups.form.autoAssignHint')}</p>
+          <p className="mt-1 text-xs text-apple-faint">
+            {t('admin.promoGroups.form.autoAssignHint')}
+          </p>
         </div>
 
         {/* Apply to addons */}
@@ -379,7 +384,7 @@ export default function AdminPromoGroupCreate() {
             type="button"
             onClick={() => setApplyToAddons(!applyToAddons)}
             className={`relative h-6 w-11 rounded-full transition-colors ${
-              applyToAddons ? 'bg-accent-500' : 'bg-dark-600'
+              applyToAddons ? 'bg-[#F97315]' : 'bg-apple-elevated'
             }`}
           >
             <span
@@ -388,7 +393,9 @@ export default function AdminPromoGroupCreate() {
               }`}
             />
           </button>
-          <span className="text-sm text-dark-200">{t('admin.promoGroups.form.applyToAddons')}</span>
+          <span className="text-sm text-apple-ink">
+            {t('admin.promoGroups.form.applyToAddons')}
+          </span>
         </label>
 
         {/* Default group */}
@@ -397,7 +404,7 @@ export default function AdminPromoGroupCreate() {
             type="button"
             onClick={() => setIsDefault(!isDefault)}
             className={`relative h-6 w-11 rounded-full transition-colors ${
-              isDefault ? 'bg-accent-500' : 'bg-dark-600'
+              isDefault ? 'bg-[#F97315]' : 'bg-apple-elevated'
             }`}
           >
             <span
@@ -406,20 +413,23 @@ export default function AdminPromoGroupCreate() {
               }`}
             />
           </button>
-          <span className="text-sm text-dark-200">{t('admin.promoGroups.form.isDefault')}</span>
+          <span className="text-sm text-apple-ink">{t('admin.promoGroups.form.isDefault')}</span>
         </label>
       </div>
 
       {/* Footer */}
-      <div className="card">
+      <div className="rounded-2xl bg-apple-card p-5 sm:p-6">
         <div className="flex justify-end gap-3">
-          <button onClick={() => navigate('/admin/promo-groups')} className="btn-secondary">
+          <button
+            onClick={() => navigate('/admin/promo-groups')}
+            className="rounded-full bg-apple-elevated px-5 py-2.5 text-sm font-medium text-apple-ink transition-opacity hover:opacity-90"
+          >
             {t('admin.promoGroups.form.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!isValid || isLoading}
-            className="btn-primary flex items-center gap-2"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {isLoading && <RefreshIcon />}
             {isLoading ? t('admin.promoGroups.form.saving') : t('admin.promoGroups.form.save')}

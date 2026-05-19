@@ -218,7 +218,7 @@ export default function AdminPinnedMessageCreate() {
 
   if (isEditing && isLoadingMessage) {
     return (
-      <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+      <div className="rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
         <p>{t('common.loading')}</p>
       </div>
     );
@@ -230,23 +230,23 @@ export default function AdminPinnedMessageCreate() {
       <div className="flex items-center gap-3">
         <AdminBackButton to="/admin/pinned-messages" />
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-error-500/20 p-2 text-error-400">
+          <div className="rounded-lg bg-apple-red/15 p-2 text-apple-red">
             <PinIcon />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-dark-100">
+            <h1 className="text-xl font-bold text-apple-ink">
               {isEditing ? t('admin.pinnedMessages.editMessage') : t('admin.pinnedMessages.create')}
             </h1>
-            <p className="text-sm text-dark-400">{t('admin.pinnedMessages.subtitle')}</p>
+            <p className="text-sm text-apple-mute">{t('admin.pinnedMessages.subtitle')}</p>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="card space-y-6">
+      <div className="apple-card-grad space-y-6 rounded-2xl bg-apple-card p-4">
         {/* Message text */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.pinnedMessages.content')}
           </label>
           <textarea
@@ -255,30 +255,30 @@ export default function AdminPinnedMessageCreate() {
             placeholder={t('admin.pinnedMessages.contentPlaceholder')}
             rows={6}
             maxLength={4000}
-            className="input min-h-[150px] resize-y"
+            className="min-h-[150px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
-          <div className="mt-1 text-right text-xs text-dark-400">{content.length}/4000</div>
+          <div className="mt-1 text-right text-xs text-apple-mute">{content.length}/4000</div>
         </div>
 
         {/* Media upload */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.pinnedMessages.media')}
           </label>
           {mediaFile || existingMediaType ? (
-            <div className="rounded-lg border border-dark-700 bg-dark-800 p-4">
+            <div className="rounded-xl bg-apple-elevated p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {(mediaType === 'photo' || existingMediaType === 'photo') && <PhotoIcon />}
                   {(mediaType === 'video' || existingMediaType === 'video') && <VideoIcon />}
                   <div>
-                    <p className="text-sm text-dark-100">
+                    <p className="text-sm text-apple-ink">
                       {mediaFile
                         ? mediaFile.name
                         : `${existingMediaType} (${t('admin.pinnedMessages.media')})`}
                     </p>
                     {mediaFile && (
-                      <p className="text-xs text-dark-400">
+                      <p className="text-xs text-apple-mute">
                         {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     )}
@@ -286,7 +286,7 @@ export default function AdminPinnedMessageCreate() {
                 </div>
                 <button
                   onClick={handleRemoveMedia}
-                  className="rounded-lg p-2 text-dark-400 hover:bg-dark-700 hover:text-error-400"
+                  className="rounded-lg p-2 text-apple-mute hover:bg-apple-card hover:text-apple-red"
                   disabled={isUploading}
                 >
                   <XIcon />
@@ -300,7 +300,7 @@ export default function AdminPinnedMessageCreate() {
                 />
               )}
               {isUploading && (
-                <div className="mt-2 flex items-center gap-2 text-sm text-accent-400">
+                <div className="mt-2 flex items-center gap-2 text-sm text-[#F97315]">
                   <RefreshIcon />
                   {t('admin.pinnedMessages.uploading')}
                 </div>
@@ -317,7 +317,7 @@ export default function AdminPinnedMessageCreate() {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-dark-600 bg-dark-800/50 p-6 text-dark-400 transition-colors hover:border-dark-500 hover:bg-dark-800 hover:text-dark-300"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-elevated p-6 text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
               >
                 <PhotoIcon />
                 <span>{t('admin.pinnedMessages.addMedia')}</span>
@@ -328,14 +328,14 @@ export default function AdminPinnedMessageCreate() {
       </div>
 
       {/* Settings */}
-      <div className="card space-y-4">
-        <h2 className="text-lg font-semibold text-dark-100">
+      <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-4">
+        <h2 className="text-lg font-semibold text-apple-ink">
           {t('admin.pinnedMessages.settings')}
         </h2>
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-dark-200">
+            <p className="text-sm font-medium text-apple-ink">
               {t('admin.pinnedMessages.sendBeforeMenu')}
             </p>
           </div>
@@ -344,7 +344,7 @@ export default function AdminPinnedMessageCreate() {
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-dark-200">
+            <p className="text-sm font-medium text-apple-ink">
               {t('admin.pinnedMessages.sendOnEveryStart')}
             </p>
           </div>
@@ -354,7 +354,7 @@ export default function AdminPinnedMessageCreate() {
         {!isEditing && (
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-dark-200">
+              <p className="text-sm font-medium text-apple-ink">
                 {t('admin.pinnedMessages.broadcastOnCreate')}
               </p>
             </div>
@@ -364,14 +364,17 @@ export default function AdminPinnedMessageCreate() {
       </div>
 
       {/* Footer */}
-      <div className="card flex items-center justify-between">
-        <button onClick={() => navigate('/admin/pinned-messages')} className="btn-secondary">
+      <div className="flex items-center justify-between rounded-2xl bg-apple-card p-4">
+        <button
+          onClick={() => navigate('/admin/pinned-messages')}
+          className="rounded-full bg-apple-elevated px-4 py-2 text-sm font-medium text-apple-mute transition-colors hover:opacity-90"
+        >
           {t('common.cancel')}
         </button>
         <button
           onClick={handleSubmit}
           disabled={!isValid || isPending || isUploading}
-          className="btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? <RefreshIcon /> : <SaveIcon />}
           {isEditing ? t('common.save') : t('admin.pinnedMessages.create')}

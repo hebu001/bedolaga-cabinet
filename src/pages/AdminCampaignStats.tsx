@@ -59,23 +59,23 @@ const bonusTypeConfig: Record<
 > = {
   balance: {
     labelKey: 'admin.campaigns.bonusType.balance',
-    color: 'text-success-400',
-    bgColor: 'bg-success-500/20',
+    color: 'text-apple-green',
+    bgColor: 'bg-apple-green/15',
   },
   subscription: {
     labelKey: 'admin.campaigns.bonusType.subscription',
-    color: 'text-accent-400',
-    bgColor: 'bg-accent-500/20',
+    color: 'text-[#F97315]',
+    bgColor: 'bg-[#F97315]/15',
   },
   tariff: {
     labelKey: 'admin.campaigns.bonusType.tariff',
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-500/20',
+    color: 'text-apple-blue',
+    bgColor: 'bg-apple-blue/15',
   },
   none: {
     labelKey: 'admin.campaigns.bonusType.none',
-    color: 'text-dark-400',
-    bgColor: 'bg-dark-600',
+    color: 'text-apple-mute',
+    bgColor: 'bg-apple-elevated',
   },
 };
 
@@ -171,7 +171,7 @@ export default function AdminCampaignStats() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -181,15 +181,15 @@ export default function AdminCampaignStats() {
       <div className="animate-fade-in">
         <div className="mb-6 flex items-center gap-3">
           <AdminBackButton to="/admin/campaigns" />
-          <h1 className="text-xl font-semibold text-dark-100">
+          <h1 className="text-xl font-semibold text-apple-ink">
             {t('admin.campaigns.stats.title')}
           </h1>
         </div>
-        <div className="rounded-xl border border-error-500/30 bg-error-500/10 p-6 text-center">
-          <p className="text-error-400">{t('admin.campaigns.stats.loadError')}</p>
+        <div className="rounded-2xl bg-apple-red/10 p-6 text-center">
+          <p className="text-apple-red">{t('admin.campaigns.stats.loadError')}</p>
           <button
             onClick={() => navigate('/admin/campaigns')}
-            className="mt-4 text-sm text-dark-400 hover:text-dark-200"
+            className="mt-4 text-sm text-apple-mute hover:text-apple-ink"
           >
             {t('common.back')}
           </button>
@@ -204,23 +204,23 @@ export default function AdminCampaignStats() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton to="/admin/campaigns" />
-          <div className="rounded-lg bg-accent-500/20 p-2 text-accent-400">
+          <div className="rounded-lg bg-[#F97315]/15 p-2 text-[#F97315]">
             <ChartIcon />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-semibold text-dark-100">{stats.name}</h1>
+            <h1 className="truncate text-xl font-semibold text-apple-ink">{stats.name}</h1>
             <div className="mt-1 flex items-center gap-2">
               <span
-                className={`rounded px-2 py-0.5 text-xs ${bonusTypeConfig[stats.bonus_type].bgColor} ${bonusTypeConfig[stats.bonus_type].color}`}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${bonusTypeConfig[stats.bonus_type].bgColor} ${bonusTypeConfig[stats.bonus_type].color}`}
               >
                 {t(bonusTypeConfig[stats.bonus_type].labelKey)}
               </span>
               {stats.is_active ? (
-                <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                   {t('admin.campaigns.stats.active')}
                 </span>
               ) : (
-                <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+                <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                   {t('admin.campaigns.stats.inactive')}
                 </span>
               )}
@@ -234,18 +234,18 @@ export default function AdminCampaignStats() {
         {(stats.deep_link || stats.web_link) && (
           <div className="space-y-3">
             {stats.deep_link && (
-              <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-                <div className="mb-1 text-xs font-medium text-dark-500">
+              <div className="rounded-2xl bg-apple-card p-4">
+                <div className="mb-1 text-xs font-medium text-apple-faint">
                   {t('admin.campaigns.stats.botLink')}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
                     <LinkIcon />
-                    <span className="truncate text-sm text-dark-300">{stats.deep_link}</span>
+                    <span className="truncate text-sm text-apple-mute">{stats.deep_link}</span>
                   </div>
                   <button
                     onClick={() => handleCopy(stats.deep_link!, 'bot')}
-                    className="flex shrink-0 items-center gap-1 rounded-lg bg-dark-700 px-3 py-2 text-dark-300 transition-colors hover:bg-dark-600"
+                    className="flex shrink-0 items-center gap-1 rounded-lg bg-apple-elevated px-3 py-2 text-apple-mute transition-colors hover:opacity-90"
                   >
                     <CopyIcon />
                     <span className="text-sm">
@@ -258,18 +258,18 @@ export default function AdminCampaignStats() {
               </div>
             )}
             {stats.web_link && (
-              <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-                <div className="mb-1 text-xs font-medium text-dark-500">
+              <div className="rounded-2xl bg-apple-card p-4">
+                <div className="mb-1 text-xs font-medium text-apple-faint">
                   {t('admin.campaigns.stats.webLink')}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
                     <LinkIcon />
-                    <span className="truncate text-sm text-dark-300">{stats.web_link}</span>
+                    <span className="truncate text-sm text-apple-mute">{stats.web_link}</span>
                   </div>
                   <button
                     onClick={() => handleCopy(stats.web_link!, 'web')}
-                    className="flex shrink-0 items-center gap-1 rounded-lg bg-dark-700 px-3 py-2 text-dark-300 transition-colors hover:bg-dark-600"
+                    className="flex shrink-0 items-center gap-1 rounded-lg bg-apple-elevated px-3 py-2 text-apple-mute transition-colors hover:opacity-90"
                   >
                     <CopyIcon />
                     <span className="text-sm">
@@ -286,103 +286,107 @@ export default function AdminCampaignStats() {
 
         {/* Main Stats */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="text-xl font-bold text-dark-100 sm:text-2xl">{stats.registrations}</div>
-            <div className="text-xs text-dark-500">{t('admin.campaigns.stats.registrations')}</div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-xl font-bold text-apple-ink sm:text-2xl">
+              {stats.registrations}
+            </div>
+            <div className="text-xs text-apple-faint">
+              {t('admin.campaigns.stats.registrations')}
+            </div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="truncate text-xl font-bold text-success-400 sm:text-2xl">
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="truncate text-xl font-bold text-apple-green sm:text-2xl">
               {formatWithCurrency(stats.total_revenue_kopeks / PARTNER_STATS.KOPEKS_DIVISOR)}
             </div>
-            <div className="text-xs text-dark-500">{t('admin.campaigns.stats.revenue')}</div>
+            <div className="text-xs text-apple-faint">{t('admin.campaigns.stats.revenue')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="text-xl font-bold text-accent-400 sm:text-2xl">
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-xl font-bold text-[#F97315] sm:text-2xl">
               {stats.paid_users_count}
             </div>
-            <div className="text-xs text-dark-500">{t('admin.campaigns.stats.paidUsers')}</div>
+            <div className="text-xs text-apple-faint">{t('admin.campaigns.stats.paidUsers')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="text-xl font-bold text-accent-400 sm:text-2xl">
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-xl font-bold text-[#F97315] sm:text-2xl">
               {stats.conversion_rate}%
             </div>
-            <div className="text-xs text-dark-500">{t('admin.campaigns.stats.conversion')}</div>
+            <div className="text-xs text-apple-faint">{t('admin.campaigns.stats.conversion')}</div>
           </div>
         </div>
 
         {/* Detailed Stats */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-          <h3 className="mb-4 font-medium text-dark-200">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+          <h3 className="mb-4 font-medium text-apple-ink">
             {t('admin.campaigns.stats.detailedStats')}
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-1 text-sm text-dark-400">
+            <div className="rounded-lg bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
                 {t('admin.campaigns.stats.bonusesIssued')}
               </div>
               {stats.bonus_type === 'balance' && (
-                <div className="text-lg font-medium text-success-400">
+                <div className="text-lg font-medium text-apple-green">
                   {formatWithCurrency(stats.balance_issued_kopeks / PARTNER_STATS.KOPEKS_DIVISOR)}
                 </div>
               )}
               {stats.bonus_type === 'subscription' && (
-                <div className="text-lg font-medium text-accent-400">
+                <div className="text-lg font-medium text-[#F97315]">
                   {t('admin.campaigns.stats.subscriptionsIssued', {
                     count: stats.subscription_issued,
                   })}
                 </div>
               )}
               {stats.bonus_type === 'tariff' && (
-                <div className="text-lg font-medium text-accent-400">
+                <div className="text-lg font-medium text-[#F97315]">
                   {t('admin.campaigns.stats.tariffsIssued', { count: stats.subscription_issued })}
                 </div>
               )}
               {stats.bonus_type === 'none' && (
-                <div className="text-lg font-medium text-dark-400">-</div>
+                <div className="text-lg font-medium text-apple-mute">-</div>
               )}
             </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-1 text-sm text-dark-400">
+            <div className="rounded-lg bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
                 {t('admin.campaigns.stats.avgRevenuePerUser')}
               </div>
-              <div className="text-lg font-medium text-dark-200">
+              <div className="text-lg font-medium text-apple-ink">
                 {formatWithCurrency(
                   stats.avg_revenue_per_user_kopeks / PARTNER_STATS.KOPEKS_DIVISOR,
                 )}
               </div>
             </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-1 text-sm text-dark-400">
+            <div className="rounded-lg bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
                 {t('admin.campaigns.stats.avgFirstPayment')}
               </div>
-              <div className="text-lg font-medium text-dark-200">
+              <div className="text-lg font-medium text-apple-ink">
                 {formatWithCurrency(stats.avg_first_payment_kopeks / PARTNER_STATS.KOPEKS_DIVISOR)}
               </div>
             </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-1 text-sm text-dark-400">
+            <div className="rounded-lg bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
                 {t('admin.campaigns.stats.trialSubscriptions')}
               </div>
-              <div className="text-lg font-medium text-dark-200">
+              <div className="text-lg font-medium text-apple-ink">
                 {t('admin.campaigns.stats.trialCount', {
                   total: stats.trial_users_count,
                   active: stats.active_trials_count,
                 })}
               </div>
             </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-1 text-sm text-dark-400">
+            <div className="rounded-lg bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
                 {t('admin.campaigns.stats.trialConversion')}
               </div>
-              <div className="text-lg font-medium text-dark-200">
+              <div className="text-lg font-medium text-apple-ink">
                 {stats.trial_conversion_rate}%
               </div>
             </div>
-            <div className="rounded-lg bg-dark-700/50 p-3">
-              <div className="mb-1 text-sm text-dark-400">
+            <div className="rounded-lg bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
                 {t('admin.campaigns.stats.lastRegistration')}
               </div>
-              <div className="text-sm font-medium text-dark-200">
+              <div className="text-sm font-medium text-apple-ink">
                 {formatDate(stats.last_registration)}
               </div>
             </div>
@@ -393,10 +397,10 @@ export default function AdminCampaignStats() {
         <div className="space-y-4">
           {chartLoading ? (
             <div className="space-y-3">
-              <div className="h-52 animate-pulse rounded-xl bg-dark-800/30" />
+              <div className="h-52 animate-pulse rounded-2xl bg-apple-card" />
               <div className="grid grid-cols-2 gap-3">
-                <div className="h-24 animate-pulse rounded-xl bg-dark-800/30" />
-                <div className="h-24 animate-pulse rounded-xl bg-dark-800/30" />
+                <div className="h-24 animate-pulse rounded-2xl bg-apple-card" />
+                <div className="h-24 animate-pulse rounded-2xl bg-apple-card" />
               </div>
             </div>
           ) : chartData ? (
@@ -408,14 +412,14 @@ export default function AdminCampaignStats() {
                   value={formatWithCurrency(
                     chartData.total_deposits_kopeks / PARTNER_STATS.KOPEKS_DIVISOR,
                   )}
-                  valueClassName="text-success-400"
+                  valueClassName="text-apple-green"
                 />
                 <StatCard
                   label={t('admin.campaigns.stats.totalSpending')}
                   value={formatWithCurrency(
                     chartData.total_spending_kopeks / PARTNER_STATS.KOPEKS_DIVISOR,
                   )}
-                  valueClassName="text-accent-400"
+                  valueClassName="text-[#F97315]"
                 />
               </div>
               <DailyChart
@@ -434,8 +438,8 @@ export default function AdminCampaignStats() {
               />
               {/* Top Registrations */}
               {chartData.top_registrations.length > 0 && (
-                <div className="bento-card">
-                  <h4 className="mb-3 text-sm font-semibold text-dark-200">
+                <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+                  <h4 className="mb-3 text-sm font-semibold text-apple-ink">
                     {t('admin.campaigns.stats.topRegistrations')}
                   </h4>
                   <div className="space-y-2">
@@ -443,27 +447,29 @@ export default function AdminCampaignStats() {
                       <Link
                         key={reg.id}
                         to={`/admin/users/${reg.id}`}
-                        className="flex items-center justify-between rounded-xl border border-dark-700/30 bg-dark-800/30 p-3 transition-colors hover:bg-dark-700/50"
+                        className="flex items-center justify-between rounded-xl bg-apple-elevated p-3 transition-colors hover:opacity-90"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex min-w-0 items-center gap-2">
-                            <span className="min-w-0 truncate text-sm font-medium text-dark-100">
+                            <span className="min-w-0 truncate text-sm font-medium text-apple-ink">
                               {reg.full_name}
                             </span>
                             {reg.is_active && (
-                              <span className="badge-success">
+                              <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                                 {t('admin.campaigns.stats.active')}
                               </span>
                             )}
                             {reg.has_paid && !reg.is_active && (
-                              <span className="badge-info">{t('admin.campaigns.stats.paid')}</span>
+                              <span className="rounded-full bg-apple-blue/15 px-2.5 py-1 text-[11px] font-semibold text-apple-blue">
+                                {t('admin.campaigns.stats.paid')}
+                              </span>
                             )}
                           </div>
-                          <div className="mt-0.5 text-xs text-dark-500">
+                          <div className="mt-0.5 text-xs text-apple-faint">
                             {new Date(reg.created_at).toLocaleDateString(i18n.language)}
                           </div>
                         </div>
-                        <div className="text-sm font-semibold text-success-400">
+                        <div className="text-sm font-semibold text-apple-green">
                           {formatWithCurrency(
                             reg.total_earnings_kopeks / PARTNER_STATS.KOPEKS_DIVISOR,
                           )}
@@ -478,19 +484,19 @@ export default function AdminCampaignStats() {
         </div>
 
         {/* Users Section */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800">
+        <div className="rounded-2xl bg-apple-card">
           <button
             onClick={() => setShowUsers(!showUsers)}
             className="flex w-full items-center justify-between p-4"
           >
             <div className="flex items-center gap-2">
               <UsersIcon />
-              <span className="font-medium text-dark-200">
+              <span className="font-medium text-apple-ink">
                 {t('admin.campaigns.stats.users')} ({stats.registrations})
               </span>
             </div>
             <svg
-              className={`h-5 w-5 text-dark-400 transition-transform ${showUsers ? 'rotate-180' : ''}`}
+              className={`h-5 w-5 text-apple-mute transition-transform ${showUsers ? 'rotate-180' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -501,13 +507,13 @@ export default function AdminCampaignStats() {
           </button>
 
           {showUsers && (
-            <div className="border-t border-dark-700 p-4">
+            <div className="border-t border-apple-hairline p-4">
               {usersLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                 </div>
               ) : registrationsData?.registrations.length === 0 ? (
-                <div className="py-8 text-center text-dark-500">
+                <div className="py-8 text-center text-apple-faint">
                   {t('admin.campaigns.stats.noUsers')}
                 </div>
               ) : (
@@ -516,28 +522,30 @@ export default function AdminCampaignStats() {
                     <Link
                       key={reg.id}
                       to={`/admin/users/${reg.user_id}`}
-                      className="flex items-center justify-between rounded-lg bg-dark-700/50 p-3 transition-colors hover:bg-dark-700"
+                      className="flex items-center justify-between rounded-lg bg-apple-elevated p-3 transition-colors hover:opacity-90"
                     >
                       <div>
-                        <div className="font-medium text-dark-100">
+                        <div className="font-medium text-apple-ink">
                           {reg.first_name ||
                             reg.username ||
                             `${t('admin.campaigns.stats.users')} #${reg.user_id}`}
                         </div>
-                        <div className="text-xs text-dark-500">{reg.telegram_id}</div>
+                        <div className="text-xs text-apple-faint">{reg.telegram_id}</div>
                       </div>
                       <div className="flex items-center gap-2">
                         {reg.has_paid && (
-                          <span className="rounded bg-success-500/20 px-2 py-0.5 text-xs text-success-400">
+                          <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                             {t('admin.campaigns.stats.paid')}
                           </span>
                         )}
                         {reg.has_subscription && (
-                          <span className="rounded bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
+                          <span className="rounded-full bg-[#F97315]/15 px-2.5 py-1 text-[11px] font-semibold text-[#F97315]">
                             {t('admin.campaigns.stats.hasSub')}
                           </span>
                         )}
-                        <span className="text-xs text-dark-500">{formatDate(reg.created_at)}</span>
+                        <span className="text-xs text-apple-faint">
+                          {formatDate(reg.created_at)}
+                        </span>
                       </div>
                     </Link>
                   ))}

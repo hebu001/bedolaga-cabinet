@@ -9,7 +9,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -138,7 +138,7 @@ export default function AdminPaymentMethodEdit() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -151,12 +151,12 @@ export default function AdminPaymentMethodEdit() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin/payment-methods')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
-          <h1 className="text-2xl font-bold text-dark-50">
+          <h1 className="text-2xl font-bold text-apple-ink">
             {t('admin.paymentMethods.notFound', 'Payment method not found')}
           </h1>
         </div>
@@ -174,29 +174,29 @@ export default function AdminPaymentMethodEdit() {
         {!capabilities.hasBackButton && (
           <button
             onClick={() => navigate('/admin/payment-methods')}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
           >
             <BackIcon />
           </button>
         )}
         <div>
-          <h1 className="text-2xl font-bold text-dark-50">{displayName}</h1>
-          <p className="text-sm text-dark-500">
+          <h1 className="text-2xl font-bold text-apple-ink">{displayName}</h1>
+          <p className="text-sm text-apple-faint">
             {METHOD_LABELS[config.method_id] || config.method_id}
           </p>
         </div>
       </div>
 
       {/* Form */}
-      <div className="card space-y-6">
+      <div className="apple-card-grad space-y-6 rounded-2xl bg-apple-card p-5">
         {/* Enable toggle */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-medium text-dark-200">
+            <div className="text-sm font-medium text-apple-ink">
               {t('admin.paymentMethods.methodEnabled')}
             </div>
             {!config.is_provider_configured && (
-              <div className="mt-0.5 text-xs text-warning-400">
+              <div className="mt-0.5 text-xs text-apple-amber">
                 {t('admin.paymentMethods.providerNotConfigured')}
               </div>
             )}
@@ -204,7 +204,7 @@ export default function AdminPaymentMethodEdit() {
           <button
             onClick={() => setIsEnabled(!isEnabled)}
             className={`relative h-6 w-11 rounded-full transition-colors ${
-              isEnabled ? 'bg-accent-500' : 'bg-dark-600'
+              isEnabled ? 'bg-[#F97315]' : 'bg-apple-elevated'
             }`}
           >
             <span
@@ -217,7 +217,7 @@ export default function AdminPaymentMethodEdit() {
 
         {/* Display name */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.paymentMethods.displayName')}
           </label>
           <input
@@ -225,9 +225,9 @@ export default function AdminPaymentMethodEdit() {
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
             placeholder={config.default_display_name}
-            className="input"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
-          <p className="mt-1 text-xs text-dark-500">
+          <p className="mt-1 text-xs text-apple-faint">
             {t('admin.paymentMethods.displayNameHint')}: {config.default_display_name}
           </p>
         </div>
@@ -235,7 +235,7 @@ export default function AdminPaymentMethodEdit() {
         {/* Sub-options */}
         {config.available_sub_options && config.available_sub_options.length > 0 && (
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.paymentMethods.subOptions')}
             </label>
             <div className="space-y-2">
@@ -245,16 +245,18 @@ export default function AdminPaymentMethodEdit() {
                   <button
                     key={opt.id}
                     onClick={() => setSubOptions((prev) => ({ ...prev, [opt.id]: !enabled }))}
-                    className={`flex w-full items-center justify-between rounded-xl border p-3 transition-all ${
+                    className={`flex w-full items-center justify-between rounded-xl p-3 transition-all ${
                       enabled
-                        ? 'border-accent-500/30 bg-dark-700/30 text-dark-100'
-                        : 'border-dark-800 bg-dark-900/30 text-dark-500'
+                        ? 'bg-apple-elevated text-apple-ink ring-1 ring-[#F97315]/30'
+                        : 'bg-apple-elevated text-apple-faint'
                     }`}
                   >
                     <span className="text-sm">{opt.name}</span>
                     <div
                       className={`flex h-5 w-5 items-center justify-center rounded ${
-                        enabled ? 'bg-accent-500 text-white' : 'border border-dark-600 bg-dark-700'
+                        enabled
+                          ? 'bg-[#F97315] text-white'
+                          : 'bg-apple-elevated ring-1 ring-apple-hairline'
                       }`}
                     >
                       {enabled && <CheckIcon />}
@@ -269,7 +271,7 @@ export default function AdminPaymentMethodEdit() {
         {/* Min/Max amounts */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.paymentMethods.minAmount')}
             </label>
             <input
@@ -277,11 +279,11 @@ export default function AdminPaymentMethodEdit() {
               value={minAmount}
               onChange={createNumberInputHandler(setMinAmount, 0)}
               placeholder={config.default_min_amount_kopeks.toString()}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.paymentMethods.maxAmount')}
             </label>
             <input
@@ -289,20 +291,20 @@ export default function AdminPaymentMethodEdit() {
               value={maxAmount}
               onChange={createNumberInputHandler(setMaxAmount, 0)}
               placeholder={config.default_max_amount_kopeks.toString()}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
         </div>
 
         {/* Display conditions */}
-        <div className="border-t border-dark-700 pt-3">
-          <h3 className="mb-4 text-sm font-semibold text-dark-200">
+        <div className="border-t border-apple-hairline pt-3">
+          <h3 className="mb-4 text-sm font-semibold text-apple-ink">
             {t('admin.paymentMethods.conditions')}
           </h3>
 
           {/* User type filter */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm text-dark-300">
+            <label className="mb-2 block text-[13px] text-apple-mute">
               {t('admin.paymentMethods.userTypeFilter')}
             </label>
             <div className="flex gap-2">
@@ -312,9 +314,10 @@ export default function AdminPaymentMethodEdit() {
                   onClick={() => setUserTypeFilter(val)}
                   className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                     userTypeFilter === val
-                      ? 'border border-accent-500/40 bg-accent-500/20 text-accent-300'
-                      : 'border border-dark-700 bg-dark-900/50 text-dark-400 hover:border-dark-600'
+                      ? 'bg-[#F97315]/20 ring-1 ring-[#F97315]/40'
+                      : 'bg-apple-elevated text-apple-mute'
                   }`}
+                  style={userTypeFilter === val ? { color: '#F97315' } : undefined}
                 >
                   {val === 'all'
                     ? t('admin.paymentMethods.userTypeAll')
@@ -328,7 +331,7 @@ export default function AdminPaymentMethodEdit() {
 
           {/* First topup filter */}
           <div className="mb-4">
-            <label className="mb-2 block text-sm text-dark-300">
+            <label className="mb-2 block text-[13px] text-apple-mute">
               {t('admin.paymentMethods.firstTopupFilter')}
             </label>
             <div className="flex gap-2">
@@ -338,9 +341,10 @@ export default function AdminPaymentMethodEdit() {
                   onClick={() => setFirstTopupFilter(val)}
                   className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                     firstTopupFilter === val
-                      ? 'border border-accent-500/40 bg-accent-500/20 text-accent-300'
-                      : 'border border-dark-700 bg-dark-900/50 text-dark-400 hover:border-dark-600'
+                      ? 'bg-[#F97315]/20 ring-1 ring-[#F97315]/40'
+                      : 'bg-apple-elevated text-apple-mute'
                   }`}
+                  style={firstTopupFilter === val ? { color: '#F97315' } : undefined}
                 >
                   {val === 'any'
                     ? t('admin.paymentMethods.firstTopupAny')
@@ -354,7 +358,7 @@ export default function AdminPaymentMethodEdit() {
 
           {/* Promo groups filter */}
           <div>
-            <label className="mb-2 block text-sm text-dark-300">
+            <label className="mb-2 block text-[13px] text-apple-mute">
               {t('admin.paymentMethods.promoGroupFilter')}
             </label>
             <div className="mb-3 flex gap-2">
@@ -364,9 +368,10 @@ export default function AdminPaymentMethodEdit() {
                   onClick={() => setPromoGroupFilterMode(val)}
                   className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                     promoGroupFilterMode === val
-                      ? 'border border-accent-500/40 bg-accent-500/20 text-accent-300'
-                      : 'border border-dark-700 bg-dark-900/50 text-dark-400 hover:border-dark-600'
+                      ? 'bg-[#F97315]/20 ring-1 ring-[#F97315]/40'
+                      : 'bg-apple-elevated text-apple-mute'
                   }`}
+                  style={promoGroupFilterMode === val ? { color: '#F97315' } : undefined}
                 >
                   {val === 'all'
                     ? t('admin.paymentMethods.promoGroupAll')
@@ -376,9 +381,9 @@ export default function AdminPaymentMethodEdit() {
             </div>
 
             {promoGroupFilterMode === 'selected' && (
-              <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-xl border border-dark-700/50 bg-dark-900/30 p-3">
+              <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-xl bg-apple-elevated p-3">
                 {promoGroups.length === 0 ? (
-                  <p className="py-2 text-center text-sm text-dark-500">
+                  <p className="py-2 text-center text-sm text-apple-faint">
                     {t('admin.paymentMethods.noPromoGroups')}
                   </p>
                 ) : (
@@ -389,15 +394,14 @@ export default function AdminPaymentMethodEdit() {
                         key={group.id}
                         onClick={() => togglePromoGroup(group.id)}
                         className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all ${
-                          selected
-                            ? 'bg-accent-500/15 text-accent-300'
-                            : 'text-dark-400 hover:bg-dark-800/50'
+                          selected ? 'bg-[#F97315]/15' : 'text-apple-mute hover:bg-apple-card'
                         }`}
+                        style={selected ? { color: '#F97315' } : undefined}
                       >
                         <span>{group.name}</span>
                         <div
                           className={`flex h-4 w-4 items-center justify-center rounded ${
-                            selected ? 'bg-accent-500 text-white' : 'border border-dark-600'
+                            selected ? 'bg-[#F97315] text-white' : 'ring-1 ring-apple-hairline'
                           }`}
                         >
                           {selected && <CheckIcon />}
@@ -414,13 +418,16 @@ export default function AdminPaymentMethodEdit() {
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/admin/payment-methods')} className="btn-secondary flex-1">
+        <button
+          onClick={() => navigate('/admin/payment-methods')}
+          className="flex-1 rounded-full bg-apple-elevated px-5 py-2.5 text-[14px] font-semibold text-apple-ink transition-opacity hover:opacity-90"
+        >
           {t('admin.paymentMethods.cancelButton')}
         </button>
         <button
           onClick={handleSave}
           disabled={updateMethodMutation.isPending}
-          className="btn-primary flex flex-1 items-center justify-center gap-2"
+          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {updateMethodMutation.isPending ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

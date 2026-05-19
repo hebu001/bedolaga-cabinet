@@ -43,11 +43,11 @@ export default function AdminWithdrawalReject() {
       <div className="mb-6 flex items-center gap-3">
         <AdminBackButton to={`/admin/withdrawals/${id}`} />
         <div>
-          <h1 className="text-xl font-semibold text-dark-100">
+          <h1 className="text-xl font-semibold text-apple-ink">
             {t('admin.withdrawals.detail.rejectTitle')}
           </h1>
           {passedDetail?.amountKopeks != null && passedDetail.amountKopeks > 0 && (
-            <p className="text-sm text-dark-400">
+            <p className="text-sm text-apple-mute">
               #{id} {'\u2022'} {formatWithCurrency(passedDetail.amountKopeks / 100, 0)}
               {displayName && ` \u2022 ${displayName}`}
             </p>
@@ -55,33 +55,33 @@ export default function AdminWithdrawalReject() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-error-500/30 bg-dark-800 p-6">
-        <p className="mb-4 text-sm text-dark-400">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
+        <p className="mb-4 text-sm text-apple-mute">
           {t('admin.withdrawals.detail.rejectDescription')}
         </p>
 
-        <label className="mb-1 block text-sm font-medium text-dark-300">
+        <label className="mb-1 block text-[13px] font-medium text-apple-mute">
           {t('admin.withdrawals.detail.commentPlaceholder')}
         </label>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={t('admin.withdrawals.detail.commentPlaceholder')}
-          className="mb-6 w-full rounded-lg border border-dark-600 bg-dark-700 p-3 text-sm text-dark-200 placeholder:text-dark-500 focus:border-accent-500 focus:outline-none"
+          className="mb-6 w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           rows={3}
         />
 
         <div className="flex gap-3">
           <button
             onClick={() => navigate(`/admin/withdrawals/${id}`)}
-            className="flex-1 rounded-lg bg-dark-700 px-4 py-3 text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+            className="flex-1 rounded-full bg-apple-elevated px-4 py-3 text-apple-mute transition-colors hover:text-apple-ink"
           >
             {t('common.cancel')}
           </button>
           <button
             onClick={() => rejectMutation.mutate(comment)}
             disabled={rejectMutation.isPending}
-            className="flex-1 rounded-lg bg-error-500 px-4 py-3 font-medium text-white transition-colors hover:bg-error-600 disabled:opacity-50"
+            className="flex-1 rounded-full bg-apple-red px-4 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {rejectMutation.isPending
               ? t('admin.withdrawals.detail.rejecting')
@@ -90,7 +90,7 @@ export default function AdminWithdrawalReject() {
         </div>
 
         {rejectMutation.isError && (
-          <div className="mt-4 rounded-lg bg-error-500/10 p-3 text-sm text-error-400">
+          <div className="mt-4 rounded-xl bg-apple-red/10 p-3 text-sm text-apple-red">
             {t('common.error')}
           </div>
         )}

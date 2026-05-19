@@ -143,10 +143,8 @@ function PinnedMessageCard({
 
   return (
     <div
-      className={`rounded-xl border p-4 transition-all ${
-        message.is_active
-          ? 'border-success-500/50 bg-success-500/5'
-          : 'border-dark-700 bg-dark-800/50'
+      className={`apple-card-grad rounded-2xl p-4 transition-all ${
+        message.is_active ? 'bg-apple-green/10' : 'bg-apple-card'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -154,51 +152,51 @@ function PinnedMessageCard({
           {/* Status + ID + media indicator */}
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-full px-2 py-1 text-xs font-medium ${
+              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                 message.is_active
-                  ? 'bg-success-500/20 text-success-400'
-                  : 'bg-dark-500/20 text-dark-400'
+                  ? 'bg-apple-green/15 text-apple-green'
+                  : 'bg-apple-elevated text-apple-mute'
               }`}
             >
               {message.is_active
                 ? t('admin.pinnedMessages.active')
                 : t('admin.pinnedMessages.inactive')}
             </span>
-            <span className="text-xs text-dark-400">#{message.id}</span>
+            <span className="text-xs text-apple-mute">#{message.id}</span>
             {message.media_type && (
-              <span className="text-dark-400">
+              <span className="text-apple-mute">
                 {message.media_type === 'photo' ? <PhotoIcon /> : <VideoIcon />}
               </span>
             )}
             {message.send_before_menu && (
-              <span className="text-dark-500" title={t('admin.pinnedMessages.sendBeforeMenu')}>
+              <span className="text-apple-faint" title={t('admin.pinnedMessages.sendBeforeMenu')}>
                 <MenuIcon />
               </span>
             )}
             {message.send_on_every_start && (
-              <span className="text-dark-500" title={t('admin.pinnedMessages.sendOnEveryStart')}>
+              <span className="text-apple-faint" title={t('admin.pinnedMessages.sendOnEveryStart')}>
                 <RepeatIcon />
               </span>
             )}
           </div>
 
           {/* Content preview */}
-          <p className="line-clamp-3 text-sm text-dark-100">
+          <p className="line-clamp-3 text-sm text-apple-ink">
             {message.content || t('admin.pinnedMessages.noContent')}
           </p>
 
           {/* Date */}
-          <div className="mt-2 text-xs text-dark-400">
+          <div className="mt-2 text-xs text-apple-mute">
             {new Date(message.created_at).toLocaleDateString()}
           </div>
         </div>
       </div>
 
       {/* Action buttons */}
-      <div className="mt-3 flex flex-wrap gap-2 border-t border-dark-700/50 pt-3">
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-apple-hairline pt-3">
         <button
           onClick={() => onEdit(message.id)}
-          className="flex items-center gap-1.5 rounded-lg bg-dark-700 px-3 py-1.5 text-xs text-dark-300 transition-colors hover:bg-dark-600 hover:text-dark-100"
+          className="flex items-center gap-1.5 rounded-lg bg-apple-elevated px-3 py-1.5 text-xs text-apple-mute transition-colors hover:text-apple-ink hover:opacity-90"
         >
           <EditIcon />
           {t('admin.pinnedMessages.editMessage')}
@@ -208,14 +206,14 @@ function PinnedMessageCard({
           <>
             <button
               onClick={onDeactivate}
-              className="flex items-center gap-1.5 rounded-lg bg-warning-500/20 px-3 py-1.5 text-xs text-warning-400 transition-colors hover:bg-warning-500/30"
+              className="flex items-center gap-1.5 rounded-lg bg-apple-amber/15 px-3 py-1.5 text-xs text-apple-amber transition-colors hover:opacity-90"
             >
               <XIcon />
               {t('admin.pinnedMessages.deactivate')}
             </button>
             <button
               onClick={onUnpin}
-              className="flex items-center gap-1.5 rounded-lg bg-error-500/20 px-3 py-1.5 text-xs text-error-400 transition-colors hover:bg-error-500/30"
+              className="flex items-center gap-1.5 rounded-lg bg-apple-red/15 px-3 py-1.5 text-xs text-apple-red transition-colors hover:opacity-90"
             >
               <UnpinIcon />
               {t('admin.pinnedMessages.unpinAll')}
@@ -224,7 +222,7 @@ function PinnedMessageCard({
         ) : (
           <button
             onClick={() => onActivate(message.id)}
-            className="flex items-center gap-1.5 rounded-lg bg-success-500/20 px-3 py-1.5 text-xs text-success-400 transition-colors hover:bg-success-500/30"
+            className="flex items-center gap-1.5 rounded-lg bg-apple-green/15 px-3 py-1.5 text-xs text-apple-green transition-colors hover:opacity-90"
           >
             <CheckIcon />
             {t('admin.pinnedMessages.activate')}
@@ -233,7 +231,7 @@ function PinnedMessageCard({
 
         <button
           onClick={() => onBroadcast(message.id)}
-          className="flex items-center gap-1.5 rounded-lg bg-accent-500/20 px-3 py-1.5 text-xs text-accent-400 transition-colors hover:bg-accent-500/30"
+          className="flex items-center gap-1.5 rounded-lg bg-[#F97315]/15 px-3 py-1.5 text-xs text-[#F97315] transition-colors hover:opacity-90"
         >
           <BroadcastIcon />
           {t('admin.pinnedMessages.broadcastToAll')}
@@ -242,7 +240,7 @@ function PinnedMessageCard({
         {!message.is_active && (
           <button
             onClick={() => onDelete(message.id)}
-            className="flex items-center gap-1.5 rounded-lg bg-error-500/20 px-3 py-1.5 text-xs text-error-400 transition-colors hover:bg-error-500/30"
+            className="flex items-center gap-1.5 rounded-lg bg-apple-red/15 px-3 py-1.5 text-xs text-apple-red transition-colors hover:opacity-90"
           >
             <TrashIcon />
             {t('admin.pinnedMessages.delete')}
@@ -345,25 +343,27 @@ export default function AdminPinnedMessages() {
         <div className="flex items-center gap-3">
           <AdminBackButton />
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-error-500/20 p-2 text-error-400">
+            <div className="rounded-lg bg-apple-red/15 p-2 text-apple-red">
               <PinIcon />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-dark-100">{t('admin.pinnedMessages.title')}</h1>
-              <p className="text-sm text-dark-400">{t('admin.pinnedMessages.subtitle')}</p>
+              <h1 className="text-xl font-bold text-apple-ink">
+                {t('admin.pinnedMessages.title')}
+              </h1>
+              <p className="text-sm text-apple-mute">{t('admin.pinnedMessages.subtitle')}</p>
             </div>
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => refetch()}
-            className="rounded-lg bg-dark-800 p-2 text-dark-400 transition-colors hover:text-dark-100"
+            className="rounded-lg bg-apple-card p-2 text-apple-mute transition-colors hover:text-apple-ink"
           >
             <RefreshIcon />
           </button>
           <button
             onClick={() => navigate('/admin/pinned-messages/create')}
-            className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-colors hover:opacity-90"
           >
             <PlusIcon />
             <span className="hidden sm:inline">{t('admin.pinnedMessages.create')}</span>
@@ -373,12 +373,12 @@ export default function AdminPinnedMessages() {
 
       {/* Messages list */}
       {isLoading ? (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+        <div className="rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
           <RefreshIcon />
           <p className="mt-2">{t('common.loading')}</p>
         </div>
       ) : messages.length === 0 ? (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+        <div className="rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
           <div className="mx-auto mb-2 w-fit">
             <PinIcon />
           </div>
@@ -403,21 +403,21 @@ export default function AdminPinnedMessages() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-dark-700 bg-dark-800/50 p-4">
+        <div className="flex items-center justify-center gap-2 rounded-2xl bg-apple-card p-4">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="rounded-lg bg-dark-700 px-3 py-1 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-apple-elevated px-3 py-1 text-apple-mute hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('admin.pinnedMessages.prev')}
           </button>
-          <span className="text-dark-400">
+          <span className="text-apple-mute">
             {page + 1} / {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            className="rounded-lg bg-dark-700 px-3 py-1 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-apple-elevated px-3 py-1 text-apple-mute hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('admin.pinnedMessages.next')}
           </button>

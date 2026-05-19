@@ -50,13 +50,13 @@ const getTypeLabel = (type: PromoCodeType): string => {
 
 const getTypeColor = (type: PromoCodeType): string => {
   const colors: Record<PromoCodeType, string> = {
-    balance: 'bg-success-500/20 text-success-400',
-    subscription_days: 'bg-accent-500/20 text-accent-400',
-    trial_subscription: 'bg-accent-500/20 text-accent-400',
-    promo_group: 'bg-warning-500/20 text-warning-400',
-    discount: 'bg-pink-500/20 text-pink-400',
+    balance: 'bg-apple-green/15 text-apple-green',
+    subscription_days: 'bg-[#F97315]/15 text-[#F97315]',
+    trial_subscription: 'bg-[#F97315]/15 text-[#F97315]',
+    promo_group: 'bg-apple-amber/15 text-apple-amber',
+    discount: 'bg-apple-red/15 text-apple-red',
   };
-  return colors[type] || 'bg-dark-600 text-dark-300';
+  return colors[type] || 'bg-apple-elevated text-apple-mute';
 };
 
 const formatDate = (date: string | null): string => {
@@ -101,7 +101,7 @@ export default function AdminPromocodeStats() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -111,12 +111,12 @@ export default function AdminPromocodeStats() {
       <div className="animate-fade-in">
         <div className="mb-6 flex items-center gap-3">
           <AdminBackButton to="/admin/promocodes" />
-          <h1 className="text-xl font-semibold text-dark-100">
+          <h1 className="text-xl font-semibold text-apple-ink">
             {t('admin.promocodes.stats.title')}
           </h1>
         </div>
         <div className="py-12 text-center">
-          <p className="text-error-400">{t('admin.promocodes.stats.notFound')}</p>
+          <p className="text-apple-red">{t('admin.promocodes.stats.notFound')}</p>
         </div>
       </div>
     );
@@ -138,7 +138,7 @@ export default function AdminPromocodeStats() {
               {getTypeLabel(promocode.type)}
             </span>
             {!promocode.is_active && (
-              <span className="rounded bg-dark-600 px-2 py-0.5 text-xs text-dark-400">
+              <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                 {t('admin.promocodes.stats.inactive')}
               </span>
             )}
@@ -146,7 +146,7 @@ export default function AdminPromocodeStats() {
         </div>
         <button
           onClick={() => navigate(`/admin/promocodes/${id}/edit`)}
-          className="flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+          className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           <EditIcon />
           {t('admin.promocodes.modal.edit')}
@@ -156,56 +156,56 @@ export default function AdminPromocodeStats() {
       <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="mb-1 text-3xl font-bold text-dark-100">{promocode.total_uses}</div>
-            <div className="text-sm text-dark-400">{t('admin.promocodes.stats.totalUses')}</div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="mb-1 text-3xl font-bold text-apple-ink">{promocode.total_uses}</div>
+            <div className="text-sm text-apple-mute">{t('admin.promocodes.stats.totalUses')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="mb-1 text-3xl font-bold text-success-400">{promocode.today_uses}</div>
-            <div className="text-sm text-dark-400">{t('admin.promocodes.stats.today')}</div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="mb-1 text-3xl font-bold text-apple-green">{promocode.today_uses}</div>
+            <div className="text-sm text-apple-mute">{t('admin.promocodes.stats.today')}</div>
           </div>
-          <div className="rounded-xl border border-dark-700 bg-dark-800 p-4 text-center">
-            <div className="mb-1 text-3xl font-bold text-accent-400">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="mb-1 text-3xl font-bold" style={{ color: '#F97315' }}>
               {promocode.max_uses === 0 ? '∞' : promocode.uses_left}
             </div>
-            <div className="text-sm text-dark-400">{t('admin.promocodes.stats.remaining')}</div>
+            <div className="text-sm text-apple-mute">{t('admin.promocodes.stats.remaining')}</div>
           </div>
         </div>
 
         {/* Details */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-          <h4 className="mb-4 font-medium text-dark-200">{t('admin.promocodes.stats.details')}</h4>
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+          <h4 className="mb-4 font-medium text-apple-ink">{t('admin.promocodes.stats.details')}</h4>
           <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-            <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-              <span className="text-dark-400">{t('admin.promocodes.stats.type')}:</span>
-              <span className="text-dark-200">{getTypeLabel(promocode.type)}</span>
+            <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+              <span className="text-apple-mute">{t('admin.promocodes.stats.type')}:</span>
+              <span className="text-apple-ink">{getTypeLabel(promocode.type)}</span>
             </div>
             {promocode.type === 'balance' && (
-              <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-                <span className="text-dark-400">{t('admin.promocodes.stats.bonus')}:</span>
-                <span className="text-success-400">
+              <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+                <span className="text-apple-mute">{t('admin.promocodes.stats.bonus')}:</span>
+                <span className="text-apple-green">
                   +{promocode.balance_bonus_rubles} {t('admin.promocodes.form.rub')}
                 </span>
               </div>
             )}
             {(promocode.type === 'subscription_days' ||
               promocode.type === 'trial_subscription') && (
-              <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-                <span className="text-dark-400">{t('admin.promocodes.stats.daysLabel')}:</span>
-                <span className="text-accent-400">+{promocode.subscription_days}</span>
+              <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+                <span className="text-apple-mute">{t('admin.promocodes.stats.daysLabel')}:</span>
+                <span style={{ color: '#F97315' }}>+{promocode.subscription_days}</span>
               </div>
             )}
             {promocode.type === 'discount' && (
               <>
-                <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-                  <span className="text-dark-400">
+                <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+                  <span className="text-apple-mute">
                     {t('admin.promocodes.stats.discountLabel')}:
                   </span>
-                  <span className="text-pink-400">-{promocode.balance_bonus_kopeks}%</span>
+                  <span className="text-apple-red">-{promocode.balance_bonus_kopeks}%</span>
                 </div>
-                <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-                  <span className="text-dark-400">{t('admin.promocodes.stats.validFor')}:</span>
-                  <span className="text-pink-400">
+                <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+                  <span className="text-apple-mute">{t('admin.promocodes.stats.validFor')}:</span>
+                  <span className="text-apple-red">
                     {t('admin.promocodes.stats.hoursValue', {
                       count: promocode.subscription_days,
                     })}
@@ -213,36 +213,36 @@ export default function AdminPromocodeStats() {
                 </div>
               </>
             )}
-            <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-              <span className="text-dark-400">{t('admin.promocodes.stats.limit')}:</span>
-              <span className="text-dark-200">
+            <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+              <span className="text-apple-mute">{t('admin.promocodes.stats.limit')}:</span>
+              <span className="text-apple-ink">
                 {promocode.current_uses}/{promocode.max_uses === 0 ? '∞' : promocode.max_uses}
               </span>
             </div>
-            <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-              <span className="text-dark-400">{t('admin.promocodes.stats.status')}:</span>
-              <span className={promocode.is_valid ? 'text-success-400' : 'text-error-400'}>
+            <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+              <span className="text-apple-mute">{t('admin.promocodes.stats.status')}:</span>
+              <span className={promocode.is_valid ? 'text-apple-green' : 'text-apple-red'}>
                 {promocode.is_valid
                   ? t('admin.promocodes.stats.active')
                   : t('admin.promocodes.stats.inactive')}
               </span>
             </div>
-            <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-              <span className="text-dark-400">{t('admin.promocodes.stats.created')}:</span>
-              <span className="text-dark-200">{formatDateTime(promocode.created_at)}</span>
+            <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+              <span className="text-apple-mute">{t('admin.promocodes.stats.created')}:</span>
+              <span className="text-apple-ink">{formatDateTime(promocode.created_at)}</span>
             </div>
-            <div className="flex justify-between rounded-lg bg-dark-700/50 p-3">
-              <span className="text-dark-400">{t('admin.promocodes.stats.validUntil')}:</span>
-              <span className="text-dark-200">
+            <div className="flex justify-between rounded-xl bg-apple-elevated p-3">
+              <span className="text-apple-mute">{t('admin.promocodes.stats.validUntil')}:</span>
+              <span className="text-apple-ink">
                 {promocode.valid_until
                   ? formatDate(promocode.valid_until)
                   : t('admin.promocodes.stats.unlimited')}
               </span>
             </div>
             {promocode.first_purchase_only && (
-              <div className="flex justify-between rounded-lg bg-dark-700/50 p-3 sm:col-span-2">
-                <span className="text-dark-400">{t('admin.promocodes.stats.restriction')}:</span>
-                <span className="text-warning-400">
+              <div className="flex justify-between rounded-xl bg-apple-elevated p-3 sm:col-span-2">
+                <span className="text-apple-mute">{t('admin.promocodes.stats.restriction')}:</span>
+                <span className="text-apple-amber">
                   {t('admin.promocodes.stats.firstPurchaseOnly')}
                 </span>
               </div>
@@ -251,13 +251,13 @@ export default function AdminPromocodeStats() {
         </div>
 
         {/* Usage History */}
-        <div className="rounded-xl border border-dark-700 bg-dark-800 p-4">
-          <h4 className="mb-4 flex items-center gap-2 font-medium text-dark-200">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+          <h4 className="mb-4 flex items-center gap-2 font-medium text-apple-ink">
             <ClockIcon />
             {t('admin.promocodes.stats.usageHistory')}
           </h4>
           {promocode.recent_uses.length === 0 ? (
-            <p className="py-8 text-center text-sm text-dark-500">
+            <p className="py-8 text-center text-sm text-apple-faint">
               {t('admin.promocodes.stats.noUsages')}
             </p>
           ) : (
@@ -265,22 +265,24 @@ export default function AdminPromocodeStats() {
               {promocode.recent_uses.map((use) => (
                 <div
                   key={use.id}
-                  className="flex flex-col gap-2 rounded-lg bg-dark-700/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded-xl bg-apple-elevated p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-dark-500">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-card">
                       <UserIcon />
                     </div>
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-dark-200">
+                      <div className="truncate text-sm font-medium text-apple-ink">
                         {use.user_full_name || use.user_username || `User #${use.user_id}`}
                       </div>
                       {use.user_username && (
-                        <div className="truncate text-xs text-dark-500">@{use.user_username}</div>
+                        <div className="truncate text-xs text-apple-faint">
+                          @{use.user_username}
+                        </div>
                       )}
                     </div>
                   </div>
-                  <div className="pl-11 text-xs text-dark-400 sm:pl-0">
+                  <div className="pl-11 text-xs text-apple-mute sm:pl-0">
                     {formatDateTime(use.used_at)}
                   </div>
                 </div>
