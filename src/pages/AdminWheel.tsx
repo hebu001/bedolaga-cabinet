@@ -31,7 +31,7 @@ import { toNumber } from '../utils/inputHelpers';
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -212,12 +212,12 @@ function SortablePrizeCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex flex-col rounded-xl border ${
+      className={`group flex flex-col rounded-2xl ${
         isDragging
-          ? 'border-accent-500/50 bg-dark-800 shadow-xl shadow-accent-500/20'
+          ? 'bg-apple-card shadow-xl shadow-[#F97315]/20 ring-1 ring-[#F97315]/50'
           : prize.is_active
-            ? 'border-dark-700/50 bg-dark-800/50'
-            : 'border-dark-800/50 bg-dark-900/30 opacity-60'
+            ? 'bg-apple-card'
+            : 'bg-apple-card opacity-60'
       }`}
     >
       {/* Prize header - always visible */}
@@ -226,7 +226,7 @@ function SortablePrizeCard({
         <button
           {...attributes}
           {...listeners}
-          className="flex-shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-dark-500 hover:bg-dark-700/50 hover:text-dark-300 active:cursor-grabbing sm:p-2.5"
+          className="flex-shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-apple-faint hover:bg-apple-elevated hover:text-apple-mute active:cursor-grabbing sm:p-2.5"
           title={t('admin.wheel.prizes.dragToReorder')}
         >
           <GripVerticalIcon />
@@ -242,8 +242,8 @@ function SortablePrizeCard({
 
         {/* Prize info */}
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold text-dark-100">{prize.display_name}</div>
-          <div className="truncate text-xs text-dark-400 sm:text-sm">
+          <div className="truncate font-semibold text-apple-ink">{prize.display_name}</div>
+          <div className="truncate text-xs text-apple-mute sm:text-sm">
             {t(`admin.wheel.prizes.types.${prize.prize_type}`)} •{' '}
             {(prize.prize_value_kopeks / 100).toFixed(0)}₽
           </div>
@@ -260,7 +260,7 @@ function SortablePrizeCard({
           </button>
           <button
             onClick={onDelete}
-            className="btn-ghost p-1.5 text-error-400 hover:bg-error-500/10 sm:p-2"
+            className="btn-ghost p-1.5 text-apple-red hover:bg-apple-red/10 sm:p-2"
             title={t('common.delete')}
           >
             <TrashIcon />
@@ -270,7 +270,7 @@ function SortablePrizeCard({
 
       {/* Expanded edit form */}
       {isExpanded && (
-        <div className="border-t border-dark-700 bg-dark-800/50 p-4">
+        <div className="border-t border-apple-hairline bg-apple-card p-4">
           <InlinePrizeForm
             prize={prize}
             onSave={onSave}
@@ -481,13 +481,13 @@ export default function AdminWheel() {
   if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
 
   if (!config) {
-    return <div className="py-12 text-center text-dark-400">{t('wheel.errors.loadFailed')}</div>;
+    return <div className="py-12 text-center text-apple-mute">{t('wheel.errors.loadFailed')}</div>;
   }
 
   return (
@@ -499,19 +499,19 @@ export default function AdminWheel() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
-          <h1 className="text-xl font-bold text-dark-50 sm:text-2xl">{t('admin.wheel.title')}</h1>
+          <h1 className="text-xl font-bold text-apple-ink sm:text-2xl">{t('admin.wheel.title')}</h1>
         </div>
         <div className="flex items-center gap-2">
           <span
             className={`rounded-full px-3 py-1 text-sm ${
               config.is_enabled
-                ? 'bg-success-500/20 text-success-400'
-                : 'bg-error-500/20 text-error-400'
+                ? 'bg-apple-green/15 text-apple-green'
+                : 'bg-apple-red/15 text-apple-red'
             }`}
           >
             {config.is_enabled ? t('admin.wheel.enabled') : t('admin.wheel.disabled')}
@@ -521,13 +521,13 @@ export default function AdminWheel() {
 
       {/* Tabs */}
       <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-1 border-b border-dark-700 pb-2 sm:gap-2">
+        <div className="flex gap-1 border-b border-apple-hairline pb-2 sm:gap-2">
           <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-1.5 whitespace-nowrap rounded-t-lg px-3 py-2 text-sm transition-colors sm:gap-2 sm:px-4 sm:text-base ${
               activeTab === 'settings'
-                ? 'border-b-2 border-accent-500 bg-dark-800 text-accent-400'
-                : 'text-dark-400 hover:text-dark-200'
+                ? 'border-b-2 border-[#F97315] bg-apple-card text-[#F97315]'
+                : 'text-apple-mute hover:text-apple-ink'
             }`}
           >
             <CogIcon />
@@ -537,8 +537,8 @@ export default function AdminWheel() {
             onClick={() => setActiveTab('prizes')}
             className={`flex items-center gap-1.5 whitespace-nowrap rounded-t-lg px-3 py-2 text-sm transition-colors sm:gap-2 sm:px-4 sm:text-base ${
               activeTab === 'prizes'
-                ? 'border-b-2 border-accent-500 bg-dark-800 text-accent-400'
-                : 'text-dark-400 hover:text-dark-200'
+                ? 'border-b-2 border-[#F97315] bg-apple-card text-[#F97315]'
+                : 'text-apple-mute hover:text-apple-ink'
             }`}
           >
             <GiftIcon />
@@ -548,8 +548,8 @@ export default function AdminWheel() {
             onClick={() => setActiveTab('statistics')}
             className={`flex items-center gap-1.5 whitespace-nowrap rounded-t-lg px-3 py-2 text-sm transition-colors sm:gap-2 sm:px-4 sm:text-base ${
               activeTab === 'statistics'
-                ? 'border-b-2 border-accent-500 bg-dark-800 text-accent-400'
-                : 'text-dark-400 hover:text-dark-200'
+                ? 'border-b-2 border-[#F97315] bg-apple-card text-[#F97315]'
+                : 'text-apple-mute hover:text-apple-ink'
             }`}
           >
             <ChartIcon />
@@ -560,14 +560,14 @@ export default function AdminWheel() {
 
       {/* Settings Tab */}
       {activeTab === 'settings' && (
-        <div className="card space-y-6 p-6">
+        <div className="apple-card-grad space-y-6 rounded-2xl bg-apple-card p-6">
           {/* Enable toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-dark-100">
+              <h3 className="font-semibold text-apple-ink">
                 {t('admin.wheel.settings.enableWheel')}
               </h3>
-              <p className="text-sm text-dark-400">{t('admin.wheel.settings.allowSpins')}</p>
+              <p className="text-sm text-apple-mute">{t('admin.wheel.settings.allowSpins')}</p>
             </div>
             <button
               type="button"
@@ -575,7 +575,9 @@ export default function AdminWheel() {
                 setSettingsForm((prev) => (prev ? { ...prev, is_enabled: !prev.is_enabled } : null))
               }
               className={`relative h-6 w-11 rounded-full transition-colors ${
-                (settingsForm?.is_enabled ?? config.is_enabled) ? 'bg-accent-500' : 'bg-dark-600'
+                (settingsForm?.is_enabled ?? config.is_enabled)
+                  ? 'bg-[#F97315]'
+                  : 'bg-apple-elevated'
               }`}
             >
               <span
@@ -588,17 +590,17 @@ export default function AdminWheel() {
             </button>
           </div>
 
-          <hr className="border-dark-700" />
+          <hr className="border-apple-hairline" />
 
           {/* Spin Cost Section */}
           <div className="space-y-4">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-dark-400">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-apple-mute">
               <StarIcon className="h-4 w-4" />
               {t('admin.wheel.settings.spinCost')}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                   {t('admin.wheel.settings.costInStars')}
                 </label>
                 <div className="flex gap-2">
@@ -619,7 +621,7 @@ export default function AdminWheel() {
                     }}
                     min={1}
                     max={1000}
-                    className="input flex-1"
+                    className="flex-1 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   />
                   <label className="flex items-center gap-2">
                     <input
@@ -632,15 +634,15 @@ export default function AdminWheel() {
                           prev ? { ...prev, spin_cost_stars_enabled: e.target.checked } : null,
                         )
                       }
-                      className="rounded border-dark-600"
+                      className="rounded border-apple-hairline"
                     />
-                    <span className="text-sm text-dark-400">{t('admin.wheel.enabled')}</span>
+                    <span className="text-sm text-apple-mute">{t('admin.wheel.enabled')}</span>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                   {t('admin.wheel.settings.costInDays')}
                 </label>
                 <div className="flex gap-2">
@@ -659,7 +661,7 @@ export default function AdminWheel() {
                     }}
                     min={1}
                     max={30}
-                    className="input flex-1"
+                    className="flex-1 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   />
                   <label className="flex items-center gap-2">
                     <input
@@ -672,26 +674,26 @@ export default function AdminWheel() {
                           prev ? { ...prev, spin_cost_days_enabled: e.target.checked } : null,
                         )
                       }
-                      className="rounded border-dark-600"
+                      className="rounded border-apple-hairline"
                     />
-                    <span className="text-sm text-dark-400">{t('admin.wheel.enabled')}</span>
+                    <span className="text-sm text-apple-mute">{t('admin.wheel.enabled')}</span>
                   </label>
                 </div>
               </div>
             </div>
           </div>
 
-          <hr className="border-dark-700" />
+          <hr className="border-apple-hairline" />
 
           {/* Limits & RTP Section */}
           <div className="space-y-4">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-dark-400">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-apple-mute">
               <AdjustmentsIcon className="h-4 w-4" />
               {t('admin.wheel.settings.limitsAndRtp')}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                   {t('admin.wheel.settings.rtpPercent')}
                 </label>
                 <input
@@ -706,9 +708,9 @@ export default function AdminWheel() {
                   }
                   className="w-full"
                 />
-                <div className="flex justify-between text-sm text-dark-400">
+                <div className="flex justify-between text-sm text-apple-mute">
                   <span>0%</span>
-                  <span className="font-bold text-accent-400">
+                  <span className="font-bold text-[#F97315]">
                     {settingsForm?.rtp_percent ?? config.rtp_percent}%
                   </span>
                   <span>100%</span>
@@ -716,7 +718,7 @@ export default function AdminWheel() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                   {t('admin.wheel.settings.dailyLimit')}
                 </label>
                 <input
@@ -734,12 +736,12 @@ export default function AdminWheel() {
                   }}
                   min={0}
                   max={100}
-                  className="input w-full"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                   {t('admin.wheel.settings.minSubDays')}
                 </label>
                 <input
@@ -762,23 +764,23 @@ export default function AdminWheel() {
                   }}
                   min={1}
                   max={30}
-                  className="input w-full"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
               </div>
             </div>
           </div>
 
-          <hr className="border-dark-700" />
+          <hr className="border-apple-hairline" />
 
           {/* Promocodes Section */}
           <div className="space-y-4">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-dark-400">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-apple-mute">
               <TicketIcon className="h-4 w-4" />
               {t('admin.wheel.settings.promocodes')}
             </h3>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark-300">
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                   {t('admin.wheel.settings.promoPrefix')}
                 </label>
                 <input
@@ -790,7 +792,7 @@ export default function AdminWheel() {
                     )
                   }
                   maxLength={20}
-                  className="input w-full"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
               </div>
             </div>
@@ -798,7 +800,7 @@ export default function AdminWheel() {
 
           {/* Save Button */}
           {hasSettingsChanges && (
-            <div className="flex justify-end border-t border-dark-700 pt-6">
+            <div className="flex justify-end border-t border-apple-hairline pt-6">
               <button
                 onClick={async () => {
                   if (!settingsForm) return;
@@ -829,7 +831,7 @@ export default function AdminWheel() {
                   });
                 }}
                 disabled={updateConfigMutation.isPending}
-                className="btn-primary flex items-center gap-2"
+                className="flex items-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {updateConfigMutation.isPending ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -849,10 +851,10 @@ export default function AdminWheel() {
           {/* Prize list */}
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm text-dark-400">{t('admin.wheel.prizes.dragToReorder')}</p>
+              <p className="text-sm text-apple-mute">{t('admin.wheel.prizes.dragToReorder')}</p>
               <button
                 onClick={() => setIsCreating(true)}
-                className="btn-primary flex flex-shrink-0 items-center gap-2"
+                className="flex flex-shrink-0 items-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 <PlusIcon />
                 <span className="hidden sm:inline">{t('admin.wheel.prizes.addPrize')}</span>
@@ -861,12 +863,12 @@ export default function AdminWheel() {
 
             {/* Unsaved order changes banner */}
             {hasUnsavedOrder && (
-              <div className="flex items-center gap-3 rounded-xl border border-warning-500/30 bg-warning-500/10 p-4">
+              <div className="flex items-center gap-3 rounded-2xl bg-apple-amber/15 p-4">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-warning-400">
+                  <p className="text-sm font-medium text-apple-amber">
                     {t('admin.wheel.prizes.unsavedOrder') || 'Есть несохраненные изменения порядка'}
                   </p>
-                  <p className="text-xs text-warning-400/70">
+                  <p className="text-xs text-apple-amber/70">
                     {t('admin.wheel.prizes.unsavedOrderHint') ||
                       'Сохраните изменения или отмените их'}
                   </p>
@@ -874,14 +876,14 @@ export default function AdminWheel() {
                 <div className="flex gap-2">
                   <button
                     onClick={handleDiscardOrderChanges}
-                    className="rounded-lg border border-dark-600 bg-dark-700 px-4 py-2 text-sm text-dark-200 transition-colors hover:bg-dark-600"
+                    className="rounded-full bg-apple-elevated px-4 py-2 text-sm text-apple-ink transition-colors hover:opacity-90"
                   >
                     {t('common.cancel') || 'Отменить'}
                   </button>
                   <button
                     onClick={handleSavePrizeOrder}
                     disabled={reorderPrizesMutation.isPending}
-                    className="rounded-lg bg-warning-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-warning-600 disabled:opacity-50"
+                    className="rounded-full bg-apple-amber px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                   >
                     {reorderPrizesMutation.isPending
                       ? t('common.saving') || 'Сохранение...'
@@ -933,7 +935,7 @@ export default function AdminWheel() {
             </DndContext>
 
             {config.prizes.length === 0 && !isCreating && (
-              <div className="py-12 text-center text-dark-400">
+              <div className="py-12 text-center text-apple-mute">
                 {t('admin.wheel.prizes.noPrizes')}
               </div>
             )}
@@ -941,8 +943,10 @@ export default function AdminWheel() {
 
           {/* Wheel Preview */}
           <div className="hidden lg:sticky lg:top-24 lg:block">
-            <div className="card p-4">
-              <h3 className="mb-4 text-sm font-medium text-dark-400">{t('admin.wheel.preview')}</h3>
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+              <h3 className="mb-4 text-sm font-medium text-apple-mute">
+                {t('admin.wheel.preview')}
+              </h3>
               <div className="mx-auto max-w-[250px]">
                 <FortuneWheel
                   prizes={config.prizes}
@@ -961,33 +965,35 @@ export default function AdminWheel() {
         <div className="space-y-4">
           {/* Stats cards */}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="card p-4 text-center">
-              <div className="text-3xl font-bold text-accent-400">{stats.total_spins}</div>
-              <div className="text-sm text-dark-400">{t('admin.wheel.statistics.totalSpins')}</div>
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+              <div className="text-3xl font-bold text-[#F97315]">{stats.total_spins}</div>
+              <div className="text-sm text-apple-mute">
+                {t('admin.wheel.statistics.totalSpins')}
+              </div>
             </div>
-            <div className="card p-4 text-center">
-              <div className="text-3xl font-bold text-success-400">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+              <div className="text-3xl font-bold text-apple-green">
                 {(stats.total_revenue_kopeks / 100).toFixed(0)}₽
               </div>
-              <div className="text-sm text-dark-400">{t('admin.wheel.statistics.revenue')}</div>
+              <div className="text-sm text-apple-mute">{t('admin.wheel.statistics.revenue')}</div>
             </div>
-            <div className="card p-4 text-center">
-              <div className="text-3xl font-bold text-warning-400">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+              <div className="text-3xl font-bold text-apple-amber">
                 {(stats.total_payout_kopeks / 100).toFixed(0)}₽
               </div>
-              <div className="text-sm text-dark-400">{t('admin.wheel.statistics.payouts')}</div>
+              <div className="text-sm text-apple-mute">{t('admin.wheel.statistics.payouts')}</div>
             </div>
-            <div className="card p-4 text-center">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
               <div
                 className={`text-3xl font-bold ${
                   stats.actual_rtp_percent <= stats.configured_rtp_percent
-                    ? 'text-success-400'
-                    : 'text-error-400'
+                    ? 'text-apple-green'
+                    : 'text-apple-red'
                 }`}
               >
                 {stats.actual_rtp_percent.toFixed(1)}%
               </div>
-              <div className="text-sm text-dark-400">
+              <div className="text-sm text-apple-mute">
                 {t('admin.wheel.statistics.actualRtp')} ({t('admin.wheel.statistics.targetRtp')}:{' '}
                 {stats.configured_rtp_percent}%)
               </div>
@@ -996,15 +1002,15 @@ export default function AdminWheel() {
 
           {/* Prize distribution */}
           {stats.prizes_distribution.length > 0 && (
-            <div className="card p-4">
-              <h3 className="mb-3 font-semibold text-dark-100">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+              <h3 className="mb-3 font-semibold text-apple-ink">
                 {t('admin.wheel.statistics.prizeDistribution')}
               </h3>
               <div className="space-y-2">
                 {stats.prizes_distribution.map((prize, i) => (
                   <div key={i} className="flex items-center justify-between">
-                    <span className="text-dark-300">{prize.display_name}</span>
-                    <span className="text-dark-100">
+                    <span className="text-apple-mute">{prize.display_name}</span>
+                    <span className="text-apple-ink">
                       {t('admin.wheel.statistics.times', { count: prize.count })}
                     </span>
                   </div>
@@ -1015,15 +1021,17 @@ export default function AdminWheel() {
 
           {/* Top wins */}
           {stats.top_wins.length > 0 && (
-            <div className="card p-4">
-              <h3 className="mb-3 font-semibold text-dark-100">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+              <h3 className="mb-3 font-semibold text-apple-ink">
                 {t('admin.wheel.statistics.topWins')}
               </h3>
               <div className="space-y-2">
                 {stats.top_wins.slice(0, 5).map((win, i) => (
                   <div key={i} className="flex items-center justify-between">
-                    <span className="text-dark-300">{win.username || `User #${win.user_id}`}</span>
-                    <span className="text-dark-100">
+                    <span className="text-apple-mute">
+                      {win.username || `User #${win.user_id}`}
+                    </span>
+                    <span className="text-apple-ink">
                       {win.prize_display_name} ({(win.prize_value_kopeks / 100).toFixed(0)}₽)
                     </span>
                   </div>
@@ -1089,11 +1097,14 @@ function InlinePrizeForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`space-y-4 ${!prize ? 'card p-4' : ''}`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`space-y-4 ${!prize ? 'apple-card-grad rounded-2xl bg-apple-card p-4' : ''}`}
+    >
       {/* Header for new prize */}
       {!prize && (
-        <div className="flex items-center justify-between border-b border-dark-700 pb-3">
-          <h3 className="font-semibold text-dark-100">{t('admin.wheel.prizes.addPrize')}</h3>
+        <div className="flex items-center justify-between border-b border-apple-hairline pb-3">
+          <h3 className="font-semibold text-apple-ink">{t('admin.wheel.prizes.addPrize')}</h3>
           <button type="button" onClick={onCancel} className="btn-ghost p-1">
             <XMarkIcon />
           </button>
@@ -1104,13 +1115,13 @@ function InlinePrizeForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Prize type */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.wheel.prizes.fields.type')}
           </label>
           <select
             value={formData.prize_type}
             onChange={(e) => setFormData({ ...formData, prize_type: e.target.value })}
-            className="input w-full"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           >
             {PRIZE_TYPE_KEYS.map((type) => (
               <option key={type.value} value={type.value}>
@@ -1122,7 +1133,7 @@ function InlinePrizeForm({
 
         {/* Display name */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.wheel.prizes.fields.displayName')}
           </label>
           <input
@@ -1131,7 +1142,7 @@ function InlinePrizeForm({
             onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
             required
             maxLength={100}
-            className="input w-full"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             placeholder="e.g. 7 Days Free"
           />
         </div>
@@ -1139,7 +1150,7 @@ function InlinePrizeForm({
         {/* Prize value */}
         {formData.prize_type !== 'nothing' && (
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.wheel.prizes.fields.value')} (
               {formData.prize_type === 'balance_bonus'
                 ? 'kopeks'
@@ -1158,14 +1169,14 @@ function InlinePrizeForm({
                 if (!isNaN(num)) setFormData({ ...formData, prize_value: num });
               }}
               min={0}
-              className="input w-full"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
         )}
 
         {/* Prize value in kopeks (for RTP calculation) */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.wheel.prizes.fields.valueKopeks')}
           </label>
           <input
@@ -1178,16 +1189,16 @@ function InlinePrizeForm({
               if (!isNaN(num)) setFormData({ ...formData, prize_value_kopeks: num });
             }}
             min={0}
-            className="input w-full"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
-          <p className="mt-1 text-xs text-dark-500">
+          <p className="mt-1 text-xs text-apple-faint">
             = {(toNumber(formData.prize_value_kopeks) / 100).toFixed(2)} RUB
           </p>
         </div>
 
         {/* Emoji */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.wheel.prizes.fields.emoji')}
           </label>
           <input
@@ -1195,7 +1206,7 @@ function InlinePrizeForm({
             value={formData.emoji}
             onChange={(e) => setFormData({ ...formData, emoji: e.target.value })}
             maxLength={10}
-            className="input w-full text-center text-2xl"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-center text-2xl text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
         </div>
 
@@ -1214,20 +1225,20 @@ function InlinePrizeForm({
           id={`is_active_${prize?.id || 'new'}`}
           checked={formData.is_active}
           onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-          className="rounded border-dark-600"
+          className="rounded border-apple-hairline"
         />
-        <label htmlFor={`is_active_${prize?.id || 'new'}`} className="text-sm text-dark-300">
+        <label htmlFor={`is_active_${prize?.id || 'new'}`} className="text-sm text-apple-mute">
           {t('admin.wheel.prizes.fields.active')}
         </label>
       </div>
 
       {/* Promocode settings */}
       {formData.prize_type === 'promocode' && (
-        <div className="space-y-3 rounded-lg bg-dark-700/50 p-3">
-          <h4 className="font-medium text-dark-200">{t('admin.wheel.prizes.promo.title')}</h4>
+        <div className="space-y-3 rounded-xl bg-apple-elevated p-3">
+          <h4 className="font-medium text-apple-ink">{t('admin.wheel.prizes.promo.title')}</h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-300">
+              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                 {t('admin.wheel.prizes.promo.balanceBonus')}
               </label>
               <input
@@ -1241,11 +1252,11 @@ function InlinePrizeForm({
                   })
                 }
                 min={0}
-                className="input w-full"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-300">
+              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                 {t('admin.wheel.prizes.promo.subscriptionDays')}
               </label>
               <input
@@ -1259,7 +1270,7 @@ function InlinePrizeForm({
                   })
                 }
                 min={0}
-                className="input w-full"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
             </div>
           </div>
@@ -1267,7 +1278,7 @@ function InlinePrizeForm({
       )}
 
       {/* Action buttons */}
-      <div className="flex justify-end gap-2 border-t border-dark-700 pt-4">
+      <div className="flex justify-end gap-2 border-t border-apple-hairline pt-4">
         <button
           type="button"
           onClick={onCancel}
@@ -1279,7 +1290,7 @@ function InlinePrizeForm({
         </button>
         <button
           type="submit"
-          className="btn-primary flex items-center gap-1 px-3 py-1.5"
+          className="flex items-center gap-1 rounded-full bg-[#F97315] px-4 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           disabled={isLoading}
         >
           {isLoading ? (

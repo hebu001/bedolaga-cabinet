@@ -20,7 +20,7 @@ import { SettingsSearchMobile, SettingsSearchResults } from '../components/admin
 // BackIcon
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -33,7 +33,7 @@ const BackIcon = () => (
 // ChevronRight for breadcrumbs
 const ChevronRightIcon = () => (
   <svg
-    className="h-3.5 w-3.5 text-dark-600"
+    className="h-3.5 w-3.5 text-apple-faint"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -260,20 +260,20 @@ export default function AdminSettings() {
       {/* Desktop Layout - fixed sidebar, scrollable content */}
       <div className="hidden h-[calc(100vh-120px)] lg:flex">
         {/* Fixed Sidebar */}
-        <div className="w-[264px] shrink-0 overflow-y-auto border-r border-dark-700/50">
-          <div className="border-b border-dark-700/50 p-4">
+        <div className="w-[264px] shrink-0 overflow-y-auto border-r border-apple-hairline">
+          <div className="border-b border-apple-hairline p-4">
             <div className="flex items-center gap-3">
               {/* Show back button only on web, not in Telegram Mini App */}
               {!capabilities.hasBackButton && (
                 <button
                   onClick={() => navigate('/admin')}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-opacity hover:opacity-90"
                   aria-label={t('admin.settings.backToAdmin')}
                 >
                   <BackIcon />
                 </button>
               )}
-              <h1 className="text-lg font-bold text-dark-100">{t('admin.settings.title')}</h1>
+              <h1 className="text-lg font-bold text-apple-ink">{t('admin.settings.title')}</h1>
             </div>
           </div>
           <SettingsTreeSidebar
@@ -294,12 +294,12 @@ export default function AdminSettings() {
             <div className="mb-2 flex items-center gap-1.5 text-xs">
               <button
                 onClick={() => setActiveSection(activeTreeInfo.group.children[0].id)}
-                className="text-dark-500 transition-colors hover:text-dark-300"
+                className="text-apple-faint transition-colors hover:text-apple-mute"
               >
                 {t(`admin.settings.groups.${activeTreeInfo.group.id}`)}
               </button>
               <ChevronRightIcon />
-              <span className="text-dark-300">
+              <span className="text-apple-mute">
                 {t(`admin.settings.tree.${activeTreeInfo.child.id}`)}
               </span>
             </div>
@@ -307,14 +307,14 @@ export default function AdminSettings() {
 
           {/* Title + count badges */}
           <div className="mb-4 flex items-center gap-3">
-            <h2 className="truncate text-xl font-semibold text-dark-100">{sectionTitle}</h2>
+            <h2 className="truncate text-xl font-semibold text-apple-ink">{sectionTitle}</h2>
             {totalCount > 0 && !searchQuery.trim() && activeTreeInfo && (
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-dark-700/50 px-2 py-0.5 text-xs text-dark-400">
+                <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                   {t('admin.settings.totalCount', { count: totalCount })}
                 </span>
                 {modifiedCount > 0 && (
-                  <span className="rounded-full bg-warning-500/20 px-2 py-0.5 text-xs text-warning-400">
+                  <span className="rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold text-apple-amber">
                     {t('admin.settings.modifiedCount', { count: modifiedCount })}
                   </span>
                 )}

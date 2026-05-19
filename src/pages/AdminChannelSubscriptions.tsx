@@ -156,24 +156,24 @@ function GlobalSettingsSection() {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-6">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
         <div className="flex items-center gap-3">
           <div className="animate-spin">
             <RefreshIcon />
           </div>
-          <span className="text-sm text-dark-400">{t('common.loading')}</span>
+          <span className="text-sm text-apple-mute">{t('common.loading')}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4">
+    <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
       <div className="mb-4 flex items-center gap-2.5">
-        <div className="text-dark-300">
+        <div className="text-apple-mute">
           <SettingsIcon />
         </div>
-        <h2 className="text-sm font-semibold text-dark-100">
+        <h2 className="text-sm font-semibold text-apple-ink">
           {t('admin.channelSubscriptions.globalSettings.title')}
         </h2>
       </div>
@@ -189,11 +189,11 @@ function GlobalSettingsSection() {
           return (
             <div
               key={key}
-              className="flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 transition-colors hover:bg-dark-700/30"
+              className="flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 transition-colors hover:bg-apple-elevated"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-dark-200">{t(i18n.label)}</p>
-                <p className="mt-0.5 text-xs text-dark-400">{t(i18n.desc)}</p>
+                <p className="text-sm font-medium text-apple-ink">{t(i18n.label)}</p>
+                <p className="mt-0.5 text-xs text-apple-mute">{t(i18n.desc)}</p>
               </div>
               <Toggle
                 checked={enabled}
@@ -229,10 +229,8 @@ function ChannelCard({
 
   return (
     <div
-      className={`rounded-xl border p-4 transition-all ${
-        channel.is_active
-          ? 'border-success-500/50 bg-success-500/5'
-          : 'border-dark-700 bg-dark-800/50'
+      className={`apple-card-grad rounded-2xl p-4 transition-all ${
+        channel.is_active ? 'bg-apple-green/10' : 'bg-apple-card'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -240,31 +238,31 @@ function ChannelCard({
           {/* Status + sort order */}
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-full px-2 py-1 text-xs font-medium ${
+              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                 channel.is_active
-                  ? 'bg-success-500/20 text-success-400'
-                  : 'bg-dark-500/20 text-dark-400'
+                  ? 'bg-apple-green/15 text-apple-green'
+                  : 'bg-apple-elevated text-apple-mute'
               }`}
             >
               {channel.is_active
                 ? t('admin.channelSubscriptions.enabled')
                 : t('admin.channelSubscriptions.disabled')}
             </span>
-            <span className="text-xs text-dark-400">#{channel.id}</span>
-            <span className="text-xs text-dark-500">
+            <span className="text-xs text-apple-mute">#{channel.id}</span>
+            <span className="text-xs text-apple-faint">
               {t('admin.channelSubscriptions.sortOrder')}: {channel.sort_order}
             </span>
           </div>
 
           {/* Title / channel_id */}
-          <p className="text-sm font-medium text-dark-100">{displayName}</p>
+          <p className="text-sm font-medium text-apple-ink">{displayName}</p>
 
           {/* Channel ID (if title exists, show ID separately) */}
-          {channel.title && <p className="mt-0.5 text-xs text-dark-400">{channel.channel_id}</p>}
+          {channel.title && <p className="mt-0.5 text-xs text-apple-mute">{channel.channel_id}</p>}
 
           {/* Link */}
           {hasLink && (
-            <div className="mt-1.5 flex items-center gap-1 text-xs text-accent-400">
+            <div className="mt-1.5 flex items-center gap-1 text-xs" style={{ color: '#F97315' }}>
               <LinkIcon />
               <a
                 href={channel.channel_link!}
@@ -280,13 +278,13 @@ function ChannelCard({
       </div>
 
       {/* Per-channel disable toggles */}
-      <div className="mt-3 space-y-2 border-t border-dark-700/50 pt-3">
+      <div className="mt-3 space-y-2 border-t border-apple-hairline pt-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-dark-300">
+            <p className="text-xs font-medium text-apple-mute">
               {t('admin.channelSubscriptions.perChannel.disableTrial')}
             </p>
-            <p className="text-xs text-dark-500">
+            <p className="text-xs text-apple-faint">
               {t('admin.channelSubscriptions.perChannel.disableTrialDesc')}
             </p>
           </div>
@@ -301,10 +299,10 @@ function ChannelCard({
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-dark-300">
+            <p className="text-xs font-medium text-apple-mute">
               {t('admin.channelSubscriptions.perChannel.disablePaid')}
             </p>
-            <p className="text-xs text-dark-500">
+            <p className="text-xs text-apple-faint">
               {t('admin.channelSubscriptions.perChannel.disablePaidDesc')}
             </p>
           </div>
@@ -320,10 +318,11 @@ function ChannelCard({
       </div>
 
       {/* Action buttons */}
-      <div className="mt-3 flex flex-wrap gap-2 border-t border-dark-700/50 pt-3">
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-apple-hairline pt-3">
         <button
           onClick={() => onEdit(channel)}
-          className="flex items-center gap-1.5 rounded-lg bg-accent-500/20 px-3 py-1.5 text-xs text-accent-400 transition-colors hover:bg-accent-500/30"
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-80"
+          style={{ backgroundColor: 'rgba(249,115,21,0.15)', color: '#F97315' }}
         >
           <EditIcon />
           {t('admin.channelSubscriptions.edit')}
@@ -332,7 +331,7 @@ function ChannelCard({
         {channel.is_active ? (
           <button
             onClick={() => onToggle(channel.id)}
-            className="flex items-center gap-1.5 rounded-lg bg-warning-500/20 px-3 py-1.5 text-xs text-warning-400 transition-colors hover:bg-warning-500/30"
+            className="flex items-center gap-1.5 rounded-full bg-apple-amber/15 px-3 py-1.5 text-xs text-apple-amber transition-opacity hover:opacity-80"
           >
             <XIcon />
             {t('admin.channelSubscriptions.disable')}
@@ -340,7 +339,7 @@ function ChannelCard({
         ) : (
           <button
             onClick={() => onToggle(channel.id)}
-            className="flex items-center gap-1.5 rounded-lg bg-success-500/20 px-3 py-1.5 text-xs text-success-400 transition-colors hover:bg-success-500/30"
+            className="flex items-center gap-1.5 rounded-full bg-apple-green/15 px-3 py-1.5 text-xs text-apple-green transition-opacity hover:opacity-80"
           >
             <CheckIcon />
             {t('admin.channelSubscriptions.enable')}
@@ -349,7 +348,7 @@ function ChannelCard({
 
         <button
           onClick={() => onDelete(channel.id)}
-          className="flex items-center gap-1.5 rounded-lg bg-error-500/20 px-3 py-1.5 text-xs text-error-400 transition-colors hover:bg-error-500/30"
+          className="flex items-center gap-1.5 rounded-full bg-apple-red/15 px-3 py-1.5 text-xs text-apple-red transition-opacity hover:opacity-80"
         >
           <TrashIcon />
           {t('admin.channelSubscriptions.delete')}
@@ -389,7 +388,7 @@ function ChannelFormFields({
     <>
       {showChannelId && (
         <div>
-          <label className="mb-1 block text-xs font-medium text-dark-300">
+          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
             {t('admin.channelSubscriptions.form.channelId')} *
           </label>
           <input
@@ -397,14 +396,14 @@ function ChannelFormFields({
             value={channelId}
             onChange={(e) => setChannelId(e.target.value)}
             placeholder={t('admin.channelSubscriptions.form.channelIdHint')}
-            className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             autoFocus
           />
         </div>
       )}
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-dark-300">
+        <label className="mb-1 block text-[13px] font-medium text-apple-mute">
           {t('admin.channelSubscriptions.form.title')}
         </label>
         <input
@@ -412,13 +411,13 @@ function ChannelFormFields({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t('admin.channelSubscriptions.form.title')}
-          className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+          className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           autoFocus={!showChannelId}
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-dark-300">
+        <label className="mb-1 block text-[13px] font-medium text-apple-mute">
           {t('admin.channelSubscriptions.form.channelLink')}
         </label>
         <input
@@ -426,13 +425,13 @@ function ChannelFormFields({
           value={channelLink}
           onChange={(e) => setChannelLink(e.target.value)}
           placeholder={t('admin.channelSubscriptions.form.channelLinkHint')}
-          className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+          className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
         />
       </div>
 
       {showSortOrder && (
         <div>
-          <label className="mb-1 block text-xs font-medium text-dark-300">
+          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
             {t('admin.channelSubscriptions.sortOrder')}
           </label>
           <input
@@ -440,7 +439,7 @@ function ChannelFormFields({
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
             placeholder="0"
-            className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
         </div>
       )}
@@ -473,7 +472,7 @@ function AddChannelForm({
   };
 
   return (
-    <div className="rounded-xl border border-accent-500/30 bg-dark-800/50 p-4">
+    <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
       <div className="space-y-3">
         <ChannelFormFields
           channelId={channelId}
@@ -492,7 +491,7 @@ function AddChannelForm({
           <button
             onClick={handleSubmit}
             disabled={!channelId.trim() || isLoading}
-            className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CheckIcon />
             {t('admin.channelSubscriptions.form.submit')}
@@ -500,7 +499,7 @@ function AddChannelForm({
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="flex items-center gap-2 rounded-lg bg-dark-700 px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full bg-apple-elevated px-4 py-2 text-sm text-apple-mute transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <XIcon />
             {t('admin.channelSubscriptions.form.cancel')}
@@ -544,10 +543,10 @@ function EditChannelForm({
   };
 
   return (
-    <div className="rounded-xl border border-accent-500/30 bg-dark-800/50 p-4">
-      <p className="mb-3 text-xs text-dark-400">
+    <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+      <p className="mb-3 text-xs text-apple-mute">
         {t('admin.channelSubscriptions.editing')}:{' '}
-        <code className="text-dark-300">{channel.channel_id}</code>
+        <code className="text-apple-ink">{channel.channel_id}</code>
       </p>
       <div className="space-y-3">
         <ChannelFormFields
@@ -567,7 +566,7 @@ function EditChannelForm({
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CheckIcon />
             {t('admin.channelSubscriptions.form.save')}
@@ -575,7 +574,7 @@ function EditChannelForm({
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="flex items-center gap-2 rounded-lg bg-dark-700 px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full bg-apple-elevated px-4 py-2 text-sm text-apple-mute transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <XIcon />
             {t('admin.channelSubscriptions.form.cancel')}
@@ -684,14 +683,17 @@ export default function AdminChannelSubscriptions() {
         <div className="flex items-center gap-3">
           <AdminBackButton />
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-accent-500/20 p-2 text-accent-400">
+            <div
+              className="rounded-lg p-2"
+              style={{ backgroundColor: 'rgba(249,115,21,0.15)', color: '#F97315' }}
+            >
               <ChannelIcon />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-dark-100">
+              <h1 className="text-xl font-bold text-apple-ink">
                 {t('admin.channelSubscriptions.title')}
               </h1>
-              <p className="text-sm text-dark-400">{t('admin.channelSubscriptions.subtitle')}</p>
+              <p className="text-sm text-apple-mute">{t('admin.channelSubscriptions.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -699,7 +701,7 @@ export default function AdminChannelSubscriptions() {
           <button
             onClick={() => refetch()}
             aria-label={t('common.refresh')}
-            className="rounded-lg bg-dark-800 p-2 text-dark-400 transition-colors hover:text-dark-100"
+            className="rounded-lg bg-apple-card p-2 text-apple-mute transition-colors hover:text-apple-ink"
           >
             <RefreshIcon />
           </button>
@@ -707,7 +709,7 @@ export default function AdminChannelSubscriptions() {
             <button
               onClick={() => setShowAddForm(true)}
               aria-label={t('admin.channelSubscriptions.addChannel')}
-              className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+              className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90"
             >
               <PlusIcon />
               <span className="hidden sm:inline">{t('admin.channelSubscriptions.addChannel')}</span>
@@ -740,14 +742,14 @@ export default function AdminChannelSubscriptions() {
 
       {/* Channel list */}
       {isLoading ? (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
           <div className="mx-auto mb-2 w-fit animate-spin">
             <RefreshIcon />
           </div>
           <p>{t('common.loading')}</p>
         </div>
       ) : channels.length === 0 ? (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
           <div className="mx-auto mb-2 w-fit">
             <ChannelIcon />
           </div>

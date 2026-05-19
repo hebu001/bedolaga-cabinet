@@ -10,7 +10,7 @@ import { usePlatform } from '@/platform/hooks/usePlatform';
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -188,14 +188,14 @@ interface StatusBadgeProps {
 
 function StatusBadge({ status, label }: StatusBadgeProps) {
   const colorMap: Record<string, string> = {
-    success: 'bg-success-500/20 text-success-400',
-    denied: 'bg-red-500/20 text-red-400',
-    error: 'bg-amber-500/20 text-amber-400',
+    success: 'bg-apple-green/15 text-apple-green',
+    denied: 'bg-apple-red/15 text-apple-red',
+    error: 'bg-apple-amber/15 text-apple-amber',
   };
 
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colorMap[status] || 'bg-dark-600 text-dark-300'}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${colorMap[status] || 'bg-apple-elevated text-apple-mute'}`}
     >
       {label}
     </span>
@@ -208,16 +208,16 @@ interface MethodBadgeProps {
 
 function MethodBadge({ method }: MethodBadgeProps) {
   const colorMap: Record<string, string> = {
-    GET: 'bg-blue-500/20 text-blue-400',
-    POST: 'bg-success-500/20 text-success-400',
-    PUT: 'bg-amber-500/20 text-amber-400',
-    PATCH: 'bg-amber-500/20 text-amber-400',
-    DELETE: 'bg-red-500/20 text-red-400',
+    GET: 'bg-apple-blue/15 text-apple-blue',
+    POST: 'bg-apple-green/15 text-apple-green',
+    PUT: 'bg-apple-amber/15 text-apple-amber',
+    PATCH: 'bg-apple-amber/15 text-apple-amber',
+    DELETE: 'bg-apple-red/15 text-apple-red',
   };
 
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 font-mono text-xs font-medium ${colorMap[method] || 'bg-dark-600 text-dark-300'}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold ${colorMap[method] || 'bg-apple-elevated text-apple-mute'}`}
     >
       {method}
     </span>
@@ -238,7 +238,7 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
   const userName = entry.user_first_name || entry.user_email || t('admin.auditLog.unknownUser');
 
   return (
-    <div className="rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600">
+    <div className="apple-card-grad rounded-2xl bg-apple-card transition-colors">
       {/* Main row */}
       <button
         type="button"
@@ -248,7 +248,7 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
       >
         {/* Timestamp */}
         <div
-          className="shrink-0 text-sm text-dark-400"
+          className="shrink-0 text-sm text-apple-mute"
           title={formatAbsoluteTime(entry.created_at)}
         >
           {formatRelativeTime(entry.created_at, t)}
@@ -256,7 +256,7 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
 
         {/* User */}
         <div className="min-w-0 shrink-0">
-          <span className="text-sm font-medium text-dark-200">{userName}</span>
+          <span className="text-sm font-medium text-apple-ink">{userName}</span>
         </div>
 
         {/* Action + status */}
@@ -265,20 +265,20 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
             status={status}
             label={t(`admin.auditLog.status.${status}`, { defaultValue: status })}
           />
-          <span className="truncate text-sm font-medium text-dark-100">
+          <span className="truncate text-sm font-medium text-apple-ink">
             {translateAction(entry.action, t)}
           </span>
         </div>
 
         {/* Resource */}
-        <div className="flex shrink-0 items-center gap-2 text-sm text-dark-400">
+        <div className="flex shrink-0 items-center gap-2 text-sm text-apple-mute">
           <span>
             {entry.resource_type
               ? t(`admin.roles.form.permissionSections.${entry.resource_type}`, entry.resource_type)
               : null}
           </span>
           {entry.resource_id && (
-            <span className="rounded bg-dark-700 px-1.5 py-0.5 font-mono text-xs text-dark-300">
+            <span className="rounded bg-apple-elevated px-1.5 py-0.5 font-mono text-xs text-apple-mute">
               #{entry.resource_id}
             </span>
           )}
@@ -293,64 +293,64 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
 
         {/* IP */}
         {entry.ip_address && (
-          <div className="shrink-0 font-mono text-xs text-dark-500">{entry.ip_address}</div>
+          <div className="shrink-0 font-mono text-xs text-apple-faint">{entry.ip_address}</div>
         )}
 
         {/* Expand indicator */}
         <ChevronDownIcon
-          className={`h-4 w-4 shrink-0 text-dark-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-apple-faint transition-transform ${isExpanded ? 'rotate-180' : ''}`}
         />
       </button>
 
       {/* Expanded details */}
       {isExpanded && (
-        <div className="border-t border-dark-700 p-4">
+        <div className="border-t border-apple-hairline p-4">
           <div className="grid gap-4 sm:grid-cols-2">
             {/* User agent */}
             {entry.user_agent && (
               <div>
-                <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                   {t('admin.auditLog.details.userAgent')}
                 </p>
-                <p className="break-all text-sm text-dark-300">{entry.user_agent}</p>
+                <p className="break-all text-sm text-apple-mute">{entry.user_agent}</p>
               </div>
             )}
 
             {/* Request path */}
             {requestPath && (
               <div>
-                <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                   {t('admin.auditLog.details.requestPath')}
                 </p>
-                <p className="break-all font-mono text-sm text-dark-300">{requestPath}</p>
+                <p className="break-all font-mono text-sm text-apple-mute">{requestPath}</p>
               </div>
             )}
 
             {/* IP Address */}
             {entry.ip_address && (
               <div>
-                <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                   {t('admin.auditLog.details.ipAddress')}
                 </p>
-                <p className="font-mono text-sm text-dark-300">{entry.ip_address}</p>
+                <p className="font-mono text-sm text-apple-mute">{entry.ip_address}</p>
               </div>
             )}
 
             {/* Timestamp */}
             <div>
-              <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+              <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                 {t('admin.auditLog.details.timestamp')}
               </p>
-              <p className="text-sm text-dark-300">{formatAbsoluteTime(entry.created_at)}</p>
+              <p className="text-sm text-apple-mute">{formatAbsoluteTime(entry.created_at)}</p>
             </div>
 
             {/* Before/after diff */}
             {entry.details && 'before' in entry.details && entry.details.before != null && (
               <div>
-                <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                   {t('admin.auditLog.details.before')}
                 </p>
-                <pre className="max-h-40 overflow-auto rounded-lg bg-dark-900 p-2 text-xs text-dark-300">
+                <pre className="max-h-40 overflow-auto rounded-lg bg-apple-elevated p-2 text-xs text-apple-mute">
                   {JSON.stringify(entry.details.before, null, 2)}
                 </pre>
               </div>
@@ -358,10 +358,10 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
 
             {entry.details && 'after' in entry.details && entry.details.after != null && (
               <div>
-                <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                   {t('admin.auditLog.details.after')}
                 </p>
-                <pre className="max-h-40 overflow-auto rounded-lg bg-dark-900 p-2 text-xs text-dark-300">
+                <pre className="max-h-40 overflow-auto rounded-lg bg-apple-elevated p-2 text-xs text-apple-mute">
                   {JSON.stringify(entry.details.after, null, 2)}
                 </pre>
               </div>
@@ -372,10 +372,10 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
               'query_params' in entry.details &&
               entry.details.query_params != null && (
                 <div className="sm:col-span-2">
-                  <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                  <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                     {t('admin.auditLog.details.queryParams')}
                   </p>
-                  <pre className="max-h-40 overflow-auto rounded-lg bg-dark-900 p-2 text-xs text-dark-300">
+                  <pre className="max-h-40 overflow-auto rounded-lg bg-apple-elevated p-2 text-xs text-apple-mute">
                     {JSON.stringify(entry.details.query_params, null, 2)}
                   </pre>
                 </div>
@@ -386,10 +386,10 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
               'request_body' in entry.details &&
               entry.details.request_body != null && (
                 <div className="sm:col-span-2">
-                  <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+                  <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                     {t('admin.auditLog.details.requestBody')}
                   </p>
-                  <pre className="max-h-60 overflow-auto rounded-lg bg-dark-900 p-2 text-xs text-dark-300">
+                  <pre className="max-h-60 overflow-auto rounded-lg bg-apple-elevated p-2 text-xs text-apple-mute">
                     {JSON.stringify(entry.details.request_body, null, 2)}
                   </pre>
                 </div>
@@ -399,10 +399,10 @@ function LogEntryCard({ entry, isExpanded, onToggle }: LogEntryCardProps) {
           {/* Full details JSON */}
           {entry.details && (
             <div className="mt-4">
-              <p className="mb-1 text-xs font-medium uppercase text-dark-500">
+              <p className="mb-1 text-xs font-medium uppercase text-apple-faint">
                 {t('admin.auditLog.details.fullDetails')}
               </p>
-              <pre className="max-h-60 overflow-auto rounded-lg bg-dark-900 p-3 text-xs text-dark-300">
+              <pre className="max-h-60 overflow-auto rounded-lg bg-apple-elevated p-3 text-xs text-apple-mute">
                 {JSON.stringify(entry.details, null, 2)}
               </pre>
             </div>
@@ -564,15 +564,15 @@ export default function AdminAuditLog() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
               aria-label={t('admin.auditLog.back')}
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold text-dark-100">{t('admin.auditLog.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.auditLog.subtitle')}</p>
+            <h1 className="text-xl font-semibold text-apple-ink">{t('admin.auditLog.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.auditLog.subtitle')}</p>
           </div>
         </div>
 
@@ -580,10 +580,10 @@ export default function AdminAuditLog() {
           {/* Auto-refresh toggle */}
           <button
             onClick={() => setAutoRefresh((prev) => !prev)}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-sm transition-colors ${
               autoRefresh
-                ? 'border-accent-500/50 bg-accent-500/10 text-accent-400'
-                : 'border-dark-700 bg-dark-800 text-dark-400 hover:border-dark-600 hover:text-dark-300'
+                ? 'bg-[#F97315]/15 text-[#F97315]'
+                : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
             }`}
             title={t('admin.auditLog.autoRefresh.tooltip')}
           >
@@ -595,7 +595,7 @@ export default function AdminAuditLog() {
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-dark-700 bg-dark-800 text-dark-400 transition-colors hover:border-dark-600 hover:text-dark-300 disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card text-apple-mute transition-colors hover:bg-apple-elevated disabled:opacity-50"
             title={t('admin.auditLog.refresh')}
           >
             <RefreshIcon className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
@@ -604,14 +604,14 @@ export default function AdminAuditLog() {
           {/* Export */}
           <PermissionGate permission="audit_log:export">
             <div className="flex items-center gap-2">
-              {exportError && <p className="text-sm text-error-400">{exportError}</p>}
+              {exportError && <p className="text-sm text-apple-red">{exportError}</p>}
               <button
                 onClick={() => {
                   setExportError(null);
                   handleExport();
                 }}
                 disabled={exporting}
-                className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 <DownloadIcon />
                 <span className="hidden sm:inline">
@@ -624,7 +624,7 @@ export default function AdminAuditLog() {
       </div>
 
       {/* Filters bar */}
-      <div className="mb-4 rounded-xl border border-dark-700 bg-dark-800">
+      <div className="apple-card-grad mb-4 rounded-2xl bg-apple-card">
         <button
           type="button"
           onClick={() => setFiltersOpen((prev) => !prev)}
@@ -632,27 +632,27 @@ export default function AdminAuditLog() {
         >
           <div className="flex items-center gap-2">
             <FilterIcon />
-            <span className="text-sm font-medium text-dark-200">
+            <span className="text-sm font-medium text-apple-ink">
               {t('admin.auditLog.filters.title')}
             </span>
             {hasActiveFilters && (
-              <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-xs font-medium text-accent-400">
+              <span className="rounded-full bg-[#F97315]/15 px-2.5 py-1 text-[11px] font-semibold text-[#F97315]">
                 {t('admin.auditLog.filters.active')}
               </span>
             )}
           </div>
           <ChevronDownIcon
-            className={`h-5 w-5 text-dark-400 transition-transform ${filtersOpen ? 'rotate-180' : ''}`}
+            className={`h-5 w-5 text-apple-mute transition-transform ${filtersOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
         {filtersOpen && (
-          <div className="border-t border-dark-700 p-4">
+          <div className="border-t border-apple-hairline p-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {/* User filter */}
               {rbacUsers && rbacUsers.length > 0 && (
                 <div className="sm:col-span-2 lg:col-span-3">
-                  <label className="mb-1 block text-sm font-medium text-dark-300">
+                  <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                     {t('admin.auditLog.filters.user')}
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -671,17 +671,15 @@ export default function AdminAuditLog() {
                               userId: isSelected ? '' : String(ru.user_id),
                             }))
                           }
-                          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-1 focus-visible:ring-offset-dark-900 ${
+                          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97315]/50 ${
                             isSelected
-                              ? 'border-accent-500 bg-accent-500/20 text-accent-300'
-                              : 'border-dark-600 bg-dark-900 text-dark-300 hover:border-dark-500 hover:text-dark-200'
+                              ? 'bg-[#F97315]/15 text-[#F97315]'
+                              : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
                           }`}
                         >
                           <span
-                            className={`flex h-4 w-4 items-center justify-center rounded border text-xs ${
-                              isSelected
-                                ? 'border-accent-500 bg-accent-500 text-white'
-                                : 'border-dark-500 bg-dark-800'
+                            className={`flex h-4 w-4 items-center justify-center rounded text-xs ${
+                              isSelected ? 'bg-[#F97315] text-white' : 'bg-apple-card'
                             }`}
                           >
                             {isSelected && '✓'}
@@ -698,12 +696,12 @@ export default function AdminAuditLog() {
               <div>
                 <label
                   htmlFor="filter-action"
-                  className="mb-1 block text-sm font-medium text-dark-300"
+                  className="mb-1 block text-[13px] font-medium text-apple-mute"
                 >
                   {t('admin.auditLog.filters.action')}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
+                  <span className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-apple-faint">
                     <SearchIcon />
                   </span>
                   <input
@@ -711,7 +709,7 @@ export default function AdminAuditLog() {
                     type="text"
                     value={filters.action}
                     onChange={(e) => setFilters((prev) => ({ ...prev, action: e.target.value }))}
-                    className="w-full rounded-lg border border-dark-600 bg-dark-900 py-2 pl-9 pr-3 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500"
+                    className="w-full rounded-xl bg-apple-elevated py-3 pl-9 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     placeholder={t('admin.auditLog.filters.actionPlaceholder')}
                   />
                 </div>
@@ -721,7 +719,7 @@ export default function AdminAuditLog() {
               <div>
                 <label
                   htmlFor="filter-resource"
-                  className="mb-1 block text-sm font-medium text-dark-300"
+                  className="mb-1 block text-[13px] font-medium text-apple-mute"
                 >
                   {t('admin.auditLog.filters.resource')}
                 </label>
@@ -729,7 +727,7 @@ export default function AdminAuditLog() {
                   id="filter-resource"
                   value={filters.resource}
                   onChange={(e) => setFilters((prev) => ({ ...prev, resource: e.target.value }))}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-sm text-dark-100 outline-none transition-colors focus:border-accent-500"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                 >
                   <option value="">{t('admin.auditLog.filters.allResources')}</option>
                   {RESOURCE_TYPES.map((type) => (
@@ -744,7 +742,7 @@ export default function AdminAuditLog() {
               <div>
                 <label
                   htmlFor="filter-status"
-                  className="mb-1 block text-sm font-medium text-dark-300"
+                  className="mb-1 block text-[13px] font-medium text-apple-mute"
                 >
                   {t('admin.auditLog.filters.status')}
                 </label>
@@ -752,7 +750,7 @@ export default function AdminAuditLog() {
                   id="filter-status"
                   value={filters.status}
                   onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-sm text-dark-100 outline-none transition-colors focus:border-accent-500"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
                 >
                   <option value="">{t('admin.auditLog.filters.allStatuses')}</option>
                   {STATUS_OPTIONS.map((status) => (
@@ -767,7 +765,7 @@ export default function AdminAuditLog() {
               <div>
                 <label
                   htmlFor="filter-date-from"
-                  className="mb-1 block text-sm font-medium text-dark-300"
+                  className="mb-1 block text-[13px] font-medium text-apple-mute"
                 >
                   {t('admin.auditLog.filters.dateFrom')}
                 </label>
@@ -776,7 +774,7 @@ export default function AdminAuditLog() {
                   type="date"
                   value={filters.dateFrom}
                   onChange={(e) => setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-sm text-dark-100 outline-none transition-colors focus:border-accent-500"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
               </div>
 
@@ -784,7 +782,7 @@ export default function AdminAuditLog() {
               <div>
                 <label
                   htmlFor="filter-date-to"
-                  className="mb-1 block text-sm font-medium text-dark-300"
+                  className="mb-1 block text-[13px] font-medium text-apple-mute"
                 >
                   {t('admin.auditLog.filters.dateTo')}
                 </label>
@@ -793,7 +791,7 @@ export default function AdminAuditLog() {
                   type="date"
                   value={filters.dateTo}
                   onChange={(e) => setFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-900 px-3 py-2 text-sm text-dark-100 outline-none transition-colors focus:border-accent-500"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
               </div>
             </div>
@@ -802,13 +800,13 @@ export default function AdminAuditLog() {
             <div className="mt-4 flex items-center gap-3">
               <button
                 onClick={handleApplyFilters}
-                className="rounded-lg bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600"
+                className="rounded-full bg-[#F97315] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
               >
                 {t('admin.auditLog.filters.apply')}
               </button>
               <button
                 onClick={handleClearFilters}
-                className="rounded-lg border border-dark-600 px-4 py-2 text-sm font-medium text-dark-300 transition-colors hover:border-dark-500 hover:text-dark-200"
+                className="rounded-full bg-apple-elevated px-4 py-2 text-sm font-medium text-apple-mute transition-colors hover:text-apple-ink"
               >
                 {t('admin.auditLog.filters.clear')}
               </button>
@@ -820,18 +818,18 @@ export default function AdminAuditLog() {
       {/* Results summary */}
       {!isLoading && !error && (
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-dark-400">
+          <p className="text-sm text-apple-mute">
             {t('admin.auditLog.totalEntries', { count: total })}
           </p>
           <div className="flex items-center gap-2">
-            <label htmlFor="page-size" className="text-sm text-dark-500">
+            <label htmlFor="page-size" className="text-sm text-apple-faint">
               {t('admin.auditLog.pagination.pageSize')}
             </label>
             <select
               id="page-size"
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="rounded-lg border border-dark-600 bg-dark-800 px-2 py-1 text-sm text-dark-200 outline-none focus:border-accent-500"
+              className="rounded-xl bg-apple-elevated px-2 py-1 text-sm text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>
@@ -846,21 +844,22 @@ export default function AdminAuditLog() {
       {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : error ? (
         <div className="py-12 text-center">
-          <p className="text-error-400">{t('admin.auditLog.errors.loadFailed')}</p>
+          <p className="text-apple-red">{t('admin.auditLog.errors.loadFailed')}</p>
           <button
             onClick={() => refetch()}
-            className="mt-3 text-sm text-accent-400 transition-colors hover:text-accent-300"
+            className="mt-3 text-sm transition-opacity hover:opacity-80"
+            style={{ color: '#F97315' }}
           >
             {t('admin.auditLog.errors.retry')}
           </button>
         </div>
       ) : filteredEntries.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-dark-400">{t('admin.auditLog.noEntries')}</p>
+          <p className="text-apple-mute">{t('admin.auditLog.noEntries')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -881,7 +880,7 @@ export default function AdminAuditLog() {
           <button
             onClick={() => setPage(0)}
             disabled={page === 0}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl bg-apple-card px-3 py-2 text-sm text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={t('admin.auditLog.pagination.first')}
           >
             &laquo;
@@ -889,13 +888,13 @@ export default function AdminAuditLog() {
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl bg-apple-card px-3 py-2 text-sm text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={t('admin.auditLog.pagination.previous')}
           >
             &lsaquo;
           </button>
 
-          <span className="px-3 py-2 text-sm text-dark-300">
+          <span className="px-3 py-2 text-sm text-apple-mute">
             {t('admin.auditLog.pagination.pageOf', {
               current: page + 1,
               total: totalPages,
@@ -905,7 +904,7 @@ export default function AdminAuditLog() {
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl bg-apple-card px-3 py-2 text-sm text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={t('admin.auditLog.pagination.next')}
           >
             &rsaquo;
@@ -913,7 +912,7 @@ export default function AdminAuditLog() {
           <button
             onClick={() => setPage(totalPages - 1)}
             disabled={page >= totalPages - 1}
-            className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-dark-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-xl bg-apple-card px-3 py-2 text-sm text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={t('admin.auditLog.pagination.last')}
           >
             &raquo;
