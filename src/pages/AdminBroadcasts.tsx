@@ -9,7 +9,7 @@ import { usePlatform } from '../platform/hooks/usePlatform';
 
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -78,38 +78,38 @@ const DocumentIcon = () => (
 // Status badge component
 const statusConfig: Record<string, { bg: string; text: string; labelKey: string }> = {
   queued: {
-    bg: 'bg-warning-500/20',
-    text: 'text-warning-400',
+    bg: 'bg-apple-amber/15',
+    text: 'text-apple-amber',
     labelKey: 'admin.broadcasts.status.queued',
   },
   in_progress: {
-    bg: 'bg-accent-500/20',
-    text: 'text-accent-400',
+    bg: 'bg-apple-blue/15',
+    text: 'text-apple-blue',
     labelKey: 'admin.broadcasts.status.inProgress',
   },
   completed: {
-    bg: 'bg-success-500/20',
-    text: 'text-success-400',
+    bg: 'bg-apple-green/15',
+    text: 'text-apple-green',
     labelKey: 'admin.broadcasts.status.completed',
   },
   partial: {
-    bg: 'bg-warning-500/20',
-    text: 'text-warning-400',
+    bg: 'bg-apple-amber/15',
+    text: 'text-apple-amber',
     labelKey: 'admin.broadcasts.status.partial',
   },
   failed: {
-    bg: 'bg-error-500/20',
-    text: 'text-error-400',
+    bg: 'bg-apple-red/15',
+    text: 'text-apple-red',
     labelKey: 'admin.broadcasts.status.failed',
   },
   cancelled: {
-    bg: 'bg-dark-500/20',
-    text: 'text-dark-400',
+    bg: 'bg-apple-elevated',
+    text: 'text-apple-mute',
     labelKey: 'admin.broadcasts.status.cancelled',
   },
   cancelling: {
-    bg: 'bg-warning-500/20',
-    text: 'text-warning-400',
+    bg: 'bg-apple-amber/15',
+    text: 'text-apple-amber',
     labelKey: 'admin.broadcasts.status.cancelling',
   },
 };
@@ -118,7 +118,9 @@ function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
   const config = statusConfig[status] || statusConfig.queued;
   return (
-    <span className={`rounded-full px-2 py-1 text-xs font-medium ${config.bg} ${config.text}`}>
+    <span
+      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${config.bg} ${config.text}`}
+    >
       {t(config.labelKey)}
     </span>
   );
@@ -159,26 +161,26 @@ export default function AdminBroadcasts() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-opacity hover:opacity-90"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-bold text-dark-100">{t('admin.broadcasts.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.broadcasts.subtitle')}</p>
+            <h1 className="text-xl font-bold text-apple-ink">{t('admin.broadcasts.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.broadcasts.subtitle')}</p>
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => refetch()}
-            className="rounded-lg bg-dark-800 p-2 text-dark-400 transition-colors hover:text-dark-100"
+            className="rounded-lg bg-apple-card p-2 text-apple-mute transition-colors hover:text-apple-ink"
           >
             <RefreshIcon />
           </button>
           <button
             onClick={() => navigate('/admin/broadcasts/create')}
-            className="flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90"
           >
             <PlusIcon />
             <span className="hidden sm:inline">{t('admin.broadcasts.create')}</span>
@@ -188,12 +190,12 @@ export default function AdminBroadcasts() {
 
       {/* Broadcasts list */}
       {isLoading ? (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
           <RefreshIcon />
           <p className="mt-2">{t('common.loading')}</p>
         </div>
       ) : broadcasts.length === 0 ? (
-        <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-8 text-center text-dark-400">
+        <div className="apple-card-grad rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
           <BroadcastIcon />
           <p className="mt-2">{t('admin.broadcasts.empty')}</p>
         </div>
@@ -203,28 +205,28 @@ export default function AdminBroadcasts() {
             <button
               key={broadcast.id}
               onClick={() => navigate(`/admin/broadcasts/${broadcast.id}`)}
-              className="w-full rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-left transition-all hover:border-dark-600 hover:bg-dark-800"
+              className="apple-card-grad w-full rounded-2xl bg-apple-card p-4 text-left transition-opacity hover:opacity-90"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
                     <StatusBadge status={broadcast.status} />
-                    <span className="text-xs text-dark-400">#{broadcast.id}</span>
+                    <span className="text-xs text-apple-mute">#{broadcast.id}</span>
                     {broadcast.has_media && (
-                      <span className="text-dark-400">
+                      <span className="text-apple-mute">
                         {broadcast.media_type === 'photo' && <PhotoIcon />}
                         {broadcast.media_type === 'video' && <VideoIcon />}
                         {broadcast.media_type === 'document' && <DocumentIcon />}
                       </span>
                     )}
                   </div>
-                  <p className="truncate text-sm text-dark-100">{broadcast.message_text}</p>
-                  <div className="mt-2 flex items-center gap-4 text-xs text-dark-400">
+                  <p className="truncate text-sm text-apple-ink">{broadcast.message_text}</p>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-apple-mute">
                     <span>{broadcast.target_type}</span>
                     <span>
                       {broadcast.sent_count}/{broadcast.total_count}
                       {broadcast.blocked_count > 0 && (
-                        <span className="text-warning-400">
+                        <span className="text-apple-amber">
                           {' '}
                           ({broadcast.blocked_count} {t('admin.broadcasts.blockedShort')})
                         </span>
@@ -235,13 +237,13 @@ export default function AdminBroadcasts() {
                 </div>
                 {['queued', 'in_progress'].includes(broadcast.status) && (
                   <div className="w-16">
-                    <div className="h-1.5 overflow-hidden rounded-full bg-dark-600">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-apple-elevated">
                       <div
-                        className="h-full bg-accent-500"
+                        className="h-full bg-[#F97315]"
                         style={{ width: `${broadcast.progress_percent}%` }}
                       />
                     </div>
-                    <p className="mt-1 text-center text-xs text-dark-400">
+                    <p className="mt-1 text-center text-xs text-apple-mute">
                       {broadcast.progress_percent.toFixed(0)}%
                     </p>
                   </div>
@@ -254,21 +256,21 @@ export default function AdminBroadcasts() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-dark-700 bg-dark-800/50 p-4">
+        <div className="apple-card-grad flex items-center justify-center gap-2 rounded-2xl bg-apple-card p-4">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="rounded-lg bg-dark-700 px-3 py-1 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-apple-elevated px-3 py-1 text-apple-mute transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('admin.broadcasts.prev')}
           </button>
-          <span className="text-dark-400">
+          <span className="text-apple-mute">
             {page + 1} / {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            className="rounded-lg bg-dark-700 px-3 py-1 text-dark-300 hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-apple-elevated px-3 py-1 text-apple-mute transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('admin.broadcasts.next')}
           </button>

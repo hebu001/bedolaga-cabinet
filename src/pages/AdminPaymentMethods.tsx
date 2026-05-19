@@ -25,7 +25,7 @@ import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import type { PaymentMethodConfig } from '../types';
 const BackIcon = () => (
   <svg
-    className="h-5 w-5 text-dark-400"
+    className="h-5 w-5 text-apple-mute"
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
@@ -110,12 +110,12 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex items-center gap-3 rounded-xl border p-4 ${
+      className={`group flex items-center gap-3 rounded-2xl p-4 ${
         isDragging
-          ? 'border-accent-500/50 bg-dark-800 shadow-xl shadow-accent-500/20'
+          ? 'bg-apple-elevated shadow-xl shadow-[#F97315]/20'
           : config.is_enabled
-            ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
-            : 'border-dark-800/50 bg-dark-900/30 opacity-60'
+            ? 'bg-apple-elevated'
+            : 'bg-apple-elevated opacity-60'
       }`}
     >
       {/* Drag handle */}
@@ -123,7 +123,7 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
       <button
         {...attributes}
         {...listeners}
-        className="flex-shrink-0 cursor-grab touch-none rounded-lg p-2.5 text-dark-500 hover:bg-dark-700/50 hover:text-dark-300 active:cursor-grabbing sm:p-1.5"
+        className="flex-shrink-0 cursor-grab touch-none rounded-lg p-2.5 text-apple-faint hover:text-apple-mute active:cursor-grabbing sm:p-1.5"
         title={t('admin.paymentMethods.dragToReorder')}
       >
         <GripIcon />
@@ -132,23 +132,23 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
       {/* Content */}
       <div className="min-w-0 flex-1 cursor-pointer" onClick={onClick}>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate font-semibold text-dark-100">{displayName}</span>
+          <span className="truncate font-semibold text-apple-ink">{displayName}</span>
           {config.is_enabled ? (
-            <span className="flex-shrink-0 rounded-full border border-success-500/20 bg-success-500/15 px-2 py-0.5 text-xs text-success-400">
+            <span className="flex-shrink-0 rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
               {t('admin.paymentMethods.enabled')}
             </span>
           ) : (
-            <span className="flex-shrink-0 rounded-full border border-dark-700/30 bg-dark-700/50 px-2 py-0.5 text-xs text-dark-500">
+            <span className="flex-shrink-0 rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
               {t('admin.paymentMethods.disabled')}
             </span>
           )}
           {!config.is_provider_configured && (
-            <span className="flex-shrink-0 rounded-full border border-warning-500/20 bg-warning-500/15 px-2 py-0.5 text-xs text-warning-400">
+            <span className="flex-shrink-0 rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold text-apple-amber">
               {t('admin.paymentMethods.notConfigured')}
             </span>
           )}
           {subOptionsInfo && (
-            <span className="flex-shrink-0 rounded-full bg-dark-700/50 px-2 py-0.5 text-xs text-dark-400">
+            <span className="flex-shrink-0 rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
               {subOptionsInfo}
             </span>
           )}
@@ -160,7 +160,8 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
             {chips.map((chip, i) => (
               <span
                 key={i}
-                className="rounded-md border border-accent-500/15 bg-accent-500/10 px-2 py-0.5 text-xs text-accent-400"
+                className="rounded-full bg-[#F97315]/10 px-2.5 py-1 text-[11px] font-semibold"
+                style={{ color: '#F97315' }}
               >
                 {chip}
               </span>
@@ -172,7 +173,7 @@ function SortablePaymentCard({ config, onClick }: SortableCardProps) {
       {/* Chevron */}
       <button
         onClick={onClick}
-        className="flex-shrink-0 p-1 text-dark-500 transition-colors hover:text-dark-300"
+        className="flex-shrink-0 p-1 text-apple-faint transition-colors hover:text-apple-mute"
       >
         <ChevronRightIcon />
       </button>
@@ -248,21 +249,21 @@ export default function AdminPaymentMethods() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
             </button>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-dark-50">{t('admin.paymentMethods.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.paymentMethods.description')}</p>
+            <h1 className="text-2xl font-bold text-apple-ink">{t('admin.paymentMethods.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.paymentMethods.description')}</p>
           </div>
         </div>
         {orderChanged && (
           <button
             onClick={handleSaveOrder}
             disabled={saveOrderMutation.isPending}
-            className="btn-primary flex items-center gap-2"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {saveOrderMutation.isPending ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -275,16 +276,16 @@ export default function AdminPaymentMethods() {
       </div>
 
       {/* Drag hint */}
-      <div className="flex items-center gap-2 text-sm text-dark-500">
+      <div className="flex items-center gap-2 text-sm text-apple-faint">
         <GripIcon />
         {t('admin.paymentMethods.dragHint')}
       </div>
 
       {/* Methods list */}
-      <div className="card">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
           </div>
         ) : methods.length > 0 ? (
           <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -305,7 +306,7 @@ export default function AdminPaymentMethods() {
           </DndContext>
         ) : (
           <div className="py-12 text-center">
-            <div className="text-dark-400">{t('admin.paymentMethods.noMethods')}</div>
+            <div className="text-apple-mute">{t('admin.paymentMethods.noMethods')}</div>
           </div>
         )}
       </div>

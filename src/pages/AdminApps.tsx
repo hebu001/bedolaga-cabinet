@@ -43,10 +43,10 @@ export default function AdminApps() {
         {!capabilities.hasBackButton && (
           <button
             onClick={() => navigate('/admin')}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-opacity hover:opacity-90"
           >
             <svg
-              className="h-5 w-5 text-dark-400"
+              className="h-5 w-5 text-apple-mute"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -56,23 +56,23 @@ export default function AdminApps() {
             </svg>
           </button>
         )}
-        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('admin.apps.title')}</h1>
+        <h1 className="text-2xl font-bold text-apple-ink sm:text-3xl">{t('admin.apps.title')}</h1>
       </div>
 
       {/* Status card */}
-      <div className="card p-4">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
         <div className="flex items-center gap-3">
           <div
-            className={`h-3 w-3 rounded-full ${status?.enabled ? 'bg-success-400' : 'bg-dark-600'}`}
+            className={`h-3 w-3 rounded-full ${status?.enabled ? 'bg-apple-green' : 'bg-apple-faint'}`}
           />
-          <span className="text-sm font-medium text-dark-200">
+          <span className="text-sm font-medium text-apple-ink">
             {status?.enabled
               ? t('admin.apps.remnaWaveConnected', 'RemnaWave connected')
               : t('admin.apps.remnaWaveDisconnected', 'RemnaWave not connected')}
           </span>
         </div>
         {status?.config_uuid && (
-          <div className="mt-2 truncate font-mono text-xs text-dark-500">
+          <div className="mt-2 truncate font-mono text-xs text-apple-faint">
             UUID: {status.config_uuid}
           </div>
         )}
@@ -80,12 +80,12 @@ export default function AdminApps() {
 
       {/* Available configs */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-dark-300">
+        <h2 className="text-sm font-semibold text-apple-mute">
           {t('admin.apps.availableConfigs', 'Available configs')}
         </h2>
         {isLoadingConfigs ? (
           <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
           </div>
         ) : configs && configs.length > 0 ? (
           <div className="space-y-2">
@@ -97,19 +97,19 @@ export default function AdminApps() {
                     setUuidMutation.mutate(config.uuid);
                   }
                 }}
-                className={`w-full rounded-lg border p-4 text-left transition-colors ${
+                className={`w-full rounded-xl p-4 text-left transition-opacity hover:opacity-90 ${
                   currentUuid === config.uuid
-                    ? 'border-accent-500 bg-accent-500/10'
-                    : 'border-dark-700 bg-dark-800/50 hover:border-dark-600'
+                    ? 'bg-[#F97315]/10 ring-1 ring-inset ring-[#F97315]'
+                    : 'bg-apple-elevated'
                 }`}
               >
-                <div className="font-medium text-dark-100">{config.name}</div>
-                <div className="mt-1 font-mono text-xs text-dark-500">{config.uuid}</div>
+                <div className="font-medium text-apple-ink">{config.name}</div>
+                <div className="mt-1 font-mono text-xs text-apple-faint">{config.uuid}</div>
               </button>
             ))}
           </div>
         ) : (
-          <div className="card py-8 text-center text-sm text-dark-500">
+          <div className="apple-card-grad rounded-2xl bg-apple-card py-8 text-center text-sm text-apple-faint">
             {t('admin.apps.noConfigs', 'No configs available')}
           </div>
         )}
