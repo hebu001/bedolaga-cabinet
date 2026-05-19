@@ -211,16 +211,16 @@ export function ThemeTab() {
   return (
     <div className="space-y-6">
       {/* Theme toggles */}
-      <div className="rounded-2xl border border-dark-700/50 bg-dark-800/50 p-6">
-        <h3 className="mb-4 text-lg font-semibold text-dark-100">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
+        <h3 className="mb-4 text-lg font-semibold text-apple-ink">
           {t('admin.settings.availableThemes')}
         </h3>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          <div className="flex items-center justify-between rounded-xl bg-dark-700/30 p-3 sm:p-4">
+          <div className="flex items-center justify-between rounded-xl bg-apple-elevated p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <MoonIcon />
-              <span className="text-sm font-medium text-dark-200 sm:text-base">
+              <span className="text-sm font-medium text-apple-ink sm:text-base">
                 {t('admin.settings.darkTheme')}
               </span>
             </div>
@@ -234,10 +234,10 @@ export function ThemeTab() {
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-xl bg-dark-700/30 p-3 sm:p-4">
+          <div className="flex items-center justify-between rounded-xl bg-apple-elevated p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <SunIcon />
-              <span className="text-sm font-medium text-dark-200 sm:text-base">
+              <span className="text-sm font-medium text-apple-ink sm:text-base">
                 {t('admin.settings.lightTheme')}
               </span>
             </div>
@@ -254,12 +254,12 @@ export function ThemeTab() {
       </div>
 
       {/* Quick Presets */}
-      <div className="rounded-2xl border border-dark-700/50 bg-dark-800/50 p-6">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
         <button
           onClick={() => toggleSection('presets')}
           className="flex w-full items-center justify-between"
         >
-          <h3 className="text-lg font-semibold text-dark-100">
+          <h3 className="text-lg font-semibold text-apple-ink">
             {t('admin.settings.quickPresets')}
           </h3>
           <div
@@ -275,7 +275,7 @@ export function ThemeTab() {
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset.colors)}
-                className="rounded-xl border border-dark-600 p-3 transition-all hover:scale-[1.02] hover:border-dark-500"
+                className="rounded-xl border border-apple-hairline p-3 transition-all hover:scale-[1.02]"
                 style={{ backgroundColor: preset.colors.darkBackground }}
               >
                 <div className="mb-2 flex items-center gap-2">
@@ -308,12 +308,12 @@ export function ThemeTab() {
       </div>
 
       {/* Custom Colors */}
-      <div className="rounded-2xl border border-dark-700/50 bg-dark-800/50 p-6">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
         <button
           onClick={() => toggleSection('colors')}
           className="flex w-full items-center justify-between"
         >
-          <h3 className="text-lg font-semibold text-dark-100">
+          <h3 className="text-lg font-semibold text-apple-ink">
             {t('admin.settings.customColors')}
           </h3>
           <div
@@ -327,7 +327,7 @@ export function ThemeTab() {
           <div className="mt-4 space-y-6">
             {/* Accent */}
             <div>
-              <h4 className="mb-3 text-sm font-medium text-dark-300">
+              <h4 className="mb-3 text-[13px] font-medium text-apple-mute">
                 {t('admin.settings.accentColor')}
               </h4>
               <ColorPicker
@@ -339,7 +339,7 @@ export function ThemeTab() {
 
             {/* Dark theme */}
             <div>
-              <h4 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+              <h4 className="mb-3 flex items-center gap-2 text-[13px] font-medium text-apple-mute">
                 <MoonIcon /> {t('admin.settings.darkTheme')}
               </h4>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -368,7 +368,7 @@ export function ThemeTab() {
 
             {/* Light theme */}
             <div>
-              <h4 className="mb-3 flex items-center gap-2 text-sm font-medium text-dark-300">
+              <h4 className="mb-3 flex items-center gap-2 text-[13px] font-medium text-apple-mute">
                 <SunIcon /> {t('admin.settings.lightTheme')}
               </h4>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -397,7 +397,7 @@ export function ThemeTab() {
 
             {/* Status colors */}
             <div>
-              <h4 className="mb-3 text-sm font-medium text-dark-300">
+              <h4 className="mb-3 text-[13px] font-medium text-apple-mute">
                 {t('admin.settings.statusColors')}
               </h4>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -428,7 +428,7 @@ export function ThemeTab() {
           <button
             onClick={() => updateColorsMutation.mutate(draftColors)}
             disabled={updateColorsMutation.isPending}
-            className="rounded-xl bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+            className="rounded-full bg-[#F97315] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {updateColorsMutation.isPending
               ? t('common.saving', t('common.save'))
@@ -437,7 +437,7 @@ export function ThemeTab() {
           <button
             onClick={handleCancel}
             disabled={updateColorsMutation.isPending}
-            className="rounded-xl bg-dark-700 px-4 py-2 text-sm font-medium text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
+            className="rounded-full bg-apple-elevated px-4 py-2 text-sm font-medium text-apple-ink transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {t('common.cancel')}
           </button>
@@ -449,7 +449,7 @@ export function ThemeTab() {
         <button
           onClick={() => resetColorsMutation.mutate()}
           disabled={resetColorsMutation.isPending}
-          className="rounded-xl bg-dark-700 px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
+          className="rounded-full bg-apple-elevated px-4 py-2 text-sm text-apple-mute transition-colors hover:opacity-90 disabled:opacity-50"
         >
           {t('admin.settings.resetAllColors')}
         </button>

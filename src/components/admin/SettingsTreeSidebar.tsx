@@ -151,9 +151,9 @@ export function SettingsTreeSidebar({
           onFocus={() => setIsSearchOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={t('admin.settings.searchPlaceholder')}
-          className="w-full rounded-lg border border-dark-700/50 bg-dark-800/50 py-2 pl-9 pr-8 text-sm text-dark-100 placeholder-dark-500 transition-colors focus:border-accent-500 focus:outline-none"
+          className="w-full rounded-xl bg-apple-elevated py-2 pl-9 pr-8 text-sm text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
         />
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-dark-500">
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-apple-faint">
           <SearchIcon className="h-4 w-4" />
         </div>
         {searchQuery && (
@@ -162,7 +162,7 @@ export function SettingsTreeSidebar({
               onSearchChange('');
               setIsSearchOpen(false);
             }}
-            className="absolute right-6 top-1/2 -translate-y-1/2 text-dark-500 transition-colors hover:text-dark-300"
+            className="absolute right-6 top-1/2 -translate-y-1/2 text-apple-faint transition-colors hover:text-apple-mute"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -170,7 +170,7 @@ export function SettingsTreeSidebar({
 
         {/* Autocomplete dropdown */}
         {isSearchOpen && suggestions.length > 0 && (
-          <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-lg border border-dark-700 bg-dark-800 py-1 shadow-xl">
+          <div className="absolute left-3 right-3 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-2xl bg-apple-card py-1 shadow-xl">
             {suggestions.map((setting, index) => (
               <button
                 key={setting.key}
@@ -178,13 +178,13 @@ export function SettingsTreeSidebar({
                 onMouseEnter={() => setHighlightedIndex(index)}
                 className={cn(
                   'flex w-full flex-col gap-0.5 px-3 py-2 text-left transition-colors',
-                  index === highlightedIndex ? 'bg-accent-500/20' : 'hover:bg-dark-700/50',
+                  index === highlightedIndex ? 'bg-[#F97315]/15' : 'hover:bg-apple-elevated',
                 )}
               >
-                <span className="truncate text-sm font-medium text-dark-100">
+                <span className="truncate text-sm font-medium text-apple-ink">
                   {getSettingDisplayName(setting)}
                 </span>
-                <span className="truncate text-xs text-dark-500">
+                <span className="truncate text-xs text-apple-faint">
                   {t(`admin.settings.categories.${setting.category.key}`, setting.category.key)}
                 </span>
               </button>
@@ -198,10 +198,10 @@ export function SettingsTreeSidebar({
         <button
           onClick={() => onSectionChange('favorites')}
           className={cn(
-            'flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-all',
+            'flex w-full items-center gap-3 rounded-xl px-3 py-2 transition-all',
             activeSection === 'favorites'
-              ? 'bg-accent-500/10 text-accent-400'
-              : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
+              ? 'bg-[#F97315]/15 text-[#F97315]'
+              : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
           )}
         >
           <StarIcon className="h-4 w-4" filled={activeSection === 'favorites'} />
@@ -211,8 +211,8 @@ export function SettingsTreeSidebar({
               className={cn(
                 'ml-auto rounded-full px-2 py-0.5 text-xs',
                 activeSection === 'favorites'
-                  ? 'bg-accent-500/20 text-accent-400'
-                  : 'bg-warning-500/20 text-warning-400',
+                  ? 'bg-[#F97315]/15 text-[#F97315]'
+                  : 'bg-apple-amber/15 text-apple-amber',
               )}
             >
               {favoritesCount}
@@ -222,11 +222,11 @@ export function SettingsTreeSidebar({
       </div>
 
       {/* Divider */}
-      <div className="mx-3 border-t border-dark-700/50" />
+      <div className="mx-3 border-t border-apple-hairline" />
 
       {/* Customization section label */}
       <div className="px-6 pb-1 pt-3">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-dark-500">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-apple-faint">
           {t('admin.settings.customization', 'Customization')}
         </span>
       </div>
@@ -240,10 +240,10 @@ export function SettingsTreeSidebar({
               key={item.id}
               onClick={() => onSectionChange(item.id)}
               className={cn(
-                'flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-all',
+                'flex w-full items-center gap-3 rounded-xl px-3 py-2 transition-all',
                 isActive
-                  ? 'bg-accent-500/10 text-accent-400'
-                  : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
+                  ? 'bg-[#F97315]/15 text-[#F97315]'
+                  : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
               )}
             >
               {item.icon && <span className="text-sm">{item.icon}</span>}
@@ -254,11 +254,11 @@ export function SettingsTreeSidebar({
       </div>
 
       {/* Divider */}
-      <div className="mx-3 border-t border-dark-700/50" />
+      <div className="mx-3 border-t border-apple-hairline" />
 
       {/* Settings section label */}
       <div className="px-6 pb-1 pt-3">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-dark-500">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-apple-faint">
           {t('admin.settings.settingsLabel', 'Settings')}
         </span>
       </div>
@@ -275,10 +275,10 @@ export function SettingsTreeSidebar({
               <button
                 onClick={() => handleGroupToggle(group.id)}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-all',
+                  'flex w-full items-center gap-3 rounded-xl px-3 py-2 transition-all',
                   hasActiveChild
-                    ? 'text-accent-300'
-                    : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
+                    ? 'text-[#F97315]'
+                    : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
                 )}
               >
                 <span className="text-sm">{group.icon}</span>
@@ -295,7 +295,7 @@ export function SettingsTreeSidebar({
 
               {/* Children */}
               {isExpanded && (
-                <div className="relative ml-5 mt-0.5 space-y-0.5 border-l border-dark-700/50 pl-3">
+                <div className="relative ml-5 mt-0.5 space-y-0.5 border-l border-apple-hairline pl-3">
                   {group.children.map((child) => {
                     const isActive = activeSection === child.id;
                     return (
@@ -303,10 +303,10 @@ export function SettingsTreeSidebar({
                         key={child.id}
                         onClick={() => onSectionChange(child.id)}
                         className={cn(
-                          'flex w-full items-center rounded-lg px-3 py-1.5 text-left text-sm transition-all',
+                          'flex w-full items-center rounded-xl px-3 py-1.5 text-left text-sm transition-all',
                           isActive
-                            ? 'bg-accent-500/10 text-accent-400'
-                            : 'text-dark-400 hover:bg-dark-800/50 hover:text-dark-200',
+                            ? 'bg-[#F97315]/15 text-[#F97315]'
+                            : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
                         )}
                       >
                         {t(`admin.settings.tree.${child.id}`, child.id)}

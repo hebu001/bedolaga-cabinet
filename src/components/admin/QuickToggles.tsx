@@ -20,10 +20,8 @@ export function QuickToggles({ settings, onUpdate, disabled, className }: QuickT
   }
 
   return (
-    <div
-      className={cn('rounded-xl border border-dark-700/40 bg-dark-800/30 px-3 py-2.5', className)}
-    >
-      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-dark-500">
+    <div className={cn('rounded-2xl bg-apple-card px-3 py-2.5', className)}>
+      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-apple-faint">
         {t('admin.settings.quickToggles')}
       </span>
       <div className="flex flex-wrap gap-2">
@@ -39,10 +37,8 @@ export function QuickToggles({ settings, onUpdate, disabled, className }: QuickT
               onClick={() => onUpdate(setting.key, isOn ? 'false' : 'true')}
               disabled={disabled}
               className={cn(
-                'flex min-h-[44px] items-center gap-2 rounded-lg border px-2.5 py-2.5 text-xs font-medium transition-all',
-                isOn
-                  ? 'border-success-500/20 bg-success-500/[0.08] text-dark-100'
-                  : 'border-dark-600/50 bg-dark-700/20 text-dark-400',
+                'flex min-h-[44px] items-center gap-2 rounded-lg px-2.5 py-2.5 text-xs font-medium transition-all',
+                isOn ? 'bg-apple-green/[0.12] text-apple-ink' : 'bg-apple-elevated text-apple-mute',
                 disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80',
               )}
             >
@@ -50,7 +46,7 @@ export function QuickToggles({ settings, onUpdate, disabled, className }: QuickT
               <div
                 className={cn(
                   'relative h-3.5 w-6 flex-shrink-0 rounded-full transition-colors',
-                  isOn ? 'bg-success-500' : 'bg-dark-600',
+                  isOn ? 'bg-apple-green' : 'bg-apple-faint',
                 )}
               >
                 <div

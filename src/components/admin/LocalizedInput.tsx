@@ -36,7 +36,7 @@ export function LocalizedInput({
   };
 
   const inputClasses = cn(
-    'w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2 text-sm text-dark-100 outline-none focus:border-accent-500',
+    'w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50',
     className,
   );
 

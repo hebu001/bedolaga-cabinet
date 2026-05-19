@@ -32,7 +32,7 @@ export function Toggle({
       <div
         className={cn(
           'relative h-8 w-14 rounded-full transition-colors',
-          checked ? 'bg-accent-500' : 'bg-dark-600',
+          checked ? 'bg-[#F97315]' : 'bg-apple-elevated',
         )}
       >
         <div

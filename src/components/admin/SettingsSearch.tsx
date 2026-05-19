@@ -108,9 +108,9 @@ export function SettingsSearch({
         onFocus={() => setIsOpen(true)}
         onKeyDown={handleKeyDown}
         placeholder={t('admin.settings.searchPlaceholder')}
-        className="w-48 rounded-xl border border-dark-700 bg-dark-800 py-2 pl-10 pr-10 text-sm text-dark-100 placeholder-dark-500 focus:border-accent-500 focus:outline-none lg:w-64"
+        className="w-48 rounded-xl bg-apple-elevated py-2 pl-10 pr-10 text-sm text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 lg:w-64"
       />
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-faint">
         <SearchIcon />
       </div>
       {searchQuery && (
@@ -119,7 +119,7 @@ export function SettingsSearch({
             setSearchQuery('');
             setIsOpen(false);
           }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 transition-colors hover:text-dark-300"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-apple-faint transition-colors hover:text-apple-mute"
         >
           <CloseIcon />
         </button>
@@ -127,20 +127,20 @@ export function SettingsSearch({
 
       {/* Autocomplete dropdown */}
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute right-0 top-full z-50 mt-1 max-h-80 w-80 overflow-y-auto rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-1 max-h-80 w-80 overflow-y-auto rounded-2xl bg-apple-card py-1 shadow-xl">
           {suggestions.map((setting, index) => (
             <button
               key={setting.key}
               onClick={() => handleSelect(setting)}
               onMouseEnter={() => setHighlightedIndex(index)}
               className={`flex w-full flex-col gap-0.5 px-3 py-2 text-left transition-colors ${
-                index === highlightedIndex ? 'bg-accent-500/20' : 'hover:bg-dark-700/50'
+                index === highlightedIndex ? 'bg-[#F97315]/15' : 'hover:bg-apple-elevated'
               }`}
             >
-              <span className="truncate text-sm font-medium text-dark-100">
+              <span className="truncate text-sm font-medium text-apple-ink">
                 {getSettingDisplayName(setting)}
               </span>
-              <span className="truncate text-xs text-dark-500">
+              <span className="truncate text-xs text-apple-faint">
                 {t(`admin.settings.categories.${setting.category.key}`, setting.category.key)}
               </span>
             </button>
@@ -218,9 +218,9 @@ export function SettingsSearchMobile({
         }}
         onFocus={() => setIsOpen(true)}
         placeholder={t('admin.settings.searchPlaceholder')}
-        className="w-full rounded-xl border border-dark-700 bg-dark-800 py-2 pl-10 pr-10 text-sm text-dark-100 placeholder-dark-500 focus:border-accent-500 focus:outline-none"
+        className="w-full rounded-xl bg-apple-elevated py-2 pl-10 pr-10 text-sm text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
       />
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-faint">
         <SearchIcon />
       </div>
       {searchQuery && (
@@ -229,7 +229,7 @@ export function SettingsSearchMobile({
             setSearchQuery('');
             setIsOpen(false);
           }}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 transition-colors hover:text-dark-300"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-apple-faint transition-colors hover:text-apple-mute"
         >
           <CloseIcon />
         </button>
@@ -237,19 +237,19 @@ export function SettingsSearchMobile({
 
       {/* Autocomplete dropdown */}
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-2xl bg-apple-card py-1 shadow-xl">
           {suggestions.map((setting, index) => (
             <button
               key={setting.key}
               onClick={() => handleSelect(setting)}
               className={`flex w-full flex-col gap-0.5 px-3 py-2 text-left transition-colors ${
-                index === highlightedIndex ? 'bg-accent-500/20' : 'hover:bg-dark-700/50'
+                index === highlightedIndex ? 'bg-[#F97315]/15' : 'hover:bg-apple-elevated'
               }`}
             >
-              <span className="truncate text-sm font-medium text-dark-100">
+              <span className="truncate text-sm font-medium text-apple-ink">
                 {getSettingDisplayName(setting)}
               </span>
-              <span className="truncate text-xs text-dark-500">
+              <span className="truncate text-xs text-apple-faint">
                 {t(`admin.settings.categories.${setting.category.key}`, setting.category.key)}
               </span>
             </button>
@@ -273,13 +273,15 @@ export function SettingsSearchResults({
 
   return (
     <div className="mt-3 flex items-center gap-2 text-sm">
-      <span className="text-dark-400">
+      <span className="text-apple-mute">
         {resultsCount > 0
           ? t('admin.settings.foundCount', { count: resultsCount })
           : t('admin.settings.notFound')}
       </span>
       {resultsCount > 0 && (
-        <span className="text-dark-500">{t('admin.settings.byQuery', { query: searchQuery })}</span>
+        <span className="text-apple-faint">
+          {t('admin.settings.byQuery', { query: searchQuery })}
+        </span>
       )}
     </div>
   );

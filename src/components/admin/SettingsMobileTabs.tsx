@@ -84,10 +84,10 @@ export function SettingsMobileTabs({
             setActiveSection('favorites');
             setExpandedGroup(null);
           }}
-          className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+          className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition-all ${
             isFavoritesActive
-              ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
-              : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
+              ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/30'
+              : 'bg-apple-card text-apple-mute active:bg-apple-elevated'
           }`}
         >
           <StarIcon filled={isFavoritesActive} />
@@ -96,8 +96,8 @@ export function SettingsMobileTabs({
             <span
               className={`rounded-full px-1.5 py-0.5 text-xs ${
                 isFavoritesActive
-                  ? 'bg-accent-500/20 text-accent-400'
-                  : 'bg-warning-500/20 text-warning-400'
+                  ? 'bg-[#F97315]/15 text-[#F97315]'
+                  : 'bg-apple-amber/15 text-apple-amber'
               }`}
             >
               {favoritesCount}
@@ -116,10 +116,10 @@ export function SettingsMobileTabs({
                 setActiveSection(item.id);
                 setExpandedGroup(null);
               }}
-              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+              className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
-                  : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
+                  ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/30'
+                  : 'bg-apple-card text-apple-mute active:bg-apple-elevated'
               }`}
             >
               {item.icon && <span className="text-sm">{item.icon}</span>}
@@ -137,10 +137,10 @@ export function SettingsMobileTabs({
               key={group.id}
               ref={hasActiveChild ? activeRef : null}
               onClick={() => handleGroupTap(group.id)}
-              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+              className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition-all ${
                 hasActiveChild || isExpanded
-                  ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
-                  : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
+                  ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/30'
+                  : 'bg-apple-card text-apple-mute active:bg-apple-elevated'
               }`}
             >
               <span className="text-sm">{group.icon}</span>
@@ -165,10 +165,10 @@ export function SettingsMobileTabs({
                 <button
                   key={child.id}
                   onClick={() => setActiveSection(child.id)}
-                  className={`shrink-0 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                  className={`shrink-0 rounded-full px-3 py-2.5 text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-accent-500/10 text-accent-400 ring-1 ring-accent-500/20'
-                      : 'bg-dark-800/30 text-dark-500 active:bg-dark-700'
+                      ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/20'
+                      : 'bg-apple-card text-apple-faint active:bg-apple-elevated'
                   }`}
                 >
                   <span className="whitespace-nowrap">{t(`admin.settings.tree.${child.id}`)}</span>

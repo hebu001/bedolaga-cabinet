@@ -48,26 +48,26 @@ export function SettingRow({
   })();
 
   return (
-    <div className="group rounded-2xl border border-dark-700/40 bg-dark-800/40 p-4 transition-all hover:border-dark-600/60 hover:bg-dark-800/60 sm:p-5">
+    <div className="apple-card-grad group rounded-2xl bg-apple-card p-4 transition-all hover:opacity-95 sm:p-5">
       {/* Header row - name, badges, favorite */}
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-semibold text-dark-100">{displayName}</h3>
+            <h3 className="text-base font-semibold text-apple-ink">{displayName}</h3>
             {setting.has_override && (
-              <span className="rounded-full bg-warning-500/20 px-2 py-0.5 text-xs font-medium text-warning-400">
+              <span className="rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold text-apple-amber">
                 {t('admin.settings.modified')}
               </span>
             )}
             {setting.read_only && (
-              <span className="flex items-center gap-1 rounded-full bg-dark-600/50 px-2 py-0.5 text-xs font-medium text-dark-400">
+              <span className="flex items-center gap-1 rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                 <LockIcon />
                 {t('admin.settings.readOnly')}
               </span>
             )}
           </div>
           {description && (
-            <p className="mt-1.5 text-sm leading-relaxed text-dark-400">{description}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-apple-mute">{description}</p>
           )}
         </div>
 
@@ -76,8 +76,8 @@ export function SettingRow({
           onClick={onToggleFavorite}
           className={`flex-shrink-0 rounded-xl p-2 transition-all ${
             isFavorite
-              ? 'bg-warning-500/15 text-warning-400 hover:bg-warning-500/25'
-              : 'text-dark-500 opacity-0 hover:bg-dark-700/50 hover:text-warning-400 group-hover:opacity-100'
+              ? 'bg-apple-amber/15 text-apple-amber hover:bg-apple-amber/25'
+              : 'text-apple-faint opacity-0 hover:bg-apple-elevated hover:text-apple-amber group-hover:opacity-100'
           }`}
           title={
             isFavorite
@@ -91,24 +91,24 @@ export function SettingRow({
 
       {/* Setting key (muted) */}
       <div className="mb-3">
-        <code className="rounded bg-dark-900/50 px-2 py-1 font-mono text-xs text-dark-500">
+        <code className="rounded bg-apple-elevated px-2 py-1 font-mono text-xs text-apple-faint">
           {setting.key}
         </code>
       </div>
 
       {/* Control section */}
       <div
-        className={`${isLongValue ? '' : 'flex items-center justify-between gap-3'} border-t border-dark-700/30 pt-3`}
+        className={`${isLongValue ? '' : 'flex items-center justify-between gap-3'} border-t border-apple-hairline pt-3`}
       >
         {setting.read_only ? (
           // Read-only display
-          <div className="flex items-center gap-2 rounded-lg bg-dark-700/30 px-4 py-2.5 text-dark-300">
+          <div className="flex items-center gap-2 rounded-xl bg-apple-elevated px-4 py-2.5 text-apple-mute">
             <span className="break-all font-mono text-sm">{String(setting.current ?? '-')}</span>
           </div>
         ) : setting.type === 'bool' ? (
           // Boolean toggle
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-dark-400">
+            <span className="text-sm text-apple-mute">
               {setting.current === true || setting.current === 'true'
                 ? t('admin.settings.enabled')
                 : t('admin.settings.disabled')}
@@ -128,7 +128,7 @@ export function SettingRow({
                 <button
                   onClick={onReset}
                   disabled={isResetting}
-                  className="rounded-lg p-2 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50"
+                  className="rounded-lg p-2 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:opacity-50"
                   title={t('admin.settings.reset')}
                 >
                   <RefreshIcon />
@@ -147,7 +147,7 @@ export function SettingRow({
               <button
                 onClick={onReset}
                 disabled={isResetting}
-                className="flex-shrink-0 rounded-lg p-2 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50"
+                className="flex-shrink-0 rounded-lg p-2 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:opacity-50"
                 title={t('admin.settings.reset')}
               >
                 <RefreshIcon />
@@ -163,7 +163,7 @@ export function SettingRow({
           <button
             onClick={onReset}
             disabled={isResetting}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink disabled:opacity-50"
             title={t('admin.settings.reset')}
           >
             <RefreshIcon />

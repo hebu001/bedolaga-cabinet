@@ -51,10 +51,10 @@ export function LocaleTabs({
               onClick={() => onChange(locale)}
               dir={isRtl ? 'rtl' : 'ltr'}
               className={cn(
-                'relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                'relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all',
                 isActive
-                  ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
-                  : 'bg-dark-800/50 text-dark-400 hover:bg-dark-700/50 hover:text-dark-300',
+                  ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/30'
+                  : 'bg-apple-elevated text-apple-mute hover:text-apple-ink hover:opacity-90',
               )}
               aria-label={`${t('admin.landings.localeTab')}: ${meta.name}`}
               aria-pressed={isActive}
@@ -62,13 +62,13 @@ export function LocaleTabs({
               <span>{meta.flag}</span>
               <span>{meta.name}</span>
               {filled && !isActive && (
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-success-500" />
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-apple-green" />
               )}
             </button>
           );
         })}
       </div>
-      <p className="text-xs text-dark-500">{t('admin.landings.localeHint')}</p>
+      <p className="text-xs text-apple-faint">{t('admin.landings.localeHint')}</p>
     </div>
   );
 }

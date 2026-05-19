@@ -61,9 +61,9 @@ export function SettingsTableRow({
   return (
     <div
       className={cn(
-        'group px-4 py-3 transition-colors hover:bg-dark-800/40',
-        isModified && 'bg-warning-500/[0.02]',
-        !isLast && 'border-b border-dark-700/30',
+        'group px-4 py-3 transition-colors hover:bg-apple-elevated',
+        isModified && 'bg-apple-amber/[0.04]',
+        !isLast && 'border-b border-apple-hairline',
         className,
       )}
     >
@@ -76,22 +76,22 @@ export function SettingsTableRow({
         <div className={cn('min-w-0', !isLongValue && 'lg:flex-1')}>
           {/* Name + badges row */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[13px] font-medium text-dark-100">{displayName}</span>
+            <span className="text-[13px] font-medium text-apple-ink">{displayName}</span>
 
             {isModified && (
-              <span className="rounded-full bg-warning-500/20 px-1.5 py-0.5 text-[10px] font-medium leading-none text-warning-400">
+              <span className="rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold leading-none text-apple-amber">
                 {t('admin.settings.modified')}
               </span>
             )}
 
             {setting.has_override && !setting.read_only && (
-              <span className="rounded-full bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-medium leading-none text-sky-400">
+              <span className="rounded-full bg-apple-blue/15 px-2.5 py-1 text-[11px] font-semibold leading-none text-apple-blue">
                 {t('admin.settings.badgeDb')}
               </span>
             )}
 
             {setting.read_only && (
-              <span className="flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-400">
+              <span className="flex items-center gap-0.5 rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold leading-none text-apple-amber">
                 {t('admin.settings.badgeEnv')}
                 <LockIcon className="h-3 w-3" />
               </span>
@@ -100,12 +100,12 @@ export function SettingsTableRow({
 
           {/* Setting key */}
           <div className="mt-0.5">
-            <code className="font-mono text-[11px] text-dark-500">{setting.key}</code>
+            <code className="font-mono text-[11px] text-apple-faint">{setting.key}</code>
           </div>
 
           {/* Description for long values */}
           {isLongValue && description && (
-            <p className="mt-1 text-xs leading-relaxed text-dark-400">{description}</p>
+            <p className="mt-1 text-xs leading-relaxed text-apple-mute">{description}</p>
           )}
         </div>
 
@@ -117,7 +117,7 @@ export function SettingsTableRow({
           )}
         >
           {setting.read_only ? (
-            <span className="max-w-[240px] truncate rounded bg-dark-700/30 px-3 py-1.5 font-mono text-xs text-dark-400">
+            <span className="max-w-[240px] truncate rounded-lg bg-apple-elevated px-3 py-1.5 font-mono text-xs text-apple-mute">
               {isBool
                 ? boolChecked
                   ? t('admin.settings.enabled')
@@ -142,7 +142,7 @@ export function SettingsTableRow({
             <button
               onClick={onReset}
               disabled={isResetting}
-              className="flex-shrink-0 rounded-lg p-1.5 text-dark-500 opacity-0 transition-all hover:bg-dark-700 hover:text-dark-200 disabled:opacity-50 group-hover:opacity-100 max-lg:opacity-100"
+              className="flex-shrink-0 rounded-lg p-1.5 text-apple-faint opacity-0 transition-all hover:bg-apple-elevated hover:text-apple-ink disabled:opacity-50 group-hover:opacity-100 max-lg:opacity-100"
               title={t('admin.settings.reset')}
               aria-label={t('admin.settings.reset')}
             >
@@ -156,8 +156,8 @@ export function SettingsTableRow({
             className={cn(
               'flex-shrink-0 rounded-lg p-1.5 transition-all',
               isFavorite
-                ? 'text-warning-400 hover:bg-warning-500/15'
-                : 'text-dark-500 opacity-0 hover:bg-dark-700/50 hover:text-warning-400 group-hover:opacity-100 max-lg:opacity-100',
+                ? 'text-apple-amber hover:bg-apple-amber/15'
+                : 'text-apple-faint opacity-0 hover:bg-apple-elevated hover:text-apple-amber group-hover:opacity-100 max-lg:opacity-100',
             )}
             title={
               isFavorite

@@ -26,7 +26,7 @@ export function AdminBackButton({ to = '/admin', replace, className }: AdminBack
       replace={replace}
       className={
         className ||
-        'flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600'
+        'flex h-10 w-10 items-center justify-center rounded-full bg-apple-elevated text-apple-ink transition-colors hover:opacity-90'
       }
     >
       <BackIcon />

@@ -31,18 +31,18 @@ export function FavoritesTab({ settings, isFavorite, toggleFavorite }: Favorites
 
   if (settings.length === 0) {
     return (
-      <div className="rounded-2xl border border-dark-700/30 bg-dark-800/30 p-12 text-center">
-        <div className="mb-4 flex justify-center text-dark-500">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-12 text-center">
+        <div className="mb-4 flex justify-center text-apple-faint">
           <StarIcon filled={false} />
         </div>
-        <p className="text-dark-400">{t('admin.settings.favoritesEmpty')}</p>
-        <p className="mt-1 text-sm text-dark-500">{t('admin.settings.favoritesHint')}</p>
+        <p className="text-apple-mute">{t('admin.settings.favoritesEmpty')}</p>
+        <p className="mt-1 text-sm text-apple-faint">{t('admin.settings.favoritesHint')}</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-dark-700/40">
+    <div className="overflow-hidden rounded-2xl bg-apple-card">
       {settings.map((setting, idx) => (
         <SettingsTableRow
           key={setting.key}

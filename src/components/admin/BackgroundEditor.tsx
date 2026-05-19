@@ -65,10 +65,10 @@ export function BackgroundEditor() {
           onClick={handleSave}
           disabled={saveMutation.isPending || saveStatus === 'saved'}
           className={cn(
-            'w-full rounded-xl py-3 text-sm font-medium transition-colors',
+            'w-full rounded-full py-3 text-sm font-medium transition-colors',
             saveStatus === 'saved'
-              ? 'bg-success-500/20 text-success-400'
-              : 'bg-accent-500 text-white hover:bg-accent-600 disabled:opacity-50',
+              ? 'bg-apple-green/20 text-apple-green'
+              : 'bg-[#F97315] text-white hover:opacity-90 disabled:opacity-50',
           )}
         >
           {saveStatus === 'saving'

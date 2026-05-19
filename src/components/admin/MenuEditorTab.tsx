@@ -136,8 +136,8 @@ function MaxPerRowSelector({ value, onChange }: MaxPerRowSelectorProps) {
           onClick={() => onChange(n)}
           className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-semibold transition-all ${
             value === n
-              ? 'bg-accent-500 text-white'
-              : 'bg-dark-700/50 text-dark-400 hover:bg-dark-600 hover:text-dark-300'
+              ? 'bg-[#F97315] text-white'
+              : 'bg-apple-elevated text-apple-mute hover:text-apple-ink hover:opacity-90'
           }`}
         >
           {n}
@@ -176,14 +176,12 @@ function ButtonChip({
     (isBuiltin ? t(`admin.buttons.sections.${button.id}`) : button.id);
 
   const styleOption = STYLE_OPTIONS.find((s) => s.value === button.style);
-  const colorDotClass = styleOption?.colorClass || 'bg-dark-500';
+  const colorDotClass = styleOption?.colorClass || 'bg-apple-faint';
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border transition-colors ${
-        button.enabled
-          ? 'border-dark-700/50 bg-dark-800/50'
-          : 'border-dark-700/30 bg-dark-800/30 opacity-60'
+      className={`overflow-hidden rounded-xl transition-colors ${
+        button.enabled ? 'bg-apple-card' : 'bg-apple-card opacity-60'
       }`}
     >
       {/* Collapsed header */}
@@ -195,8 +193,8 @@ function ButtonChip({
             aria-label={t('admin.menuEditor.moveUp')}
             className={`rounded-lg p-1.5 transition-colors ${
               onMoveUp
-                ? 'text-dark-400 hover:bg-dark-700/50 hover:text-dark-300'
-                : 'cursor-default text-dark-700'
+                ? 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink'
+                : 'cursor-default text-apple-faint'
             }`}
           >
             <ArrowUpIcon />
@@ -207,33 +205,33 @@ function ButtonChip({
             aria-label={t('admin.menuEditor.moveDown')}
             className={`rounded-lg p-1.5 transition-colors ${
               onMoveDown
-                ? 'text-dark-400 hover:bg-dark-700/50 hover:text-dark-300'
-                : 'cursor-default text-dark-700'
+                ? 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink'
+                : 'cursor-default text-apple-faint'
             }`}
           >
             <ArrowDownIcon />
           </button>
         </div>
         <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${colorDotClass}`} />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-dark-100">
+        <span className="min-w-0 flex-1 truncate text-sm font-medium text-apple-ink">
           {displayName}
         </span>
         {!isBuiltin && (
-          <span className="text-dark-500" title="URL">
+          <span className="text-apple-faint" title="URL">
             <LinkIcon />
           </span>
         )}
         <Toggle checked={button.enabled} onChange={() => onUpdate({ enabled: !button.enabled })} />
         <button
           onClick={onToggleExpand}
-          className="rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-700/50 hover:text-dark-300"
+          className="rounded-lg p-1 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink"
         >
           <ChevronIcon expanded={isExpanded} />
         </button>
         {!isBuiltin && (
           <button
             onClick={onRemove}
-            className="rounded-lg p-1 text-dark-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className="rounded-lg p-1 text-apple-faint transition-colors hover:bg-apple-red/10 hover:text-apple-red"
           >
             <TrashIcon />
           </button>
@@ -242,10 +240,10 @@ function ButtonChip({
 
       {/* Expanded body */}
       {isExpanded && (
-        <div className="space-y-3 border-t border-dark-700/30 px-3 py-3">
+        <div className="space-y-3 border-t border-apple-hairline px-3 py-3">
           {/* Color selector */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-dark-300">
+            <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
               {t('admin.buttons.color')}
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -253,10 +251,10 @@ function ButtonChip({
                 <button
                   key={opt.value}
                   onClick={() => onUpdate({ style: opt.value })}
-                  className={`flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all ${
+                  className={`flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-all ${
                     button.style === opt.value
-                      ? 'border-accent-500 bg-accent-500/10 text-accent-400'
-                      : 'border-dark-600 bg-dark-700/50 text-dark-300 hover:border-dark-500'
+                      ? 'bg-[#F97315]/10 text-[#F97315]'
+                      : 'bg-apple-elevated text-apple-mute hover:opacity-90'
                   }`}
                 >
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${opt.colorClass}`} />
@@ -268,7 +266,7 @@ function ButtonChip({
 
           {/* Emoji ID */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-dark-300">
+            <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
               {t('admin.buttons.emojiId')}
             </label>
             <input
@@ -276,7 +274,7 @@ function ButtonChip({
               value={button.icon_custom_emoji_id}
               onChange={(e) => onUpdate({ icon_custom_emoji_id: e.target.value })}
               placeholder={t('admin.buttons.emojiPlaceholder')}
-              className="w-full rounded-lg border border-dark-600 bg-dark-700/50 px-3 py-2 text-sm text-dark-100 placeholder-dark-500 transition-colors focus:border-accent-500 focus:outline-none"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
 
@@ -284,17 +282,17 @@ function ButtonChip({
           {!isBuiltin && (
             <>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-dark-300">URL</label>
+                <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">URL</label>
                 <input
                   type="url"
                   value={button.url || ''}
                   onChange={(e) => onUpdate({ url: e.target.value || null })}
                   placeholder="https://..."
-                  className="w-full rounded-lg border border-dark-600 bg-dark-700/50 px-3 py-2 text-sm text-dark-100 placeholder-dark-500 transition-colors focus:border-accent-500 focus:outline-none"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-dark-300">
+                <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
                   {t('admin.menuEditor.openIn')}
                 </label>
                 <div className="flex gap-1.5">
@@ -302,10 +300,10 @@ function ButtonChip({
                     <button
                       key={mode}
                       onClick={() => onUpdate({ open_in: mode })}
-                      className={`flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all ${
+                      className={`flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-all ${
                         button.open_in === mode
-                          ? 'border-accent-500 bg-accent-500/10 text-accent-400'
-                          : 'border-dark-600 bg-dark-700/50 text-dark-300 hover:border-dark-500'
+                          ? 'bg-[#F97315]/10 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute hover:opacity-90'
                       }`}
                     >
                       {t(`admin.menuEditor.openMode.${mode}`)}
@@ -318,13 +316,13 @@ function ButtonChip({
 
           {/* Localized labels */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-dark-300">
+            <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
               {t('admin.buttons.customLabels')}
             </label>
             <div className="space-y-2">
               {BOT_LOCALES.map((locale) => (
                 <div key={locale} className="flex items-center gap-2">
-                  <span className="w-7 shrink-0 text-center text-[10px] font-semibold uppercase text-dark-500">
+                  <span className="w-7 shrink-0 text-center text-[10px] font-semibold uppercase text-apple-faint">
                     {locale}
                   </span>
                   <input
@@ -337,11 +335,13 @@ function ButtonChip({
                     }
                     placeholder={t('admin.menuEditor.buttonTextPlaceholder')}
                     maxLength={100}
-                    className="w-full rounded-lg border border-dark-600 bg-dark-700/50 px-3 py-1.5 text-sm text-dark-100 placeholder-dark-500 transition-colors focus:border-accent-500 focus:outline-none"
+                    className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   />
                 </div>
               ))}
-              <p className="text-[10px] text-dark-500">{t('admin.menuEditor.customLabelsHint')}</p>
+              <p className="text-[10px] text-apple-faint">
+                {t('admin.menuEditor.customLabelsHint')}
+              </p>
             </div>
           </div>
         </div>
@@ -397,21 +397,21 @@ function SortableRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`overflow-hidden rounded-2xl border bg-dark-800/50 transition-all ${
-        isDragging ? 'border-accent-500/50 shadow-xl shadow-accent-500/20' : 'border-dark-700/50'
+      className={`overflow-hidden rounded-2xl bg-apple-card transition-all ${
+        isDragging ? 'shadow-xl shadow-black/40 ring-1 ring-[#F97315]/40' : ''
       }`}
     >
       {/* Row header */}
-      <div className="flex items-center gap-3 border-b border-dark-700/30 px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-apple-hairline px-4 py-3">
         <button
           {...attributes}
           {...listeners}
-          className="flex-shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-dark-500 hover:bg-dark-700/50 hover:text-dark-300 active:cursor-grabbing"
+          className="flex-shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-apple-faint hover:bg-apple-elevated hover:text-apple-ink active:cursor-grabbing"
           title={t('admin.menuEditor.dragToReorder')}
         >
           <GripIcon />
         </button>
-        <span className="text-sm font-semibold text-dark-200">
+        <span className="text-sm font-semibold text-apple-ink">
           {t('admin.menuEditor.row')} {rowIndex + 1}
         </span>
         <div className="flex-1" />
@@ -422,7 +422,7 @@ function SortableRow({
         {!allBuiltin && (
           <button
             onClick={() => onRemoveRow(row.id)}
-            className="rounded-lg p-1.5 text-dark-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+            className="rounded-lg p-1.5 text-apple-faint transition-colors hover:bg-apple-red/10 hover:text-apple-red"
           >
             <TrashIcon />
           </button>
@@ -478,7 +478,7 @@ function InlineAddPanel({ rowId, usedBuiltinIds, onAddBuiltin, onAddCustom }: In
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-dark-700/50 py-2.5 text-sm text-dark-500 transition-colors hover:border-dark-600 hover:text-dark-400"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-apple-hairline py-2.5 text-sm text-apple-faint transition-colors hover:text-apple-mute"
       >
         <PlusIcon />
         {t('admin.menuEditor.addButton')}
@@ -487,10 +487,10 @@ function InlineAddPanel({ rowId, usedBuiltinIds, onAddBuiltin, onAddCustom }: In
   }
 
   return (
-    <div className="space-y-1 rounded-xl border border-dark-700/50 bg-dark-900/30 p-2">
+    <div className="space-y-1 rounded-xl bg-apple-elevated p-2">
       {availableBuiltins.length > 0 && (
         <>
-          <p className="px-2 pb-0.5 text-xs font-medium text-dark-500">
+          <p className="px-2 pb-0.5 text-xs font-medium text-apple-faint">
             {t('admin.menuEditor.builtinButtons')}
           </p>
           {availableBuiltins.map((id) => (
@@ -500,12 +500,12 @@ function InlineAddPanel({ rowId, usedBuiltinIds, onAddBuiltin, onAddCustom }: In
                 onAddBuiltin(rowId, id);
                 setIsOpen(false);
               }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-dark-200 transition-colors hover:bg-dark-700/50"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-apple-ink transition-colors hover:bg-apple-card"
             >
               {t(`admin.buttons.sections.${id}`)}
             </button>
           ))}
-          <div className="my-1 border-t border-dark-700/30" />
+          <div className="my-1 border-t border-apple-hairline" />
         </>
       )}
       <button
@@ -513,14 +513,14 @@ function InlineAddPanel({ rowId, usedBuiltinIds, onAddBuiltin, onAddCustom }: In
           onAddCustom(rowId);
           setIsOpen(false);
         }}
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-dark-200 transition-colors hover:bg-dark-700/50"
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-apple-ink transition-colors hover:bg-apple-card"
       >
         <LinkIcon />
         {t('admin.menuEditor.addUrlButton')}
       </button>
       <button
         onClick={() => setIsOpen(false)}
-        className="flex w-full items-center justify-center rounded-lg py-1.5 text-xs text-dark-500 transition-colors hover:text-dark-400"
+        className="flex w-full items-center justify-center rounded-lg py-1.5 text-xs text-apple-faint transition-colors hover:text-apple-mute"
       >
         {t('common.cancel')}
       </button>
@@ -771,7 +771,7 @@ export function MenuEditorTab() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-dark-400">
+      <div className="flex items-center justify-center py-12 text-apple-mute">
         <svg className="mr-2 h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
           <circle
             className="opacity-25"
@@ -794,7 +794,7 @@ export function MenuEditorTab() {
 
   if (isError) {
     return (
-      <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+      <div className="rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red">
         {t('common.error')}
       </div>
     );
@@ -803,7 +803,7 @@ export function MenuEditorTab() {
   return (
     <div className="space-y-4">
       {/* Drag hint */}
-      <div className="flex items-center gap-2 text-sm text-dark-500">
+      <div className="flex items-center gap-2 text-sm text-apple-faint">
         <GripIcon />
         {t('admin.menuEditor.dragHint')}
       </div>
@@ -839,7 +839,7 @@ export function MenuEditorTab() {
       {/* Add row */}
       <button
         onClick={addRow}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-dark-700/50 py-4 text-sm font-medium text-dark-500 transition-colors hover:border-dark-600 hover:text-dark-400"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-apple-hairline py-4 text-sm font-medium text-apple-faint transition-colors hover:text-apple-mute"
       >
         <PlusIcon />
         {t('admin.menuEditor.addRow')}
@@ -851,14 +851,14 @@ export function MenuEditorTab() {
           <button
             onClick={handleSave}
             disabled={updateMutation.isPending}
-            className="rounded-xl bg-accent-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+            className="rounded-full bg-[#F97315] px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {updateMutation.isPending ? t('common.saving') : t('common.save')}
           </button>
           <button
             onClick={handleCancel}
             disabled={updateMutation.isPending}
-            className="rounded-xl bg-dark-700 px-4 py-2 text-sm font-medium text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
+            className="rounded-full bg-apple-elevated px-4 py-2 text-sm font-medium text-apple-ink transition-colors hover:opacity-90 disabled:opacity-50"
           >
             {t('common.cancel')}
           </button>
@@ -874,7 +874,7 @@ export function MenuEditorTab() {
             }
           }}
           disabled={resetMutation.isPending}
-          className="rounded-xl bg-dark-700 px-4 py-2 text-sm text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-50"
+          className="rounded-full bg-apple-elevated px-4 py-2 text-sm text-apple-ink transition-colors hover:opacity-90 disabled:opacity-50"
         >
           {t('admin.buttons.resetAll')}
         </button>

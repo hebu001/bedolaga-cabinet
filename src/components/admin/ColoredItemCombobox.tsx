@@ -186,8 +186,8 @@ export function ColoredItemCombobox({
         type="button"
         onClick={handleToggle}
         className={cn(
-          'flex min-h-[44px] w-full items-center gap-3 rounded-xl border bg-dark-800 px-4 py-2.5 text-left text-sm transition-colors',
-          isOpen ? 'border-accent-500/50' : 'border-dark-700 hover:border-dark-600',
+          'flex min-h-[44px] w-full items-center gap-3 rounded-xl bg-apple-elevated px-4 py-2.5 text-left text-sm transition-all',
+          isOpen ? 'ring-2 ring-[#F97315]/50' : 'hover:opacity-90',
           isLoading && 'animate-pulse',
         )}
         aria-expanded={isOpen}
@@ -199,11 +199,11 @@ export function ColoredItemCombobox({
               className="h-3 w-3 shrink-0 rounded-full"
               style={{ backgroundColor: value.color }}
             />
-            <span className="flex-1 truncate text-dark-100">{value.name}</span>
+            <span className="flex-1 truncate text-apple-ink">{value.name}</span>
             <button
               type="button"
               onClick={handleClear}
-              className="shrink-0 rounded p-0.5 text-dark-500 transition-colors hover:text-dark-300"
+              className="shrink-0 rounded p-0.5 text-apple-faint transition-colors hover:text-apple-mute"
               aria-label={t('news.admin.combobox.clear')}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -213,15 +213,15 @@ export function ColoredItemCombobox({
           </>
         ) : (
           <>
-            <span className="h-3 w-3 shrink-0 rounded-full bg-dark-600" />
-            <span className="flex-1 truncate text-dark-500">
+            <span className="h-3 w-3 shrink-0 rounded-full bg-apple-card" />
+            <span className="flex-1 truncate text-apple-faint">
               {placeholder ?? t('news.admin.combobox.placeholder')}
             </span>
           </>
         )}
         <svg
           className={cn(
-            'h-4 w-4 shrink-0 text-dark-500 transition-transform duration-200',
+            'h-4 w-4 shrink-0 text-apple-faint transition-transform duration-200',
             isOpen && 'rotate-180',
           )}
           viewBox="0 0 24 24"
@@ -235,20 +235,20 @@ export function ColoredItemCombobox({
       {isOpen && (
         <div
           className={cn(
-            'absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-xl border border-dark-700 bg-dark-900/95 shadow-xl shadow-black/30 backdrop-blur-lg',
+            'absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl bg-apple-card shadow-xl shadow-black/30 backdrop-blur-lg',
           )}
           role="listbox"
           onKeyDown={handleKeyDown}
         >
           {/* Search input */}
-          <div className="border-b border-dark-700 p-3">
+          <div className="border-b border-apple-hairline p-3">
             <input
               ref={searchInputRef}
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('news.admin.combobox.searchOrCreate')}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-2.5 text-sm text-dark-100 placeholder-dark-500 outline-none transition-colors focus:border-accent-500/50"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
 
@@ -262,10 +262,10 @@ export function ColoredItemCombobox({
                     type="button"
                     onClick={() => handleSelect(item)}
                     className={cn(
-                      'flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors',
+                      'flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors',
                       value?.id === item.id
-                        ? 'bg-accent-500/10 text-accent-400'
-                        : 'text-dark-200 hover:bg-dark-800',
+                        ? 'bg-[#F97315]/15 text-[#F97315]'
+                        : 'text-apple-ink hover:bg-apple-elevated',
                     )}
                     role="option"
                     aria-selected={value?.id === item.id}
@@ -277,7 +277,8 @@ export function ColoredItemCombobox({
                     <span className="flex-1 truncate">{item.name}</span>
                     {value?.id === item.id && (
                       <svg
-                        className="h-4 w-4 shrink-0 text-accent-400"
+                        className="h-4 w-4 shrink-0"
+                        style={{ color: '#F97315' }}
                         viewBox="0 0 24 24"
                         fill="currentColor"
                       >
@@ -289,11 +290,11 @@ export function ColoredItemCombobox({
                         type="button"
                         onClick={(e) => handleDelete(e, item)}
                         disabled={deletingId === item.id}
-                        className="shrink-0 rounded p-1 text-dark-600 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                        className="shrink-0 rounded p-1 text-apple-faint transition-colors hover:bg-apple-red/10 hover:text-apple-red disabled:opacity-50"
                         aria-label={t('news.admin.combobox.delete', { name: item.name })}
                       >
                         {deletingId === item.id ? (
-                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
+                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-apple-red border-t-transparent" />
                         ) : (
                           <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
@@ -306,7 +307,7 @@ export function ColoredItemCombobox({
               </div>
             ) : (
               !showCreateSection && (
-                <div className="px-4 py-6 text-center text-sm text-dark-500">
+                <div className="px-4 py-6 text-center text-sm text-apple-faint">
                   {t('news.admin.combobox.noItems')}
                 </div>
               )
@@ -315,18 +316,18 @@ export function ColoredItemCombobox({
 
           {/* Create new section */}
           {showCreateSection && (
-            <div className="border-t border-dark-700 p-3">
-              <div className="mb-2.5 text-xs font-medium uppercase tracking-wider text-dark-500">
+            <div className="border-t border-apple-hairline p-3">
+              <div className="mb-2.5 text-xs font-medium uppercase tracking-wider text-apple-faint">
                 {t('news.admin.combobox.createNew')}
               </div>
 
               {/* Name preview */}
-              <div className="mb-3 flex items-center gap-2.5 rounded-lg bg-dark-800 px-3 py-2">
+              <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-apple-elevated px-3 py-2">
                 <span
                   className="h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: newColor }}
                 />
-                <span className="text-sm text-dark-200">{search.trim()}</span>
+                <span className="text-sm text-apple-ink">{search.trim()}</span>
               </div>
 
               {/* Color swatches */}
@@ -343,7 +344,7 @@ export function ColoredItemCombobox({
                       'h-8 w-8 rounded-lg border-2 transition-all',
                       newColor === color
                         ? 'scale-110 border-white'
-                        : 'border-transparent hover:border-dark-500',
+                        : 'border-transparent hover:border-apple-mute',
                     )}
                     style={{ backgroundColor: color }}
                     aria-label={t('news.admin.selectColor', { color })}
@@ -356,7 +357,7 @@ export function ColoredItemCombobox({
                 type="button"
                 onClick={handleCreate}
                 disabled={isCreating}
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isCreating ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

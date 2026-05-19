@@ -54,49 +54,49 @@ export function SortableSelectedMethodCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'rounded-lg border',
-        isDragging ? 'border-accent-500/50 bg-dark-700' : 'border-dark-700 bg-dark-800/50',
+        'rounded-2xl',
+        isDragging ? 'bg-apple-elevated ring-1 ring-[#F97315]/50' : 'bg-apple-card',
       )}
     >
       <div className="flex items-center gap-2 px-3 py-2">
         <button
           {...attributes}
           {...listeners}
-          className="flex-shrink-0 cursor-grab touch-none text-dark-500 hover:text-dark-300 active:cursor-grabbing"
+          className="flex-shrink-0 cursor-grab touch-none text-apple-faint hover:text-apple-mute active:cursor-grabbing"
         >
           <GripIcon />
         </button>
         <button onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-start">
-          <span className="truncate text-sm text-dark-100">{method.display_name}</span>
+          <span className="truncate text-sm text-apple-ink">{method.display_name}</span>
         </button>
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="flex-shrink-0 text-dark-500 hover:text-dark-300"
+          className="flex-shrink-0 text-apple-faint hover:text-apple-mute"
         >
           <ChevronDownIcon open={expanded} />
         </button>
         <button
           onClick={() => onRemove(method.method_id)}
-          className="flex-shrink-0 text-dark-500 hover:text-error-400"
+          className="flex-shrink-0 text-apple-faint hover:text-apple-red"
         >
           <TrashIcon />
         </button>
       </div>
       {expanded && (
-        <div className="space-y-3 border-t border-dark-700 px-3 py-3">
+        <div className="space-y-3 border-t border-apple-hairline px-3 py-3">
           <div>
-            <label className="mb-1 block text-xs text-dark-500">
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.landings.methodDisplayName', 'Display name')}
             </label>
             <input
               type="text"
               value={method.display_name}
               onChange={(e) => onUpdate(method.method_id, 'display_name', e.target.value)}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-dark-500">
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.landings.methodDescription', 'Description')}
             </label>
             <input
@@ -104,11 +104,11 @@ export function SortableSelectedMethodCard({
               value={method.description ?? ''}
               onChange={(e) => onUpdate(method.method_id, 'description', e.target.value || null)}
               placeholder={t('admin.landings.methodDescPlaceholder', 'Optional description')}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-dark-500">
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.landings.methodIconUrl', 'Icon URL')}
             </label>
             <input
@@ -116,12 +116,12 @@ export function SortableSelectedMethodCard({
               value={method.icon_url ?? ''}
               onChange={(e) => onUpdate(method.method_id, 'icon_url', e.target.value || null)}
               placeholder="https://..."
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs text-dark-500">
+              <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                 {t('admin.landings.methodMinAmount', 'Min amount (kopeks)')}
               </label>
               <input
@@ -137,11 +137,11 @@ export function SortableSelectedMethodCard({
                   )
                 }
                 placeholder="—"
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-dark-500">
+              <label className="mb-1 block text-[13px] font-medium text-apple-mute">
                 {t('admin.landings.methodMaxAmount', 'Max amount (kopeks)')}
               </label>
               <input
@@ -157,12 +157,12 @@ export function SortableSelectedMethodCard({
                   )
                 }
                 placeholder="—"
-                className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-dark-500">
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.landings.methodCurrency', 'Currency')}
             </label>
             <input
@@ -170,11 +170,11 @@ export function SortableSelectedMethodCard({
               value={method.currency ?? ''}
               onChange={(e) => onUpdate(method.method_id, 'currency', e.target.value || null)}
               placeholder="RUB"
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-dark-500">
+            <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.landings.methodReturnUrl', 'Return URL after payment')}
             </label>
             <input
@@ -185,12 +185,12 @@ export function SortableSelectedMethodCard({
                 'admin.landings.methodReturnUrlPlaceholder',
                 'Default: cabinet success page. Use {token} for purchase token',
               )}
-              className="w-full rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-100 outline-none focus:border-accent-500"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
           {availableSubOptions && availableSubOptions.length > 0 && (
             <div>
-              <label className="mb-1.5 block text-xs text-dark-500">
+              <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
                 {t('admin.landings.methodSubOptions', 'Payment sub-options')}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -210,19 +210,17 @@ export function SortableSelectedMethodCard({
                         onSubOptionsChange(method.method_id, { ...current, [opt.id]: !enabled });
                       }}
                       className={cn(
-                        'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors',
+                        'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors',
                         enabled
-                          ? 'border-accent-500/30 bg-accent-500/10 text-accent-300'
-                          : 'border-dark-700 bg-dark-800 text-dark-500',
+                          ? 'bg-[#F97315]/15 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute',
                       )}
                     >
                       <div
                         aria-hidden="true"
                         className={cn(
                           'flex h-3.5 w-3.5 items-center justify-center rounded',
-                          enabled
-                            ? 'bg-accent-500 text-white'
-                            : 'border border-dark-600 bg-dark-700',
+                          enabled ? 'bg-[#F97315] text-white' : 'bg-apple-card',
                         )}
                       >
                         {enabled && (

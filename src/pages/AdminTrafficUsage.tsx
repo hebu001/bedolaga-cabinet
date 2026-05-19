@@ -145,28 +145,28 @@ const getCompositeRisk = (
 
 const RISK_STYLES: Record<RiskLevel, { dot: string; text: string; bar: string; bg: string }> = {
   low: {
-    dot: 'bg-success-400',
-    text: 'text-success-400',
-    bar: 'bg-success-400',
-    bg: 'bg-success-400/10',
+    dot: 'bg-apple-green',
+    text: 'text-apple-green',
+    bar: 'bg-apple-green',
+    bg: 'bg-apple-green/10',
   },
   medium: {
-    dot: 'bg-warning-400',
-    text: 'text-warning-400',
-    bar: 'bg-warning-400',
-    bg: 'bg-warning-400/10',
+    dot: 'bg-apple-amber',
+    text: 'text-apple-amber',
+    bar: 'bg-apple-amber',
+    bg: 'bg-apple-amber/10',
   },
   high: {
-    dot: 'bg-orange-400',
-    text: 'text-orange-400',
-    bar: 'bg-orange-400',
-    bg: 'bg-orange-400/10',
+    dot: 'bg-[#F97315]',
+    text: 'text-[#F97315]',
+    bar: 'bg-[#F97315]',
+    bg: 'bg-[#F97315]/10',
   },
   critical: {
-    dot: 'bg-error-400 animate-pulse',
-    text: 'text-error-400',
-    bar: 'bg-error-400',
-    bg: 'bg-error-400/10',
+    dot: 'bg-apple-red animate-pulse',
+    text: 'text-apple-red',
+    bar: 'bg-apple-red',
+    bg: 'bg-apple-red/10',
   },
 };
 
@@ -375,9 +375,9 @@ function ProgressBar({ loading }: { loading: boolean }) {
   if (!visible) return null;
 
   return (
-    <div className="absolute left-0 right-0 top-0 z-50 h-0.5 overflow-hidden rounded-full bg-dark-700/50">
+    <div className="absolute left-0 right-0 top-0 z-50 h-0.5 overflow-hidden rounded-full bg-apple-elevated">
       <div
-        className="h-full rounded-full bg-gradient-to-r from-accent-500 to-accent-400 transition-all duration-200 ease-out"
+        className="h-full rounded-full bg-[#F97315] transition-all duration-200 ease-out"
         style={{ width: `${progress}%` }}
       />
     </div>
@@ -419,27 +419,27 @@ function PeriodSelector({
     return (
       <div className="flex items-center gap-2">
         <CalendarIcon />
-        <span className="text-xs text-dark-400">{t('admin.trafficUsage.dateFrom')}</span>
+        <span className="text-xs text-apple-mute">{t('admin.trafficUsage.dateFrom')}</span>
         <input
           type="date"
           value={customStart}
           min={minDate}
           max={customEnd || today}
           onChange={(e) => onCustomStartChange(e.target.value)}
-          className="rounded-lg border border-dark-700 bg-dark-800 px-2 py-1 text-xs text-dark-200 focus:border-dark-600 focus:outline-none"
+          className="rounded-lg bg-apple-elevated px-2 py-1 text-xs text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
         />
-        <span className="text-xs text-dark-400">{t('admin.trafficUsage.dateTo')}</span>
+        <span className="text-xs text-apple-mute">{t('admin.trafficUsage.dateTo')}</span>
         <input
           type="date"
           value={customEnd}
           min={customStart || minDate}
           max={today}
           onChange={(e) => onCustomEndChange(e.target.value)}
-          className="rounded-lg border border-dark-700 bg-dark-800 px-2 py-1 text-xs text-dark-200 focus:border-dark-600 focus:outline-none"
+          className="rounded-lg bg-apple-elevated px-2 py-1 text-xs text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
         />
         <button
           onClick={onToggleDateMode}
-          className="rounded-lg p-1 text-dark-400 transition-colors hover:bg-dark-700 hover:text-dark-200"
+          className="rounded-lg p-1 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink"
           title={t('admin.trafficUsage.period')}
         >
           <XIcon />
@@ -450,16 +450,16 @@ function PeriodSelector({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-dark-400">{label}</span>
+      <span className="text-xs text-apple-mute">{label}</span>
       <div className="flex gap-1">
         {PERIODS.map((p) => (
           <button
             key={p}
             onClick={() => onChange(p)}
-            className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
               value === p
-                ? 'bg-accent-500 text-white'
-                : 'bg-dark-800 text-dark-400 hover:bg-dark-700 hover:text-dark-200'
+                ? 'bg-[#F97315] text-white hover:opacity-90'
+                : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
             }`}
           >
             {p}
@@ -469,7 +469,7 @@ function PeriodSelector({
       </div>
       <button
         onClick={onToggleDateMode}
-        className="rounded-lg border border-dark-700 bg-dark-800 p-1.5 text-dark-400 transition-colors hover:border-dark-600 hover:bg-dark-700 hover:text-dark-200"
+        className="rounded-lg bg-apple-elevated p-1.5 text-apple-mute transition-colors hover:text-apple-ink"
         title={t('admin.trafficUsage.customDates')}
       >
         <CalendarIcon />
@@ -520,16 +520,16 @@ function TariffFilter({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
           activeCount > 0
-            ? 'border-accent-500/50 bg-accent-500/10 text-accent-400'
-            : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600 hover:bg-dark-700'
+            ? 'bg-[#F97315]/15 text-[#F97315]'
+            : 'bg-apple-elevated text-apple-ink hover:opacity-90'
         }`}
       >
         <FilterIcon />
         {t('admin.trafficUsage.tariff')}
         {activeCount > 0 && (
-          <span className="rounded-full bg-accent-500 px-1.5 text-[10px] text-white">
+          <span className="rounded-full bg-[#F97315] px-1.5 text-[10px] text-white">
             {activeCount}
           </span>
         )}
@@ -537,16 +537,16 @@ function TariffFilter({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-56 rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+        <div className="absolute left-0 top-full z-30 mt-1 w-56 rounded-xl bg-apple-card py-1 shadow-xl">
           <button
             onClick={selectAll}
-            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-dark-700 ${
-              allSelected ? 'text-accent-400' : 'text-dark-300'
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-apple-elevated ${
+              allSelected ? 'text-[#F97315]' : 'text-apple-mute'
             }`}
           >
             <span
               className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                allSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                allSelected ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
               }`}
             >
               {allSelected && (
@@ -564,7 +564,7 @@ function TariffFilter({
             {t('admin.trafficUsage.allTariffs')}
           </button>
 
-          <div className="mx-2 border-t border-dark-700" />
+          <div className="mx-2 border-t border-apple-hairline" />
 
           <div className="max-h-48 overflow-y-auto">
             {available.map((tariff) => {
@@ -573,11 +573,11 @@ function TariffFilter({
                 <button
                   key={tariff}
                   onClick={() => toggle(tariff)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-dark-300 transition-colors hover:bg-dark-700"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-apple-mute transition-colors hover:bg-apple-elevated"
                 >
                   <span
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                      checked ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                      checked ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
                     }`}
                   >
                     {checked && (
@@ -608,10 +608,10 @@ function TariffFilter({
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-success-500',
-  trial: 'bg-warning-500',
-  expired: 'bg-error-500',
-  disabled: 'bg-dark-500',
+  active: 'bg-apple-green',
+  trial: 'bg-apple-amber',
+  expired: 'bg-apple-red',
+  disabled: 'bg-apple-faint',
 };
 
 function StatusFilter({
@@ -661,16 +661,16 @@ function StatusFilter({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
           activeCount > 0
-            ? 'border-accent-500/50 bg-accent-500/10 text-accent-400'
-            : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600 hover:bg-dark-700'
+            ? 'bg-[#F97315]/15 text-[#F97315]'
+            : 'bg-apple-elevated text-apple-ink hover:opacity-90'
         }`}
       >
         <StatusIcon />
         {t('admin.trafficUsage.status')}
         {activeCount > 0 && (
-          <span className="rounded-full bg-accent-500 px-1.5 text-[10px] text-white">
+          <span className="rounded-full bg-[#F97315] px-1.5 text-[10px] text-white">
             {activeCount}
           </span>
         )}
@@ -678,16 +678,16 @@ function StatusFilter({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-56 rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+        <div className="absolute left-0 top-full z-30 mt-1 w-56 rounded-xl bg-apple-card py-1 shadow-xl">
           <button
             onClick={selectAll}
-            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-dark-700 ${
-              allSelected ? 'text-accent-400' : 'text-dark-300'
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-apple-elevated ${
+              allSelected ? 'text-[#F97315]' : 'text-apple-mute'
             }`}
           >
             <span
               className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                allSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                allSelected ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
               }`}
             >
               {allSelected && (
@@ -705,7 +705,7 @@ function StatusFilter({
             {t('admin.trafficUsage.allStatuses')}
           </button>
 
-          <div className="mx-2 border-t border-dark-700" />
+          <div className="mx-2 border-t border-apple-hairline" />
 
           <div className="max-h-48 overflow-y-auto">
             {available.map((s) => {
@@ -714,11 +714,11 @@ function StatusFilter({
                 <button
                   key={s}
                   onClick={() => toggle(s)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-dark-300 transition-colors hover:bg-dark-700"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-apple-mute transition-colors hover:bg-apple-elevated"
                 >
                   <span
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                      checked ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                      checked ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
                     }`}
                   >
                     {checked && (
@@ -737,7 +737,9 @@ function StatusFilter({
                       </svg>
                     )}
                   </span>
-                  <span className={`h-2 w-2 rounded-full ${STATUS_COLORS[s] || 'bg-dark-500'}`} />
+                  <span
+                    className={`h-2 w-2 rounded-full ${STATUS_COLORS[s] || 'bg-apple-faint'}`}
+                  />
                   {statusLabel(s)}
                 </button>
               );
@@ -791,16 +793,16 @@ function NodeFilter({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
           activeCount > 0
-            ? 'border-accent-500/50 bg-accent-500/10 text-accent-400'
-            : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600 hover:bg-dark-700'
+            ? 'bg-[#F97315]/15 text-[#F97315]'
+            : 'bg-apple-elevated text-apple-ink hover:opacity-90'
         }`}
       >
         <ServerIcon />
         {t('admin.trafficUsage.nodes')}
         {activeCount > 0 && (
-          <span className="rounded-full bg-accent-500 px-1.5 text-[10px] text-white">
+          <span className="rounded-full bg-[#F97315] px-1.5 text-[10px] text-white">
             {activeCount}
           </span>
         )}
@@ -808,16 +810,16 @@ function NodeFilter({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+        <div className="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl bg-apple-card py-1 shadow-xl">
           <button
             onClick={selectAll}
-            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-dark-700 ${
-              allSelected ? 'text-accent-400' : 'text-dark-300'
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-apple-elevated ${
+              allSelected ? 'text-[#F97315]' : 'text-apple-mute'
             }`}
           >
             <span
               className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                allSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                allSelected ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
               }`}
             >
               {allSelected && (
@@ -835,7 +837,7 @@ function NodeFilter({
             {t('admin.trafficUsage.allNodes')}
           </button>
 
-          <div className="mx-2 border-t border-dark-700" />
+          <div className="mx-2 border-t border-apple-hairline" />
 
           <div className="max-h-48 overflow-y-auto">
             {available.map((node) => {
@@ -844,11 +846,11 @@ function NodeFilter({
                 <button
                   key={node.node_uuid}
                   onClick={() => toggle(node.node_uuid)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-dark-300 transition-colors hover:bg-dark-700"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-apple-mute transition-colors hover:bg-apple-elevated"
                 >
                   <span
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                      checked ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                      checked ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
                     }`}
                   >
                     {checked && (
@@ -919,15 +921,15 @@ function CountryFilter({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
           activeCount > 0
-            ? 'border-accent-500/50 bg-accent-500/10 text-accent-400'
-            : 'border-dark-700 bg-dark-800 text-dark-200 hover:border-dark-600 hover:bg-dark-700'
+            ? 'bg-[#F97315]/15 text-[#F97315]'
+            : 'bg-apple-elevated text-apple-ink hover:opacity-90'
         }`}
       >
         <GlobeIcon />
         {activeCount > 0 && (
-          <span className="rounded-full bg-accent-500 px-1.5 text-[10px] text-white">
+          <span className="rounded-full bg-[#F97315] px-1.5 text-[10px] text-white">
             {activeCount}
           </span>
         )}
@@ -935,16 +937,16 @@ function CountryFilter({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl sm:left-0 sm:right-auto">
+        <div className="absolute right-0 top-full z-30 mt-1 w-48 rounded-xl bg-apple-card py-1 shadow-xl sm:left-0 sm:right-auto">
           <button
             onClick={selectAll}
-            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-dark-700 ${
-              allSelected ? 'text-accent-400' : 'text-dark-300'
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-apple-elevated ${
+              allSelected ? 'text-[#F97315]' : 'text-apple-mute'
             }`}
           >
             <span
               className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                allSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                allSelected ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
               }`}
             >
               {allSelected && (
@@ -962,7 +964,7 @@ function CountryFilter({
             All
           </button>
 
-          <div className="mx-2 border-t border-dark-700" />
+          <div className="mx-2 border-t border-apple-hairline" />
 
           <div className="max-h-48 overflow-y-auto">
             {available.map(({ code, count }) => {
@@ -971,11 +973,11 @@ function CountryFilter({
                 <button
                   key={code}
                   onClick={() => toggle(code)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-dark-300 transition-colors hover:bg-dark-700"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-apple-mute transition-colors hover:bg-apple-elevated"
                 >
                   <span
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                      checked ? 'border-accent-500 bg-accent-500' : 'border-dark-600'
+                      checked ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
                     }`}
                   >
                     {checked && (
@@ -995,7 +997,7 @@ function CountryFilter({
                     )}
                   </span>
                   {getFlagEmoji(code)} {code.toUpperCase()}
-                  <span className="ml-auto text-dark-500">{count}</span>
+                  <span className="ml-auto text-apple-faint">{count}</span>
                 </button>
               );
             })}
@@ -1376,17 +1378,17 @@ export default function AdminTrafficUsage() {
           const item = row.original;
           return (
             <div className="flex items-center gap-1.5">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-[10px] font-medium text-white">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F97315] text-[10px] font-medium text-white">
                 {item.full_name?.[0] || '?'}
               </div>
               <div className="min-w-0">
-                <div className="truncate text-xs font-medium text-dark-100">{item.full_name}</div>
+                <div className="truncate text-xs font-medium text-apple-ink">{item.full_name}</div>
                 {item.username ? (
-                  <div className="truncate text-[10px] leading-tight text-dark-500">
+                  <div className="truncate text-[10px] leading-tight text-apple-faint">
                     @{item.username}
                   </div>
                 ) : item.email ? (
-                  <div className="truncate text-[10px] leading-tight text-dark-500">
+                  <div className="truncate text-[10px] leading-tight text-apple-faint">
                     {item.email}
                   </div>
                 ) : null}
@@ -1403,7 +1405,7 @@ export default function AdminTrafficUsage() {
         size: 120,
         minSize: 80,
         cell: ({ getValue }) => (
-          <span className="text-xs text-dark-300">
+          <span className="text-xs text-apple-mute">
             {(getValue() as string | null) || t('admin.trafficUsage.noTariff')}
           </span>
         ),
@@ -1416,7 +1418,7 @@ export default function AdminTrafficUsage() {
         minSize: 60,
         meta: { align: 'center' as const },
         cell: ({ getValue }) => (
-          <span className="text-xs text-dark-300">{getValue() as number}</span>
+          <span className="text-xs text-apple-mute">{getValue() as number}</span>
         ),
       },
       {
@@ -1428,7 +1430,7 @@ export default function AdminTrafficUsage() {
         meta: { align: 'center' as const },
         cell: ({ getValue }) => {
           const gb = getValue() as number;
-          return <span className="text-xs text-dark-300">{gb > 0 ? `${gb} GB` : '\u221E'}</span>;
+          return <span className="text-xs text-apple-mute">{gb > 0 ? `${gb} GB` : '\u221E'}</span>;
         },
       },
       // ---- Enrichment columns ----
@@ -1442,8 +1444,10 @@ export default function AdminTrafficUsage() {
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
           if (enrichmentLoading && !enrichment)
-            return <div className="mx-auto h-4 w-8 animate-pulse rounded bg-dark-700" />;
-          return <span className="text-xs text-dark-300">{e?.devices_connected ?? '\u2014'}</span>;
+            return <div className="mx-auto h-4 w-8 animate-pulse rounded bg-apple-elevated" />;
+          return (
+            <span className="text-xs text-apple-mute">{e?.devices_connected ?? '\u2014'}</span>
+          );
         },
       },
       {
@@ -1456,11 +1460,11 @@ export default function AdminTrafficUsage() {
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
           if (enrichmentLoading && !enrichment)
-            return <div className="mx-auto h-4 w-12 animate-pulse rounded bg-dark-700" />;
+            return <div className="mx-auto h-4 w-12 animate-pulse rounded bg-apple-elevated" />;
           if (!e || e.total_spent_kopeks === 0)
-            return <span className="text-xs text-dark-300">{'\u2014'}</span>;
+            return <span className="text-xs text-apple-mute">{'\u2014'}</span>;
           return (
-            <span className="text-xs text-dark-300">{formatCurrency(e.total_spent_kopeks)}</span>
+            <span className="text-xs text-apple-mute">{formatCurrency(e.total_spent_kopeks)}</span>
           );
         },
       },
@@ -1474,9 +1478,9 @@ export default function AdminTrafficUsage() {
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
           if (enrichmentLoading && !enrichment)
-            return <div className="mx-auto h-4 w-14 animate-pulse rounded bg-dark-700" />;
+            return <div className="mx-auto h-4 w-14 animate-pulse rounded bg-apple-elevated" />;
           return (
-            <span className="text-xs text-dark-300">
+            <span className="text-xs text-apple-mute">
               {formatShortDate(e?.subscription_start_date ?? null)}
             </span>
           );
@@ -1492,9 +1496,9 @@ export default function AdminTrafficUsage() {
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
           if (enrichmentLoading && !enrichment)
-            return <div className="mx-auto h-4 w-14 animate-pulse rounded bg-dark-700" />;
+            return <div className="mx-auto h-4 w-14 animate-pulse rounded bg-apple-elevated" />;
           return (
-            <span className="text-xs text-dark-300">
+            <span className="text-xs text-apple-mute">
               {formatShortDate(e?.subscription_end_date ?? null)}
             </span>
           );
@@ -1510,8 +1514,8 @@ export default function AdminTrafficUsage() {
         cell: ({ row }) => {
           const e = enrichment?.[row.original.user_id];
           if (enrichmentLoading && !enrichment)
-            return <div className="mx-auto h-4 w-16 animate-pulse rounded bg-dark-700" />;
-          return <span className="text-xs text-dark-300">{e?.last_node_name ?? '\u2014'}</span>;
+            return <div className="mx-auto h-4 w-16 animate-pulse rounded bg-apple-elevated" />;
+          return <span className="text-xs text-apple-mute">{e?.last_node_name ?? '\u2014'}</span>;
         },
       },
       // ---- Dynamic node columns ----
@@ -1527,7 +1531,7 @@ export default function AdminTrafficUsage() {
           cell: ({ getValue }) => {
             const bytes = getValue() as number;
             if (bytes <= 0) {
-              return <span className="text-xs text-dark-300">{'\u2014'}</span>;
+              return <span className="text-xs text-apple-mute">{'\u2014'}</span>;
             }
             const dailyNode = bytesToGbPerDay(bytes, periodDays);
             const nodeRatio = hasNodeThreshold ? getRatio(dailyNode, nodeThresholdNum) : 0;
@@ -1535,7 +1539,7 @@ export default function AdminTrafficUsage() {
             return (
               <div className="flex flex-col items-center">
                 <span
-                  className="text-xs text-dark-300"
+                  className="text-xs text-apple-mute"
                   style={{
                     color: textColor,
                     fontWeight: nodeRatio > 0.8 ? 600 : undefined,
@@ -1594,14 +1598,14 @@ export default function AdminTrafficUsage() {
       cell: ({ getValue }) => {
         const bytes = getValue() as number;
         if (bytes <= 0) {
-          return <span className="text-xs font-semibold text-dark-100">{'\u2014'}</span>;
+          return <span className="text-xs font-semibold text-apple-ink">{'\u2014'}</span>;
         }
         const dailyTotal = bytesToGbPerDay(bytes, periodDays);
         return (
           <div className="flex flex-col items-center">
-            <span className="text-xs font-semibold text-dark-100">{formatBytes(bytes)}</span>
+            <span className="text-xs font-semibold text-apple-ink">{formatBytes(bytes)}</span>
             {hasTotalThreshold && (
-              <span className="text-[9px] leading-tight text-dark-400">
+              <span className="text-[9px] leading-tight text-apple-mute">
                 {formatGbPerDay(dailyTotal)} GB/d
               </span>
             )}
@@ -1648,10 +1652,10 @@ export default function AdminTrafficUsage() {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl border px-4 py-2 text-sm shadow-lg ${
+          className={`fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl px-4 py-2 text-sm shadow-lg ${
             toast.type === 'success'
-              ? 'border-success-500/30 bg-success-500/20 text-success-400'
-              : 'border-error-500/30 bg-error-500/20 text-error-400'
+              ? 'bg-apple-green/15 text-apple-green'
+              : 'bg-apple-red/15 text-apple-red'
           }`}
         >
           {toast.message}
@@ -1664,20 +1668,20 @@ export default function AdminTrafficUsage() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-dark-700 bg-dark-800 transition-colors hover:border-dark-600"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <ChevronLeftIcon />
             </button>
           )}
           <div>
-            <h1 className="text-xl font-bold text-dark-100">{t('admin.trafficUsage.title')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.trafficUsage.subtitle')}</p>
+            <h1 className="text-xl font-bold text-apple-ink">{t('admin.trafficUsage.title')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.trafficUsage.subtitle')}</p>
           </div>
         </div>
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="rounded-lg p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+          className="rounded-lg p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
         >
           <RefreshIcon className={loading ? 'animate-spin' : ''} />
         </button>
@@ -1715,7 +1719,7 @@ export default function AdminTrafficUsage() {
           />
 
           {/* Threshold inputs */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-dark-700 bg-dark-800 px-2 py-1">
+          <div className="flex items-center gap-1.5 rounded-full bg-apple-elevated px-3 py-1.5">
             <ShieldIcon />
             <input
               type="number"
@@ -1725,18 +1729,18 @@ export default function AdminTrafficUsage() {
               step="0.1"
               min="0"
               max="9999"
-              className="w-20 bg-transparent text-xs text-dark-200 placeholder-dark-500 [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-20 bg-transparent text-xs text-apple-ink [appearance:textfield] placeholder:text-apple-faint focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             {totalThreshold && (
               <button
                 onClick={() => setTotalThreshold('')}
-                className="text-dark-500 hover:text-dark-300"
+                className="text-apple-faint hover:text-apple-mute"
               >
                 <XIcon />
               </button>
             )}
           </div>
-          <div className="flex items-center gap-1.5 rounded-lg border border-dark-700 bg-dark-800 px-2 py-1">
+          <div className="flex items-center gap-1.5 rounded-full bg-apple-elevated px-3 py-1.5">
             <ServerSmallIcon />
             <input
               type="number"
@@ -1746,12 +1750,12 @@ export default function AdminTrafficUsage() {
               step="0.1"
               min="0"
               max="9999"
-              className="w-20 bg-transparent text-xs text-dark-200 placeholder-dark-500 [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-20 bg-transparent text-xs text-apple-ink [appearance:textfield] placeholder:text-apple-faint focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             {nodeThreshold && (
               <button
                 onClick={() => setNodeThreshold('')}
-                className="text-dark-500 hover:text-dark-300"
+                className="text-apple-faint hover:text-apple-mute"
               >
                 <XIcon />
               </button>
@@ -1761,7 +1765,7 @@ export default function AdminTrafficUsage() {
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-1.5 rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-xs font-medium text-dark-200 transition-colors hover:border-dark-600 hover:bg-dark-700 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-full bg-apple-elevated px-3 py-1.5 text-xs font-medium text-apple-ink transition-colors hover:opacity-90 disabled:opacity-50"
           >
             <DownloadIcon />
             {t('admin.trafficUsage.exportCsv')}
@@ -1775,9 +1779,9 @@ export default function AdminTrafficUsage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder={t('admin.trafficUsage.search')}
-              className="w-full rounded-xl border border-dark-700 bg-dark-800 py-2 pl-10 pr-4 text-dark-100 placeholder-dark-500 focus:border-dark-600 focus:outline-none"
+              className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-faint">
               <SearchIcon />
             </div>
           </div>
@@ -1787,19 +1791,19 @@ export default function AdminTrafficUsage() {
       {/* Table */}
       {initialLoading && !hasData ? (
         <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
       ) : !hasData && !loading ? (
-        <div className="py-12 text-center text-dark-400">{t('admin.trafficUsage.noData')}</div>
+        <div className="py-12 text-center text-apple-mute">{t('admin.trafficUsage.noData')}</div>
       ) : (
         <div
           className={`transition-opacity duration-200 ${loading && hasData ? 'opacity-70' : 'opacity-100'}`}
         >
-          <div className="overflow-x-auto rounded-xl border border-dark-700">
+          <div className="apple-card-grad overflow-x-auto rounded-2xl bg-apple-card">
             <table className="text-left text-sm" style={{ width: table.getCenterTotalSize() }}>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b border-dark-700 bg-dark-800/80">
+                  <tr key={headerGroup.id} className="border-b border-apple-hairline">
                     {headerGroup.headers.map((header) => {
                       const meta = header.column.columnDef.meta;
                       const isSticky = meta?.sticky;
@@ -1810,10 +1814,10 @@ export default function AdminTrafficUsage() {
                         <th
                           key={header.id}
                           className={`relative overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2 text-xs font-medium ${
-                            isBold ? 'font-semibold text-dark-200' : 'text-dark-400'
+                            isBold ? 'font-semibold text-apple-ink' : 'text-apple-mute'
                           } ${align} ${
-                            isSticky ? 'sticky left-0 z-10 bg-dark-800' : ''
-                          } ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-dark-200' : ''}`}
+                            isSticky ? 'sticky left-0 z-10 bg-apple-card' : ''
+                          } ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-apple-ink' : ''}`}
                           style={{ width: header.getSize(), maxWidth: header.getSize() }}
                           onClick={header.column.getToggleSortingHandler()}
                         >
@@ -1831,8 +1835,8 @@ export default function AdminTrafficUsage() {
                             <div
                               className={`absolute right-2 top-0 h-full w-1 ${
                                 header.column.getIsResizing()
-                                  ? 'bg-accent-500'
-                                  : 'bg-transparent hover:bg-dark-500'
+                                  ? 'bg-[#F97315]'
+                                  : 'bg-transparent hover:bg-apple-faint'
                               }`}
                             />
                           </div>
@@ -1857,7 +1861,7 @@ export default function AdminTrafficUsage() {
                   return (
                     <tr
                       key={row.id}
-                      className="cursor-pointer border-b border-dark-700/50 transition-colors hover:bg-dark-800/50"
+                      className="cursor-pointer border-b border-apple-hairline transition-colors hover:bg-apple-elevated"
                       style={{ backgroundColor: rowBg }}
                       onClick={() => navigate(`/admin/users/${row.original.user_id}`)}
                     >
@@ -1870,7 +1874,7 @@ export default function AdminTrafficUsage() {
                           <td
                             key={cell.id}
                             className={`overflow-hidden px-3 py-2 ${align} ${
-                              isSticky ? 'sticky left-0 z-10 bg-dark-900' : ''
+                              isSticky ? 'sticky left-0 z-10 bg-apple-card' : ''
                             }`}
                             style={{
                               width: cell.column.getSize(),
@@ -1893,7 +1897,7 @@ export default function AdminTrafficUsage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-dark-400">
+          <div className="text-sm text-apple-mute">
             {offset + 1}
             {'\u2013'}
             {Math.min(offset + limit, total)} / {total}
@@ -1902,17 +1906,17 @@ export default function AdminTrafficUsage() {
             <button
               onClick={() => setOffset(Math.max(0, offset - limit))}
               disabled={offset === 0}
-              className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+              className="rounded-lg bg-apple-elevated p-2 transition-colors hover:opacity-90 disabled:opacity-50"
             >
               <ChevronLeftIcon />
             </button>
-            <span className="px-3 py-2 text-dark-300">
+            <span className="px-3 py-2 text-apple-mute">
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setOffset(offset + limit)}
               disabled={offset + limit >= total}
-              className="rounded-lg border border-dark-700 bg-dark-800 p-2 transition-colors hover:bg-dark-700 disabled:opacity-50"
+              className="rounded-lg bg-apple-elevated p-2 transition-colors hover:opacity-90 disabled:opacity-50"
             >
               <ChevronRightIcon />
             </button>
