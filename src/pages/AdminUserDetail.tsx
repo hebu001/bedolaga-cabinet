@@ -116,17 +116,19 @@ const TelegramIcon = () => (
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    active: 'bg-success-500/20 text-success-400 border-success-500/30',
-    blocked: 'bg-error-500/20 text-error-400 border-error-500/30',
-    deleted: 'bg-dark-600 text-dark-400 border-dark-500',
-    trial: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
-    expired: 'bg-warning-500/20 text-warning-400 border-warning-500/30',
-    limited: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    disabled: 'bg-dark-600 text-dark-400 border-dark-500',
+    active: 'bg-apple-green/15 text-apple-green',
+    blocked: 'bg-apple-red/15 text-apple-red',
+    deleted: 'bg-apple-elevated text-apple-mute',
+    trial: 'bg-[#F97315]/15 text-[#F97315]',
+    expired: 'bg-apple-amber/15 text-apple-amber',
+    limited: 'bg-apple-amber/15 text-apple-amber',
+    disabled: 'bg-apple-elevated text-apple-mute',
   };
 
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-xs ${styles[status] || styles.active}`}>
+    <span
+      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles[status] || styles.active}`}
+    >
       {status}
     </span>
   );
@@ -135,20 +137,20 @@ function StatusBadge({ status }: { status: string }) {
 function GiftStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
   const styles: Record<string, string> = {
-    pending: 'bg-warning-500/20 text-warning-400 border-warning-500/30',
-    paid: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
-    delivered: 'bg-success-500/20 text-success-400 border-success-500/30',
-    pending_activation: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
-    failed: 'bg-error-500/20 text-error-400 border-error-500/30',
-    expired: 'bg-dark-600 text-dark-400 border-dark-500',
+    pending: 'bg-apple-amber/15 text-apple-amber',
+    paid: 'bg-[#F97315]/15 text-[#F97315]',
+    delivered: 'bg-apple-green/15 text-apple-green',
+    pending_activation: 'bg-[#F97315]/15 text-[#F97315]',
+    failed: 'bg-apple-red/15 text-apple-red',
+    expired: 'bg-apple-elevated text-apple-mute',
   };
-  const fallback = 'bg-dark-600 text-dark-400 border-dark-500';
+  const fallback = 'bg-apple-elevated text-apple-mute';
 
   const label = t(`admin.users.detail.gifts.status.${status}`, { defaultValue: '' }) || status;
 
   return (
     <span
-      className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${styles[status] || fallback}`}
+      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider ${styles[status] || fallback}`}
     >
       {label}
     </span>
@@ -191,15 +193,15 @@ function GiftCard({
   };
 
   return (
-    <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 transition-colors hover:bg-dark-800/70">
+    <div className="rounded-xl bg-apple-card p-4 transition-colors hover:bg-apple-elevated">
       {/* Header */}
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-2">
           <div
-            className={`flex h-8 w-8 items-center justify-center rounded-lg ${isSent ? 'bg-accent-500/15' : 'bg-success-500/15'}`}
+            className={`flex h-8 w-8 items-center justify-center rounded-lg ${isSent ? 'bg-[#F97315]/15' : 'bg-apple-green/15'}`}
           >
             <svg
-              className={`h-4 w-4 ${isSent ? 'text-accent-400' : 'text-success-400'}`}
+              className={`h-4 w-4 ${isSent ? 'text-[#F97315]' : 'text-apple-green'}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -213,8 +215,8 @@ function GiftCard({
             </svg>
           </div>
           <div>
-            <div className="text-sm font-medium text-dark-100">{gift.tariff_name || '—'}</div>
-            <div className="text-xs text-dark-500">
+            <div className="text-sm font-medium text-apple-ink">{gift.tariff_name || '—'}</div>
+            <div className="text-xs text-apple-faint">
               {gift.period_days} {t('admin.users.detail.gifts.days')} · {gift.device_limit}{' '}
               {t('admin.users.detail.gifts.devices')}
             </div>
@@ -226,43 +228,43 @@ function GiftCard({
       {/* Details grid */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
         <div>
-          <span className="text-dark-500">{otherPartyLabel}:</span>{' '}
-          <span className="text-dark-300">{otherPartyName}</span>
+          <span className="text-apple-faint">{otherPartyLabel}:</span>{' '}
+          <span className="text-apple-mute">{otherPartyName}</span>
           {otherPartyId && (
             <button
               onClick={() => onNavigateToUser(otherPartyId)}
-              className="ml-1 text-accent-400 hover:text-accent-300"
+              className="ml-1 text-[#F97315] hover:text-[#F97315]"
             >
               #{otherPartyId}
             </button>
           )}
         </div>
         <div>
-          <span className="text-dark-500">{t('admin.users.detail.gifts.amount')}:</span>{' '}
-          <span className="text-dark-300">{formatWithCurrency(gift.amount_kopeks / 100)}</span>
+          <span className="text-apple-faint">{t('admin.users.detail.gifts.amount')}:</span>{' '}
+          <span className="text-apple-mute">{formatWithCurrency(gift.amount_kopeks / 100)}</span>
         </div>
         <div>
-          <span className="text-dark-500">{t('admin.users.detail.gifts.paymentMethod')}:</span>{' '}
-          <span className="text-dark-300">{gift.payment_method || '—'}</span>
+          <span className="text-apple-faint">{t('admin.users.detail.gifts.paymentMethod')}:</span>{' '}
+          <span className="text-apple-mute">{gift.payment_method || '—'}</span>
         </div>
         <div>
-          <span className="text-dark-500">{t('admin.users.detail.gifts.createdAt')}:</span>{' '}
-          <span className="text-dark-300">
+          <span className="text-apple-faint">{t('admin.users.detail.gifts.createdAt')}:</span>{' '}
+          <span className="text-apple-mute">
             {gift.created_at ? new Date(gift.created_at).toLocaleString(locale, dateOpts) : '—'}
           </span>
         </div>
         {gift.paid_at && (
           <div>
-            <span className="text-dark-500">{t('admin.users.detail.gifts.paidAt')}:</span>{' '}
-            <span className="text-dark-300">
+            <span className="text-apple-faint">{t('admin.users.detail.gifts.paidAt')}:</span>{' '}
+            <span className="text-apple-mute">
               {new Date(gift.paid_at).toLocaleString(locale, dateOpts)}
             </span>
           </div>
         )}
         {gift.delivered_at && (
           <div>
-            <span className="text-dark-500">{t('admin.users.detail.gifts.deliveredAt')}:</span>{' '}
-            <span className="text-success-400">
+            <span className="text-apple-faint">{t('admin.users.detail.gifts.deliveredAt')}:</span>{' '}
+            <span className="text-apple-green">
               {new Date(gift.delivered_at).toLocaleString(locale, dateOpts)}
             </span>
           </div>
@@ -271,13 +273,13 @@ function GiftCard({
 
       {/* Gift message */}
       {gift.gift_message && (
-        <div className="mt-3 rounded-lg bg-dark-900/50 p-2.5 text-xs italic text-dark-400">
+        <div className="mt-3 rounded-lg bg-apple-card p-2.5 text-xs italic text-apple-mute">
           &ldquo;{gift.gift_message}&rdquo;
         </div>
       )}
 
       {/* Token */}
-      <div className="mt-2 font-mono text-[10px] text-dark-600">GIFT-{gift.token}</div>
+      <div className="mt-2 font-mono text-[10px] text-apple-faint">GIFT-{gift.token}</div>
     </div>
   );
 }
@@ -1232,7 +1234,7 @@ export default function AdminUserDetail() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -1240,10 +1242,10 @@ export default function AdminUserDetail() {
   if (!user) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
-        <p className="text-dark-400">{t('admin.users.notFound')}</p>
+        <p className="text-apple-mute">{t('admin.users.notFound')}</p>
         <button
           onClick={() => navigate('/admin/users')}
-          className="rounded-lg bg-accent-500 px-4 py-2 text-white transition-colors hover:bg-accent-600"
+          className="rounded-full bg-[#F97315] px-4 py-2 text-white transition-opacity hover:opacity-90"
         >
           {t('common.back')}
         </button>
@@ -1257,19 +1259,22 @@ export default function AdminUserDetail() {
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton to="/admin/users" />
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-lg font-bold text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#F97315] to-[#C2410C] text-lg font-bold text-white">
             {user.first_name?.[0] || user.username?.[0] || '?'}
           </div>
           <div>
-            <div className="font-semibold text-dark-100">{user.full_name}</div>
-            <div className="flex items-center gap-2 text-sm text-dark-400">
+            <div className="font-semibold text-apple-ink">{user.full_name}</div>
+            <div className="flex items-center gap-2 text-sm text-apple-mute">
               <TelegramIcon />
               {user.telegram_id}
               {user.username && <span>@{user.username}</span>}
             </div>
           </div>
         </div>
-        <button onClick={loadUser} className="rounded-lg p-2 transition-colors hover:bg-dark-700">
+        <button
+          onClick={loadUser}
+          className="rounded-lg p-2 transition-colors hover:bg-apple-elevated"
+        >
           <RefreshIcon className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
@@ -1287,8 +1292,8 @@ export default function AdminUserDetail() {
               onClick={() => setActiveTab(tab)}
               className={`shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
                 activeTab === tab
-                  ? 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
-                  : 'bg-dark-800/50 text-dark-400 active:bg-dark-700'
+                  ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/30'
+                  : 'bg-apple-card text-apple-mute active:bg-apple-elevated'
               }`}
             >
               {tab === 'info' && t('admin.users.detail.tabs.info')}
@@ -1308,15 +1313,15 @@ export default function AdminUserDetail() {
         {activeTab === 'info' && (
           <div className="space-y-4">
             {/* Status */}
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 p-3">
-              <span className="text-dark-400">{t('admin.users.detail.status')}</span>
+            <div className="flex items-center justify-between rounded-xl bg-apple-card p-3">
+              <span className="text-apple-mute">{t('admin.users.detail.status')}</span>
               <div className="flex items-center gap-2">
                 <StatusBadge status={user.status} />
                 {user.status === 'active' ? (
                   <button
                     onClick={handleBlockUser}
                     disabled={actionLoading}
-                    className="rounded-lg bg-error-500/20 px-3 py-1 text-xs text-error-400 transition-colors hover:bg-error-500/30"
+                    className="rounded-lg bg-apple-red/20 px-3 py-1 text-xs text-apple-red transition-colors hover:bg-apple-red/30"
                   >
                     {t('admin.users.actions.block')}
                   </button>
@@ -1324,7 +1329,7 @@ export default function AdminUserDetail() {
                   <button
                     onClick={handleUnblockUser}
                     disabled={actionLoading}
-                    className="rounded-lg bg-success-500/20 px-3 py-1 text-xs text-success-400 transition-colors hover:bg-success-500/30"
+                    className="rounded-lg bg-apple-green/20 px-3 py-1 text-xs text-apple-green transition-colors hover:bg-apple-green/30"
                   >
                     {t('admin.users.actions.unblock')}
                   </button>
@@ -1334,53 +1339,55 @@ export default function AdminUserDetail() {
 
             {/* Details grid */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-500">Email</div>
-                <div className="text-dark-100">{user.email || '-'}</div>
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-1 text-xs text-apple-faint">Email</div>
+                <div className="text-apple-ink">{user.email || '-'}</div>
               </div>
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-500">{t('admin.users.detail.language')}</div>
-                <div className="text-dark-100">{user.language}</div>
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-1 text-xs text-apple-faint">
+                  {t('admin.users.detail.language')}
+                </div>
+                <div className="text-apple-ink">{user.language}</div>
               </div>
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-1 text-xs text-apple-faint">
                   {t('admin.users.detail.registration')}
                 </div>
-                <div className="text-dark-100">{formatDate(user.created_at)}</div>
+                <div className="text-apple-ink">{formatDate(user.created_at)}</div>
               </div>
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-1 text-xs text-apple-faint">
                   {t('admin.users.detail.botActivity')}
                 </div>
-                <div className="text-dark-100">{formatDate(user.last_activity)}</div>
+                <div className="text-apple-ink">{formatDate(user.last_activity)}</div>
               </div>
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-1 text-xs text-apple-faint">
                   {t('admin.users.detail.cabinetLastLogin')}
                 </div>
-                <div className="text-dark-100">{formatDate(user.cabinet_last_login)}</div>
+                <div className="text-apple-ink">{formatDate(user.cabinet_last_login)}</div>
               </div>
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-1 text-xs text-apple-faint">
                   {t('admin.users.detail.totalSpent')}
                 </div>
-                <div className="text-dark-100">
+                <div className="text-apple-ink">
                   {formatWithCurrency(user.total_spent_kopeks / 100)}
                 </div>
               </div>
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-1 text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-1 text-xs text-apple-faint">
                   {t('admin.users.detail.purchases')}
                 </div>
-                <div className="text-dark-100">{user.purchase_count}</div>
+                <div className="text-apple-ink">{user.purchase_count}</div>
               </div>
             </div>
 
             {/* VPN Connection Info */}
             {(panelInfo || userSubscriptions.length > 0) && (
-              <div className="rounded-xl border border-dark-700/30 bg-dark-800/50 p-4">
+              <div className="rounded-xl bg-apple-card p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-dark-200">
+                  <span className="text-sm font-medium text-apple-ink">
                     {t('admin.users.detail.vpnConnection')}
                   </span>
                   {userSubscriptions.length > 1 && (
@@ -1390,7 +1397,7 @@ export default function AdminUserDetail() {
                         const subId = Number(e.target.value);
                         setActiveSubscriptionId(subId);
                       }}
-                      className="rounded-lg border border-dark-600 bg-dark-700 px-3 py-1.5 text-xs text-dark-200"
+                      className="rounded-lg border border-apple-hairline bg-apple-elevated px-3 py-1.5 text-xs text-apple-ink"
                     >
                       {userSubscriptions.map((s) => (
                         <option key={s.id} value={s.id}>
@@ -1402,13 +1409,13 @@ export default function AdminUserDetail() {
                 </div>
                 {panelInfoLoading && !panelInfo?.found && (
                   <div className="flex items-center justify-center py-4">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                   </div>
                 )}
                 {panelInfo?.found && (
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg bg-dark-700/30 p-3">
-                      <div className="mb-1 text-xs text-dark-500">
+                    <div className="rounded-lg bg-apple-elevated p-3">
+                      <div className="mb-1 text-xs text-apple-faint">
                         {t('admin.users.detail.lastConnection')}
                       </div>
                       <div className="flex items-center gap-2">
@@ -1419,11 +1426,11 @@ export default function AdminUserDetail() {
                             return (
                               <>
                                 <span
-                                  className={`inline-block h-2 w-2 shrink-0 rounded-full ${isRecent ? 'bg-success-400 shadow-[0_0_6px_rgba(74,222,128,0.5)]' : 'bg-dark-500'}`}
+                                  className={`inline-block h-2 w-2 shrink-0 rounded-full ${isRecent ? 'bg-apple-green shadow-[0_0_6px_rgba(74,222,128,0.5)]' : 'bg-apple-elevated'}`}
                                   title={isRecent ? t('admin.users.detail.online') : ''}
                                 />
                                 <span
-                                  className={`text-sm ${isRecent ? 'font-medium text-success-400' : 'text-dark-100'}`}
+                                  className={`text-sm ${isRecent ? 'font-medium text-apple-green' : 'text-apple-ink'}`}
                                 >
                                   {isRecent
                                     ? t('admin.users.detail.online')
@@ -1432,14 +1439,14 @@ export default function AdminUserDetail() {
                               </>
                             );
                           })()}
-                        {!panelInfo.online_at && <span className="text-sm text-dark-100">-</span>}
+                        {!panelInfo.online_at && <span className="text-sm text-apple-ink">-</span>}
                       </div>
                     </div>
-                    <div className="rounded-lg bg-dark-700/30 p-3">
-                      <div className="mb-1 text-xs text-dark-500">
+                    <div className="rounded-lg bg-apple-elevated p-3">
+                      <div className="mb-1 text-xs text-apple-faint">
                         {t('admin.users.detail.firstConnection')}
                       </div>
-                      <div className="text-sm text-dark-100">
+                      <div className="text-sm text-apple-ink">
                         {panelInfo.first_connected_at
                           ? new Date(panelInfo.first_connected_at).toLocaleDateString(locale, {
                               day: '2-digit',
@@ -1450,13 +1457,13 @@ export default function AdminUserDetail() {
                       </div>
                     </div>
                     {panelInfo.last_connected_node_name && (
-                      <div className="col-span-2 rounded-lg bg-dark-700/30 p-3">
-                        <div className="mb-1 text-xs text-dark-500">
+                      <div className="col-span-2 rounded-lg bg-apple-elevated p-3">
+                        <div className="mb-1 text-xs text-apple-faint">
                           {t('admin.users.detail.lastNode')}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-dark-100">
+                        <div className="flex items-center gap-2 text-sm text-apple-ink">
                           <svg
-                            className="h-4 w-4 shrink-0 text-dark-400"
+                            className="h-4 w-4 shrink-0 text-apple-mute"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1475,7 +1482,7 @@ export default function AdminUserDetail() {
                   </div>
                 )}
                 {!panelInfoLoading && !panelInfo?.found && userSubscriptions.length > 0 && (
-                  <div className="py-2 text-center text-xs text-dark-500">
+                  <div className="py-2 text-center text-xs text-apple-faint">
                     {t('admin.users.detail.noVpnData')}
                   </div>
                 )}
@@ -1484,20 +1491,24 @@ export default function AdminUserDetail() {
 
             {/* Campaign */}
             {user.campaign_name && (
-              <div className="rounded-xl border border-accent-500/20 bg-accent-500/5 p-3">
-                <div className="mb-1 text-xs text-dark-500">{t('admin.users.detail.campaign')}</div>
-                <div className="text-sm font-medium text-accent-400">{user.campaign_name}</div>
+              <div className="rounded-xl border border-[#F97315]/20 bg-[#F97315]/5 p-3">
+                <div className="mb-1 text-xs text-apple-faint">
+                  {t('admin.users.detail.campaign')}
+                </div>
+                <div className="text-sm font-medium text-[#F97315]">{user.campaign_name}</div>
               </div>
             )}
 
             {/* Promo Group */}
-            <div className="rounded-xl bg-dark-800/50 p-3">
+            <div className="rounded-xl bg-apple-card p-3">
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs text-dark-500">{t('admin.users.detail.promoGroup')}</span>
+                <span className="text-xs text-apple-faint">
+                  {t('admin.users.detail.promoGroup')}
+                </span>
                 {hasPermission('users:promo_group') && (
                   <button
                     onClick={() => setEditingPromoGroup(!editingPromoGroup)}
-                    className="text-xs text-accent-400 transition-colors hover:text-accent-300"
+                    className="text-xs text-[#F97315] transition-colors hover:text-[#F97315]"
                   >
                     {editingPromoGroup
                       ? t('common.cancel')
@@ -1514,7 +1525,7 @@ export default function AdminUserDetail() {
                       handleChangePromoGroup(val ? parseInt(val, 10) : null);
                     }}
                     disabled={actionLoading}
-                    className="input text-sm"
+                    className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   >
                     <option value="">{t('admin.users.detail.selectPromoGroup')}</option>
                     {promoGroups.map((g) => (
@@ -1527,25 +1538,25 @@ export default function AdminUserDetail() {
                     <button
                       onClick={() => handleChangePromoGroup(null)}
                       disabled={actionLoading}
-                      className="w-full rounded-lg bg-dark-700 py-1.5 text-xs text-dark-300 transition-colors hover:bg-dark-600"
+                      className="w-full rounded-lg bg-apple-elevated py-1.5 text-xs text-apple-mute transition-colors hover:bg-apple-elevated"
                     >
                       {t('admin.users.detail.removePromoGroup')}
                     </button>
                   )}
                 </div>
               ) : (
-                <div className="text-sm font-medium text-dark-100">
+                <div className="text-sm font-medium text-apple-ink">
                   {user.promo_group?.name || (
-                    <span className="text-dark-500">{t('admin.users.detail.noPromoGroup')}</span>
+                    <span className="text-apple-faint">{t('admin.users.detail.noPromoGroup')}</span>
                   )}
                 </div>
               )}
             </div>
 
             {/* Referral */}
-            <div className="rounded-xl bg-dark-800/50 p-3">
+            <div className="rounded-xl bg-apple-card p-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-dark-200">
+                <span className="text-sm font-medium text-apple-ink">
                   {t('admin.users.detail.referral.title')}
                 </span>
                 {hasPermission('users:referral') && (
@@ -1556,7 +1567,7 @@ export default function AdminUserDetail() {
                       }
                       setEditingReferralCommission(!editingReferralCommission);
                     }}
-                    className="text-xs text-accent-400 transition-colors hover:text-accent-300"
+                    className="text-xs text-[#F97315] transition-colors hover:text-[#F97315]"
                   >
                     {editingReferralCommission ? t('common.cancel') : t('common.edit')}
                   </button>
@@ -1564,18 +1575,18 @@ export default function AdminUserDetail() {
               </div>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
-                  <div className="text-lg font-bold text-dark-100">
+                  <div className="text-lg font-bold text-apple-ink">
                     {user.referral.referrals_count}
                   </div>
-                  <div className="text-xs text-dark-500">
+                  <div className="text-xs text-apple-faint">
                     {t('admin.users.detail.referral.referrals')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-dark-100">
+                  <div className="text-lg font-bold text-apple-ink">
                     {formatWithCurrency(user.referral.total_earnings_kopeks / 100)}
                   </div>
-                  <div className="text-xs text-dark-500">
+                  <div className="text-xs text-apple-faint">
                     {t('admin.users.detail.referral.earned')}
                   </div>
                 </div>
@@ -1587,7 +1598,7 @@ export default function AdminUserDetail() {
                         value={referralCommissionValue}
                         onChange={createNumberInputHandler(setReferralCommissionValue, 0)}
                         placeholder="0-100"
-                        className="input w-full text-center text-sm"
+                        className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-center text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                         min={0}
                         max={100}
                         disabled={actionLoading}
@@ -1595,19 +1606,19 @@ export default function AdminUserDetail() {
                       <button
                         onClick={handleUpdateReferralCommission}
                         disabled={actionLoading}
-                        className="w-full rounded-lg bg-accent-500 px-2 py-1 text-xs text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                        className="w-full rounded-full bg-[#F97315] px-2 py-1 text-xs text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                       >
                         {actionLoading ? t('common.loading') : t('common.save')}
                       </button>
                     </div>
                   ) : (
                     <>
-                      <div className="text-lg font-bold text-dark-100">
+                      <div className="text-lg font-bold text-apple-ink">
                         {user.referral.commission_percent != null
                           ? `${user.referral.commission_percent}%`
                           : t('admin.users.detail.referral.default')}
                       </div>
-                      <div className="text-xs text-dark-500">
+                      <div className="text-xs text-apple-faint">
                         {t('admin.users.detail.referral.commission')}
                       </div>
                     </>
@@ -1618,16 +1629,16 @@ export default function AdminUserDetail() {
 
             {/* Referrals list */}
             {user.referral.referrals_count > 0 && (
-              <div className="rounded-xl bg-dark-800/50 p-3">
-                <div className="mb-2 text-sm font-medium text-dark-200">
+              <div className="rounded-xl bg-apple-card p-3">
+                <div className="mb-2 text-sm font-medium text-apple-ink">
                   {t('admin.users.detail.referralsList')}
                 </div>
                 {referralsLoading ? (
                   <div className="flex justify-center py-4">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                   </div>
                 ) : referrals.length === 0 ? (
-                  <div className="py-2 text-center text-xs text-dark-500">
+                  <div className="py-2 text-center text-xs text-apple-faint">
                     {t('admin.users.detail.noReferrals')}
                   </div>
                 ) : (
@@ -1636,20 +1647,20 @@ export default function AdminUserDetail() {
                       <button
                         key={ref.id}
                         onClick={() => navigate(`/admin/users/${ref.id}`)}
-                        className="flex w-full items-center justify-between rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                        className="flex w-full items-center justify-between rounded-lg bg-apple-elevated p-2 text-left transition-colors hover:bg-apple-elevated"
                       >
                         <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-dark-600 text-xs font-bold text-dark-300">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-apple-elevated text-xs font-bold text-apple-mute">
                             {ref.first_name?.[0] || ref.username?.[0] || '?'}
                           </div>
                           <div>
-                            <div className="text-sm text-dark-100">{ref.full_name}</div>
-                            <div className="text-xs text-dark-500">
+                            <div className="text-sm text-apple-ink">{ref.full_name}</div>
+                            <div className="text-xs text-apple-faint">
                               {formatDate(ref.created_at)}
                             </div>
                           </div>
                         </div>
-                        <div className="text-xs text-dark-400">
+                        <div className="text-xs text-apple-mute">
                           {formatWithCurrency(ref.total_spent_kopeks / 100)}
                         </div>
                       </button>
@@ -1661,22 +1672,22 @@ export default function AdminUserDetail() {
 
             {/* Restrictions */}
             {(user.restriction_topup || user.restriction_subscription) && (
-              <div className="rounded-xl border border-error-500/30 bg-error-500/10 p-3">
-                <div className="mb-2 text-sm font-medium text-error-400">
+              <div className="rounded-xl border border-apple-red bg-apple-red/10 p-3">
+                <div className="mb-2 text-sm font-medium text-apple-red">
                   {t('admin.users.detail.restrictions.title')}
                 </div>
                 {user.restriction_topup && (
-                  <div className="text-xs text-error-300">
+                  <div className="text-xs text-apple-red">
                     {t('admin.users.detail.restrictions.topup')}
                   </div>
                 )}
                 {user.restriction_subscription && (
-                  <div className="text-xs text-error-300">
+                  <div className="text-xs text-apple-red">
                     {t('admin.users.detail.restrictions.subscription')}
                   </div>
                 )}
                 {user.restriction_reason && (
-                  <div className="mt-1 text-xs text-dark-400">
+                  <div className="mt-1 text-xs text-apple-mute">
                     {t('admin.users.detail.restrictions.reason')}: {user.restriction_reason}
                   </div>
                 )}
@@ -1684,8 +1695,8 @@ export default function AdminUserDetail() {
             )}
 
             {/* Actions */}
-            <div className="rounded-xl bg-dark-800/50 p-4">
-              <div className="mb-3 text-sm font-medium text-dark-200">
+            <div className="rounded-xl bg-apple-card p-4">
+              <div className="mb-3 text-sm font-medium text-apple-ink">
                 {t('admin.users.detail.actions.title')}
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -1720,8 +1731,8 @@ export default function AdminUserDetail() {
                   disabled={actionLoading}
                   className={`rounded-lg px-3 py-2 text-sm font-medium transition-all disabled:opacity-50 ${
                     confirmingAction === 'disable'
-                      ? 'bg-dark-500 text-white'
-                      : 'bg-dark-700 text-dark-300 hover:bg-dark-600'
+                      ? 'bg-apple-elevated text-white'
+                      : 'bg-apple-elevated text-apple-mute hover:bg-apple-elevated'
                   }`}
                 >
                   {confirmingAction === 'disable'
@@ -1760,17 +1771,17 @@ export default function AdminUserDetail() {
                         setActiveSubscriptionId(sub.id);
                         setSubscriptionDetailView(true);
                       }}
-                      className="w-full rounded-xl border border-dark-700/50 bg-dark-800/50 p-4 text-left transition-all hover:border-dark-600"
+                      className="w-full rounded-xl bg-apple-card p-4 text-left transition-all hover:bg-apple-elevated"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-dark-100">
+                          <span className="text-sm font-semibold text-apple-ink">
                             {sub.tariff_name || `#${sub.id}`}
                           </span>
                           <StatusBadge status={sub.status} />
                         </div>
                         <svg
-                          className="h-4 w-4 text-dark-500"
+                          className="h-4 w-4 text-apple-faint"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1783,7 +1794,7 @@ export default function AdminUserDetail() {
                           />
                         </svg>
                       </div>
-                      <div className="mt-2 flex items-center gap-4 text-xs text-dark-400">
+                      <div className="mt-2 flex items-center gap-4 text-xs text-apple-mute">
                         <span>
                           {sub.traffic_used_gb.toFixed(1)} / {sub.traffic_limit_gb}{' '}
                           {t('common.units.gb')}
@@ -1800,8 +1811,8 @@ export default function AdminUserDetail() {
 
                 {/* Create new subscription — at list level */}
                 {hasPermission('users:subscription') && (
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-3 text-sm font-medium text-dark-200">
+                  <div className="rounded-xl bg-apple-card p-4">
+                    <div className="mb-3 text-sm font-medium text-apple-ink">
                       {t('admin.users.detail.subscription.createNew', 'Создать подписку')}
                     </div>
                     <div className="space-y-3">
@@ -1810,7 +1821,7 @@ export default function AdminUserDetail() {
                         onChange={(e) =>
                           setSelectedTariffId(e.target.value ? parseInt(e.target.value) : null)
                         }
-                        className="input"
+                        className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                       >
                         <option value="">
                           {t('admin.users.detail.subscription.selectTariff')}
@@ -1838,7 +1849,7 @@ export default function AdminUserDetail() {
                         value={subDays}
                         onChange={createNumberInputHandler(setSubDays, 1)}
                         placeholder={t('admin.users.detail.subscription.days')}
-                        className="input"
+                        className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                         min={1}
                         max={3650}
                       />
@@ -1864,7 +1875,7 @@ export default function AdminUserDetail() {
                 {subscriptionDetailView && userSubscriptions.length > 1 && (
                   <button
                     onClick={() => setSubscriptionDetailView(false)}
-                    className="flex items-center gap-1.5 text-sm text-dark-400 transition-colors hover:text-dark-200"
+                    className="flex items-center gap-1.5 text-sm text-apple-mute transition-colors hover:text-apple-ink"
                   >
                     <svg
                       className="h-4 w-4"
@@ -1880,37 +1891,37 @@ export default function AdminUserDetail() {
                 )}
 
                 {/* Current subscription */}
-                <div className="rounded-xl bg-dark-800/50 p-4">
+                <div className="rounded-xl bg-apple-card p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="font-medium text-dark-200">
+                    <span className="font-medium text-apple-ink">
                       {t('admin.users.detail.subscription.current')}
                       {userSubscriptions.length > 1 && (
-                        <span className="ml-2 text-xs text-dark-500">#{selectedSub.id}</span>
+                        <span className="ml-2 text-xs text-apple-faint">#{selectedSub.id}</span>
                       )}
                     </span>
                     <StatusBadge status={selectedSub.status} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-xs text-dark-500">
+                      <div className="text-xs text-apple-faint">
                         {t('admin.users.detail.subscription.tariff')}
                       </div>
-                      <div className="text-dark-100">
+                      <div className="text-apple-ink">
                         {selectedSub.tariff_name ||
                           t('admin.users.detail.subscription.notSpecified')}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-dark-500">
+                      <div className="text-xs text-apple-faint">
                         {t('admin.users.detail.subscription.validUntil')}
                       </div>
-                      <div className="text-dark-100">{formatDate(selectedSub.end_date)}</div>
+                      <div className="text-apple-ink">{formatDate(selectedSub.end_date)}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-dark-500">
+                      <div className="text-xs text-apple-faint">
                         {t('admin.users.detail.subscription.traffic')}
                       </div>
-                      <div className="text-dark-100">
+                      <div className="text-apple-ink">
                         {panelInfo?.found
                           ? (panelInfo.used_traffic_bytes / (1024 * 1024 * 1024)).toFixed(1)
                           : selectedSub.traffic_used_gb.toFixed(1)}{' '}
@@ -1918,18 +1929,18 @@ export default function AdminUserDetail() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-dark-500">
+                      <div className="text-xs text-apple-faint">
                         {t('admin.users.detail.subscription.devices')}
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleSetDeviceLimit(selectedSub.device_limit - 1)}
                           disabled={actionLoading || selectedSub.device_limit <= 1}
-                          className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
+                          className="flex h-6 w-6 items-center justify-center rounded-md bg-apple-elevated text-apple-mute transition-colors hover:bg-apple-elevated disabled:opacity-30"
                         >
                           <MinusIcon />
                         </button>
-                        <span className="min-w-[2ch] text-center text-dark-100">
+                        <span className="min-w-[2ch] text-center text-apple-ink">
                           {selectedSub.device_limit}
                         </span>
                         <button
@@ -1939,7 +1950,7 @@ export default function AdminUserDetail() {
                             (currentTariff?.max_device_limit != null &&
                               selectedSub.device_limit >= currentTariff.max_device_limit)
                           }
-                          className="flex h-6 w-6 items-center justify-center rounded-md bg-dark-700 text-dark-300 transition-colors hover:bg-dark-600 disabled:opacity-30"
+                          className="flex h-6 w-6 items-center justify-center rounded-md bg-apple-elevated text-apple-mute transition-colors hover:bg-apple-elevated disabled:opacity-30"
                         >
                           <PlusIcon />
                         </button>
@@ -1950,12 +1961,12 @@ export default function AdminUserDetail() {
 
                 {/* Traffic Packages */}
                 {selectedSub.traffic_purchases && selectedSub.traffic_purchases.length > 0 && (
-                  <div className="rounded-xl bg-dark-800/50 p-4">
+                  <div className="rounded-xl bg-apple-card p-4">
                     <div className="mb-3 flex items-center justify-between">
-                      <span className="text-sm font-medium text-dark-200">
+                      <span className="text-sm font-medium text-apple-ink">
                         {t('admin.users.detail.subscription.trafficPackages')}
                         {selectedSub.purchased_traffic_gb > 0 && (
-                          <span className="ml-2 text-xs text-dark-400">
+                          <span className="ml-2 text-xs text-apple-mute">
                             ({selectedSub.purchased_traffic_gb} {t('common.units.gb')})
                           </span>
                         )}
@@ -1966,20 +1977,20 @@ export default function AdminUserDetail() {
                         <div
                           key={tp.id}
                           className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                            tp.is_expired ? 'bg-dark-700/30 opacity-60' : 'bg-dark-700/50'
+                            tp.is_expired ? 'bg-apple-elevated opacity-60' : 'bg-apple-elevated'
                           }`}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 text-sm text-dark-200">
+                            <div className="flex items-center gap-2 text-sm text-apple-ink">
                               <span className="font-medium">
                                 {tp.traffic_gb} {t('common.units.gb')}
                               </span>
                               {tp.is_expired ? (
-                                <span className="rounded-full bg-error-500/20 px-1.5 py-0.5 text-[10px] text-error-400">
+                                <span className="rounded-full bg-apple-red/20 px-1.5 py-0.5 text-[10px] text-apple-red">
                                   {t('admin.users.detail.subscription.expired')}
                                 </span>
                               ) : (
-                                <span className="text-xs text-dark-400">
+                                <span className="text-xs text-apple-mute">
                                   {tp.days_remaining}{' '}
                                   {t('admin.users.detail.subscription.daysLeft')}
                                 </span>
@@ -1996,8 +2007,8 @@ export default function AdminUserDetail() {
                               disabled={actionLoading}
                               className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
                                 confirmingAction === `removeTraffic_${tp.id}`
-                                  ? 'bg-error-500 text-white'
-                                  : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                                  ? 'bg-apple-red text-white'
+                                  : 'text-apple-faint hover:bg-apple-red/15 hover:text-apple-red'
                               }`}
                             >
                               {confirmingAction === `removeTraffic_${tp.id}` ? '?' : '\u00D7'}
@@ -2013,15 +2024,15 @@ export default function AdminUserDetail() {
                 {currentTariff &&
                   currentTariff.traffic_topup_enabled &&
                   Object.keys(currentTariff.traffic_topup_packages).length > 0 && (
-                    <div className="rounded-xl bg-dark-800/50 p-4">
-                      <div className="mb-3 text-sm font-medium text-dark-200">
+                    <div className="rounded-xl bg-apple-card p-4">
+                      <div className="mb-3 text-sm font-medium text-apple-ink">
                         {t('admin.users.detail.subscription.addTraffic')}
                       </div>
                       <div className="flex gap-2">
                         <select
                           value={selectedTrafficGb}
                           onChange={(e) => setSelectedTrafficGb(e.target.value)}
-                          className="input flex-1"
+                          className="w-full flex-1 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                         >
                           <option value="">
                             {t('admin.users.detail.subscription.selectPackage')}
@@ -2039,12 +2050,12 @@ export default function AdminUserDetail() {
                             selectedTrafficGb && handleAddTraffic(Number(selectedTrafficGb))
                           }
                           disabled={actionLoading || !selectedTrafficGb}
-                          className="shrink-0 rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                          className="shrink-0 rounded-full bg-[#F97315] px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                         >
                           {t('admin.users.detail.subscription.addButton')}
                         </button>
                       </div>
-                      <div className="mt-2 text-xs text-dark-500">
+                      <div className="mt-2 text-xs text-apple-faint">
                         {t('admin.users.detail.subscription.addTrafficNote')}
                       </div>
                     </div>
@@ -2052,15 +2063,15 @@ export default function AdminUserDetail() {
 
                 {/* Actions */}
                 {hasPermission('users:subscription') && (
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-3 font-medium text-dark-200">
+                  <div className="rounded-xl bg-apple-card p-4">
+                    <div className="mb-3 font-medium text-apple-ink">
                       {t('admin.users.detail.subscription.actions')}
                     </div>
                     <div className="space-y-3">
                       <select
                         value={subAction}
                         onChange={(e) => setSubAction(e.target.value)}
-                        className="input"
+                        className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                       >
                         <option value="extend">
                           {t('admin.users.detail.subscription.extend')}
@@ -2087,7 +2098,7 @@ export default function AdminUserDetail() {
                           value={subDays}
                           onChange={createNumberInputHandler(setSubDays, 1)}
                           placeholder={t('admin.users.detail.subscription.days')}
-                          className="input"
+                          className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                           min={1}
                           max={3650}
                         />
@@ -2099,7 +2110,7 @@ export default function AdminUserDetail() {
                           onChange={(e) =>
                             setSelectedTariffId(e.target.value ? parseInt(e.target.value) : null)
                           }
-                          className="input"
+                          className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                         >
                           <option value="">
                             {t('admin.users.detail.subscription.selectTariff')}
@@ -2131,13 +2142,13 @@ export default function AdminUserDetail() {
 
             {/* Create new subscription — only for single-sub users or no subs */}
             {hasPermission('users:subscription') && userSubscriptions.length <= 1 && (
-              <div className="rounded-xl bg-dark-800/50 p-4">
+              <div className="rounded-xl bg-apple-card p-4">
                 {userSubscriptions.length === 0 && (
-                  <div className="mb-4 text-center text-dark-400">
+                  <div className="mb-4 text-center text-apple-mute">
                     {t('admin.users.detail.subscription.noActive')}
                   </div>
                 )}
-                <div className="mb-3 text-sm font-medium text-dark-200">
+                <div className="mb-3 text-sm font-medium text-apple-ink">
                   {t('admin.users.detail.subscription.createNew', 'Создать подписку')}
                 </div>
                 <div className="space-y-3">
@@ -2146,7 +2157,7 @@ export default function AdminUserDetail() {
                     onChange={(e) =>
                       setSelectedTariffId(e.target.value ? parseInt(e.target.value) : null)
                     }
-                    className="input"
+                    className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   >
                     <option value="">{t('admin.users.detail.subscription.selectTariff')}</option>
                     {tariffs
@@ -2173,7 +2184,7 @@ export default function AdminUserDetail() {
                     value={subDays}
                     onChange={createNumberInputHandler(setSubDays, 1)}
                     placeholder={t('admin.users.detail.subscription.days')}
-                    className="input"
+                    className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     min={1}
                     max={3650}
                   />
@@ -2194,19 +2205,19 @@ export default function AdminUserDetail() {
             {(subscriptionDetailView || userSubscriptions.length <= 1) && (
               <>
                 {panelInfoLoading ? (
-                  <div className="flex justify-center rounded-xl bg-dark-800/50 py-8">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                  <div className="flex justify-center rounded-xl bg-apple-card py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                   </div>
                 ) : panelInfo && !panelInfo.found ? (
-                  <div className="rounded-xl border border-dark-700 bg-dark-800/50 p-4 text-center text-sm text-dark-400">
+                  <div className="rounded-xl bg-apple-card p-4 text-center text-sm text-apple-mute">
                     {t('admin.users.detail.panelNotFound')}
                   </div>
                 ) : panelInfo && panelInfo.found ? (
                   <>
                     {/* Links */}
                     {(panelInfo.subscription_url || panelInfo.happ_link) && (
-                      <div className="rounded-xl bg-dark-800/50 p-4">
-                        <div className="mb-3 text-sm font-medium text-dark-200">
+                      <div className="rounded-xl bg-apple-card p-4">
+                        <div className="mb-3 text-sm font-medium text-apple-ink">
                           {t('admin.users.detail.subscriptionUrl')} /{' '}
                           {t('admin.users.detail.happLink')}
                         </div>
@@ -2214,12 +2225,12 @@ export default function AdminUserDetail() {
                           {panelInfo.subscription_url && (
                             <button
                               onClick={() => copyToClipboard(panelInfo.subscription_url!)}
-                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                              className="w-full rounded-lg bg-apple-elevated p-2 text-left transition-colors hover:bg-apple-elevated"
                             >
-                              <div className="mb-0.5 text-xs text-dark-500">
+                              <div className="mb-0.5 text-xs text-apple-faint">
                                 {t('admin.users.detail.subscriptionUrl')}
                               </div>
-                              <div className="truncate font-mono text-xs text-dark-200">
+                              <div className="truncate font-mono text-xs text-apple-ink">
                                 {panelInfo.subscription_url}
                               </div>
                             </button>
@@ -2227,12 +2238,12 @@ export default function AdminUserDetail() {
                           {panelInfo.happ_link && (
                             <button
                               onClick={() => copyToClipboard(panelInfo.happ_link!)}
-                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                              className="w-full rounded-lg bg-apple-elevated p-2 text-left transition-colors hover:bg-apple-elevated"
                             >
-                              <div className="mb-0.5 text-xs text-dark-500">
+                              <div className="mb-0.5 text-xs text-apple-faint">
                                 {t('admin.users.detail.happLink')}
                               </div>
-                              <div className="truncate font-mono text-xs text-dark-200">
+                              <div className="truncate font-mono text-xs text-apple-ink">
                                 {panelInfo.happ_link}
                               </div>
                             </button>
@@ -2245,20 +2256,20 @@ export default function AdminUserDetail() {
                     {(panelInfo.trojan_password ||
                       panelInfo.vless_uuid ||
                       panelInfo.ss_password) && (
-                      <div className="rounded-xl bg-dark-800/50 p-4">
-                        <div className="mb-3 text-sm font-medium text-dark-200">
+                      <div className="rounded-xl bg-apple-card p-4">
+                        <div className="mb-3 text-sm font-medium text-apple-ink">
                           {t('admin.users.detail.panelConfig')}
                         </div>
                         <div className="space-y-2">
                           {panelInfo.trojan_password && (
                             <button
                               onClick={() => copyToClipboard(panelInfo.trojan_password!)}
-                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                              className="w-full rounded-lg bg-apple-elevated p-2 text-left transition-colors hover:bg-apple-elevated"
                             >
-                              <div className="mb-0.5 text-xs text-dark-500">
+                              <div className="mb-0.5 text-xs text-apple-faint">
                                 {t('admin.users.detail.trojanPassword')}
                               </div>
-                              <div className="truncate font-mono text-xs text-dark-200">
+                              <div className="truncate font-mono text-xs text-apple-ink">
                                 {panelInfo.trojan_password}
                               </div>
                             </button>
@@ -2266,12 +2277,12 @@ export default function AdminUserDetail() {
                           {panelInfo.vless_uuid && (
                             <button
                               onClick={() => copyToClipboard(panelInfo.vless_uuid!)}
-                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                              className="w-full rounded-lg bg-apple-elevated p-2 text-left transition-colors hover:bg-apple-elevated"
                             >
-                              <div className="mb-0.5 text-xs text-dark-500">
+                              <div className="mb-0.5 text-xs text-apple-faint">
                                 {t('admin.users.detail.vlessUuid')}
                               </div>
-                              <div className="truncate font-mono text-xs text-dark-200">
+                              <div className="truncate font-mono text-xs text-apple-ink">
                                 {panelInfo.vless_uuid}
                               </div>
                             </button>
@@ -2279,12 +2290,12 @@ export default function AdminUserDetail() {
                           {panelInfo.ss_password && (
                             <button
                               onClick={() => copyToClipboard(panelInfo.ss_password!)}
-                              className="w-full rounded-lg bg-dark-700/50 p-2 text-left transition-colors hover:bg-dark-700"
+                              className="w-full rounded-lg bg-apple-elevated p-2 text-left transition-colors hover:bg-apple-elevated"
                             >
-                              <div className="mb-0.5 text-xs text-dark-500">
+                              <div className="mb-0.5 text-xs text-apple-faint">
                                 {t('admin.users.detail.ssPassword')}
                               </div>
-                              <div className="truncate font-mono text-xs text-dark-200">
+                              <div className="truncate font-mono text-xs text-apple-ink">
                                 {panelInfo.ss_password}
                               </div>
                             </button>
@@ -2294,30 +2305,30 @@ export default function AdminUserDetail() {
                     )}
 
                     {/* Connection info */}
-                    <div className="rounded-xl bg-dark-800/50 p-4">
+                    <div className="rounded-xl bg-apple-card p-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <div className="text-xs text-dark-500">
+                          <div className="text-xs text-apple-faint">
                             {t('admin.users.detail.firstConnected')}
                           </div>
-                          <div className="text-sm text-dark-100">
+                          <div className="text-sm text-apple-ink">
                             {formatDate(panelInfo.first_connected_at)}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-dark-500">
+                          <div className="text-xs text-apple-faint">
                             {t('admin.users.detail.lastOnline')}
                           </div>
-                          <div className="text-sm text-dark-100">
+                          <div className="text-sm text-apple-ink">
                             {formatDate(panelInfo.online_at)}
                           </div>
                         </div>
                         {panelInfo.last_connected_node_name && (
                           <div className="col-span-2">
-                            <div className="text-xs text-dark-500">
+                            <div className="text-xs text-apple-faint">
                               {t('admin.users.detail.lastNode')}
                             </div>
-                            <div className="text-sm text-dark-100">
+                            <div className="text-sm text-apple-ink">
                               {panelInfo.last_connected_node_name}
                             </div>
                           </div>
@@ -2326,24 +2337,24 @@ export default function AdminUserDetail() {
                     </div>
 
                     {/* Live traffic */}
-                    <div className="rounded-xl bg-dark-800/50 p-4">
-                      <div className="mb-3 text-sm font-medium text-dark-200">
+                    <div className="rounded-xl bg-apple-card p-4">
+                      <div className="mb-3 text-sm font-medium text-apple-ink">
                         {t('admin.users.detail.liveTraffic')}
                       </div>
                       <div className="mb-2">
                         <div className="mb-1 flex justify-between text-xs">
-                          <span className="text-dark-400">
+                          <span className="text-apple-mute">
                             {formatBytes(panelInfo.used_traffic_bytes)}
                           </span>
-                          <span className="text-dark-500">
+                          <span className="text-apple-faint">
                             {panelInfo.traffic_limit_bytes > 0
                               ? formatBytes(panelInfo.traffic_limit_bytes)
                               : '∞'}
                           </span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-dark-700">
+                        <div className="h-2 overflow-hidden rounded-full bg-apple-elevated">
                           <div
-                            className="h-full rounded-full bg-accent-500 transition-all"
+                            className="h-full rounded-full bg-[#F97315] transition-all"
                             style={{
                               width:
                                 panelInfo.traffic_limit_bytes > 0
@@ -2353,16 +2364,16 @@ export default function AdminUserDetail() {
                           />
                         </div>
                       </div>
-                      <div className="text-xs text-dark-500">
+                      <div className="text-xs text-apple-faint">
                         {t('admin.users.detail.lifetime')}:{' '}
                         {formatBytes(panelInfo.lifetime_used_traffic_bytes)}
                       </div>
                     </div>
 
                     {/* Node usage */}
-                    <div className="rounded-xl bg-dark-800/50 p-4">
+                    <div className="rounded-xl bg-apple-card p-4">
                       <div className="mb-3 flex items-center justify-between">
-                        <span className="text-sm font-medium text-dark-200">
+                        <span className="text-sm font-medium text-apple-ink">
                           {t('admin.users.detail.nodeUsage')}
                         </span>
                         <div className="flex items-center gap-2">
@@ -2373,8 +2384,8 @@ export default function AdminUserDetail() {
                                 onClick={() => setNodeUsageDays(d)}
                                 className={`rounded-lg px-2 py-1 text-xs transition-colors ${
                                   nodeUsageDays === d
-                                    ? 'bg-accent-500/20 text-accent-400'
-                                    : 'text-dark-500 hover:text-dark-300'
+                                    ? 'bg-[#F97315]/20 text-[#F97315]'
+                                    : 'text-apple-faint hover:text-apple-mute'
                                 }`}
                               >
                                 {d}d
@@ -2383,7 +2394,7 @@ export default function AdminUserDetail() {
                           </div>
                           <button
                             onClick={() => loadSubscriptionData()}
-                            className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
+                            className="rounded-lg p-1 text-apple-faint transition-colors hover:text-apple-mute"
                             title={t('common.refresh')}
                           >
                             <RefreshIcon className="h-3.5 w-3.5" />
@@ -2398,7 +2409,7 @@ export default function AdminUserDetail() {
                             return (
                               <div key={item.node_uuid}>
                                 <div className="mb-1 flex justify-between text-xs">
-                                  <span className="text-dark-300">
+                                  <span className="text-apple-mute">
                                     {item.country_code && (
                                       <span className="mr-1">
                                         {getCountryFlag(item.country_code)}
@@ -2406,13 +2417,13 @@ export default function AdminUserDetail() {
                                     )}
                                     {item.node_name}
                                   </span>
-                                  <span className="text-dark-400">
+                                  <span className="text-apple-mute">
                                     {formatBytes(item.total_bytes)}
                                   </span>
                                 </div>
-                                <div className="h-1.5 overflow-hidden rounded-full bg-dark-700">
+                                <div className="h-1.5 overflow-hidden rounded-full bg-apple-elevated">
                                   <div
-                                    className="h-full rounded-full bg-accent-500/60"
+                                    className="h-full rounded-full bg-[#F97315]/60"
                                     style={{ width: `${pct}%` }}
                                   />
                                 </div>
@@ -2421,22 +2432,22 @@ export default function AdminUserDetail() {
                           })}
                         </div>
                       ) : (
-                        <div className="py-2 text-center text-xs text-dark-500">-</div>
+                        <div className="py-2 text-center text-xs text-apple-faint">-</div>
                       )}
                     </div>
                   </>
                 ) : null}
 
                 {/* Devices */}
-                <div className="rounded-xl bg-dark-800/50 p-4">
+                <div className="rounded-xl bg-apple-card p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="text-sm font-medium text-dark-200">
+                    <span className="text-sm font-medium text-apple-ink">
                       {t('admin.users.detail.devices.title')} ({devicesTotal}/{deviceLimit})
                     </span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => loadDevices()}
-                        className="rounded-lg p-1 text-dark-500 transition-colors hover:text-dark-300"
+                        className="rounded-lg p-1 text-apple-faint transition-colors hover:text-apple-mute"
                         title={t('common.refresh')}
                       >
                         <RefreshIcon className="h-3.5 w-3.5" />
@@ -2447,8 +2458,8 @@ export default function AdminUserDetail() {
                           disabled={actionLoading}
                           className={`rounded-lg px-2 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
                             confirmingAction === 'resetDevices'
-                              ? 'bg-error-500 text-white'
-                              : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
+                              ? 'bg-apple-red text-white'
+                              : 'bg-apple-red/15 text-apple-red hover:bg-apple-red/25'
                           }`}
                         >
                           {confirmingAction === 'resetDevices'
@@ -2460,20 +2471,20 @@ export default function AdminUserDetail() {
                   </div>
                   {devicesLoading ? (
                     <div className="flex justify-center py-4">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                     </div>
                   ) : devices.length > 0 ? (
                     <div className="space-y-2">
                       {devices.map((device) => (
                         <div
                           key={device.hwid}
-                          className="flex items-center justify-between rounded-lg bg-dark-700/50 px-3 py-2"
+                          className="flex items-center justify-between rounded-lg bg-apple-elevated px-3 py-2"
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-xs font-medium text-dark-200">
+                            <div className="truncate text-xs font-medium text-apple-ink">
                               {device.platform || device.device_model || device.hwid.slice(0, 12)}
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] text-dark-500">
+                            <div className="flex items-center gap-2 text-[10px] text-apple-faint">
                               {device.device_model && device.platform && (
                                 <span>{device.device_model}</span>
                               )}
@@ -2494,8 +2505,8 @@ export default function AdminUserDetail() {
                             disabled={actionLoading}
                             className={`ml-2 shrink-0 rounded-lg px-2 py-1 text-xs transition-all disabled:opacity-50 ${
                               confirmingAction === `deleteDevice_${device.hwid}`
-                                ? 'bg-error-500 text-white'
-                                : 'text-dark-500 hover:bg-error-500/15 hover:text-error-400'
+                                ? 'bg-apple-red text-white'
+                                : 'text-apple-faint hover:bg-apple-red/15 hover:text-apple-red'
                             }`}
                           >
                             {confirmingAction === `deleteDevice_${device.hwid}` ? '?' : '\u00D7'}
@@ -2504,14 +2515,14 @@ export default function AdminUserDetail() {
                       ))}
                     </div>
                   ) : (
-                    <div className="py-2 text-center text-xs text-dark-500">
+                    <div className="py-2 text-center text-xs text-apple-faint">
                       {t('admin.users.detail.devices.none')}
                     </div>
                   )}
                 </div>
 
                 {/* Subscription Request History */}
-                <div className="rounded-xl bg-dark-800/50">
+                <div className="rounded-xl bg-apple-card">
                   <button
                     onClick={() => {
                       const next = !requestHistoryExpanded;
@@ -2523,17 +2534,17 @@ export default function AdminUserDetail() {
                     className="flex w-full items-center justify-between p-4 text-left"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-dark-200">
+                      <span className="text-sm font-medium text-apple-ink">
                         {t('admin.users.detail.requestHistory')}
                       </span>
                       {requestHistoryTotal > 0 && (
-                        <span className="rounded-full bg-accent-500/15 px-2 py-0.5 text-xs font-medium text-accent-400">
+                        <span className="rounded-full bg-[#F97315]/15 px-2 py-0.5 text-xs font-medium text-[#F97315]">
                           {requestHistoryTotal}
                         </span>
                       )}
                     </div>
                     <svg
-                      className={`h-4 w-4 text-dark-500 transition-transform ${requestHistoryExpanded ? 'rotate-180' : ''}`}
+                      className={`h-4 w-4 text-apple-faint transition-transform ${requestHistoryExpanded ? 'rotate-180' : ''}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -2548,7 +2559,7 @@ export default function AdminUserDetail() {
                   </button>
 
                   {requestHistoryExpanded && (
-                    <div className="border-t border-dark-700/50 px-4 pb-4 pt-3">
+                    <div className="border-t border-apple-hairline px-4 pb-4 pt-3">
                       {/* Subscription selector for multi-tariff */}
                       {userSubscriptions.length > 1 && (
                         <div className="mb-3">
@@ -2557,7 +2568,7 @@ export default function AdminUserDetail() {
                             onChange={(e) => {
                               setRequestHistorySubId(Number(e.target.value) || null);
                             }}
-                            className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100"
+                            className="w-full rounded-lg border border-apple-hairline bg-apple-elevated px-3 py-2 text-sm text-apple-ink"
                           >
                             {userSubscriptions.map((sub) => (
                               <option key={sub.id} value={sub.id}>
@@ -2570,15 +2581,15 @@ export default function AdminUserDetail() {
 
                       {requestHistoryLoading && requestHistory.length === 0 ? (
                         <div className="flex justify-center py-6">
-                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                         </div>
                       ) : requestHistory.length === 0 && !requestHistoryLoading ? (
-                        <div className="py-6 text-center text-sm text-dark-500">
+                        <div className="py-6 text-center text-sm text-apple-faint">
                           {t('admin.users.detail.noRequests')}
                         </div>
                       ) : (
                         <>
-                          <div className="mb-2 text-xs text-dark-500">
+                          <div className="mb-2 text-xs text-apple-faint">
                             {t('admin.users.detail.requestHistoryTotal')}: {requestHistoryTotal}
                           </div>
 
@@ -2586,7 +2597,7 @@ export default function AdminUserDetail() {
                           <div className="-mx-4 overflow-x-auto px-4">
                             <table className="w-full min-w-[480px] text-left text-sm">
                               <thead>
-                                <tr className="border-b border-dark-700/50 text-xs text-dark-500">
+                                <tr className="border-b border-apple-hairline text-xs text-apple-faint">
                                   <th className="pb-2 pr-3 font-medium">
                                     {t('admin.users.detail.requestAt')}
                                   </th>
@@ -2602,16 +2613,16 @@ export default function AdminUserDetail() {
                                 {requestHistory.map((record, idx) => (
                                   <tr
                                     key={record.id}
-                                    className={`border-b border-dark-700/30 ${idx % 2 === 0 ? 'bg-dark-800/30' : ''}`}
+                                    className={`border-b border-apple-hairline ${idx % 2 === 0 ? 'bg-apple-card' : ''}`}
                                   >
-                                    <td className="whitespace-nowrap py-2.5 pr-3 text-dark-200">
+                                    <td className="whitespace-nowrap py-2.5 pr-3 text-apple-ink">
                                       {formatDate(record.requestAt)}
                                     </td>
-                                    <td className="whitespace-nowrap py-2.5 pr-3 font-mono text-xs text-dark-300">
+                                    <td className="whitespace-nowrap py-2.5 pr-3 font-mono text-xs text-apple-mute">
                                       {record.requestIp || '\u2014'}
                                     </td>
                                     <td
-                                      className="max-w-[200px] truncate py-2.5 text-xs text-dark-400"
+                                      className="max-w-[200px] truncate py-2.5 text-xs text-apple-mute"
                                       title={record.userAgent || ''}
                                     >
                                       {record.userAgent
@@ -2631,10 +2642,10 @@ export default function AdminUserDetail() {
                             <button
                               onClick={() => loadRequestHistory(requestHistoryOffset, true)}
                               disabled={requestHistoryLoading}
-                              className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg bg-dark-700/50 py-2.5 text-sm text-dark-300 transition-colors hover:bg-dark-700 disabled:opacity-50"
+                              className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg bg-apple-elevated py-2.5 text-sm text-apple-mute transition-colors hover:bg-apple-elevated disabled:opacity-50"
                             >
                               {requestHistoryLoading ? (
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                               ) : (
                                 t('admin.users.detail.loadMore')
                               )}
@@ -2654,45 +2665,45 @@ export default function AdminUserDetail() {
         {activeTab === 'balance' && (
           <div className="space-y-4">
             {/* Current balance */}
-            <div className="rounded-xl border border-accent-500/30 bg-gradient-to-r from-accent-500/20 to-accent-700/20 p-4">
-              <div className="mb-1 text-sm text-dark-400">
+            <div className="rounded-xl border border-[#F97315]/30 bg-gradient-to-r from-[#F97315]/20 to-[#C2410C]/20 p-4">
+              <div className="mb-1 text-sm text-apple-mute">
                 {t('admin.users.detail.balance.current')}
               </div>
-              <div className="text-3xl font-bold text-dark-100">
+              <div className="text-3xl font-bold text-apple-ink">
                 {formatWithCurrency(user.balance_rubles)}
               </div>
             </div>
 
             {/* Add/subtract form */}
             {hasPermission('users:balance') && (
-              <div className="space-y-3 rounded-xl bg-dark-800/50 p-4">
+              <div className="space-y-3 rounded-xl bg-apple-card p-4">
                 <input
                   type="number"
                   value={balanceAmount}
                   onChange={createNumberInputHandler(setBalanceAmount)}
                   placeholder={t('admin.users.detail.balance.amountPlaceholder')}
-                  className="input"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
                 <input
                   type="text"
                   value={balanceDescription}
                   onChange={(e) => setBalanceDescription(e.target.value)}
                   placeholder={t('admin.users.detail.balance.descriptionPlaceholder')}
-                  className="input"
+                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   maxLength={500}
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleUpdateBalance(true)}
                     disabled={actionLoading || balanceAmount === ''}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-success-500 py-2 text-white transition-colors hover:bg-success-600 disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-apple-green py-2 text-white transition-colors hover:bg-apple-green disabled:opacity-50"
                   >
                     <PlusIcon /> {t('admin.users.detail.balance.add')}
                   </button>
                   <button
                     onClick={() => handleUpdateBalance(false)}
                     disabled={actionLoading || balanceAmount === ''}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-error-500 py-2 text-white transition-colors hover:bg-error-600 disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-apple-red py-2 text-white transition-colors hover:bg-apple-red disabled:opacity-50"
                   >
                     <MinusIcon /> {t('admin.users.detail.balance.subtract')}
                   </button>
@@ -2702,9 +2713,9 @@ export default function AdminUserDetail() {
 
             {/* Active promo offer */}
             {user.promo_offer_discount_percent > 0 && (
-              <div className="rounded-xl border border-accent-500/20 bg-accent-500/5 p-4">
+              <div className="rounded-xl border border-[#F97315]/20 bg-[#F97315]/5 p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-accent-400">
+                  <span className="text-sm font-medium text-[#F97315]">
                     {t('admin.users.detail.activePromoOffer')}
                   </span>
                   <button
@@ -2712,8 +2723,8 @@ export default function AdminUserDetail() {
                     disabled={actionLoading}
                     className={`rounded-lg px-3 py-1 text-xs font-medium transition-all disabled:opacity-50 ${
                       confirmingAction === 'deactivateOffer'
-                        ? 'bg-error-500 text-white'
-                        : 'bg-error-500/15 text-error-400 hover:bg-error-500/25'
+                        ? 'bg-apple-red text-white'
+                        : 'bg-apple-red/15 text-apple-red hover:bg-apple-red/25'
                     }`}
                   >
                     {confirmingAction === 'deactivateOffer'
@@ -2723,24 +2734,28 @@ export default function AdminUserDetail() {
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <div className="text-lg font-bold text-dark-100">
+                    <div className="text-lg font-bold text-apple-ink">
                       {user.promo_offer_discount_percent}%
                     </div>
-                    <div className="text-xs text-dark-500">{t('admin.users.detail.discount')}</div>
+                    <div className="text-xs text-apple-faint">
+                      {t('admin.users.detail.discount')}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-dark-100">
+                    <div className="text-sm font-medium text-apple-ink">
                       {user.promo_offer_discount_source || '-'}
                     </div>
-                    <div className="text-xs text-dark-500">{t('admin.users.detail.source')}</div>
+                    <div className="text-xs text-apple-faint">{t('admin.users.detail.source')}</div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-dark-100">
+                    <div className="text-sm font-medium text-apple-ink">
                       {user.promo_offer_discount_expires_at
                         ? formatDate(user.promo_offer_discount_expires_at)
                         : '-'}
                     </div>
-                    <div className="text-xs text-dark-500">{t('admin.users.detail.expiresAt')}</div>
+                    <div className="text-xs text-apple-faint">
+                      {t('admin.users.detail.expiresAt')}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2748,8 +2763,8 @@ export default function AdminUserDetail() {
 
             {/* Send promo offer */}
             {hasPermission('users:send_offer') && (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-3 text-sm font-medium text-dark-200">
+              <div className="rounded-xl bg-apple-card p-4">
+                <div className="mb-3 text-sm font-medium text-apple-ink">
                   {t('admin.users.detail.sendOffer')}
                 </div>
                 <div className="space-y-3">
@@ -2758,7 +2773,7 @@ export default function AdminUserDetail() {
                     value={offerDiscountPercent}
                     onChange={createNumberInputHandler(setOfferDiscountPercent, 1)}
                     placeholder={t('admin.users.detail.discountPercent')}
-                    className="input"
+                    className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     min={1}
                     max={100}
                   />
@@ -2767,7 +2782,7 @@ export default function AdminUserDetail() {
                     value={offerValidHours}
                     onChange={createNumberInputHandler(setOfferValidHours, 1)}
                     placeholder={t('admin.users.detail.validHours')}
-                    className="input"
+                    className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     min={1}
                     max={8760}
                   />
@@ -2784,22 +2799,22 @@ export default function AdminUserDetail() {
 
             {/* Recent transactions */}
             {user.recent_transactions.length > 0 && (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-3 font-medium text-dark-200">
+              <div className="rounded-xl bg-apple-card p-4">
+                <div className="mb-3 font-medium text-apple-ink">
                   {t('admin.users.detail.balance.recentTransactions')}
                 </div>
                 <div className="max-h-48 space-y-2 overflow-y-auto">
                   {user.recent_transactions.map((tx) => (
                     <div
                       key={tx.id}
-                      className="flex items-center justify-between border-b border-dark-700 py-2 last:border-0"
+                      className="flex items-center justify-between border-b border-apple-hairline py-2 last:border-0"
                     >
                       <div>
-                        <div className="text-sm text-dark-200">{tx.description || tx.type}</div>
-                        <div className="text-xs text-dark-500">{formatDate(tx.created_at)}</div>
+                        <div className="text-sm text-apple-ink">{tx.description || tx.type}</div>
+                        <div className="text-xs text-apple-faint">{formatDate(tx.created_at)}</div>
                       </div>
                       <div
-                        className={tx.amount_kopeks >= 0 ? 'text-success-400' : 'text-error-400'}
+                        className={tx.amount_kopeks >= 0 ? 'text-apple-green' : 'text-apple-red'}
                       >
                         {tx.amount_kopeks >= 0 ? '+' : ''}
                         {formatWithCurrency(tx.amount_rubles)}
@@ -2817,14 +2832,14 @@ export default function AdminUserDetail() {
           <div className="space-y-4">
             {/* Subscription selector for multi-tariff */}
             {userSubscriptions.length > 1 && (
-              <div className="rounded-xl bg-dark-800/50 p-4">
-                <div className="mb-2 text-sm text-dark-400">
+              <div className="rounded-xl bg-apple-card p-4">
+                <div className="mb-2 text-sm text-apple-mute">
                   {t('admin.users.detail.sync.selectSubscription')}
                 </div>
                 <select
                   value={activeSubscriptionId || ''}
                   onChange={(e) => setActiveSubscriptionId(Number(e.target.value) || null)}
-                  className="w-full rounded-lg border border-dark-600 bg-dark-700 px-3 py-2 text-sm text-dark-100"
+                  className="w-full rounded-lg border border-apple-hairline bg-apple-elevated px-3 py-2 text-sm text-apple-ink"
                 >
                   {userSubscriptions.map((sub) => (
                     <option key={sub.id} value={sub.id}>
@@ -2838,15 +2853,15 @@ export default function AdminUserDetail() {
             {/* Sync status */}
             {syncStatus && (
               <div
-                className={`rounded-xl border p-4 ${syncStatus.has_differences ? 'border-warning-500/30 bg-warning-500/10' : 'border-success-500/30 bg-success-500/10'}`}
+                className={`rounded-xl border p-4 ${syncStatus.has_differences ? 'border-apple-amber bg-apple-amber/10' : 'border-apple-green bg-apple-green/10'}`}
               >
                 <div className="mb-3 flex items-center gap-2">
                   {syncStatus.has_differences ? (
-                    <span className="font-medium text-warning-400">
+                    <span className="font-medium text-apple-amber">
                       {t('admin.users.detail.sync.hasDifferences')}
                     </span>
                   ) : (
-                    <span className="font-medium text-success-400">
+                    <span className="font-medium text-apple-green">
                       {t('admin.users.detail.sync.synced')}
                     </span>
                   )}
@@ -2855,7 +2870,7 @@ export default function AdminUserDetail() {
                 {syncStatus.differences.length > 0 && (
                   <div className="mb-3 space-y-1">
                     {syncStatus.differences.map((diff, i) => (
-                      <div key={i} className="text-xs text-dark-300">
+                      <div key={i} className="text-xs text-apple-mute">
                         • {diff}
                       </div>
                     ))}
@@ -2864,21 +2879,23 @@ export default function AdminUserDetail() {
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <div className="mb-2 text-xs text-dark-500">
+                    <div className="mb-2 text-xs text-apple-faint">
                       {t('admin.users.detail.sync.bot')}
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.statusLabel')}:
                         </span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-ink">
                           {syncStatus.bot_subscription_status || '-'}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">{t('admin.users.detail.sync.until')}:</span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-mute">
+                          {t('admin.users.detail.sync.until')}:
+                        </span>
+                        <span className="text-apple-ink">
                           {syncStatus.bot_subscription_end_date
                             ? new Date(syncStatus.bot_subscription_end_date).toLocaleDateString(
                                 locale,
@@ -2887,65 +2904,67 @@ export default function AdminUserDetail() {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.traffic')}:
                         </span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-ink">
                           {syncStatus.bot_traffic_used_gb.toFixed(2)} {t('common.units.gb')}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.devices')}:
                         </span>
-                        <span className="text-dark-200">{syncStatus.bot_device_limit}</span>
+                        <span className="text-apple-ink">{syncStatus.bot_device_limit}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.squads')}:
                         </span>
-                        <span className="text-dark-200">{syncStatus.bot_squads?.length || 0}</span>
+                        <span className="text-apple-ink">{syncStatus.bot_squads?.length || 0}</span>
                       </div>
                     </div>
                   </div>
                   <div>
-                    <div className="mb-2 text-xs text-dark-500">
+                    <div className="mb-2 text-xs text-apple-faint">
                       {t('admin.users.detail.sync.panel')}
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.statusLabel')}:
                         </span>
-                        <span className="text-dark-200">{syncStatus.panel_status || '-'}</span>
+                        <span className="text-apple-ink">{syncStatus.panel_status || '-'}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">{t('admin.users.detail.sync.until')}:</span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-mute">
+                          {t('admin.users.detail.sync.until')}:
+                        </span>
+                        <span className="text-apple-ink">
                           {syncStatus.panel_expire_at
                             ? new Date(syncStatus.panel_expire_at).toLocaleDateString(locale)
                             : '-'}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.traffic')}:
                         </span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-ink">
                           {syncStatus.panel_traffic_used_gb.toFixed(2)} {t('common.units.gb')}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.devices')}:
                         </span>
-                        <span className="text-dark-200">{syncStatus.panel_device_limit}</span>
+                        <span className="text-apple-ink">{syncStatus.panel_device_limit}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-dark-400">
+                        <span className="text-apple-mute">
                           {t('admin.users.detail.sync.squads')}:
                         </span>
-                        <span className="text-dark-200">
+                        <span className="text-apple-ink">
                           {syncStatus.panel_squads?.length || 0}
                         </span>
                       </div>
@@ -2956,14 +2975,14 @@ export default function AdminUserDetail() {
             )}
 
             {/* UUID info */}
-            <div className="rounded-xl bg-dark-800/50 p-4">
+            <div className="rounded-xl bg-apple-card p-4">
               {syncStatus?.subscription_tariff_name && (
-                <div className="mb-2 text-xs text-dark-500">
+                <div className="mb-2 text-xs text-apple-faint">
                   {syncStatus.subscription_tariff_name}
                 </div>
               )}
-              <div className="mb-1 text-sm text-dark-400">Remnawave UUID</div>
-              <div className="break-all font-mono text-sm text-dark-100">
+              <div className="mb-1 text-sm text-apple-mute">Remnawave UUID</div>
+              <div className="break-all font-mono text-sm text-apple-ink">
                 {syncStatus?.remnawave_uuid ||
                   user.remnawave_uuid ||
                   t('admin.users.detail.sync.notLinked')}
@@ -2975,7 +2994,7 @@ export default function AdminUserDetail() {
               <button
                 onClick={handleSyncFromPanel}
                 disabled={actionLoading}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-accent-500/30 bg-accent-500/10 p-4 text-accent-400 transition-all hover:bg-accent-500/20 disabled:opacity-50"
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-[#F97315]/30 bg-[#F97315]/10 p-4 text-[#F97315] transition-all hover:bg-[#F97315]/20 disabled:opacity-50"
               >
                 <ArrowDownIcon className={`h-6 w-6 ${actionLoading ? 'animate-bounce' : ''}`} />
                 <span className="text-center text-xs font-medium">
@@ -2985,7 +3004,7 @@ export default function AdminUserDetail() {
               <button
                 onClick={handleSyncToPanel}
                 disabled={actionLoading}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-accent-500/30 bg-accent-500/10 p-4 text-accent-400 transition-all hover:bg-accent-500/20 disabled:opacity-50"
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-[#F97315]/30 bg-[#F97315]/10 p-4 text-[#F97315] transition-all hover:bg-[#F97315]/20 disabled:opacity-50"
               >
                 <ArrowUpIcon className={`h-6 w-6 ${actionLoading ? 'animate-bounce' : ''}`} />
                 <span className="text-center text-xs font-medium">
@@ -3003,7 +3022,7 @@ export default function AdminUserDetail() {
               /* Ticket Chat View */
               ticketDetailLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                 </div>
               ) : selectedTicket ? (
                 <div className="space-y-4">
@@ -3014,10 +3033,10 @@ export default function AdminUserDetail() {
                         setSelectedTicketId(null);
                         setSelectedTicket(null);
                       }}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-dark-800 transition-colors hover:bg-dark-700"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-apple-card transition-colors hover:bg-apple-elevated"
                     >
                       <svg
-                        className="h-4 w-4 text-dark-400"
+                        className="h-4 w-4 text-apple-mute"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -3031,18 +3050,19 @@ export default function AdminUserDetail() {
                       </svg>
                     </button>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium text-dark-100">
+                      <div className="truncate font-medium text-apple-ink">
                         #{selectedTicket.id} {selectedTicket.title}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-dark-500">
+                      <div className="flex items-center gap-2 text-xs text-apple-faint">
                         <span
                           className={`rounded-full border px-1.5 py-0.5 ${
                             {
                               open: 'border-blue-500/30 bg-blue-500/20 text-blue-400',
-                              pending: 'border-warning-500/30 bg-warning-500/20 text-warning-400',
-                              answered: 'border-success-500/30 bg-success-500/20 text-success-400',
-                              closed: 'border-dark-500 bg-dark-600 text-dark-400',
-                            }[selectedTicket.status] || 'border-dark-500 bg-dark-600 text-dark-400'
+                              pending: 'border-apple-amber bg-apple-amber/20 text-apple-amber',
+                              answered: 'border-apple-green bg-apple-green/20 text-apple-green',
+                              closed: 'border-apple-hairline bg-apple-elevated text-apple-mute',
+                            }[selectedTicket.status] ||
+                            'border-apple-hairline bg-apple-elevated text-apple-mute'
                           }`}
                         >
                           {selectedTicket.status}
@@ -3061,8 +3081,8 @@ export default function AdminUserDetail() {
                         disabled={selectedTicket.status === s || actionLoading}
                         className={`rounded-lg border px-2.5 py-1 text-xs transition-all ${
                           selectedTicket.status === s
-                            ? 'border-accent-500/50 bg-accent-500/20 text-accent-400'
-                            : 'border-dark-700/50 text-dark-400 hover:border-dark-600 hover:text-dark-200'
+                            ? 'border-[#F97315]/50 bg-[#F97315]/20 text-[#F97315]'
+                            : 'border-apple-hairline text-apple-mute hover:border-apple-hairline hover:text-apple-ink'
                         } disabled:opacity-50`}
                       >
                         {t(`admin.tickets.status${s.charAt(0).toUpperCase() + s.slice(1)}`)}
@@ -3071,31 +3091,31 @@ export default function AdminUserDetail() {
                   </div>
 
                   {/* Messages */}
-                  <div className="scrollbar-hide max-h-[60vh] space-y-3 overflow-y-auto rounded-xl bg-dark-800/30 p-3">
+                  <div className="scrollbar-hide max-h-[60vh] space-y-3 overflow-y-auto rounded-xl bg-apple-card p-3">
                     {selectedTicket.messages.map((msg) => (
                       <div
                         key={msg.id}
                         className={`rounded-xl p-3 ${
                           msg.is_from_admin
-                            ? 'ml-6 border border-accent-500/20 bg-accent-500/10'
-                            : 'mr-6 border border-dark-700/30 bg-dark-800/50'
+                            ? 'ml-6 border border-[#F97315]/20 bg-[#F97315]/10'
+                            : 'mr-6 bg-apple-card'
                         }`}
                       >
                         <div className="mb-1 flex items-center justify-between">
                           <span
-                            className={`text-xs font-medium ${msg.is_from_admin ? 'text-accent-400' : 'text-dark-400'}`}
+                            className={`text-xs font-medium ${msg.is_from_admin ? 'text-[#F97315]' : 'text-apple-mute'}`}
                           >
                             {msg.is_from_admin
                               ? t('admin.tickets.adminLabel')
                               : t('admin.tickets.userLabel')}
                           </span>
-                          <span className="text-xs text-dark-500">
+                          <span className="text-xs text-apple-faint">
                             {formatDate(msg.created_at)}
                           </span>
                         </div>
                         {msg.message_text && (
                           <p
-                            className="whitespace-pre-wrap text-sm text-dark-200 [&_a]:text-accent-400 [&_a]:underline"
+                            className="whitespace-pre-wrap text-sm text-apple-ink [&_a]:text-[#F97315] [&_a]:underline"
                             dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
                           />
                         )}
@@ -3113,7 +3133,7 @@ export default function AdminUserDetail() {
                         onChange={(e) => setReplyText(e.target.value)}
                         placeholder={t('admin.tickets.replyPlaceholder')}
                         rows={2}
-                        className="input flex-1 resize-none"
+                        className="w-full flex-1 resize-none rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
@@ -3124,7 +3144,7 @@ export default function AdminUserDetail() {
                       <button
                         onClick={handleTicketReply}
                         disabled={!replyText.trim() || replySending}
-                        className="shrink-0 self-end rounded-lg bg-accent-500 px-4 py-2 text-sm text-white transition-colors hover:bg-accent-600 disabled:opacity-50"
+                        className="shrink-0 self-end rounded-full bg-[#F97315] px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                       >
                         {replySending ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -3150,12 +3170,12 @@ export default function AdminUserDetail() {
               ) : null
             ) : ticketsLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
               </div>
             ) : tickets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl bg-dark-800/50 py-12">
+              <div className="flex flex-col items-center justify-center rounded-xl bg-apple-card py-12">
                 <svg
-                  className="mb-3 h-12 w-12 text-dark-600"
+                  className="mb-3 h-12 w-12 text-apple-faint"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -3167,29 +3187,29 @@ export default function AdminUserDetail() {
                     d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"
                   />
                 </svg>
-                <p className="text-dark-400">{t('admin.users.detail.noTickets')}</p>
+                <p className="text-apple-mute">{t('admin.users.detail.noTickets')}</p>
               </div>
             ) : (
               <>
-                <div className="text-sm text-dark-400">
+                <div className="text-sm text-apple-mute">
                   {ticketsTotal} {t('admin.users.detail.ticketsCount')}
                 </div>
                 <div className="space-y-2">
                   {tickets.map((ticket) => {
                     const statusStyles: Record<string, string> = {
                       open: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-                      pending: 'bg-warning-500/20 text-warning-400 border-warning-500/30',
-                      answered: 'bg-success-500/20 text-success-400 border-success-500/30',
-                      closed: 'bg-dark-600 text-dark-400 border-dark-500',
+                      pending: 'bg-apple-amber/20 text-apple-amber border-apple-amber',
+                      answered: 'bg-apple-green/20 text-apple-green border-apple-green',
+                      closed: 'bg-apple-elevated text-apple-mute border-apple-hairline',
                     };
                     return (
                       <button
                         key={ticket.id}
                         onClick={() => setSelectedTicketId(ticket.id)}
-                        className="w-full rounded-xl bg-dark-800/50 p-4 text-left transition-colors hover:bg-dark-700/50"
+                        className="w-full rounded-xl bg-apple-card p-4 text-left transition-colors hover:bg-apple-elevated"
                       >
                         <div className="mb-2 flex items-center justify-between">
-                          <span className="font-medium text-dark-100">
+                          <span className="font-medium text-apple-ink">
                             #{ticket.id} {ticket.title}
                           </span>
                           <span
@@ -3198,14 +3218,14 @@ export default function AdminUserDetail() {
                             {ticket.status}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-xs text-dark-500">
+                        <div className="flex items-center justify-between text-xs text-apple-faint">
                           <span>{formatDate(ticket.created_at)}</span>
                           <span>
                             {ticket.messages_count} {t('admin.users.detail.messagesCount')}
                           </span>
                         </div>
                         {ticket.last_message && (
-                          <div className="mt-2 truncate text-sm text-dark-400">
+                          <div className="mt-2 truncate text-sm text-apple-mute">
                             {ticket.last_message.is_from_admin ? '> ' : ''}
                             {ticket.last_message.message_text}
                           </div>
@@ -3224,12 +3244,12 @@ export default function AdminUserDetail() {
           <div className="space-y-6">
             {giftsLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
               </div>
             ) : !giftsData || (giftsData.sent.length === 0 && giftsData.received.length === 0) ? (
-              <div className="flex flex-col items-center justify-center rounded-xl bg-dark-800/50 py-16">
+              <div className="flex flex-col items-center justify-center rounded-xl bg-apple-card py-16">
                 <svg
-                  className="mb-3 h-12 w-12 text-dark-600"
+                  className="mb-3 h-12 w-12 text-apple-faint"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -3241,23 +3261,23 @@ export default function AdminUserDetail() {
                     d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
                   />
                 </svg>
-                <p className="text-sm text-dark-500">{t('admin.users.detail.gifts.noGifts')}</p>
+                <p className="text-sm text-apple-faint">{t('admin.users.detail.gifts.noGifts')}</p>
               </div>
             ) : (
               <>
                 {/* Summary counters */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-1 text-xs text-dark-500">
+                  <div className="rounded-xl bg-apple-card p-4">
+                    <div className="mb-1 text-xs text-apple-faint">
                       {t('admin.users.detail.gifts.totalSent')}
                     </div>
-                    <div className="text-2xl font-bold text-accent-400">{giftsData.sent_total}</div>
+                    <div className="text-2xl font-bold text-[#F97315]">{giftsData.sent_total}</div>
                   </div>
-                  <div className="rounded-xl bg-dark-800/50 p-4">
-                    <div className="mb-1 text-xs text-dark-500">
+                  <div className="rounded-xl bg-apple-card p-4">
+                    <div className="mb-1 text-xs text-apple-faint">
                       {t('admin.users.detail.gifts.totalReceived')}
                     </div>
-                    <div className="text-2xl font-bold text-success-400">
+                    <div className="text-2xl font-bold text-apple-green">
                       {giftsData.received_total}
                     </div>
                   </div>
@@ -3265,9 +3285,9 @@ export default function AdminUserDetail() {
 
                 {/* Sent Gifts */}
                 <div>
-                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-dark-200">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-apple-ink">
                     <svg
-                      className="h-4 w-4 text-accent-400"
+                      className="h-4 w-4 text-[#F97315]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -3280,10 +3300,10 @@ export default function AdminUserDetail() {
                       />
                     </svg>
                     {t('admin.users.detail.gifts.sentTitle')}
-                    <span className="text-dark-500">({giftsData.sent_total})</span>
+                    <span className="text-apple-faint">({giftsData.sent_total})</span>
                   </h3>
                   {giftsData.sent.length === 0 ? (
-                    <div className="rounded-xl bg-dark-800/30 py-6 text-center text-sm text-dark-500">
+                    <div className="rounded-xl bg-apple-card py-6 text-center text-sm text-apple-faint">
                       {t('admin.users.detail.gifts.noSent')}
                     </div>
                   ) : (
@@ -3303,9 +3323,9 @@ export default function AdminUserDetail() {
 
                 {/* Received Gifts */}
                 <div>
-                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-dark-200">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-apple-ink">
                     <svg
-                      className="h-4 w-4 text-success-400"
+                      className="h-4 w-4 text-apple-green"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -3318,10 +3338,10 @@ export default function AdminUserDetail() {
                       />
                     </svg>
                     {t('admin.users.detail.gifts.receivedTitle')}
-                    <span className="text-dark-500">({giftsData.received_total})</span>
+                    <span className="text-apple-faint">({giftsData.received_total})</span>
                   </h3>
                   {giftsData.received.length === 0 ? (
-                    <div className="rounded-xl bg-dark-800/30 py-6 text-center text-sm text-dark-500">
+                    <div className="rounded-xl bg-apple-card py-6 text-center text-sm text-apple-faint">
                       {t('admin.users.detail.gifts.noReceived')}
                     </div>
                   ) : (
@@ -3347,8 +3367,8 @@ export default function AdminUserDetail() {
         {activeTab === 'referrals' && user && (
           <div className="space-y-6">
             {/* Section 1: Who referred this user */}
-            <div className="rounded-2xl border border-dark-700/30 bg-dark-800/40 p-5">
-              <h3 className="mb-4 text-base font-semibold text-dark-100">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
+              <h3 className="mb-4 text-base font-semibold text-apple-ink">
                 {t('admin.users.detail.referrals.referredBy')}
               </h3>
 
@@ -3356,17 +3376,17 @@ export default function AdminUserDetail() {
                 <div className="flex items-center justify-between gap-3">
                   <button
                     onClick={() => navigate(`/admin/users/${user.referral.referred_by_id}`)}
-                    className="flex items-center gap-3 rounded-xl bg-dark-700/30 px-4 py-3 transition-colors hover:bg-dark-700/50"
+                    className="flex items-center gap-3 rounded-xl bg-apple-elevated px-4 py-3 transition-colors hover:bg-apple-elevated"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-500/20 text-sm font-bold text-accent-400">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F97315]/20 text-sm font-bold text-[#F97315]">
                       {(user.referral.referred_by_username || '?')[0].toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-dark-100">
+                      <div className="text-sm font-medium text-apple-ink">
                         {user.referral.referred_by_username ||
                           `ID: ${user.referral.referred_by_id}`}
                       </div>
-                      <div className="text-xs text-dark-500">
+                      <div className="text-xs text-apple-faint">
                         ID: {user.referral.referred_by_id}
                       </div>
                     </div>
@@ -3374,7 +3394,7 @@ export default function AdminUserDetail() {
                   <button
                     onClick={handleRemoveReferrer}
                     disabled={actionLoading}
-                    className="rounded-lg border border-error-500/30 bg-error-500/10 px-3 py-2 text-sm text-error-400 transition-colors hover:bg-error-500/20 disabled:opacity-50"
+                    className="rounded-lg border border-apple-red bg-apple-red/10 px-3 py-2 text-sm text-apple-red transition-colors hover:bg-apple-red/20 disabled:opacity-50"
                   >
                     {t('admin.users.detail.referrals.removeReferrer')}
                   </button>
@@ -3389,7 +3409,7 @@ export default function AdminUserDetail() {
                           value={referrerSearchQuery}
                           onChange={(e) => setReferrerSearchQuery(e.target.value)}
                           placeholder={t('admin.users.detail.referrals.searchPlaceholder')}
-                          className="flex-1 rounded-lg border border-dark-600 bg-dark-700 px-3 py-2.5 text-sm text-dark-100 placeholder-dark-500 focus:border-accent-500 focus:outline-none"
+                          className="flex-1 rounded-lg border border-apple-hairline bg-apple-elevated px-3 py-2.5 text-sm text-apple-ink placeholder:text-apple-faint focus:border-[#F97315] focus:outline-none"
                           autoFocus
                         />
                         <button
@@ -3398,36 +3418,36 @@ export default function AdminUserDetail() {
                             setReferrerSearchQuery('');
                             setReferrerSearchResults([]);
                           }}
-                          className="rounded-lg bg-dark-700 px-3 py-2.5 text-sm text-dark-400 hover:bg-dark-600"
+                          className="rounded-lg bg-apple-elevated px-3 py-2.5 text-sm text-apple-mute hover:bg-apple-elevated"
                         >
                           {t('common.cancel')}
                         </button>
                       </div>
                       {referrerSearchQuery.length >= 2 && referrerSearchResults.length > 0 && (
-                        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+                        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-apple-hairline bg-apple-card py-1 shadow-xl">
                           {referrerSearchResults
                             .filter((u) => u.id !== userId)
                             .map((u) => (
                               <button
                                 key={u.id}
                                 onClick={() => handleAssignReferrer(u.id)}
-                                className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-dark-700/50"
+                                className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-apple-elevated"
                               >
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-dark-600/50 text-xs font-bold text-dark-300">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-apple-elevated text-xs font-bold text-apple-mute">
                                   {(u.full_name || u.username || '?')[0].toUpperCase()}
                                 </div>
                                 <div>
-                                  <div className="text-sm text-dark-100">
+                                  <div className="text-sm text-apple-ink">
                                     {u.full_name || u.username || `ID: ${u.id}`}
                                   </div>
-                                  <div className="text-xs text-dark-500">
+                                  <div className="text-xs text-apple-faint">
                                     {u.telegram_id ? `TG: ${u.telegram_id}` : `ID: ${u.id}`}
                                   </div>
                                 </div>
                               </button>
                             ))}
                           {referrerSearchResults.filter((u) => u.id !== userId).length === 0 && (
-                            <div className="px-3 py-4 text-center text-sm text-dark-500">
+                            <div className="px-3 py-4 text-center text-sm text-apple-faint">
                               {t('admin.users.detail.referrals.noUsersFound')}
                             </div>
                           )}
@@ -3436,19 +3456,19 @@ export default function AdminUserDetail() {
                       {referrerSearchQuery.length >= 2 &&
                         !referrerSearchLoading &&
                         referrerSearchResults.length === 0 && (
-                          <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-dark-700 bg-dark-800 py-4 text-center text-sm text-dark-500 shadow-xl">
+                          <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-apple-hairline bg-apple-card py-4 text-center text-sm text-apple-faint shadow-xl">
                             {t('admin.users.detail.referrals.noUsersFound')}
                           </div>
                         )}
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-dark-500">
+                      <span className="text-sm text-apple-faint">
                         {t('admin.users.detail.referrals.noReferrer')}
                       </span>
                       <button
                         onClick={() => setShowReferrerSearch(true)}
-                        className="rounded-lg bg-accent-500/15 px-3 py-2 text-sm text-accent-400 transition-colors hover:bg-accent-500/25"
+                        className="rounded-lg bg-[#F97315]/15 px-3 py-2 text-sm text-[#F97315] transition-colors hover:bg-[#F97315]/25"
                       >
                         {t('admin.users.detail.referrals.assignReferrer')}
                       </button>
@@ -3460,52 +3480,52 @@ export default function AdminUserDetail() {
 
             {/* Section 2: Referral stats */}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="rounded-xl bg-dark-800/40 p-4">
-                <div className="text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-4">
+                <div className="text-xs text-apple-faint">
                   {t('admin.users.detail.referrals.totalReferrals')}
                 </div>
-                <div className="mt-1 text-xl font-bold text-dark-100">
+                <div className="mt-1 text-xl font-bold text-apple-ink">
                   {user.referral.referrals_count}
                 </div>
               </div>
-              <div className="rounded-xl bg-dark-800/40 p-4">
-                <div className="text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-4">
+                <div className="text-xs text-apple-faint">
                   {t('admin.users.detail.referrals.totalEarnings')}
                 </div>
-                <div className="mt-1 text-xl font-bold text-dark-100">
+                <div className="mt-1 text-xl font-bold text-apple-ink">
                   {formatWithCurrency(user.referral.total_earnings_kopeks / 100)}
                 </div>
               </div>
-              <div className="rounded-xl bg-dark-800/40 p-4">
-                <div className="text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-4">
+                <div className="text-xs text-apple-faint">
                   {t('admin.users.detail.referrals.commission')}
                 </div>
-                <div className="mt-1 text-xl font-bold text-dark-100">
+                <div className="mt-1 text-xl font-bold text-apple-ink">
                   {user.referral.commission_percent != null
                     ? `${user.referral.commission_percent}%`
                     : t('admin.users.detail.referrals.default')}
                 </div>
               </div>
-              <div className="rounded-xl bg-dark-800/40 p-4">
-                <div className="text-xs text-dark-500">
+              <div className="rounded-xl bg-apple-card p-4">
+                <div className="text-xs text-apple-faint">
                   {t('admin.users.detail.referrals.referralCode')}
                 </div>
-                <div className="mt-1 truncate font-mono text-sm text-dark-100">
+                <div className="mt-1 truncate font-mono text-sm text-apple-ink">
                   {user.referral.referral_code}
                 </div>
               </div>
             </div>
 
             {/* Section 3: Referrals list */}
-            <div className="rounded-2xl border border-dark-700/30 bg-dark-800/40 p-5">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-dark-100">
+                <h3 className="text-base font-semibold text-apple-ink">
                   {t('admin.users.detail.referrals.referralsList')} ({referralsTotal})
                 </h3>
                 {!showAddReferral && (
                   <button
                     onClick={() => setShowAddReferral(true)}
-                    className="rounded-lg bg-accent-500/15 px-3 py-2 text-sm text-accent-400 transition-colors hover:bg-accent-500/25"
+                    className="rounded-lg bg-[#F97315]/15 px-3 py-2 text-sm text-[#F97315] transition-colors hover:bg-[#F97315]/25"
                   >
                     {t('admin.users.detail.referrals.addReferral')}
                   </button>
@@ -3521,7 +3541,7 @@ export default function AdminUserDetail() {
                       value={addReferralSearchQuery}
                       onChange={(e) => setAddReferralSearchQuery(e.target.value)}
                       placeholder={t('admin.users.detail.referrals.searchPlaceholder')}
-                      className="flex-1 rounded-lg border border-dark-600 bg-dark-700 px-3 py-2.5 text-sm text-dark-100 placeholder-dark-500 focus:border-accent-500 focus:outline-none"
+                      className="flex-1 rounded-lg border border-apple-hairline bg-apple-elevated px-3 py-2.5 text-sm text-apple-ink placeholder:text-apple-faint focus:border-[#F97315] focus:outline-none"
                       autoFocus
                     />
                     <button
@@ -3530,13 +3550,13 @@ export default function AdminUserDetail() {
                         setAddReferralSearchQuery('');
                         setAddReferralSearchResults([]);
                       }}
-                      className="rounded-lg bg-dark-700 px-3 py-2.5 text-sm text-dark-400 hover:bg-dark-600"
+                      className="rounded-lg bg-apple-elevated px-3 py-2.5 text-sm text-apple-mute hover:bg-apple-elevated"
                     >
                       {t('common.cancel')}
                     </button>
                   </div>
                   {addReferralSearchQuery.length >= 2 && addReferralSearchResults.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-dark-700 bg-dark-800 py-1 shadow-xl">
+                    <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-apple-hairline bg-apple-card py-1 shadow-xl">
                       {addReferralSearchResults
                         .filter((u) => u.id !== userId && !referralsList.some((r) => r.id === u.id))
                         .map((u) => (
@@ -3544,16 +3564,16 @@ export default function AdminUserDetail() {
                             key={u.id}
                             onClick={() => handleAddReferral(u.id)}
                             disabled={actionLoading}
-                            className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-dark-700/50 disabled:opacity-50"
+                            className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50"
                           >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-dark-600/50 text-xs font-bold text-dark-300">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-apple-elevated text-xs font-bold text-apple-mute">
                               {(u.full_name || u.username || '?')[0].toUpperCase()}
                             </div>
                             <div>
-                              <div className="text-sm text-dark-100">
+                              <div className="text-sm text-apple-ink">
                                 {u.full_name || u.username || `ID: ${u.id}`}
                               </div>
-                              <div className="text-xs text-dark-500">
+                              <div className="text-xs text-apple-faint">
                                 {u.telegram_id ? `TG: ${u.telegram_id}` : `ID: ${u.id}`}
                               </div>
                             </div>
@@ -3562,7 +3582,7 @@ export default function AdminUserDetail() {
                       {addReferralSearchResults.filter(
                         (u) => u.id !== userId && !referralsList.some((r) => r.id === u.id),
                       ).length === 0 && (
-                        <div className="px-3 py-4 text-center text-sm text-dark-500">
+                        <div className="px-3 py-4 text-center text-sm text-apple-faint">
                           {t('admin.users.detail.referrals.noUsersFound')}
                         </div>
                       )}
@@ -3571,7 +3591,7 @@ export default function AdminUserDetail() {
                   {addReferralSearchQuery.length >= 2 &&
                     !addReferralSearchLoading &&
                     addReferralSearchResults.length === 0 && (
-                      <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-dark-700 bg-dark-800 py-4 text-center text-sm text-dark-500 shadow-xl">
+                      <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-apple-hairline bg-apple-card py-4 text-center text-sm text-apple-faint shadow-xl">
                         {t('admin.users.detail.referrals.noUsersFound')}
                       </div>
                     )}
@@ -3580,10 +3600,10 @@ export default function AdminUserDetail() {
 
               {referralsListLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                 </div>
               ) : referralsList.length === 0 ? (
-                <div className="py-8 text-center text-dark-500">
+                <div className="py-8 text-center text-apple-faint">
                   {t('admin.users.detail.referrals.noReferrals')}
                 </div>
               ) : (
@@ -3591,20 +3611,20 @@ export default function AdminUserDetail() {
                   {referralsList.map((ref) => (
                     <div
                       key={ref.id}
-                      className="flex items-center justify-between rounded-xl bg-dark-700/20 px-4 py-3"
+                      className="flex items-center justify-between rounded-xl bg-apple-elevated px-4 py-3"
                     >
                       <button
                         onClick={() => navigate(`/admin/users/${ref.id}`)}
                         className="flex items-center gap-3 text-left"
                       >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-dark-600/50 text-sm font-bold text-dark-300">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-apple-elevated text-sm font-bold text-apple-mute">
                           {(ref.full_name || ref.username || '?')[0].toUpperCase()}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-dark-100">
+                          <div className="text-sm font-medium text-apple-ink">
                             {ref.full_name || ref.username || `ID: ${ref.id}`}
                           </div>
-                          <div className="text-xs text-dark-500">
+                          <div className="text-xs text-apple-faint">
                             {ref.telegram_id ? `TG: ${ref.telegram_id}` : `ID: ${ref.id}`}
                           </div>
                         </div>
@@ -3612,7 +3632,7 @@ export default function AdminUserDetail() {
                       <button
                         onClick={() => handleRemoveReferral(ref.id)}
                         disabled={actionLoading}
-                        className="rounded-lg p-2 text-dark-500 transition-colors hover:bg-error-500/10 hover:text-error-400 disabled:opacity-50"
+                        className="rounded-lg p-2 text-apple-faint transition-colors hover:bg-apple-red/10 hover:text-apple-red disabled:opacity-50"
                         title={t('admin.users.detail.referrals.removeReferral')}
                       >
                         <svg

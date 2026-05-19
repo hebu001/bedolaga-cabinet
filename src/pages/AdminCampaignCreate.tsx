@@ -43,31 +43,27 @@ const RefreshIcon = () => (
 // Bonus type config
 const bonusTypeConfig: Record<
   CampaignBonusType,
-  { labelKey: string; color: string; bgColor: string; borderColor: string }
+  { labelKey: string; color: string; bgColor: string }
 > = {
   balance: {
     labelKey: 'admin.campaigns.bonusType.balance',
-    color: 'text-success-400',
-    bgColor: 'bg-success-500/10',
-    borderColor: 'border-success-500/30',
+    color: 'text-apple-green',
+    bgColor: 'bg-apple-green/10',
   },
   subscription: {
     labelKey: 'admin.campaigns.bonusType.subscription',
-    color: 'text-accent-400',
-    bgColor: 'bg-accent-500/10',
-    borderColor: 'border-accent-500/30',
+    color: 'text-[#F97315]',
+    bgColor: 'bg-[#F97315]/10',
   },
   tariff: {
     labelKey: 'admin.campaigns.bonusType.tariff',
-    color: 'text-accent-400',
-    bgColor: 'bg-accent-500/10',
-    borderColor: 'border-accent-500/30',
+    color: 'text-[#F97315]',
+    bgColor: 'bg-[#F97315]/10',
   },
   none: {
     labelKey: 'admin.campaigns.bonusType.none',
-    color: 'text-dark-400',
-    bgColor: 'bg-dark-500/10',
-    borderColor: 'border-dark-500/30',
+    color: 'text-apple-mute',
+    bgColor: 'bg-apple-elevated',
   },
 };
 
@@ -87,24 +83,26 @@ function ServerSelector({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-dark-300">
+      <label className="mb-2 block text-[13px] font-medium text-apple-mute">
         {t('admin.campaigns.form.servers')}
       </label>
-      <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border border-dark-700 bg-dark-800 p-3">
+      <div className="max-h-48 space-y-2 overflow-y-auto rounded-xl bg-apple-elevated p-3">
         {servers.map((server) => (
           <button
             key={server.id}
             type="button"
             onClick={() => onToggle(server.squad_uuid)}
-            className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+            className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
               selected.includes(server.squad_uuid)
-                ? 'bg-accent-500/20 text-accent-300'
-                : 'bg-dark-700 text-dark-300 hover:bg-dark-600'
+                ? 'bg-[#F97315]/20 text-[#F97315]'
+                : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
             }`}
           >
             <div
               className={`flex h-5 w-5 items-center justify-center rounded ${
-                selected.includes(server.squad_uuid) ? 'bg-accent-500 text-white' : 'bg-dark-600'
+                selected.includes(server.squad_uuid)
+                  ? 'bg-[#F97315] text-white'
+                  : 'bg-apple-elevated'
               }`}
             >
               {selected.includes(server.squad_uuid) && <CheckIcon />}
@@ -135,13 +133,13 @@ function TariffSelector({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-dark-300">
+      <label className="mb-2 block text-[13px] font-medium text-apple-mute">
         {t('admin.campaigns.form.selectTariff')}
       </label>
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
-        className="input"
+        className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
       >
         <option value="">{t('admin.campaigns.form.notSelected')}</option>
         {tariffs.map((tariff) => (
@@ -278,24 +276,24 @@ export default function AdminCampaignCreate() {
       <div className="flex items-center gap-3">
         <AdminBackButton />
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-accent-500/20 p-2 text-accent-400">
+          <div className="rounded-lg bg-[#F97315]/20 p-2 text-[#F97315]">
             <CampaignIcon />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-dark-100">
+            <h1 className="text-xl font-bold text-apple-ink">
               {t('admin.campaigns.modal.createTitle')}
             </h1>
-            <p className="text-sm text-dark-400">{t('admin.campaigns.subtitle')}</p>
+            <p className="text-sm text-apple-mute">{t('admin.campaigns.subtitle')}</p>
           </div>
         </div>
       </div>
 
       {/* Partner info banner */}
       {partnerId && partner && (
-        <div className="rounded-xl border border-accent-500/20 bg-accent-500/5 p-4">
+        <div className="rounded-2xl bg-[#F97315]/10 p-4">
           <div className="flex items-start gap-3">
             <svg
-              className="mt-0.5 h-5 w-5 shrink-0 text-accent-400"
+              className="mt-0.5 h-5 w-5 shrink-0 text-[#F97315]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -307,7 +305,7 @@ export default function AdminCampaignCreate() {
                 d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
               />
             </svg>
-            <p className="text-sm text-accent-300">
+            <p className="text-sm text-[#F97315]">
               {t('admin.campaigns.form.partnerAutoAssign', {
                 name: partner.first_name || partner.username || `#${partnerId}`,
               })}
@@ -317,23 +315,23 @@ export default function AdminCampaignCreate() {
       )}
 
       {/* Basic Info */}
-      <div className="card space-y-4">
+      <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5">
         {/* Name */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.campaigns.form.name')}
-            <span className="text-error-400">*</span>
+            <span className="text-apple-red">*</span>
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={`input ${name.length > 0 && !isNameValid ? 'border-error-500/50' : ''}`}
+            className={`w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${name.length > 0 && !isNameValid ? 'ring-2 ring-apple-red/50' : ''}`}
             placeholder={t('admin.campaigns.form.namePlaceholder')}
             maxLength={255}
           />
           {name.length > 0 && !isNameValid && (
-            <p className="mt-1 text-xs text-error-400">
+            <p className="mt-1 text-xs text-apple-red">
               {t('admin.campaigns.validation.nameRequired')}
             </p>
           )}
@@ -341,33 +339,33 @@ export default function AdminCampaignCreate() {
 
         {/* Start Parameter */}
         <div>
-          <label className="mb-2 block text-sm font-medium text-dark-300">
+          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
             {t('admin.campaigns.form.startParameter')}
-            <span className="text-error-400">*</span>
+            <span className="text-apple-red">*</span>
           </label>
           <input
             type="text"
             value={startParameter}
             onChange={(e) => setStartParameter(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
-            className={`input font-mono ${startParameter.length > 0 && !isStartParamValid ? 'border-error-500/50' : ''}`}
+            className={`w-full rounded-xl bg-apple-elevated px-4 py-3 font-mono text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${startParameter.length > 0 && !isStartParamValid ? 'ring-2 ring-apple-red/50' : ''}`}
             placeholder="instagram_jan2024"
             maxLength={100}
           />
-          <p className="mt-1 text-xs text-dark-500">
+          <p className="mt-1 text-xs text-apple-faint">
             {t('admin.campaigns.form.startParameterHint')}
           </p>
         </div>
 
         {/* Active toggle */}
-        <div className="flex items-center justify-between rounded-lg border border-dark-700 bg-dark-800 p-4">
-          <span className="text-sm font-medium text-dark-300">
+        <div className="flex items-center justify-between rounded-xl bg-apple-elevated p-4">
+          <span className="text-sm font-medium text-apple-mute">
             {t('admin.campaigns.form.active')}
           </span>
           <button
             type="button"
             onClick={() => setIsActive(!isActive)}
             className={`relative h-6 w-11 rounded-full transition-colors ${
-              isActive ? 'bg-accent-500' : 'bg-dark-600'
+              isActive ? 'bg-[#F97315]' : 'bg-apple-card'
             }`}
           >
             <span
@@ -380,8 +378,8 @@ export default function AdminCampaignCreate() {
       </div>
 
       {/* Bonus Type */}
-      <div className="card space-y-4">
-        <h2 className="text-lg font-semibold text-dark-100">
+      <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5">
+        <h2 className="text-lg font-semibold text-apple-ink">
           {t('admin.campaigns.form.bonusType')}
         </h2>
 
@@ -391,10 +389,10 @@ export default function AdminCampaignCreate() {
               key={type}
               type="button"
               onClick={() => setBonusType(type)}
-              className={`rounded-lg border p-4 text-left transition-all ${
+              className={`rounded-xl p-4 text-left transition-all ${
                 bonusType === type
-                  ? `${bonusTypeConfig[type].bgColor} ${bonusTypeConfig[type].borderColor} ${bonusTypeConfig[type].color}`
-                  : 'border-dark-700 bg-dark-800 text-dark-300 hover:border-dark-600'
+                  ? `${bonusTypeConfig[type].bgColor} ${bonusTypeConfig[type].color}`
+                  : 'bg-apple-elevated text-apple-mute hover:opacity-80'
               }`}
             >
               <span className="text-sm font-medium">{t(bonusTypeConfig[type].labelKey)}</span>
@@ -405,9 +403,7 @@ export default function AdminCampaignCreate() {
 
       {/* Bonus Settings */}
       {bonusType === 'balance' && (
-        <div
-          className={`card space-y-4 border ${bonusTypeConfig.balance.borderColor} ${bonusTypeConfig.balance.bgColor}`}
-        >
+        <div className={`space-y-4 rounded-2xl p-5 ${bonusTypeConfig.balance.bgColor}`}>
           <h2 className={`text-lg font-semibold ${bonusTypeConfig.balance.color}`}>
             {t('admin.campaigns.form.balanceBonus')}
           </h2>
@@ -416,57 +412,55 @@ export default function AdminCampaignCreate() {
               type="number"
               value={balanceBonusRubles}
               onChange={createNumberInputHandler(setBalanceBonusRubles, 0)}
-              className="input w-32"
+              className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               min={0}
               step={1}
             />
-            <span className="text-dark-300">₽</span>
+            <span className="text-apple-mute">₽</span>
           </div>
         </div>
       )}
 
       {bonusType === 'subscription' && (
-        <div
-          className={`card space-y-4 border ${bonusTypeConfig.subscription.borderColor} ${bonusTypeConfig.subscription.bgColor}`}
-        >
+        <div className={`space-y-4 rounded-2xl p-5 ${bonusTypeConfig.subscription.bgColor}`}>
           <h2 className={`text-lg font-semibold ${bonusTypeConfig.subscription.color}`}>
             {t('admin.campaigns.form.trialSubscription')}
           </h2>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-300">
+              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                 {t('admin.campaigns.form.days')}
               </label>
               <input
                 type="number"
                 value={subscriptionDays}
                 onChange={createNumberInputHandler(setSubscriptionDays, 1)}
-                className="input"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={1}
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-300">
+              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                 {t('admin.campaigns.form.trafficGb')}
               </label>
               <input
                 type="number"
                 value={subscriptionTraffic}
                 onChange={createNumberInputHandler(setSubscriptionTraffic, 0)}
-                className="input"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={0}
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark-300">
+              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
                 {t('admin.campaigns.form.devices')}
               </label>
               <input
                 type="number"
                 value={subscriptionDevices}
                 onChange={createNumberInputHandler(setSubscriptionDevices, 1)}
-                className="input"
+                className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={1}
               />
             </div>
@@ -477,9 +471,7 @@ export default function AdminCampaignCreate() {
       )}
 
       {bonusType === 'tariff' && (
-        <div
-          className={`card space-y-4 border ${bonusTypeConfig.tariff.borderColor} ${bonusTypeConfig.tariff.bgColor}`}
-        >
+        <div className={`space-y-4 rounded-2xl p-5 ${bonusTypeConfig.tariff.bgColor}`}>
           <h2 className={`text-lg font-semibold ${bonusTypeConfig.tariff.color}`}>
             {t('admin.campaigns.form.tariff')}
           </h2>
@@ -487,14 +479,14 @@ export default function AdminCampaignCreate() {
           <TariffSelector tariffs={tariffs} value={tariffId} onChange={setTariffId} />
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.campaigns.form.durationDays')}
             </label>
             <input
               type="number"
               value={tariffDays}
               onChange={createNumberInputHandler(setTariffDays, 1)}
-              className="input w-32"
+              className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               min={1}
             />
           </div>
@@ -502,25 +494,23 @@ export default function AdminCampaignCreate() {
       )}
 
       {bonusType === 'none' && (
-        <div
-          className={`card border ${bonusTypeConfig.none.borderColor} ${bonusTypeConfig.none.bgColor}`}
-        >
-          <p className="text-sm text-dark-400">{t('admin.campaigns.form.noBonusDescription')}</p>
+        <div className={`rounded-2xl p-5 ${bonusTypeConfig.none.bgColor}`}>
+          <p className="text-sm text-apple-mute">{t('admin.campaigns.form.noBonusDescription')}</p>
         </div>
       )}
 
       {/* Footer */}
-      <div className="card flex items-center justify-end gap-3">
+      <div className="apple-card-grad flex items-center justify-end gap-3 rounded-2xl bg-apple-card p-5">
         <button
           onClick={() => navigate(partnerId ? `/admin/partners/${partnerId}` : '/admin/campaigns')}
-          className="btn-secondary"
+          className="rounded-full bg-apple-elevated px-5 py-2.5 text-sm font-medium text-apple-ink transition-opacity hover:opacity-90"
         >
           {t('common.cancel')}
         </button>
         <button
           onClick={handleSubmit}
           disabled={!isValid || createMutation.isPending}
-          className="btn-primary flex items-center gap-2"
+          className="flex items-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           {createMutation.isPending ? <RefreshIcon /> : <CampaignIcon />}
           {t('admin.campaigns.form.save')}

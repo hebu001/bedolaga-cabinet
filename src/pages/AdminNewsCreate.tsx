@@ -141,11 +141,11 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
       aria-label={title}
       aria-pressed={isActive}
       className={cn(
-        'min-h-[44px] min-w-[44px] rounded p-2.5 transition-colors',
+        'min-h-[44px] min-w-[44px] rounded-lg p-2.5 transition-colors',
         disabled && 'cursor-not-allowed opacity-50',
         isActive
-          ? 'bg-accent-500/20 text-accent-400'
-          : 'text-dark-400 hover:bg-dark-700 hover:text-dark-200',
+          ? 'bg-[#F97315]/20 text-[#F97315]'
+          : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
       )}
     >
       {children}
@@ -630,14 +630,14 @@ export default function AdminNewsCreate() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AdminBackButton to="/admin/news" />
-          <h1 className="text-xl font-bold text-dark-100">
+          <h1 className="text-xl font-bold text-apple-ink">
             {isEdit ? t('news.admin.edit') : t('news.admin.create')}
           </h1>
         </div>
         <button
           onClick={handleSave}
           disabled={saveMutation.isPending || !title.trim() || !slug.trim() || !selectedCategory}
-          className="min-h-[44px] rounded-lg bg-accent-500 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-[44px] rounded-full bg-[#F97315] px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saveMutation.isPending ? t('news.admin.saving') : t('news.admin.save')}
         </button>
@@ -646,20 +646,24 @@ export default function AdminNewsCreate() {
       {/* Form */}
       <div className="space-y-5">
         {/* Title */}
-        <div>
-          <label className="label">{t('news.admin.titleLabel')}</label>
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-apple-mute">
+            {t('news.admin.titleLabel')}
+          </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             required
           />
         </div>
 
         {/* Slug */}
-        <div>
-          <label className="label">{t('news.admin.slugLabel')}</label>
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-apple-mute">
+            {t('news.admin.slugLabel')}
+          </label>
           <input
             type="text"
             value={slug}
@@ -667,15 +671,17 @@ export default function AdminNewsCreate() {
               setSlug(e.target.value);
               setSlugManuallyEdited(true);
             }}
-            className="input font-mono text-sm"
+            className="w-full rounded-xl bg-apple-elevated px-4 py-3 font-mono text-sm text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             required
           />
         </div>
 
         {/* Category + Tag row */}
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="label">{t('news.admin.categoryLabel')}</label>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-apple-mute">
+              {t('news.admin.categoryLabel')}
+            </label>
             <ColoredItemCombobox
               items={categoriesData ?? []}
               value={selectedCategory}
@@ -685,8 +691,10 @@ export default function AdminNewsCreate() {
               placeholder={t('news.admin.combobox.selectCategory')}
             />
           </div>
-          <div>
-            <label className="label">{t('news.admin.tagLabel')}</label>
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-apple-mute">
+              {t('news.admin.tagLabel')}
+            </label>
             <ColoredItemCombobox
               items={tagsData ?? []}
               value={selectedTag}
@@ -699,49 +707,55 @@ export default function AdminNewsCreate() {
         </div>
 
         {/* Read time */}
-        <div>
-          <label className="label">{t('news.admin.readTimeLabel')}</label>
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-apple-mute">
+            {t('news.admin.readTimeLabel')}
+          </label>
           <input
             type="number"
             value={readTimeMinutes}
             onChange={(e) => setReadTimeMinutes(Number(e.target.value) || 1)}
             min={1}
             max={60}
-            className="input max-w-xs"
+            className="w-full max-w-xs rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
           />
         </div>
 
         {/* Excerpt */}
-        <div>
-          <label className="label">{t('news.admin.excerptLabel')}</label>
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-apple-mute">
+            {t('news.admin.excerptLabel')}
+          </label>
           <textarea
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
-            className="input min-h-[80px] resize-y"
+            className="min-h-[80px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             rows={3}
           />
         </div>
 
         {/* Featured Image URL */}
-        <div>
-          <label className="label">{t('news.admin.imageLabel')}</label>
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-apple-mute">
+            {t('news.admin.imageLabel')}
+          </label>
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={featuredImageUrl}
               onChange={(e) => setFeaturedImageUrl(e.target.value)}
-              className="input flex-1"
+              className="w-full flex-1 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               placeholder="https://..."
             />
             <button
               type="button"
               onClick={() => featuredImageInputRef.current?.click()}
               disabled={isFeaturedImageUploading}
-              className="flex min-h-[44px] items-center gap-2 rounded-lg bg-dark-700 px-4 py-2.5 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-[44px] items-center gap-2 rounded-xl bg-apple-elevated px-4 py-2.5 text-sm font-medium text-apple-ink transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t('news.admin.uploadFeaturedImage')}
             >
               {isFeaturedImageUploading ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
               ) : (
                 <UploadIcon />
               )}
@@ -776,7 +790,7 @@ export default function AdminNewsCreate() {
               onChange={() => setIsPublished((v) => !v)}
               aria-label={t('news.admin.published')}
             />
-            <span className="text-sm text-dark-300">{t('news.admin.published')}</span>
+            <span className="text-sm text-apple-mute">{t('news.admin.published')}</span>
           </div>
           <div className="flex items-center gap-3">
             <Toggle
@@ -784,25 +798,27 @@ export default function AdminNewsCreate() {
               onChange={() => setIsFeatured((v) => !v)}
               aria-label={t('news.admin.featured')}
             />
-            <span className="text-sm text-dark-300">{t('news.admin.featured')}</span>
+            <span className="text-sm text-apple-mute">{t('news.admin.featured')}</span>
           </div>
         </div>
 
         {/* Content editor */}
-        <div>
-          <label className="label">{t('news.admin.contentLabel')}</label>
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium text-apple-mute">
+            {t('news.admin.contentLabel')}
+          </label>
           <div
-            className="relative overflow-hidden rounded-xl border border-dark-700 bg-dark-800/50"
+            className="apple-card-grad relative overflow-hidden rounded-2xl bg-apple-card"
             onDragOver={handleEditorDragOver}
             onDragLeave={handleEditorDragLeave}
             onDrop={handleEditorDrop}
           >
             {/* Upload progress overlay */}
             {isUploading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-dark-900/60 backdrop-blur-sm">
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-apple-bg/60 backdrop-blur-sm">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
-                  <span className="text-sm font-medium text-dark-200">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+                  <span className="text-sm font-medium text-apple-ink">
                     {t('news.admin.uploading')}
                   </span>
                 </div>
@@ -811,8 +827,8 @@ export default function AdminNewsCreate() {
 
             {/* Drag overlay */}
             {isDragging && !isUploading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-accent-400 bg-accent-400/10">
-                <span className="text-sm font-semibold text-accent-400">
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl border-2 border-dashed border-[#F97315] bg-[#F97315]/10">
+                <span className="text-sm font-semibold text-[#F97315]">
                   {t('news.admin.dropMedia')}
                 </span>
               </div>
@@ -820,7 +836,7 @@ export default function AdminNewsCreate() {
 
             {/* Toolbar */}
             {editor && (
-              <div className="flex flex-wrap items-center gap-0.5 border-b border-dark-700 bg-dark-800 p-2">
+              <div className="flex flex-wrap items-center gap-0.5 border-b border-apple-hairline bg-apple-elevated p-2">
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleBold().run()}
                   isActive={editor.isActive('bold')}
@@ -850,7 +866,7 @@ export default function AdminNewsCreate() {
                   <StrikeIcon />
                 </ToolbarButton>
 
-                <div className="mx-1 h-5 w-px bg-dark-700" />
+                <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -874,7 +890,7 @@ export default function AdminNewsCreate() {
                   <H3Icon />
                 </ToolbarButton>
 
-                <div className="mx-1 h-5 w-px bg-dark-700" />
+                <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -905,7 +921,7 @@ export default function AdminNewsCreate() {
                   <CodeBlockIcon />
                 </ToolbarButton>
 
-                <div className="mx-1 h-5 w-px bg-dark-700" />
+                <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                 <ToolbarButton
                   onClick={() => editor.chain().focus().setTextAlign('left').run()}
@@ -922,7 +938,7 @@ export default function AdminNewsCreate() {
                   <AlignCenterIcon />
                 </ToolbarButton>
 
-                <div className="mx-1 h-5 w-px bg-dark-700" />
+                <div className="mx-1 h-5 w-px bg-apple-hairline" />
 
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleHighlight().run()}
@@ -940,7 +956,7 @@ export default function AdminNewsCreate() {
                   title={t('news.admin.toolbar.image')}
                 >
                   {isUploading ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent-400 border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                   ) : (
                     <ImageIcon />
                   )}
@@ -965,7 +981,7 @@ export default function AdminNewsCreate() {
 
         {/* Error feedback */}
         {saveError && (
-          <div className="rounded-lg border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-400">
+          <div className="rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red">
             {saveError}
           </div>
         )}
@@ -974,7 +990,7 @@ export default function AdminNewsCreate() {
         <button
           onClick={handleSave}
           disabled={saveMutation.isPending || !title.trim() || !slug.trim() || !selectedCategory}
-          className="min-h-[44px] w-full rounded-lg bg-accent-500 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-[44px] w-full rounded-full bg-[#F97315] py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saveMutation.isPending ? t('news.admin.saving') : t('news.admin.save')}
         </button>

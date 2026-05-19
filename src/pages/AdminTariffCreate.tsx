@@ -328,7 +328,7 @@ export default function AdminTariffCreate() {
   if (isEdit && isLoadingTariff) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
       </div>
     );
   }
@@ -340,37 +340,42 @@ export default function AdminTariffCreate() {
         <div className="flex items-center gap-3">
           <AdminBackButton to="/admin/tariffs" />
           <div>
-            <h1 className="text-xl font-bold text-dark-100">{t('admin.tariffs.selectType')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.tariffs.selectTypeDesc')}</p>
+            <h1 className="text-xl font-bold text-apple-ink">{t('admin.tariffs.selectType')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.tariffs.selectTypeDesc')}</p>
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <button
             onClick={() => setTariffType('period')}
-            className="card group p-6 text-left transition-colors hover:border-accent-500/50"
+            className="apple-card-grad group rounded-2xl bg-apple-card p-6 text-left transition-opacity hover:opacity-90"
           >
             <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-accent-500/20 p-3 text-accent-400 group-hover:bg-accent-500/30">
+              <div
+                className="rounded-lg p-3"
+                style={{ backgroundColor: 'rgba(249,115,21,0.15)', color: '#F97315' }}
+              >
                 <CalendarIcon />
               </div>
               <div>
-                <h3 className="font-medium text-dark-100">{t('admin.tariffs.periodTariff')}</h3>
-                <p className="mt-1 text-sm text-dark-400">{t('admin.tariffs.periodTariffDesc')}</p>
+                <h3 className="font-medium text-apple-ink">{t('admin.tariffs.periodTariff')}</h3>
+                <p className="mt-1 text-sm text-apple-mute">
+                  {t('admin.tariffs.periodTariffDesc')}
+                </p>
               </div>
             </div>
           </button>
           <button
             onClick={() => setTariffType('daily')}
-            className="card group p-6 text-left transition-colors hover:border-warning-500/50"
+            className="apple-card-grad group rounded-2xl bg-apple-card p-6 text-left transition-opacity hover:opacity-90"
           >
             <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-warning-500/20 p-3 text-warning-400 group-hover:bg-warning-500/30">
+              <div className="rounded-lg bg-apple-amber/15 p-3 text-apple-amber">
                 <SunIcon />
               </div>
               <div>
-                <h3 className="font-medium text-dark-100">{t('admin.tariffs.dailyTariff')}</h3>
-                <p className="mt-1 text-sm text-dark-400">{t('admin.tariffs.dailyTariffDesc')}</p>
+                <h3 className="font-medium text-apple-ink">{t('admin.tariffs.dailyTariff')}</h3>
+                <p className="mt-1 text-sm text-apple-mute">{t('admin.tariffs.dailyTariffDesc')}</p>
               </div>
             </div>
           </button>
@@ -388,21 +393,22 @@ export default function AdminTariffCreate() {
         <AdminBackButton to="/admin/tariffs" />
         <div className="flex items-center gap-3">
           <div
-            className={`rounded-lg p-2 ${
-              isDaily ? 'bg-warning-500/20 text-warning-400' : 'bg-accent-500/20 text-accent-400'
-            }`}
+            className={`rounded-lg p-2 ${isDaily ? 'bg-apple-amber/15 text-apple-amber' : ''}`}
+            style={
+              isDaily ? undefined : { backgroundColor: 'rgba(249,115,21,0.15)', color: '#F97315' }
+            }
           >
             {isDaily ? <SunIcon /> : <CalendarIcon />}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-dark-100">
+            <h1 className="text-xl font-bold text-apple-ink">
               {isEdit
                 ? t('admin.tariffs.editTitle')
                 : isDaily
                   ? t('admin.tariffs.newDailyTitle')
                   : t('admin.tariffs.newPeriodTitle')}
             </h1>
-            <p className="text-sm text-dark-400">
+            <p className="text-sm text-apple-mute">
               {isDaily ? t('admin.tariffs.dailyDeduction') : t('admin.tariffs.periodPayment')}
             </p>
           </div>
@@ -424,9 +430,9 @@ export default function AdminTariffCreate() {
             className={`shrink-0 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
               activeTab === tab
                 ? isDaily
-                  ? 'bg-warning-500/15 text-warning-400 ring-1 ring-warning-500/30'
-                  : 'bg-accent-500/15 text-accent-400 ring-1 ring-accent-500/30'
-                : 'bg-dark-800/50 text-dark-400 hover:bg-dark-700'
+                  ? 'bg-apple-amber/15 text-apple-amber ring-1 ring-apple-amber/30'
+                  : 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/30'
+                : 'bg-apple-elevated text-apple-mute'
             }`}
           >
             {tab === 'basic' && t('admin.tariffs.tabBasic')}
@@ -439,26 +445,26 @@ export default function AdminTariffCreate() {
 
       {/* Content */}
       {activeTab === 'basic' && (
-        <div className="card space-y-4">
+        <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-4">
           {/* Name */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.tariffs.nameLabel')}
-              <span className="text-error-400">*</span>
+              <span className="text-apple-red">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={`input ${!isNameValid && name.length > 0 ? 'border-error-500/50' : ''}`}
+              className={`w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${!isNameValid && name.length > 0 ? 'ring-2 ring-apple-red/50' : ''}`}
               placeholder={
                 isDaily ? t('admin.tariffs.nameExampleDaily') : t('admin.tariffs.nameExamplePeriod')
               }
               maxLength={50}
             />
-            <p className="mt-1 text-xs text-dark-500">{t('admin.tariffs.nameHint')}</p>
+            <p className="mt-1 text-xs text-apple-faint">{t('admin.tariffs.nameHint')}</p>
             {name.length > 0 && (name.length < 2 || name.length > 50) && (
-              <p className="mt-1 text-xs text-error-400">
+              <p className="mt-1 text-xs text-apple-red">
                 {t('admin.tariffs.validation.nameLength')}
               </p>
             )}
@@ -466,23 +472,23 @@ export default function AdminTariffCreate() {
 
           {/* Description */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.tariffs.descriptionLabel')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="input min-h-[80px] resize-none"
+              className="min-h-[80px] w-full resize-none rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               placeholder={t('admin.tariffs.descriptionPlaceholder')}
             />
           </div>
 
           {/* Daily Price (only for daily tariff) */}
           {isDaily && (
-            <div className="rounded-lg border border-warning-500/30 bg-warning-500/10 p-4">
-              <label className="mb-2 block text-sm font-medium text-warning-400">
+            <div className="rounded-xl bg-apple-amber/10 p-4">
+              <label className="mb-2 block text-[13px] font-medium text-apple-amber">
                 {t('admin.tariffs.dailyPriceLabel')}
-                <span className="text-error-400">*</span>
+                <span className="text-apple-red">*</span>
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -497,20 +503,22 @@ export default function AdminTariffCreate() {
                       setDailyPriceKopeks(num);
                     }
                   }}
-                  className={`input w-32 ${dailyPriceKopeks === '' || dailyPriceKopeks === 0 ? 'border-error-500/50' : ''}`}
+                  className={`w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${dailyPriceKopeks === '' || dailyPriceKopeks === 0 ? 'ring-2 ring-apple-red/50' : ''}`}
                   min={0}
                   step={0.1}
                   placeholder="50"
                 />
-                <span className="text-dark-400">{t('admin.tariffs.currencyPerDay')}</span>
+                <span className="text-apple-mute">{t('admin.tariffs.currencyPerDay')}</span>
               </div>
-              <p className="mt-2 text-xs text-dark-500">{t('admin.tariffs.dailyDeductionDesc')}</p>
+              <p className="mt-2 text-xs text-apple-faint">
+                {t('admin.tariffs.dailyDeductionDesc')}
+              </p>
             </div>
           )}
 
           {/* Traffic Limit */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.tariffs.trafficLimitLabel')}
             </label>
             <div className="flex items-center gap-2">
@@ -518,32 +526,32 @@ export default function AdminTariffCreate() {
                 type="number"
                 value={trafficLimitGb}
                 onChange={createNumberInputHandler(setTrafficLimitGb, 0)}
-                className="input w-32"
+                className="w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={0}
                 placeholder="100"
               />
-              <span className="text-dark-400">{t('admin.tariffs.gbUnit')}</span>
+              <span className="text-apple-mute">{t('admin.tariffs.gbUnit')}</span>
               {(trafficLimitGb === 0 || trafficLimitGb === '') && (
-                <span className="flex items-center gap-1 text-sm text-success-500">
+                <span className="flex items-center gap-1 text-sm text-apple-green">
                   <InfinityIcon />
                   {t('admin.tariffs.unlimited')}
                 </span>
               )}
             </div>
-            <p className="mt-1 text-xs text-dark-500">{t('admin.tariffs.trafficLimitHint')}</p>
+            <p className="mt-1 text-xs text-apple-faint">{t('admin.tariffs.trafficLimitHint')}</p>
           </div>
 
           {/* Device Limit */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.tariffs.deviceLimitLabel')}
-              <span className="text-error-400">*</span>
+              <span className="text-apple-red">*</span>
             </label>
             <input
               type="number"
               value={deviceLimit}
               onChange={createNumberInputHandler(setDeviceLimit, 1)}
-              className={`input w-32 ${!isDeviceLimitValid ? 'border-error-500/50' : ''}`}
+              className={`w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${!isDeviceLimitValid ? 'ring-2 ring-apple-red/50' : ''}`}
               min={1}
               placeholder="1"
             />
@@ -551,62 +559,62 @@ export default function AdminTariffCreate() {
 
           {/* Tier Level */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.tariffs.tierLevelLabel')}
-              <span className="text-error-400">*</span>
+              <span className="text-apple-red">*</span>
             </label>
             <input
               type="number"
               value={tierLevel}
               onChange={createNumberInputHandler(setTierLevel, 1, 10)}
-              className={`input w-32 ${!isTierLevelValid ? 'border-error-500/50' : ''}`}
+              className={`w-32 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 ${!isTierLevelValid ? 'ring-2 ring-apple-red/50' : ''}`}
               min={1}
               max={10}
               placeholder="1"
             />
-            <p className="mt-1 text-xs text-dark-500">{t('admin.tariffs.tierLevelHint')}</p>
+            <p className="mt-1 text-xs text-apple-faint">{t('admin.tariffs.tierLevelHint')}</p>
           </div>
         </div>
       )}
 
       {activeTab === 'periods' && !isDaily && (
-        <div className="card space-y-4">
-          <p className="text-sm text-dark-400">{t('admin.tariffs.periodsTabHint')}</p>
+        <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-4">
+          <p className="text-sm text-apple-mute">{t('admin.tariffs.periodsTabHint')}</p>
 
           {/* Add new period */}
-          <div className="rounded-lg border border-dashed border-dark-600 bg-dark-800/50 p-4">
-            <h4 className="mb-3 text-sm font-medium text-dark-300">
+          <div className="rounded-xl bg-apple-elevated p-4">
+            <h4 className="mb-3 text-sm font-medium text-apple-mute">
               {t('admin.tariffs.addPeriodTitle')}
             </h4>
             <div className="flex flex-wrap items-end gap-3">
               <div>
-                <label className="mb-1 block text-xs text-dark-500">
+                <label className="mb-1 block text-xs text-apple-faint">
                   {t('admin.tariffs.daysLabel')}
                 </label>
                 <input
                   type="number"
                   value={newPeriodDays}
                   onChange={createNumberInputHandler(setNewPeriodDays, 1)}
-                  className="input w-24"
+                  className="w-24 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   placeholder="30"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-dark-500">
+                <label className="mb-1 block text-xs text-apple-faint">
                   {t('admin.tariffs.priceLabel')}
                 </label>
                 <input
                   type="number"
                   value={newPeriodPrice}
                   onChange={createNumberInputHandler(setNewPeriodPrice, 1)}
-                  className="input w-28"
+                  className="w-28 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   placeholder="300"
                 />
               </div>
               <button
                 onClick={addPeriod}
                 disabled={periodPrices.some((p) => p.days === toNumber(newPeriodDays, 0))}
-                className="btn-primary flex items-center gap-2"
+                className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
               >
                 <PlusIcon />
                 {t('admin.tariffs.addButton')}
@@ -616,15 +624,17 @@ export default function AdminTariffCreate() {
 
           {/* Period list */}
           {periodPrices.length === 0 ? (
-            <div className="py-8 text-center text-dark-500">{t('admin.tariffs.noPeriodsHint')}</div>
+            <div className="py-8 text-center text-apple-faint">
+              {t('admin.tariffs.noPeriodsHint')}
+            </div>
           ) : (
             <div className="space-y-2">
               {periodPrices.map((period) => (
                 <div
                   key={period.days}
-                  className="flex items-center gap-3 rounded-lg bg-dark-800 p-3"
+                  className="flex items-center gap-3 rounded-xl bg-apple-elevated p-3"
                 >
-                  <div className="w-20 font-medium text-dark-300">
+                  <div className="w-20 font-medium text-apple-mute">
                     {period.days} {t('admin.tariffs.daysShort')}
                   </div>
                   <input
@@ -655,15 +665,15 @@ export default function AdminTariffCreate() {
                         return copy;
                       });
                     }}
-                    className="input w-28"
+                    className="w-28 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     step={1}
                     placeholder="0"
                   />
-                  <span className="text-dark-400">₽</span>
+                  <span className="text-apple-mute">₽</span>
                   <div className="flex-1" />
                   <button
                     onClick={() => removePeriod(period.days)}
-                    className="rounded-lg p-2 text-dark-400 transition-colors hover:bg-error-500/20 hover:text-error-400"
+                    className="rounded-lg p-2 text-apple-mute transition-colors hover:bg-apple-red/15 hover:text-apple-red"
                   >
                     <TrashIcon />
                   </button>
@@ -678,30 +688,30 @@ export default function AdminTariffCreate() {
         <div className="space-y-4">
           {/* External Squad */}
           {externalSquads.length > 0 && (
-            <div className="card space-y-4">
-              <h4 className="text-sm font-medium text-dark-200">
+            <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-4">
+              <h4 className="text-sm font-medium text-apple-ink">
                 {t('admin.tariffs.externalSquadTitle')}
               </h4>
-              <p className="text-sm text-dark-400">{t('admin.tariffs.externalSquadHint')}</p>
+              <p className="text-sm text-apple-mute">{t('admin.tariffs.externalSquadHint')}</p>
               <div className="space-y-2">
                 <button
                   type="button"
                   onClick={() => setSelectedExternalSquad(null)}
-                  className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+                  className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
                     !selectedExternalSquad
                       ? isDaily
-                        ? 'bg-warning-500/20 text-warning-300'
-                        : 'bg-accent-500/20 text-accent-300'
-                      : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        ? 'bg-apple-amber/15 text-apple-amber'
+                        : 'bg-[#F97315]/15 text-[#F97315]'
+                      : 'bg-apple-elevated text-apple-mute'
                   }`}
                 >
                   <div
                     className={`flex h-5 w-5 items-center justify-center rounded-full ${
                       !selectedExternalSquad
                         ? isDaily
-                          ? 'bg-warning-500 text-white'
-                          : 'bg-accent-500 text-white'
-                        : 'bg-dark-600'
+                          ? 'bg-apple-amber text-white'
+                          : 'bg-[#F97315] text-white'
+                        : 'bg-apple-card'
                     }`}
                   >
                     {!selectedExternalSquad && <CheckIcon />}
@@ -717,27 +727,27 @@ export default function AdminTariffCreate() {
                       key={squad.uuid}
                       type="button"
                       onClick={() => setSelectedExternalSquad(squad.uuid)}
-                      className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
                         isSelected
                           ? isDaily
-                            ? 'bg-warning-500/20 text-warning-300'
-                            : 'bg-accent-500/20 text-accent-300'
-                          : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                            ? 'bg-apple-amber/15 text-apple-amber'
+                            : 'bg-[#F97315]/15 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute'
                       }`}
                     >
                       <div
                         className={`flex h-5 w-5 items-center justify-center rounded-full ${
                           isSelected
                             ? isDaily
-                              ? 'bg-warning-500 text-white'
-                              : 'bg-accent-500 text-white'
-                            : 'bg-dark-600'
+                              ? 'bg-apple-amber text-white'
+                              : 'bg-[#F97315] text-white'
+                            : 'bg-apple-card'
                         }`}
                       >
                         {isSelected && <CheckIcon />}
                       </div>
                       <span className="flex-1 text-sm font-medium">{squad.name}</span>
-                      <span className="text-xs text-dark-500">
+                      <span className="text-xs text-apple-faint">
                         {squad.members_count} {t('admin.tariffs.externalSquadUsers')}
                       </span>
                     </button>
@@ -748,11 +758,13 @@ export default function AdminTariffCreate() {
           )}
 
           {/* Servers */}
-          <div className="card space-y-4">
-            <h4 className="text-sm font-medium text-dark-200">{t('admin.tariffs.serversTitle')}</h4>
-            <p className="text-sm text-dark-400">{t('admin.tariffs.serversTabHint')}</p>
+          <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-4">
+            <h4 className="text-sm font-medium text-apple-ink">
+              {t('admin.tariffs.serversTitle')}
+            </h4>
+            <p className="text-sm text-apple-mute">{t('admin.tariffs.serversTabHint')}</p>
             {servers.length === 0 ? (
-              <p className="py-4 text-center text-dark-500">
+              <p className="py-4 text-center text-apple-faint">
                 {t('admin.tariffs.noServersAvailable')}
               </p>
             ) : (
@@ -764,21 +776,21 @@ export default function AdminTariffCreate() {
                       key={server.id}
                       type="button"
                       onClick={() => toggleServer(server.squad_uuid)}
-                      className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
                         isSelected
                           ? isDaily
-                            ? 'bg-warning-500/20 text-warning-300'
-                            : 'bg-accent-500/20 text-accent-300'
-                          : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                            ? 'bg-apple-amber/15 text-apple-amber'
+                            : 'bg-[#F97315]/15 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute'
                       }`}
                     >
                       <div
                         className={`flex h-5 w-5 items-center justify-center rounded ${
                           isSelected
                             ? isDaily
-                              ? 'bg-warning-500 text-white'
-                              : 'bg-accent-500 text-white'
-                            : 'bg-dark-600'
+                              ? 'bg-apple-amber text-white'
+                              : 'bg-[#F97315] text-white'
+                            : 'bg-apple-card'
                         }`}
                       >
                         {isSelected && <CheckIcon />}
@@ -789,7 +801,7 @@ export default function AdminTariffCreate() {
                         </Twemoji>
                       </span>
                       {server.country_code && (
-                        <span className="text-xs text-dark-500">{server.country_code}</span>
+                        <span className="text-xs text-apple-faint">{server.country_code}</span>
                       )}
                     </button>
                   );
@@ -803,12 +815,12 @@ export default function AdminTariffCreate() {
       {activeTab === 'extra' && (
         <div className="space-y-4">
           {/* Device addon */}
-          <div className="card space-y-3">
-            <h4 className="text-sm font-medium text-dark-200">
+          <div className="apple-card-grad space-y-3 rounded-2xl bg-apple-card p-4">
+            <h4 className="text-sm font-medium text-apple-ink">
               {t('admin.tariffs.extraDeviceTitle')}
             </h4>
             <div className="flex items-center gap-3">
-              <span className="w-48 text-sm text-dark-400">
+              <span className="w-48 text-sm text-apple-mute">
                 {t('admin.tariffs.devicePriceLabel')}
               </span>
               <input
@@ -822,41 +834,41 @@ export default function AdminTariffCreate() {
                     setDevicePriceKopeks(Math.max(0, parseFloat(val) || 0) * 100);
                   }
                 }}
-                className="input w-24"
+                className="w-24 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={0}
                 step={1}
                 placeholder="0"
               />
-              <span className="text-dark-400">₽</span>
+              <span className="text-apple-mute">₽</span>
             </div>
-            <p className="text-xs text-dark-500">{t('admin.tariffs.devicePriceHint')}</p>
+            <p className="text-xs text-apple-faint">{t('admin.tariffs.devicePriceHint')}</p>
             <div className="flex items-center gap-3">
-              <span className="w-48 text-sm text-dark-400">
+              <span className="w-48 text-sm text-apple-mute">
                 {t('admin.tariffs.maxDeviceLabel')}
               </span>
               <input
                 type="number"
                 value={maxDeviceLimit}
                 onChange={createNumberInputHandler(setMaxDeviceLimit, 0)}
-                className="input w-24"
+                className="w-24 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 min={0}
                 placeholder="0"
               />
             </div>
-            <p className="text-xs text-dark-500">{t('admin.tariffs.noLimitHint')}</p>
+            <p className="text-xs text-apple-faint">{t('admin.tariffs.noLimitHint')}</p>
           </div>
 
           {/* Traffic topup */}
-          <div className="card space-y-3">
+          <div className="apple-card-grad space-y-3 rounded-2xl bg-apple-card p-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-dark-200">
+              <h4 className="text-sm font-medium text-apple-ink">
                 {t('admin.tariffs.extraTrafficTitle')}
               </h4>
               <button
                 type="button"
                 onClick={() => setTrafficTopupEnabled(!trafficTopupEnabled)}
                 className={`relative h-6 w-11 rounded-full transition-colors ${
-                  trafficTopupEnabled ? 'bg-accent-500' : 'bg-dark-600'
+                  trafficTopupEnabled ? 'bg-[#F97315]' : 'bg-apple-elevated'
                 }`}
               >
                 <span
@@ -869,46 +881,46 @@ export default function AdminTariffCreate() {
             {trafficTopupEnabled && (
               <>
                 <div className="flex items-center gap-3">
-                  <span className="w-32 text-sm text-dark-400">
+                  <span className="w-32 text-sm text-apple-mute">
                     {t('admin.tariffs.trafficMaxLimitLabel')}
                   </span>
                   <input
                     type="number"
                     value={maxTopupTrafficGb}
                     onChange={createNumberInputHandler(setMaxTopupTrafficGb, 0)}
-                    className="input w-24"
+                    className="w-24 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                     min={0}
                     placeholder="0"
                   />
-                  <span className="text-dark-400">{t('admin.tariffs.gbUnit')}</span>
+                  <span className="text-apple-mute">{t('admin.tariffs.gbUnit')}</span>
                 </div>
                 {/* Add new package */}
-                <div className="rounded-lg border border-dashed border-dark-600 bg-dark-800/50 p-3">
-                  <h5 className="mb-2 text-xs font-medium text-dark-400">
+                <div className="rounded-xl bg-apple-elevated p-3">
+                  <h5 className="mb-2 text-xs font-medium text-apple-mute">
                     {t('admin.tariffs.addPackageTitle')}
                   </h5>
                   <div className="flex flex-wrap items-end gap-2">
                     <div>
-                      <label className="mb-1 block text-xs text-dark-500">
+                      <label className="mb-1 block text-xs text-apple-faint">
                         {t('admin.tariffs.gbUnit')}
                       </label>
                       <input
                         type="number"
                         value={newPackageGb}
                         onChange={createNumberInputHandler(setNewPackageGb, 1)}
-                        className="input w-20"
+                        className="w-20 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                         placeholder="10"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-dark-500">
+                      <label className="mb-1 block text-xs text-apple-faint">
                         {t('admin.tariffs.priceLabel')}
                       </label>
                       <input
                         type="number"
                         value={newPackagePrice}
                         onChange={createNumberInputHandler(setNewPackagePrice, 1)}
-                        className="input w-24"
+                        className="w-24 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                         placeholder="100"
                       />
                     </div>
@@ -931,7 +943,7 @@ export default function AdminTariffCreate() {
                         newPackagePrice === '' ||
                         !!trafficTopupPackages[String(newPackageGb)]
                       }
-                      className="btn-primary flex items-center gap-1 px-3 py-2 text-sm"
+                      className="flex items-center gap-1 rounded-full bg-[#F97315] px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
                     >
                       <PlusIcon />
                       {t('admin.tariffs.addButton')}
@@ -941,11 +953,11 @@ export default function AdminTariffCreate() {
 
                 {/* Package list */}
                 <div>
-                  <span className="text-sm text-dark-400">
+                  <span className="text-sm text-apple-mute">
                     {t('admin.tariffs.trafficPackagesLabel')}
                   </span>
                   {Object.keys(trafficTopupPackages).length === 0 ? (
-                    <div className="mt-2 py-4 text-center text-sm text-dark-500">
+                    <div className="mt-2 py-4 text-center text-sm text-apple-faint">
                       {t('admin.tariffs.noPackagesHint')}
                     </div>
                   ) : (
@@ -955,9 +967,9 @@ export default function AdminTariffCreate() {
                         .map(([gb, priceKopeks]) => (
                           <div
                             key={gb}
-                            className="flex items-center gap-2 rounded-lg bg-dark-800 p-2"
+                            className="flex items-center gap-2 rounded-xl bg-apple-elevated p-2"
                           >
-                            <span className="w-16 text-sm font-medium text-dark-300">
+                            <span className="w-16 text-sm font-medium text-apple-mute">
                               {gb} {t('admin.tariffs.gbPackageUnit')}
                             </span>
                             <input
@@ -994,11 +1006,11 @@ export default function AdminTariffCreate() {
                                   return copy;
                                 });
                               }}
-                              className="input w-24"
+                              className="w-24 rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                               step={1}
                               placeholder="0"
                             />
-                            <span className="text-xs text-dark-400">₽</span>
+                            <span className="text-xs text-apple-mute">₽</span>
                             <div className="flex-1" />
                             <button
                               type="button"
@@ -1009,7 +1021,7 @@ export default function AdminTariffCreate() {
                                   return copy;
                                 });
                               }}
-                              className="rounded-lg p-2 text-dark-400 transition-colors hover:bg-error-500/20 hover:text-error-400"
+                              className="rounded-lg p-2 text-apple-mute transition-colors hover:bg-apple-red/15 hover:text-apple-red"
                             >
                               <TrashIcon />
                             </button>
@@ -1023,11 +1035,11 @@ export default function AdminTariffCreate() {
           </div>
 
           {/* Traffic reset mode */}
-          <div className="card space-y-3">
-            <h4 className="text-sm font-medium text-dark-200">
+          <div className="apple-card-grad space-y-3 rounded-2xl bg-apple-card p-4">
+            <h4 className="text-sm font-medium text-apple-ink">
               {t('admin.tariffs.trafficResetModeTitle')}
             </h4>
-            <p className="text-xs text-dark-500">{t('admin.tariffs.trafficResetModeDesc')}</p>
+            <p className="text-xs text-apple-faint">{t('admin.tariffs.trafficResetModeDesc')}</p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { value: null, labelKey: 'admin.tariffs.resetModeGlobal', emoji: '🌐' },
@@ -1045,12 +1057,12 @@ export default function AdminTariffCreate() {
                   key={option.value || 'global'}
                   type="button"
                   onClick={() => setTrafficResetMode(option.value)}
-                  className={`rounded-lg p-3 text-left text-sm transition-colors ${
+                  className={`rounded-xl p-3 text-left text-sm transition-colors ${
                     trafficResetMode === option.value
                       ? isDaily
-                        ? 'bg-warning-500/20 text-warning-300 ring-1 ring-warning-500/30'
-                        : 'bg-accent-500/20 text-accent-300 ring-1 ring-accent-500/30'
-                      : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        ? 'bg-apple-amber/15 text-apple-amber ring-1 ring-apple-amber/30'
+                        : 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-[#F97315]/30'
+                      : 'bg-apple-elevated text-apple-mute'
                   }`}
                 >
                   {option.emoji} {t(option.labelKey)}
@@ -1060,13 +1072,15 @@ export default function AdminTariffCreate() {
           </div>
 
           {/* Promo Groups */}
-          <div className="card space-y-4">
-            <h4 className="text-sm font-medium text-dark-200">
+          <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-4">
+            <h4 className="text-sm font-medium text-apple-ink">
               {t('admin.tariffs.promoGroupsTitle')}
             </h4>
-            <p className="text-sm text-dark-400">{t('admin.tariffs.promoGroupsHint')}</p>
+            <p className="text-sm text-apple-mute">{t('admin.tariffs.promoGroupsHint')}</p>
             {promoGroups.length === 0 ? (
-              <p className="py-4 text-center text-dark-500">{t('admin.tariffs.noPromoGroups')}</p>
+              <p className="py-4 text-center text-apple-faint">
+                {t('admin.tariffs.noPromoGroups')}
+              </p>
             ) : (
               <div className="space-y-2">
                 {promoGroups.map((group) => {
@@ -1076,21 +1090,21 @@ export default function AdminTariffCreate() {
                       key={group.id}
                       type="button"
                       onClick={() => togglePromoGroup(group.id)}
-                      className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors ${
                         isSelected
                           ? isDaily
-                            ? 'bg-warning-500/20 text-warning-300'
-                            : 'bg-accent-500/20 text-accent-300'
-                          : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
+                            ? 'bg-apple-amber/15 text-apple-amber'
+                            : 'bg-[#F97315]/15 text-[#F97315]'
+                          : 'bg-apple-elevated text-apple-mute'
                       }`}
                     >
                       <div
                         className={`flex h-5 w-5 items-center justify-center rounded ${
                           isSelected
                             ? isDaily
-                              ? 'bg-warning-500 text-white'
-                              : 'bg-accent-500 text-white'
-                            : 'bg-dark-600'
+                              ? 'bg-apple-amber text-white'
+                              : 'bg-[#F97315] text-white'
+                            : 'bg-apple-card'
                         }`}
                       >
                         {isSelected && <CheckIcon />}
@@ -1104,21 +1118,21 @@ export default function AdminTariffCreate() {
           </div>
 
           {/* Tariff status */}
-          <div className="card space-y-3">
-            <h4 className="text-sm font-medium text-dark-200">{t('admin.tariffs.statusTitle')}</h4>
+          <div className="apple-card-grad space-y-3 rounded-2xl bg-apple-card p-4">
+            <h4 className="text-sm font-medium text-apple-ink">{t('admin.tariffs.statusTitle')}</h4>
             {/* Active toggle */}
-            <div className="flex items-center justify-between rounded-lg bg-dark-800 p-3">
+            <div className="flex items-center justify-between rounded-xl bg-apple-elevated p-3">
               <div>
-                <span className="text-sm font-medium text-dark-200">
+                <span className="text-sm font-medium text-apple-ink">
                   {t('admin.tariffs.isActiveLabel')}
                 </span>
-                <p className="text-xs text-dark-500">{t('admin.tariffs.isActiveHint')}</p>
+                <p className="text-xs text-apple-faint">{t('admin.tariffs.isActiveHint')}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsActive(!isActive)}
                 className={`relative h-6 w-11 rounded-full transition-colors ${
-                  isActive ? 'bg-success-500' : 'bg-dark-600'
+                  isActive ? 'bg-apple-green' : 'bg-apple-card'
                 }`}
               >
                 <span
@@ -1129,18 +1143,18 @@ export default function AdminTariffCreate() {
               </button>
             </div>
             {/* Show in gift toggle */}
-            <div className="flex items-center justify-between rounded-lg bg-dark-800 p-3">
+            <div className="flex items-center justify-between rounded-xl bg-apple-elevated p-3">
               <div>
-                <span className="text-sm font-medium text-dark-200">
+                <span className="text-sm font-medium text-apple-ink">
                   {t('admin.tariffs.showInGiftLabel')}
                 </span>
-                <p className="text-xs text-dark-500">{t('admin.tariffs.showInGiftHint')}</p>
+                <p className="text-xs text-apple-faint">{t('admin.tariffs.showInGiftHint')}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowInGift(!showInGift)}
                 className={`relative h-6 w-11 rounded-full transition-colors ${
-                  showInGift ? 'bg-accent-500' : 'bg-dark-600'
+                  showInGift ? 'bg-[#F97315]' : 'bg-apple-card'
                 }`}
               >
                 <span
@@ -1155,13 +1169,13 @@ export default function AdminTariffCreate() {
       )}
 
       {/* Footer */}
-      <div className="card space-y-3">
+      <div className="apple-card-grad space-y-3 rounded-2xl bg-apple-card p-4">
         {validationErrors.length > 0 && (
-          <div className="rounded-lg border border-error-500/30 bg-error-500/10 p-3">
-            <p className="mb-1 text-sm font-medium text-error-400">
+          <div className="rounded-xl bg-apple-red/10 p-3">
+            <p className="mb-1 text-sm font-medium text-apple-red">
               {t('admin.tariffs.cannotSave')}
             </p>
-            <ul className="list-inside list-disc space-y-1 text-xs text-error-300">
+            <ul className="list-inside list-disc space-y-1 text-xs text-apple-red/80">
               {validationErrors.map((error) => (
                 <li key={error}>{t(`admin.tariffs.validation.${error}`)}</li>
               ))}
@@ -1172,7 +1186,7 @@ export default function AdminTariffCreate() {
           <button
             onClick={handleSubmit}
             disabled={!isValid || isLoading}
-            className="btn-primary flex items-center gap-2"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
           >
             {isLoading && <RefreshIcon />}
             {isLoading ? t('admin.tariffs.savingButton') : t('admin.tariffs.saveButton')}

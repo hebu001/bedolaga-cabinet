@@ -513,7 +513,7 @@ export default function AdminBroadcastCreate() {
     isLoading: boolean,
   ) => (
     <div>
-      <label className="mb-2 block text-sm font-medium text-dark-300">
+      <label className="mb-2 block text-[13px] font-medium text-apple-mute">
         {channelType === 'telegram'
           ? t('admin.broadcasts.selectFilter')
           : t('admin.broadcasts.selectEmailFilter')}
@@ -521,11 +521,11 @@ export default function AdminBroadcastCreate() {
       <div className="relative">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="flex w-full items-center justify-between rounded-lg border border-dark-700 bg-dark-800 p-3 text-left transition-colors hover:border-dark-600"
+          className="flex w-full items-center justify-between rounded-xl bg-apple-elevated p-3 text-left transition-colors"
         >
           <div className="flex items-center gap-2">
             <UsersIcon />
-            <span className={selectedFilter ? 'text-dark-100' : 'text-dark-400'}>
+            <span className={selectedFilter ? 'text-apple-ink' : 'text-apple-mute'}>
               {selectedFilter
                 ? selectedFilter.label
                 : channelType === 'telegram'
@@ -533,7 +533,10 @@ export default function AdminBroadcastCreate() {
                   : t('admin.broadcasts.selectEmailFilterPlaceholder')}
             </span>
             {recipientsCount !== null && (
-              <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-xs text-accent-400">
+              <span
+                className="rounded-full px-2 py-0.5 text-xs"
+                style={{ backgroundColor: 'rgba(249,115,21,0.15)', color: '#F97315' }}
+              >
                 {recipientsCount} {t('admin.broadcasts.recipients')}
               </span>
             )}
@@ -542,26 +545,29 @@ export default function AdminBroadcastCreate() {
         </button>
 
         {showFilters && (
-          <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-lg border border-dark-700 bg-dark-800 shadow-xl">
+          <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-xl bg-apple-card shadow-xl">
             {isLoading ? (
-              <div className="p-4 text-center text-dark-400">{t('common.loading')}</div>
+              <div className="p-4 text-center text-apple-mute">{t('common.loading')}</div>
             ) : (
               Object.entries(groupedFilters).map(([group, filters]) => (
                 <div key={group}>
-                  <div className="sticky top-0 bg-dark-900 px-3 py-2 text-xs font-medium text-dark-400">
+                  <div className="sticky top-0 bg-apple-bg px-3 py-2 text-xs font-medium text-apple-mute">
                     {FILTER_GROUP_LABEL_KEYS[group] ? t(FILTER_GROUP_LABEL_KEYS[group]) : group}
                   </div>
                   {filters.map((filter) => (
                     <button
                       key={filter.key}
                       onClick={() => handleFilterSelect(filter.key)}
-                      className={`flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-dark-700 ${
-                        target === filter.key ? 'bg-accent-500/20' : ''
-                      }`}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-apple-elevated"
+                      style={
+                        target === filter.key
+                          ? { backgroundColor: 'rgba(249,115,21,0.15)' }
+                          : undefined
+                      }
                     >
-                      <span className="text-dark-100">{filter.label}</span>
+                      <span className="text-apple-ink">{filter.label}</span>
                       {filter.count !== null && filter.count !== undefined && (
-                        <span className="text-xs text-dark-400">{filter.count}</span>
+                        <span className="text-xs text-apple-mute">{filter.count}</span>
                       )}
                     </button>
                   ))}
@@ -580,59 +586,70 @@ export default function AdminBroadcastCreate() {
       <div className="flex items-center gap-3">
         <AdminBackButton />
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-accent-500/20 p-2 text-accent-400">
+          <div
+            className="rounded-xl p-2"
+            style={{ backgroundColor: 'rgba(249,115,21,0.15)', color: '#F97315' }}
+          >
             <BroadcastIcon />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-dark-100">{t('admin.broadcasts.create')}</h1>
-            <p className="text-sm text-dark-400">{t('admin.broadcasts.subtitle')}</p>
+            <h1 className="text-xl font-bold text-apple-ink">{t('admin.broadcasts.create')}</h1>
+            <p className="text-sm text-apple-mute">{t('admin.broadcasts.subtitle')}</p>
           </div>
         </div>
       </div>
 
       {/* Channel toggles */}
-      <div className="card">
-        <label className="mb-3 block text-sm font-medium text-dark-300">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+        <label className="mb-3 block text-[13px] font-medium text-apple-mute">
           {t('admin.broadcasts.selectChannel')}
         </label>
         <div className="flex gap-3">
           <button
             onClick={handleToggleTelegram}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg border p-4 transition-all ${
-              telegramEnabled
-                ? 'border-accent-500 bg-accent-500/10 text-accent-400'
-                : 'border-dark-700 bg-dark-800 text-dark-300 hover:border-dark-600'
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl p-4 transition-all ${
+              telegramEnabled ? '' : 'bg-apple-elevated text-apple-mute'
             }`}
+            style={
+              telegramEnabled
+                ? { backgroundColor: 'rgba(249,115,21,0.12)', color: '#F97315' }
+                : undefined
+            }
           >
             <TelegramIcon />
             <span className="font-medium">{t('admin.broadcasts.enableTelegram')}</span>
           </button>
           <button
             onClick={handleToggleEmail}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg border p-4 transition-all ${
-              emailEnabled
-                ? 'border-accent-500 bg-accent-500/10 text-accent-400'
-                : 'border-dark-700 bg-dark-800 text-dark-300 hover:border-dark-600'
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl p-4 transition-all ${
+              emailEnabled ? '' : 'bg-apple-elevated text-apple-mute'
             }`}
+            style={
+              emailEnabled
+                ? { backgroundColor: 'rgba(249,115,21,0.12)', color: '#F97315' }
+                : undefined
+            }
           >
             <EmailIcon />
             <span className="font-medium">{t('admin.broadcasts.enableEmail')}</span>
           </button>
         </div>
         {!telegramEnabled && !emailEnabled && (
-          <p className="mt-2 text-sm text-error-400">{t('admin.broadcasts.atLeastOneChannel')}</p>
+          <p className="mt-2 text-sm text-apple-red">{t('admin.broadcasts.atLeastOneChannel')}</p>
         )}
         {bothChannels && (
-          <p className="mt-2 text-sm text-accent-400">{t('admin.broadcasts.sendingBoth')}</p>
+          <p className="mt-2 text-sm" style={{ color: '#F97315' }}>
+            {t('admin.broadcasts.sendingBoth')}
+          </p>
         )}
       </div>
 
       {/* Broadcast category */}
-      <div className="card">
-        <label className="mb-3 block text-sm font-medium text-dark-300">
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+        <label className="mb-3 block text-[13px] font-medium text-apple-mute">
           {t('admin.broadcasts.category', 'Категория рассылки')}
         </label>
-        <p className="mb-3 text-xs text-dark-500">
+        <p className="mb-3 text-xs text-apple-faint">
           {t(
             'admin.broadcasts.categoryDesc',
             'Пользователи могут отключить получение новостей и промо в настройках профиля. Системные рассылки доставляются всем.',
@@ -643,11 +660,14 @@ export default function AdminBroadcastCreate() {
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`flex-1 rounded-lg border p-3 text-sm font-medium transition-all ${
-                category === cat
-                  ? 'border-accent-500 bg-accent-500/10 text-accent-400'
-                  : 'border-dark-700 bg-dark-800 text-dark-300 hover:border-dark-600'
+              className={`flex-1 rounded-xl p-3 text-sm font-medium transition-all ${
+                category === cat ? '' : 'bg-apple-elevated text-apple-mute'
               }`}
+              style={
+                category === cat
+                  ? { backgroundColor: 'rgba(249,115,21,0.12)', color: '#F97315' }
+                  : undefined
+              }
             >
               {cat === 'system' && t('admin.broadcasts.categorySystem', '⚙️ Системное')}
               {cat === 'news' && t('admin.broadcasts.categoryNews', '📰 Новости')}
@@ -659,16 +679,16 @@ export default function AdminBroadcastCreate() {
 
       {/* Telegram section */}
       {telegramEnabled && (
-        <div className="card space-y-6">
+        <div className="apple-card-grad space-y-6 rounded-2xl bg-apple-card p-4">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-dark-100">
+            <h2 className="text-lg font-semibold text-apple-ink">
               {t('admin.broadcasts.telegramSection')}
             </h2>
             <button
               type="button"
               onClick={() => setShowTelegramPreview(true)}
               disabled={messageText.trim().length === 0}
-              className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-apple-elevated px-3 py-1.5 text-sm text-apple-mute transition-colors hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t('admin.broadcasts.preview', 'Предпросмотр')}
             </button>
@@ -689,7 +709,7 @@ export default function AdminBroadcastCreate() {
 
           {/* Message text */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.broadcasts.messageText')}
             </label>
             <textarea
@@ -698,33 +718,33 @@ export default function AdminBroadcastCreate() {
               placeholder={t('admin.broadcasts.messageTextPlaceholder')}
               rows={6}
               maxLength={4000}
-              className="input min-h-[150px] resize-y"
+              className="min-h-[150px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
-            <div className="mt-1 text-right text-xs text-dark-400">{messageText.length}/4000</div>
+            <div className="mt-1 text-right text-xs text-apple-mute">{messageText.length}/4000</div>
           </div>
 
           {/* Media upload */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.broadcasts.media')}
             </label>
             {mediaFile ? (
-              <div className="rounded-lg border border-dark-700 bg-dark-800 p-4">
+              <div className="rounded-xl bg-apple-elevated p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {mediaType === 'photo' && <PhotoIcon />}
                     {mediaType === 'video' && <VideoIcon />}
                     {mediaType === 'document' && <DocumentIcon />}
                     <div>
-                      <p className="text-sm text-dark-100">{mediaFile.name}</p>
-                      <p className="text-xs text-dark-400">
+                      <p className="text-sm text-apple-ink">{mediaFile.name}</p>
+                      <p className="text-xs text-apple-mute">
                         {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={handleRemoveMedia}
-                    className="rounded-lg p-2 text-dark-400 hover:bg-dark-700 hover:text-error-400"
+                    className="rounded-lg p-2 text-apple-mute hover:text-apple-red"
                     disabled={isUploading}
                   >
                     <XIcon />
@@ -738,7 +758,10 @@ export default function AdminBroadcastCreate() {
                   />
                 )}
                 {isUploading && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-accent-400">
+                  <div
+                    className="mt-2 flex items-center gap-2 text-sm"
+                    style={{ color: '#F97315' }}
+                  >
                     <RefreshIcon />
                     {t('admin.broadcasts.uploading')}
                   </div>
@@ -755,7 +778,7 @@ export default function AdminBroadcastCreate() {
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-dark-600 bg-dark-800/50 p-6 text-dark-400 transition-colors hover:border-dark-500 hover:bg-dark-800 hover:text-dark-300"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-elevated p-6 text-apple-mute transition-colors hover:text-apple-ink"
                 >
                   <PhotoIcon />
                   <span>{t('admin.broadcasts.addMedia')}</span>
@@ -766,7 +789,7 @@ export default function AdminBroadcastCreate() {
 
           {/* Buttons selection */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.broadcasts.buttons')}
             </label>
             <div className="flex flex-wrap gap-2">
@@ -774,10 +797,10 @@ export default function AdminBroadcastCreate() {
                 <button
                   key={button.key}
                   onClick={() => toggleButton(button.key)}
-                  className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                  className={`rounded-full px-3 py-2 text-sm transition-colors ${
                     selectedButtons.includes(button.key)
-                      ? 'bg-accent-500 text-white'
-                      : 'border border-dark-700 bg-dark-800 text-dark-300 hover:bg-dark-700'
+                      ? 'bg-[#F97315] text-white hover:opacity-90'
+                      : 'bg-apple-elevated text-apple-mute'
                   }`}
                 >
                   {button.label}
@@ -788,7 +811,7 @@ export default function AdminBroadcastCreate() {
 
           {/* Custom buttons */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.broadcasts.customButtons')}
             </label>
 
@@ -798,20 +821,20 @@ export default function AdminBroadcastCreate() {
                 {customButtons.map((btn, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between rounded-lg border border-dark-700 bg-dark-800 px-3 py-2"
+                    className="flex items-center justify-between rounded-xl bg-apple-elevated px-3 py-2"
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="shrink-0 rounded bg-dark-700 px-1.5 py-0.5 text-xs text-dark-400">
+                      <span className="shrink-0 rounded bg-apple-card px-1.5 py-0.5 text-xs text-apple-mute">
                         {btn.action_type === 'url'
                           ? t('admin.broadcasts.customButtonTypeUrl')
                           : t('admin.broadcasts.customButtonTypeCallback')}
                       </span>
-                      <span className="truncate text-sm text-dark-100">{btn.label}</span>
-                      <span className="truncate text-xs text-dark-500">{btn.action_value}</span>
+                      <span className="truncate text-sm text-apple-ink">{btn.label}</span>
+                      <span className="truncate text-xs text-apple-faint">{btn.action_value}</span>
                     </div>
                     <button
                       onClick={() => removeCustomButton(index)}
-                      className="ml-2 shrink-0 rounded p-1 text-dark-400 hover:bg-dark-700 hover:text-error-400"
+                      className="ml-2 shrink-0 rounded p-1 text-apple-mute hover:text-apple-red"
                     >
                       <XIcon />
                     </button>
@@ -827,7 +850,7 @@ export default function AdminBroadcastCreate() {
                   e.preventDefault();
                   addCustomButton();
                 }}
-                className="space-y-3 rounded-lg border border-dark-600 bg-dark-800/50 p-3"
+                className="space-y-3 rounded-xl bg-apple-elevated p-3"
               >
                 <input
                   type="text"
@@ -835,17 +858,17 @@ export default function AdminBroadcastCreate() {
                   onChange={(e) => setNewButtonLabel(e.target.value)}
                   placeholder={t('admin.broadcasts.customButtonLabelPlaceholder')}
                   maxLength={64}
-                  className="input"
+                  className="w-full rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                   autoFocus
                 />
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setNewButtonActionType('callback')}
-                    className={`flex-1 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    className={`flex-1 rounded-full px-3 py-2 text-sm transition-colors ${
                       newButtonActionType === 'callback'
-                        ? 'bg-accent-500 text-white'
-                        : 'border border-dark-700 bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        ? 'bg-[#F97315] text-white hover:opacity-90'
+                        : 'bg-apple-card text-apple-mute'
                     }`}
                   >
                     {t('admin.broadcasts.customButtonTypeCallback')}
@@ -853,10 +876,10 @@ export default function AdminBroadcastCreate() {
                   <button
                     type="button"
                     onClick={() => setNewButtonActionType('url')}
-                    className={`flex-1 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    className={`flex-1 rounded-full px-3 py-2 text-sm transition-colors ${
                       newButtonActionType === 'url'
-                        ? 'bg-accent-500 text-white'
-                        : 'border border-dark-700 bg-dark-800 text-dark-300 hover:bg-dark-700'
+                        ? 'bg-[#F97315] text-white hover:opacity-90'
+                        : 'bg-apple-card text-apple-mute'
                     }`}
                   >
                     {t('admin.broadcasts.customButtonTypeUrl')}
@@ -872,7 +895,7 @@ export default function AdminBroadcastCreate() {
                       : t('admin.broadcasts.customButtonCallbackPlaceholder')
                   }
                   maxLength={newButtonActionType === 'callback' ? 64 : 256}
-                  className="input"
+                  className="w-full rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
                 <div className="flex gap-2">
                   <button
@@ -882,11 +905,15 @@ export default function AdminBroadcastCreate() {
                       setNewButtonLabel('');
                       setNewButtonActionValue('');
                     }}
-                    className="btn-secondary flex-1"
+                    className="flex-1 rounded-full bg-apple-card px-4 py-2.5 text-sm font-medium text-apple-mute transition-colors hover:text-apple-ink"
                   >
                     {t('common.cancel')}
                   </button>
-                  <button type="submit" disabled={!isNewButtonValid} className="btn-primary flex-1">
+                  <button
+                    type="submit"
+                    disabled={!isNewButtonValid}
+                    className="flex-1 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
                     {t('common.add')}
                   </button>
                 </div>
@@ -895,7 +922,7 @@ export default function AdminBroadcastCreate() {
               <button
                 onClick={() => setIsAddingCustomButton(true)}
                 disabled={customButtons.length >= 10}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-dark-600 bg-dark-800/50 px-4 py-3 text-sm text-dark-400 transition-colors hover:border-dark-500 hover:bg-dark-800 hover:text-dark-300"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-elevated px-4 py-3 text-sm text-apple-mute transition-colors hover:text-apple-ink"
               >
                 <span>+</span>
                 <span>{t('admin.broadcasts.addCustomButton')}</span>
@@ -907,16 +934,16 @@ export default function AdminBroadcastCreate() {
 
       {/* Email section */}
       {emailEnabled && (
-        <div className="card space-y-6">
+        <div className="apple-card-grad space-y-6 rounded-2xl bg-apple-card p-4">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold text-dark-100">
+            <h2 className="text-lg font-semibold text-apple-ink">
               {t('admin.broadcasts.emailSection')}
             </h2>
             <button
               type="button"
               onClick={() => setShowEmailPreview(true)}
               disabled={emailContent.trim().length === 0}
-              className="rounded-lg border border-dark-700 bg-dark-800 px-3 py-1.5 text-sm text-dark-300 transition-colors hover:border-dark-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full bg-apple-elevated px-3 py-1.5 text-sm text-apple-mute transition-colors hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t('admin.broadcasts.preview', 'Предпросмотр')}
             </button>
@@ -937,7 +964,7 @@ export default function AdminBroadcastCreate() {
 
           {/* Email subject */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.broadcasts.emailSubject')}
             </label>
             <input
@@ -945,36 +972,37 @@ export default function AdminBroadcastCreate() {
               value={emailSubject}
               onChange={(e) => setEmailSubject(e.target.value)}
               placeholder={t('admin.broadcasts.emailSubjectPlaceholder')}
-              className="input"
+              className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               maxLength={200}
             />
           </div>
 
           {/* Email content */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark-300">
+            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.broadcasts.emailContent')}
             </label>
-            <p className="mb-2 text-xs text-dark-400">{t('admin.broadcasts.emailContentHint')}</p>
+            <p className="mb-2 text-xs text-apple-mute">{t('admin.broadcasts.emailContentHint')}</p>
             <textarea
               value={emailContent}
               onChange={(e) => setEmailContent(e.target.value)}
               placeholder={t('admin.broadcasts.emailContentPlaceholder')}
               rows={10}
-              className="input min-h-[200px] resize-y font-mono text-sm"
+              className="min-h-[200px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 font-mono text-sm text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
           </div>
 
           {/* Email variables hint */}
-          <div className="rounded-lg border border-dark-700 bg-dark-800/50 p-4">
-            <p className="mb-2 text-sm font-medium text-dark-300">
+          <div className="rounded-xl bg-apple-elevated p-4">
+            <p className="mb-2 text-sm font-medium text-apple-mute">
               {t('admin.broadcasts.emailVariables')}
             </p>
             <div className="flex flex-wrap gap-2">
               {['{{user_name}}', '{{email}}', '{{user_id}}'].map((variable) => (
                 <code
                   key={variable}
-                  className="rounded bg-dark-700 px-2 py-1 text-xs text-accent-400"
+                  className="rounded bg-apple-card px-2 py-1 text-xs"
+                  style={{ color: '#F97315' }}
                 >
                   {variable}
                 </code>
@@ -985,33 +1013,36 @@ export default function AdminBroadcastCreate() {
       )}
 
       {/* Footer */}
-      <div className="card flex items-center justify-between">
-        <div className="text-sm text-dark-400">
+      <div className="apple-card-grad flex items-center justify-between rounded-2xl bg-apple-card p-4">
+        <div className="text-sm text-apple-mute">
           {(telegramRecipientsCount !== null || emailRecipientsCount !== null) && (
             <span>
               {t('admin.broadcasts.willBeSent')}:{' '}
               {telegramRecipientsCount !== null && (
                 <>
-                  <strong className="text-accent-400">{telegramRecipientsCount}</strong> (TG)
+                  <strong style={{ color: '#F97315' }}>{telegramRecipientsCount}</strong> (TG)
                 </>
               )}
               {telegramRecipientsCount !== null && emailRecipientsCount !== null && ' + '}
               {emailRecipientsCount !== null && (
                 <>
-                  <strong className="text-accent-400">{emailRecipientsCount}</strong> (Email)
+                  <strong style={{ color: '#F97315' }}>{emailRecipientsCount}</strong> (Email)
                 </>
               )}
             </span>
           )}
         </div>
         <div className="flex gap-3">
-          <button onClick={() => navigate('/admin/broadcasts')} className="btn-secondary">
+          <button
+            onClick={() => navigate('/admin/broadcasts')}
+            className="rounded-full bg-apple-elevated px-4 py-2.5 text-sm font-medium text-apple-mute transition-colors hover:text-apple-ink"
+          >
             {t('common.cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={!isValid || isPending || isUploading}
-            className="btn-primary flex items-center gap-2"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? <RefreshIcon /> : <BroadcastIcon />}
             {t('admin.broadcasts.send')}
