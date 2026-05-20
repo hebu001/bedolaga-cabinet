@@ -922,21 +922,6 @@ export default function SubscriptionPurchase() {
               </div>
             )}
 
-          {/* Legacy subscription notice */}
-          {subscription && !subscription.is_trial && !subscription.tariff_id && (
-            <div className="rounded-2xl p-4" style={{ background: 'rgba(249,115,21,0.1)' }}>
-              <div className="mb-1 text-[14px] font-semibold" style={{ color: '#F97315' }}>
-                {t('subscription.legacy.selectTariffTitle')}
-              </div>
-              <div className="text-[13px] text-apple-mute">
-                {t('subscription.legacy.selectTariffDescription')}
-              </div>
-              <div className="mt-1 text-[12px] text-apple-faint">
-                {t('subscription.legacy.currentSubContinues')}
-              </div>
-            </div>
-          )}
-
           {/* Switch Tariff Preview Modal */}
           {switchTariffId && (
             <div
