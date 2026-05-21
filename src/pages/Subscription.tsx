@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
+import { DEVICE_ALIAS_MAX_LENGTH } from '../constants/devices';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform';
 import { formatTraffic } from '../utils/formatTraffic';
@@ -400,6 +401,21 @@ export default function Subscription() {
   const deleteDeviceMutation = useMutation({
     mutationFn: (hwid: string) => subscriptionApi.deleteDevice(hwid, subscriptionId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
+    },
+  });
+
+  // Inline device rename. Only one row is editable at a time —
+  // `editingDeviceHwid` doubles as the toggle and the target hwid.
+  const [editingDeviceHwid, setEditingDeviceHwid] = useState<string | null>(null);
+  const [editingDeviceName, setEditingDeviceName] = useState('');
+
+  const renameDeviceMutation = useMutation({
+    mutationFn: ({ hwid, name }: { hwid: string; name: string | null }) =>
+      subscriptionApi.renameDevice(hwid, name, subscriptionId),
+    onSuccess: () => {
+      setEditingDeviceHwid(null);
+      setEditingDeviceName('');
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
   });
@@ -2078,50 +2094,156 @@ export default function Subscription() {
                 <div className="h-7 w-7 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
               </div>
             ) : devicesData && devicesData.devices.length > 0 ? (
-              devicesData.devices.map((device, i) => (
-                <div
-                  key={device.hwid}
-                  className={`flex items-center gap-3 p-4 ${
-                    i !== devicesData.devices.length - 1 ? 'border-b border-apple-hairline' : ''
-                  }`}
-                >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#F97315"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[15px] text-apple-ink">
-                      {device.device_model || device.platform}
-                    </div>
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-apple-faint">
-                      <span>{device.platform}</span>
-                      <span className="font-mono">{device.hwid.slice(0, 8).toUpperCase()}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (confirm(t('subscription.confirmDeleteDevice'))) {
-                        deleteDeviceMutation.mutate(device.hwid);
-                      }
-                    }}
-                    disabled={deleteDeviceMutation.isPending}
-                    className="shrink-0 text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
+              devicesData.devices.map((device, i) => {
+                const isEditing = editingDeviceHwid === device.hwid;
+                // Display priority: user alias → device model → platform.
+                const deviceName =
+                  (device.local_name && device.local_name.trim()) ||
+                  device.device_model ||
+                  device.platform;
+                const submitRename = () =>
+                  renameDeviceMutation.mutate({
+                    hwid: device.hwid,
+                    name: editingDeviceName.trim() || null,
+                  });
+                const cancelRename = () => {
+                  setEditingDeviceHwid(null);
+                  setEditingDeviceName('');
+                };
+
+                return (
+                  <div
+                    key={device.hwid}
+                    className={`flex items-center gap-3 p-4 ${
+                      i !== devicesData.devices.length - 1 ? 'border-b border-apple-hairline' : ''
+                    }`}
                   >
-                    {t('subscription.deleteDevice')}
-                  </button>
-                </div>
-              ))
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#F97315"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          autoFocus
+                          value={editingDeviceName}
+                          maxLength={DEVICE_ALIAS_MAX_LENGTH}
+                          placeholder={device.device_model || device.platform}
+                          onChange={(e) => setEditingDeviceName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              submitRename();
+                            } else if (e.key === 'Escape') {
+                              e.preventDefault();
+                              cancelRename();
+                            }
+                          }}
+                          className="w-full rounded-lg bg-apple-elevated px-2.5 py-1 text-[15px] text-apple-ink outline-none ring-1 ring-apple-hairline focus:ring-apple-blue"
+                        />
+                      ) : (
+                        <div className="truncate text-[15px] text-apple-ink">{deviceName}</div>
+                      )}
+                      <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-apple-faint">
+                        <span>{device.platform}</span>
+                        <span className="font-mono">{device.hwid.slice(0, 8).toUpperCase()}</span>
+                      </div>
+                    </div>
+                    {isEditing ? (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          onClick={submitRename}
+                          disabled={renameDeviceMutation.isPending}
+                          aria-label={t('subscription.renameDeviceSave')}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-apple-blue transition-opacity hover:opacity-80 disabled:opacity-50"
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={cancelRename}
+                          disabled={renameDeviceMutation.isPending}
+                          aria-label={t('subscription.renameDeviceCancel')}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-apple-faint transition-opacity hover:opacity-80 disabled:opacity-50"
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingDeviceHwid(device.hwid);
+                            setEditingDeviceName(device.local_name || '');
+                          }}
+                          aria-label={t('subscription.renameDevice')}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-apple-faint transition-opacity hover:opacity-80"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(t('subscription.confirmDeleteDevice'))) {
+                              deleteDeviceMutation.mutate(device.hwid);
+                            }
+                          }}
+                          disabled={deleteDeviceMutation.isPending}
+                          className="shrink-0 text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
+                        >
+                          {t('subscription.deleteDevice')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             ) : (
               <div className="py-10 text-center text-[13px] text-apple-mute">
                 {t('subscription.noDevices')}

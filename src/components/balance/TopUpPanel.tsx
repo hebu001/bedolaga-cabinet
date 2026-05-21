@@ -148,7 +148,8 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
     onSuccess: (data) => {
       const redirectUrl = data.payment_url || data.invoice_url;
       if (redirectUrl) {
-        setPaymentUrl(redirectUrl);
+        // Save pending info BEFORE a possible redirect — code after
+        // window.location.href won't run.
         if (data.payment_id && method) {
           saveTopUpPendingInfo({
             amount_kopeks: data.amount_kopeks,
@@ -158,6 +159,21 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
             created_at: Date.now(),
           });
         }
+
+        // open_url_direct: skip the link panel and navigate straight to
+        // the provider. Telegram deep links (t.me / tg://) must go through
+        // the native handler, so the flag is ignored for them.
+        const lowerUrl = redirectUrl.toLowerCase();
+        const isTelegramDeepLink =
+          lowerUrl.startsWith('https://t.me/') ||
+          lowerUrl.startsWith('http://t.me/') ||
+          lowerUrl.startsWith('tg://');
+        if (method?.open_url_direct && !isTelegramDeepLink) {
+          window.location.href = redirectUrl;
+          return;
+        }
+
+        setPaymentUrl(redirectUrl);
       }
     },
     onError: (err: unknown) => {
