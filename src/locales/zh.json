@@ -1757,8 +1757,8 @@
         "telegramOidcClientId": "Client ID（机器人 ID）",
         "telegramOidcClientSecret": "Client Secret"
       },
-      "offlineConv": "\u79bb\u7ebf\u8f6c\u5316",
-      "apiKey": "API \u5bc6\u94a5"
+      "offlineConv": "离线转化",
+      "apiKey": "API 密钥"
     },
     "buttons": {
       "color": "按钮颜色",
@@ -4075,6 +4075,13 @@
       "defaultMessage": "您的帐户已被封锁。",
       "reason": "原因",
       "contactSupport": "如果您认为这是错误，请联系客服。"
+    },
+    "accountDeleted": {
+      "title": "账户已停用",
+      "description": "由于长期未活动，您的账户已被停用。请在 Telegram 中打开机器人并发送 /start 以恢复访问。",
+      "openBot": "打开机器人",
+      "retry": "我已按 /start，重试",
+      "hint": "运行 /start 后，返回此处并点击「重试」。"
     }
   },
   "banSystem": {

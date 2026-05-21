@@ -27,11 +27,13 @@ import {
   MaintenanceScreen,
   ChannelSubscriptionScreen,
   BlacklistedScreen,
+  AccountDeletedScreen,
 } from './components/blocking';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PermissionRoute } from '@/components/auth/PermissionRoute';
 import { saveReturnUrl } from './utils/token';
 import { useAnalyticsCounters } from './hooks/useAnalyticsCounters';
+import { useSiteVerification } from './hooks/useSiteVerification';
 // Auth pages - load immediately (small)
 import Login from './pages/Login';
 import TelegramCallback from './pages/TelegramCallback';
@@ -236,6 +238,10 @@ function BlockingOverlay() {
     return <BlacklistedScreen />;
   }
 
+  if (blockingType === 'account_deleted') {
+    return <AccountDeletedScreen />;
+  }
+
   return null;
 }
 
@@ -247,6 +253,9 @@ function LegacySubscriptionRedirect() {
 
 function App() {
   useAnalyticsCounters();
+  // Pulls site-verification tokens (Antilopay apay-tag etc.) from the bot
+  // backend and injects matching <meta> tags into document.head.
+  useSiteVerification();
 
   return (
     <>

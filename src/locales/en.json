@@ -4657,6 +4657,13 @@
       "defaultMessage": "Your account has been blocked.",
       "reason": "Reason",
       "contactSupport": "If you believe this is an error, please contact support."
+    },
+    "accountDeleted": {
+      "title": "Account deactivated",
+      "description": "Your account was deactivated after a long period of inactivity. To restore access, open the bot in Telegram and send /start.",
+      "openBot": "Open the bot",
+      "retry": "I pressed /start, retry",
+      "hint": "After running /start, return here and tap «Retry»."
     }
   },
   "merge": {

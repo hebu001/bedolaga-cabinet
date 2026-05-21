@@ -1719,8 +1719,8 @@
         "telegramOidcClientId": "Client ID (شناسه ربات)",
         "telegramOidcClientSecret": "Client Secret"
       },
-      "offlineConv": "\u062a\u0628\u062f\u06cc\u0644\u200c\u0647\u0627\u06cc \u0622\u0641\u0644\u0627\u06cc\u0646",
-      "apiKey": "\u06a9\u0644\u06cc\u062f API"
+      "offlineConv": "تبدیل‌های آفلاین",
+      "apiKey": "کلید API"
     },
     "buttons": {
       "color": "رنگ دکمه",
@@ -4194,6 +4194,13 @@
       "defaultMessage": "حساب شما مسدود شده است.",
       "reason": "دلیل",
       "contactSupport": "اگر فکر می‌کنید این اشتباه است، با پشتیبانی تماس بگیرید."
+    },
+    "accountDeleted": {
+      "title": "حساب غیرفعال شد",
+      "description": "حساب شما به دلیل عدم فعالیت طولانی غیرفعال شده است. برای بازیابی دسترسی، ربات را در تلگرام باز کرده و دستور /start را ارسال کنید.",
+      "openBot": "باز کردن ربات",
+      "retry": "من /start را زدم، دوباره امتحان کن",
+      "hint": "پس از اجرای /start، به اینجا بازگردید و «دوباره امتحان کنید» را بزنید."
     }
   },
   "merge": {
