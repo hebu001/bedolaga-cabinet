@@ -24,6 +24,10 @@ export const UI = {
 // API
 export const API = {
   TIMEOUT_MS: 30000,
+  // Balance purchases: the backend commits the charge fast, then runs a slow
+  // panel sync before responding. Cap the wait so the pay button doesn't spin
+  // for the full 30s — on timeout the UI navigates to the (updated) result.
+  PURCHASE_TIMEOUT_MS: 15000,
   BALANCE_STALE_TIME_MS: 30000,
   TRAFFIC_CACHE_MS: 30000,
   TRAFFIC_WARN_PERCENT: 70,

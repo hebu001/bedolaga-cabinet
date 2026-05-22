@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { API } from '../config/constants';
 import type {
   Subscription,
   SubscriptionStatusResponse,
@@ -387,10 +388,11 @@ export const subscriptionApi = {
     subscription: Subscription;
     was_trial_conversion: boolean;
   }> => {
-    const response = await apiClient.post(
-      '/cabinet/subscription/purchase',
-      ...bodyWithSubId({ selection }, subscriptionId),
-    );
+    const [body, config] = bodyWithSubId({ selection }, subscriptionId);
+    const response = await apiClient.post('/cabinet/subscription/purchase', body, {
+      ...config,
+      timeout: API.PURCHASE_TIMEOUT_MS,
+    });
     return response.data;
   },
 
@@ -407,11 +409,15 @@ export const subscriptionApi = {
     balance_kopeks: number;
     balance_label: string;
   }> => {
-    const response = await apiClient.post('/cabinet/subscription/purchase-tariff', {
-      tariff_id: tariffId,
-      period_days: periodDays,
-      traffic_gb: trafficGb,
-    });
+    const response = await apiClient.post(
+      '/cabinet/subscription/purchase-tariff',
+      {
+        tariff_id: tariffId,
+        period_days: periodDays,
+        traffic_gb: trafficGb,
+      },
+      { timeout: API.PURCHASE_TIMEOUT_MS },
+    );
     return response.data;
   },
 
