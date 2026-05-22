@@ -141,19 +141,19 @@ export default function Balance() {
 
   const normalizeType = (type: string) => type?.toUpperCase?.() ?? type;
 
-  // Apple-dark badge tint per transaction type
+  // Apple-dark badge: solid color fill + white text per transaction type
   const getTypeColor = (type: string) => {
     switch (normalizeType(type)) {
       case 'DEPOSIT':
-        return 'border-apple-green/30 bg-apple-green/12 text-apple-green';
+        return 'bg-apple-green text-white';
       case 'SUBSCRIPTION_PAYMENT':
-        return 'border-apple-blue/30 bg-apple-blue/12 text-apple-blue';
+        return 'bg-apple-blue text-white';
       case 'REFERRAL_REWARD':
-        return 'border-apple-amber/30 bg-apple-amber/12 text-apple-amber';
+        return 'bg-apple-amber text-white';
       case 'WITHDRAWAL':
-        return 'border-apple-red/30 bg-apple-red/12 text-apple-red';
+        return 'bg-apple-red text-white';
       default:
-        return 'border-apple-hairline bg-apple-elevated text-apple-mute';
+        return 'bg-apple-elevated text-apple-mute';
     }
   };
 
@@ -326,7 +326,7 @@ export default function Balance() {
                             <div className="min-w-0 flex-1">
                               <div className="mb-1 flex items-center gap-2.5">
                                 <span
-                                  className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${getTypeColor(tx.type)}`}
+                                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${getTypeColor(tx.type)}`}
                                 >
                                   {getTypeLabel(tx.type)}
                                 </span>
@@ -335,7 +335,7 @@ export default function Balance() {
                                 </span>
                               </div>
                               {tx.description && (
-                                <div className="text-sm text-apple-mute">{tx.description}</div>
+                                <div className="text-sm text-apple-ink">{tx.description}</div>
                               )}
                             </div>
                             <div className={`text-[17px] font-semibold tabular-nums ${colorClass}`}>
