@@ -326,7 +326,7 @@ export default function Balance() {
                             <div className="min-w-0 flex-1">
                               <div className="mb-1 flex items-center gap-2.5">
                                 <span
-                                  className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${getTypeColor(tx.type)}`}
+                                  className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${getTypeColor(tx.type)}`}
                                 >
                                   {getTypeLabel(tx.type)}
                                 </span>

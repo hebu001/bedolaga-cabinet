@@ -100,12 +100,14 @@ function AppleToggle({
 function AccordionSection({
   title,
   icon,
+  color = '#0A84FF',
   open,
   onToggle,
   children,
 }: {
   title: string;
   icon?: React.ReactNode;
+  color?: string;
   open: boolean;
   onToggle: () => void;
   children: React.ReactNode;
@@ -118,7 +120,10 @@ function AccordionSection({
         className="flex w-full items-center gap-3 px-5 py-4 text-left"
       >
         {icon && (
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F97315]/15 text-[#F97315]">
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-white"
+            style={{ background: color }}
+          >
             {icon}
           </span>
         )}
@@ -602,6 +607,7 @@ export default function Profile() {
       <AccordionSection
         title={t('profile.accountInfo')}
         icon={<UserIcon className="h-[18px] w-[18px]" />}
+        color="#0A84FF"
         open={openSection === 'account'}
         onToggle={() => toggleSection('account')}
       >
@@ -636,6 +642,7 @@ export default function Profile() {
         <AccordionSection
           title={t('profile.emailAuth')}
           icon={<MailIcon className="h-[18px] w-[18px]" />}
+          color="#34C759"
           open={openSection === 'email'}
           onToggle={() => toggleSection('email')}
         >
@@ -880,6 +887,7 @@ export default function Profile() {
         <AccordionSection
           title={t('referral.title')}
           icon={<GiftIcon className="h-[18px] w-[18px]" />}
+          color="#FF2D55"
           open={openSection === 'referral'}
           onToggle={() => toggleSection('referral')}
         >
@@ -1322,6 +1330,7 @@ export default function Profile() {
       <AccordionSection
         title={t('profile.accounts.title')}
         icon={<LinkIcon className="h-[18px] w-[18px]" />}
+        color="#5856D6"
         open={openSection === 'accounts'}
         onToggle={() => toggleSection('accounts')}
       >
@@ -1332,6 +1341,7 @@ export default function Profile() {
       <AccordionSection
         title={t('profile.notifications.title')}
         icon={<BellIcon className="h-[18px] w-[18px]" />}
+        color="#FF9F0A"
         open={openSection === 'notifications'}
         onToggle={() => toggleSection('notifications')}
       >
@@ -1492,6 +1502,7 @@ export default function Profile() {
       <AccordionSection
         title={t('info.title')}
         icon={<InfoIcon className="h-[18px] w-[18px]" />}
+        color="#5AC8FA"
         open={openSection === 'info'}
         onToggle={() => toggleSection('info')}
       >
