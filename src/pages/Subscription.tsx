@@ -769,13 +769,11 @@ export default function Subscription() {
             : subscription.is_limited
               ? '#ff9f0a'
               : '#ff453a';
-          // Always renew via the dedicated /subscriptions/:id/renew page —
-          // it hits the fast POST /subscription/renew endpoint. The classic
-          // ?renew=1 path went through purchase-tariff, which does a slow
-          // full panel re-sync.
           const renewLink = subscription.is_trial
             ? '/subscription/purchase'
-            : `/subscriptions/${subscription.id}/renew`;
+            : isMultiTariff
+              ? `/subscriptions/${subscription.id}/renew`
+              : '/subscription/purchase?renew=1';
 
           return (
             <>
