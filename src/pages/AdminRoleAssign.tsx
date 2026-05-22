@@ -464,7 +464,7 @@ export default function AdminRoleAssign() {
               </div>
 
               {/* Expiry date */}
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <label
                   htmlFor="assign-expires"
                   className="mb-1 block text-[13px] font-medium text-apple-mute"
@@ -476,7 +476,7 @@ export default function AdminRoleAssign() {
                   type="datetime-local"
                   value={expiresAt}
                   onChange={(e) => setExpiresAt(e.target.value)}
-                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none [color-scheme:dark] focus:ring-2 focus:ring-[#F97315]/50"
+                  className="w-full min-w-0 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none [color-scheme:dark] focus:ring-2 focus:ring-inset focus:ring-[#F97315]/50"
                 />
                 <p className="mt-1 text-xs text-apple-faint">{t('admin.roleAssign.expiresHint')}</p>
               </div>
