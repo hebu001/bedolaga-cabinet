@@ -563,8 +563,10 @@ export default function Profile() {
   };
 
   // Apple-dark input class
+  // ring-inset: the focus ring renders inside the input so it isn't clipped
+  // by the overflow-hidden height-animation wrappers the inputs live in.
   const inputCls =
-    'w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60 disabled:opacity-50';
+    'w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-inset focus:ring-apple-blue/60 disabled:opacity-50';
 
   const partnerStatusValue = partnerStatus?.partner_status ?? 'none';
   const showApplySection = partnerStatusValue === 'none';
