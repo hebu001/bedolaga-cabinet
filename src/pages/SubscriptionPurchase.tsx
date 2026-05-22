@@ -36,6 +36,19 @@ import {
 } from '../utils/purchaseIntentStorage';
 import { saveTopUpPendingInfo } from '../utils/topUpStorage';
 
+/**
+ * True when an axios request was aborted by its own timeout (no HTTP
+ * response received). The purchase endpoints can outlive the 30s client
+ * timeout while the backend finishes a slow panel sync — by then the
+ * balance charge and subscription change are already committed.
+ */
+function isTimeoutError(error: unknown): boolean {
+  return (
+    error instanceof AxiosError &&
+    (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT' || /timeout/i.test(error.message))
+  );
+}
+
 export default function SubscriptionPurchase() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -302,14 +315,21 @@ export default function SubscriptionPurchase() {
   });
 
   // Classic purchase mutation
+  const finishPurchaseNavigation = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+    queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
+    queryClient.invalidateQueries({ queryKey: ['balance'] });
+    queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+    navigate('/subscriptions', { replace: true });
+  }, [queryClient, subscriptionId, navigate]);
+
   const purchaseMutation = useMutation({
     mutationFn: () => subscriptionApi.submitPurchase(currentSelection, subscriptionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
-      queryClient.invalidateQueries({ queryKey: ['balance'] });
-      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
-      navigate('/subscriptions', { replace: true });
+    onSuccess: finishPurchaseNavigation,
+    // A timeout almost always means the purchase committed but the backend
+    // response was slow — show the updated list instead of a false error.
+    onError: (error) => {
+      if (isTimeoutError(error)) finishPurchaseNavigation();
     },
   });
 
@@ -353,6 +373,14 @@ export default function SubscriptionPurchase() {
   });
 
   // Tariff purchase mutation
+  const finishTariffPurchase = useCallback(() => {
+    clearPurchaseIntent();
+    queryClient.invalidateQueries({ queryKey: ['subscription'] });
+    queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
+    queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+    navigate('/subscriptions', { replace: true });
+  }, [queryClient, navigate]);
+
   const tariffPurchaseMutation = useMutation({
     mutationFn: () => {
       if (!selectedTariff) {
@@ -370,12 +398,13 @@ export default function SubscriptionPurchase() {
         useCustomTraffic && selectedTariff.custom_traffic_enabled ? customTrafficGb : undefined;
       return subscriptionApi.purchaseTariff(selectedTariff.id, days, trafficGb);
     },
-    onSuccess: () => {
-      clearPurchaseIntent();
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
-      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
-      navigate('/subscriptions', { replace: true });
+    onSuccess: finishTariffPurchase,
+    // purchase-tariff can outlive the 30s axios timeout while the backend
+    // finishes a slow panel sync — the charge is already committed. Treat a
+    // timeout as done and show the updated list; real validation failures
+    // return fast with an error body and still surface inline.
+    onError: (error) => {
+      if (isTimeoutError(error)) finishTariffPurchase();
     },
   });
 
