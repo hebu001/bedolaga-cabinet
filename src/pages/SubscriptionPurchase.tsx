@@ -848,8 +848,7 @@ export default function SubscriptionPurchase() {
                         setSwitchTariffId(tariff.id);
                         setShowTariffListModal(false);
                       }}
-                      className="w-full rounded-full bg-apple-elevated py-3 text-[15px] font-medium transition-opacity hover:opacity-80"
-                      style={{ color: '#F97315' }}
+                      className="w-full rounded-full bg-white py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
                     >
                       {t('subscription.switchTariff.switch')}
                     </button>

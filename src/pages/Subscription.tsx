@@ -101,35 +101,54 @@ const CountdownTimer = memo(function CountdownTimer({
   );
 });
 
-// Apple-style leading icon tile for list rows
+// iOS Settings-style leading icon tile: colored rounded square + white glyph.
 const ROW_ICON = {
-  link: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71',
-  device: 'M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 18h.01',
-  autopay:
-    'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
-  server:
-    'M5 2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 14h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zM7 6h.01M7 18h.01',
-  reissue: 'M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10',
-  traffic: 'M7 16a4 4 0 0 1-.88-7.9A5 5 0 0 1 15.9 6 5 5 0 0 1 17 15.9M15 13l-3-3-3 3M12 10v8',
+  link: {
+    d: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71',
+    color: '#0A84FF',
+  },
+  device: {
+    d: 'M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 18h.01',
+    color: '#34C759',
+  },
+  autopay: {
+    d: 'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+    color: '#FF9F0A',
+  },
+  server: {
+    d: 'M5 2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 14h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zM7 6h.01M7 18h.01',
+    color: '#5856D6',
+  },
+  reissue: { d: 'M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10', color: '#AF52DE' },
+  traffic: {
+    d: 'M7 16a4 4 0 0 1-.88-7.9A5 5 0 0 1 15.9 6 5 5 0 0 1 17 15.9M15 13l-3-3-3 3M12 10v8',
+    color: '#5AC8FA',
+  },
 } as const;
 
-const RowIcon = ({ d }: { d: string }) => (
-  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
-    <svg
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#F97315"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
+const RowIcon = ({ icon }: { icon: keyof typeof ROW_ICON }) => {
+  const { d, color } = ROW_ICON[icon];
+  return (
+    <span
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
+      style={{ background: color }}
     >
-      <path d={d} />
-    </svg>
-  </span>
-);
+      <svg
+        width="17"
+        height="17"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d={d} />
+      </svg>
+    </span>
+  );
+};
 
 // Pill-style slider — track, filler and thumb share one height (apple-dark)
 const SLIDER_H = 28;
@@ -1382,7 +1401,7 @@ export default function Subscription() {
                   <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
                     {displayedConnectionUrl && !shouldHideConnectionLink && (
                       <div className="flex items-center gap-2.5 p-4">
-                        <RowIcon d={ROW_ICON.link} />
+                        <RowIcon icon="link" />
                         <code
                           className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
                           title={displayedConnectionUrl}
@@ -1425,7 +1444,7 @@ export default function Subscription() {
                             : ''
                         }`}
                       >
-                        <RowIcon d={ROW_ICON.device} />
+                        <RowIcon icon="device" />
                         <div className="min-w-0 flex-1">
                           <div className="text-[15px] text-apple-ink">
                             {t('dashboard.connectDevice')}
@@ -1460,7 +1479,7 @@ export default function Subscription() {
                         className={`p-4 ${i > 0 ? 'border-t border-apple-hairline' : ''}`}
                       >
                         <div className="mb-2.5 flex items-center gap-3">
-                          <RowIcon d={ROW_ICON.traffic} />
+                          <RowIcon icon="traffic" />
                           <span className="flex-1 text-[15px] font-medium text-apple-ink">
                             {purchase.traffic_gb} {t('common.units.gb')}
                           </span>
@@ -2241,9 +2260,22 @@ export default function Subscription() {
                             }
                           }}
                           disabled={deleteDeviceMutation.isPending}
-                          className="shrink-0 text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
+                          aria-label={t('subscription.deleteDevice')}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
                         >
-                          {t('subscription.deleteDevice')}
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
+                          </svg>
                         </button>
                       </div>
                     )}
@@ -2271,7 +2303,7 @@ export default function Subscription() {
               {/* Autopay */}
               {!subscription.is_daily && (
                 <div className="flex items-center gap-3 p-4">
-                  <RowIcon d={ROW_ICON.autopay} />
+                  <RowIcon icon="autopay" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[15px] text-apple-ink">
                       {t('subscription.autoRenewal')}
@@ -2320,7 +2352,7 @@ export default function Subscription() {
                   }}
                   className="flex w-full items-center gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated"
                 >
-                  <RowIcon d={ROW_ICON.server} />
+                  <RowIcon icon="server" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[15px] text-apple-ink">
                       {t('subscription.additionalOptions.manageServers', 'Управление серверами')}
@@ -2341,7 +2373,7 @@ export default function Subscription() {
                   disabled={revokeMutation.isPending || revokeCooldown > 0}
                   className="flex w-full items-center gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50"
                 >
-                  <RowIcon d={ROW_ICON.reissue} />
+                  <RowIcon icon="reissue" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[15px] text-apple-ink">
                       {t('subscription.revoke.button')}
