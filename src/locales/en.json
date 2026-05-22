@@ -713,7 +713,7 @@
     "amount": "Amount",
     "deposit": "Deposit",
     "withdrawal": "Withdrawal",
-    "subscriptionPayment": "Subscription Payment",
+    "subscriptionPayment": "Payment",
     "referralReward": "Referral Reward",
     "minAmount": "Min.",
     "maxAmount": "Max.",

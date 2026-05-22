@@ -141,19 +141,19 @@ export default function Balance() {
 
   const normalizeType = (type: string) => type?.toUpperCase?.() ?? type;
 
-  // Apple-dark badge: soft tinted fill + colored text + leading dot
-  const getTypeColor = (type: string) => {
+  // Badge palette per transaction type — { fg: text/dot color, bg: tinted fill }
+  const getTypeColor = (type: string): { fg: string; bg: string } => {
     switch (normalizeType(type)) {
       case 'DEPOSIT':
-        return 'bg-apple-green/15 text-apple-green';
+        return { fg: '#18932F', bg: 'rgba(24,147,47,0.15)' };
       case 'SUBSCRIPTION_PAYMENT':
-        return 'bg-apple-blue/15 text-apple-blue';
+        return { fg: '#FF484D', bg: 'rgba(255,72,77,0.15)' };
       case 'REFERRAL_REWARD':
-        return 'bg-apple-amber/15 text-apple-amber';
+        return { fg: '#ff9f0a', bg: 'rgba(255,159,10,0.15)' };
       case 'WITHDRAWAL':
-        return 'bg-apple-red/15 text-apple-red';
+        return { fg: '#ff453a', bg: 'rgba(255,69,58,0.15)' };
       default:
-        return 'bg-apple-elevated text-apple-mute';
+        return { fg: '#98989d', bg: 'rgba(255,255,255,0.06)' };
     }
   };
 
@@ -308,6 +308,7 @@ export default function Balance() {
                     >
                       {transactions.items.map((tx) => {
                         const isZero = tx.amount_rubles === 0;
+                        const typeStyle = getTypeColor(tx.type);
                         const isPositive = tx.amount_rubles > 0;
                         const displayAmount = Math.abs(tx.amount_rubles);
                         const sign = isZero ? '' : isPositive ? '+' : '-';
@@ -326,7 +327,8 @@ export default function Balance() {
                             <div className="min-w-0 flex-1">
                               <div className="mb-1 flex items-center gap-2.5">
                                 <span
-                                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${getTypeColor(tx.type)}`}
+                                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide"
+                                  style={{ color: typeStyle.fg, background: typeStyle.bg }}
                                 >
                                   <span
                                     className="h-1.5 w-1.5 rounded-full bg-current"
