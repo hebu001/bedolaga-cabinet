@@ -130,6 +130,9 @@ export default {
         mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
+        // iOS 26 — larger, softer window corners
+        '2xl': '20px',
+        '3xl': '28px',
         bento: '24px',
         '4xl': '32px',
         // Linear design tokens

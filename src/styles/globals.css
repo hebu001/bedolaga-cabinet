@@ -114,9 +114,9 @@
   :root {
     --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 
-    /* Unified Card System */
-    --bento-radius: 16px;
-    --bento-radius-lg: 20px;
+    /* Unified Card System — iOS 26 softer window corners */
+    --bento-radius: 20px;
+    --bento-radius-lg: 24px;
     --bento-gap: 16px;
     --bento-gap-lg: 24px;
     --bento-padding: 20px;
@@ -393,14 +393,10 @@ img.twemoji {
 }
 
 @layer components {
-  /* Apple-dark card: subtle light gradient sheen */
+  /* Apple-dark card: flat fill, no gradient sheen (iOS 26 style).
+     Class kept as a no-op so existing markup needs no churn. */
   .apple-card-grad {
-    background-image: linear-gradient(
-      150deg,
-      rgba(255, 255, 255, 0.07) 0%,
-      rgba(255, 255, 255, 0.02) 35%,
-      transparent 65%
-    );
+    background-image: none;
   }
 
   /* Apple-dark bottom-sheet modal */

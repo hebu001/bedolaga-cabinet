@@ -16,6 +16,7 @@ import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
 import { CopyIcon, CheckIcon } from '../components/icons';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
+import { useNotify } from '../platform/hooks/useNotify';
 import { resolveConnectionUrlForUi } from '../utils/connectionLink';
 import {
   getErrorMessage,
@@ -263,6 +264,7 @@ export default function Subscription() {
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
   const haptic = useHapticFeedback();
+  const notify = useNotify();
   const [copied, setCopied] = useState(false);
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -403,6 +405,7 @@ export default function Subscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
+    onError: (error) => notify.error(getErrorMessage(error)),
   });
 
   // Inline device rename. Only one row is editable at a time —
@@ -418,6 +421,8 @@ export default function Subscription() {
       setEditingDeviceName('');
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
+    // Keep the row in edit mode on failure so the user can retry.
+    onError: (error) => notify.error(getErrorMessage(error)),
   });
 
   // Delete all devices mutation
@@ -426,6 +431,7 @@ export default function Subscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
+    onError: (error) => notify.error(getErrorMessage(error)),
   });
 
   // Pause subscription mutation
