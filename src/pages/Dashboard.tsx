@@ -250,12 +250,7 @@ export default function Dashboard() {
     refreshTrafficMutation.mutate();
   }, [subscription, refreshTrafficMutation]);
 
-  // В multi-tariff /cabinet/subscription отключён, поэтому subscriptionResponse=undefined.
-  // Используем список из /cabinet/subscriptions/list — пустой массив означает «нет подписок»,
-  // и тогда показываем TrialOfferCard. Без этой ветки multi-tariff юзер никогда не видел триал.
-  const hasNoSubscription = isMultiTariff
-    ? multiSubData !== undefined && (multiSubData.subscriptions?.length ?? 0) === 0
-    : subscriptionResponse?.has_subscription === false && !subLoading;
+  const hasNoSubscription = subscriptionResponse?.has_subscription === false && !subLoading;
 
   // ── Derived display data ──
   const usedGb = trafficData?.traffic_used_gb ?? subscription?.traffic_used_gb ?? 0;
