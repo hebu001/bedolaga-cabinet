@@ -141,17 +141,17 @@ export default function Balance() {
 
   const normalizeType = (type: string) => type?.toUpperCase?.() ?? type;
 
-  // Apple-dark badge: solid color fill + white text per transaction type
+  // Apple-dark badge: soft tinted fill + colored text + leading dot
   const getTypeColor = (type: string) => {
     switch (normalizeType(type)) {
       case 'DEPOSIT':
-        return 'bg-apple-green text-white';
+        return 'bg-apple-green/15 text-apple-green';
       case 'SUBSCRIPTION_PAYMENT':
-        return 'bg-apple-blue text-white';
+        return 'bg-apple-blue/15 text-apple-blue';
       case 'REFERRAL_REWARD':
-        return 'bg-apple-amber text-white';
+        return 'bg-apple-amber/15 text-apple-amber';
       case 'WITHDRAWAL':
-        return 'bg-apple-red text-white';
+        return 'bg-apple-red/15 text-apple-red';
       default:
         return 'bg-apple-elevated text-apple-mute';
     }
@@ -326,8 +326,12 @@ export default function Balance() {
                             <div className="min-w-0 flex-1">
                               <div className="mb-1 flex items-center gap-2.5">
                                 <span
-                                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${getTypeColor(tx.type)}`}
+                                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${getTypeColor(tx.type)}`}
                                 >
+                                  <span
+                                    className="h-1.5 w-1.5 rounded-full bg-current"
+                                    aria-hidden="true"
+                                  />
                                   {getTypeLabel(tx.type)}
                                 </span>
                                 <span className="text-xs text-apple-faint">
