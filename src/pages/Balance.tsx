@@ -334,7 +334,7 @@ export default function Balance() {
                                   />
                                   {getTypeLabel(tx.type)}
                                 </span>
-                                <span className="text-xs text-apple-faint">
+                                <span className="text-xs font-bold text-apple-ink">
                                   {new Date(tx.created_at).toLocaleDateString()}
                                 </span>
                               </div>
