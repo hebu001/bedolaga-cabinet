@@ -145,7 +145,7 @@ export default function Balance() {
   const getTypeColor = (type: string): { fg: string; bg: string } => {
     switch (normalizeType(type)) {
       case 'DEPOSIT':
-        return { fg: '#18932F', bg: 'rgba(24,147,47,0.15)' };
+        return { fg: '#30d158', bg: 'rgba(48,209,88,0.15)' };
       case 'SUBSCRIPTION_PAYMENT':
         return { fg: '#FF484D', bg: 'rgba(255,72,77,0.15)' };
       case 'REFERRAL_REWARD':
@@ -316,7 +316,7 @@ export default function Balance() {
                           ? 'text-apple-mute'
                           : isPositive
                             ? 'text-apple-green'
-                            : 'text-apple-red';
+                            : 'text-[#FF484D]';
 
                         return (
                           <motion.div
