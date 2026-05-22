@@ -404,7 +404,8 @@ export default function SubscriptionPurchase() {
     setDirectPayError(null);
 
     try {
-      // Save purchase intent before redirecting
+      // Save purchase intent before redirecting (frontend fallback for the
+      // ?auto=1 return path).
       savePurchaseIntent({
         tariff_id: tariffId,
         tariff_name: tariffName,
@@ -413,6 +414,31 @@ export default function SubscriptionPurchase() {
         total_price_kopeks: totalPriceKopeks,
         created_at: Date.now(),
       });
+
+      // Pre-flight so the backend persists a server-side cart: hit the
+      // renew / purchase-tariff endpoint. With insufficient balance it
+      // returns 402 and saves the cart in Redis — the top-up webhook then
+      // auto-completes the renewal server-side, without depending on the
+      // user returning to the cabinet.
+      const isRenewalOfCurrent =
+        renewIntent && !!subscription && tariffId === subscription.tariff_id;
+      try {
+        if (isRenewalOfCurrent) {
+          await subscriptionApi.renewSubscription(periodDays, subscription?.id);
+        } else {
+          await subscriptionApi.purchaseTariff(tariffId, periodDays, trafficGb);
+        }
+        // Unexpectedly succeeded — balance was already sufficient, done.
+        clearPurchaseIntent();
+        queryClient.invalidateQueries({ queryKey: ['subscription'] });
+        queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+        navigate('/subscriptions', { replace: true });
+        return;
+      } catch {
+        // Expected: 402 insufficient_funds — the backend cart is now saved.
+        // Any other error: fall through to top-up; the renewal still
+        // recovers via the ?auto=1 return path.
+      }
 
       // Create top-up for the missing amount
       const topUpAmount = Math.max(missingKopeks, 100); // Minimum 1 ruble
