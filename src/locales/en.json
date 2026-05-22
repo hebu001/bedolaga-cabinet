@@ -3180,6 +3180,9 @@
           "none": "No connected devices",
           "resetAll": "Reset all",
           "deleted": "Device removed",
+          "rename": "Rename",
+          "renameSave": "Save",
+          "renamed": "Device name updated",
           "allDeleted": "All devices reset"
         },
         "referral": {

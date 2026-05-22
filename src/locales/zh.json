@@ -2670,6 +2670,9 @@
           "none": "没有已连接的设备",
           "resetAll": "重置全部",
           "deleted": "设备已删除",
+          "rename": "重命名",
+          "renameSave": "保存",
+          "renamed": "设备名称已更新",
           "allDeleted": "所有设备已重置"
         },
         "referral": {
