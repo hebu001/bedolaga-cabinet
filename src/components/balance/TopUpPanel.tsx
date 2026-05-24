@@ -43,9 +43,11 @@ interface Selectable {
 interface TopUpPanelProps {
   methods: PaymentMethod[];
   onSuccess: () => void;
+  /** Pre-fill the amount input (in rubles). Used when arriving with ?amount=X. */
+  initialAmount?: string;
 }
 
-export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
+export default function TopUpPanel({ methods, onSuccess, initialAmount }: TopUpPanelProps) {
   const { t } = useTranslation();
   const { formatAmount, currencySymbol, convertToRub } = useCurrency();
   const { openInvoice, openTelegramLink, openLink } = usePlatform();
@@ -85,7 +87,7 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
   }, [methods]);
 
   const [selectedKey, setSelectedKey] = useState<string>('');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(initialAmount ?? '');
   const [error, setError] = useState<string | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);

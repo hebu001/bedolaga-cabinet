@@ -20,6 +20,13 @@ function lazyWithRetry<T extends ComponentType<unknown>>(factory: () => Promise<
     }),
   );
 }
+
+// Redirect legacy /balance/top-up* routes to /balance, preserving query so that
+// callers like InsufficientBalancePrompt can pass ?amount=X into the modal.
+function RedirectToBalanceWithQuery() {
+  const location = useLocation();
+  return <Navigate to={`/balance${location.search}`} replace />;
+}
 import { useBlockingStore } from './store/blocking';
 import Layout from './components/layout/Layout';
 import PageLoader from './components/common/PageLoader';
@@ -66,8 +73,6 @@ const QuickPurchase = lazyWithRetry(() => import('./pages/QuickPurchase'));
 const PurchaseSuccess = lazyWithRetry(() => import('./pages/PurchaseSuccess'));
 const RenewSubscription = lazyWithRetry(() => import('./pages/RenewSubscription'));
 const AutoLogin = lazyWithRetry(() => import('./pages/AutoLogin'));
-const TopUpMethodSelect = lazyWithRetry(() => import('./pages/TopUpMethodSelect'));
-const TopUpAmount = lazyWithRetry(() => import('./pages/TopUpAmount'));
 const TopUpResult = lazyWithRetry(() => import('./pages/TopUpResult'));
 const ConnectedAccounts = lazyWithRetry(() => import('./pages/ConnectedAccounts'));
 const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCallback'));
@@ -531,16 +536,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/balance/top-up"
-          element={
-            <ProtectedRoute>
-              <LazyPage>
-                <TopUpMethodSelect />
-              </LazyPage>
-            </ProtectedRoute>
-          }
-        />
+        {/* Top-up flow folded into /balance — legacy routes redirect */}
+        <Route path="/balance/top-up" element={<RedirectToBalanceWithQuery />} />
         <Route
           path="/balance/top-up/result"
           element={
@@ -553,16 +550,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/balance/top-up/:methodId"
-          element={
-            <ProtectedRoute>
-              <LazyPage>
-                <TopUpAmount />
-              </LazyPage>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/balance/top-up/:methodId" element={<RedirectToBalanceWithQuery />} />
         <Route
           path="/referral"
           element={
