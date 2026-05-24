@@ -64,7 +64,7 @@ const TrafficIcon = () => (
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+      d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z"
     />
   </svg>
 );
@@ -134,15 +134,17 @@ export default function SuccessNotificationModal() {
   const isDevicesPurchased = data.type === 'devices_purchased';
   const isTrafficPurchased = data.type === 'traffic_purchased';
 
-  // Format amount
-  const formattedAmount = data.amountKopeks
-    ? `${formatAmount(data.amountKopeks / 100)} ${currencySymbol}`
-    : null;
+  // Format amount — strip trailing ".00" / ",00" so 100.00 ₽ becomes 100 ₽
+  // (the symbol is rendered separately in JSX next to the number).
+  const formatNoTrailingZeros = (kopeks: number) =>
+    formatAmount(kopeks / 100).replace(/[.,]00$/, '');
+
+  const formattedAmount = data.amountKopeks ? formatNoTrailingZeros(data.amountKopeks) : null;
 
   // Format new balance
   const formattedBalance =
     data.newBalanceKopeks !== undefined
-      ? `${formatAmount(data.newBalanceKopeks / 100)} ${currencySymbol}`
+      ? `${formatNoTrailingZeros(data.newBalanceKopeks)} ${currencySymbol}`
       : null;
 
   // Format expiry date
@@ -180,11 +182,11 @@ export default function SuccessNotificationModal() {
     } else if (data.type === 'devices_purchased') {
       title = t('successNotification.devicesPurchased.title', 'Devices added!');
       icon = <DevicesIcon />;
-      gradientClass = 'from-blue-500 to-cyan-600';
+      gradientClass = 'from-[#F97315] to-[#FB923C]';
     } else if (data.type === 'traffic_purchased') {
       title = t('successNotification.trafficPurchased.title', 'Traffic added!');
       icon = <TrafficIcon />;
-      gradientClass = 'from-success-500 to-success-600';
+      gradientClass = 'from-[#F97315] to-[#FB923C]';
     }
   }
 
@@ -198,6 +200,40 @@ export default function SuccessNotificationModal() {
     navigate('/balance');
   };
 
+  // Visual scheme per type — colored icon circle + action button
+  const isOrangeTheme = isDevicesPurchased || isTrafficPurchased;
+  const iconCircleBg = isOrangeTheme
+    ? 'bg-[#F97315]/15'
+    : isBalanceTopup
+      ? 'bg-[#30d158]/15'
+      : 'bg-accent-500/15';
+  const iconColor = isOrangeTheme
+    ? 'text-[#F97315]'
+    : isBalanceTopup
+      ? 'text-[#30d158]'
+      : 'text-accent-400';
+  // Fallback subtitle (Russian copy used in the design reference)
+  const fallbackSubtitle = isBalanceTopup
+    ? t(
+        'successNotification.balanceTopup.subtitle',
+        'Ваш баланс успешно пополнен. Средства уже доступны.',
+      )
+    : message;
+
+  // Amount-card label
+  const amountLabel = isBalanceTopup
+    ? t('successNotification.amount', 'Сумма пополнения')
+    : t('successNotification.price', 'Стоимость');
+
+  // Action button text
+  const actionLabel = isBalanceTopup
+    ? t('successNotification.goToBalance', 'Перейти к балансу')
+    : t('successNotification.goToSubscription', 'Перейти к подписке');
+  const handleAction = isBalanceTopup ? handleGoToBalance : handleGoToSubscription;
+
+  // Hide gradientClass — new design uses a flat dark card
+  void gradientClass;
+
   const modalContent = (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       {/* Backdrop */}
@@ -205,7 +241,7 @@ export default function SuccessNotificationModal() {
 
       {/* Modal */}
       <div
-        className="relative mx-4 w-full max-w-sm overflow-hidden rounded-3xl border border-dark-700/50 bg-dark-900 shadow-2xl"
+        className="relative mx-4 w-full max-w-sm overflow-hidden rounded-3xl bg-apple-card shadow-2xl"
         style={{
           marginBottom: safeBottom ? `${safeBottom}px` : undefined,
         }}
@@ -214,154 +250,100 @@ export default function SuccessNotificationModal() {
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute right-3 top-3 z-10 rounded-xl p-2 text-dark-400 transition-colors hover:bg-dark-800 hover:text-dark-200"
+          aria-label={t('common.close', 'Close')}
+          className="absolute right-3 top-3 z-10 rounded-full p-2 text-apple-mute transition-colors hover:bg-white/5 hover:text-apple-ink"
         >
           <CloseIcon />
         </button>
 
-        {/* Success header with animation */}
-        <div
-          className={`flex flex-col items-center bg-gradient-to-br ${gradientClass} px-6 pb-8 pt-10`}
-        >
-          <div className="mb-4 animate-bounce text-white">{icon}</div>
-          <h2 className="text-center text-2xl font-bold text-white">{title}</h2>
-          {message && <p className="mt-2 text-center text-white/80">{message}</p>}
-        </div>
-
-        {/* Details */}
-        <div className="space-y-4 p-6">
-          {/* Amount */}
-          {formattedAmount && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">
-                {isBalanceTopup
-                  ? t('successNotification.amount', 'Amount')
-                  : t('successNotification.price', 'Price')}
-              </span>
-              <span
-                className={`text-lg font-bold ${isDevicesPurchased || isTrafficPurchased ? 'text-dark-100' : 'text-success-400'}`}
-              >
-                {isDevicesPurchased || isTrafficPurchased ? '' : '+'}
-                {formattedAmount}
-              </span>
-            </div>
-          )}
-
-          {/* Devices info (for devices purchase) */}
-          {isDevicesPurchased && data.devicesAdded && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">
-                {t('successNotification.devicesAdded', 'Devices added')}
-              </span>
-              <span className="text-lg font-bold text-blue-400">+{data.devicesAdded}</span>
-            </div>
-          )}
-
-          {isDevicesPurchased && data.newDeviceLimit && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">
-                {t('successNotification.totalDevices', 'Total devices')}
-              </span>
-              <span className="font-semibold text-dark-100">{data.newDeviceLimit}</span>
-            </div>
-          )}
-
-          {/* Traffic info (for traffic purchase) */}
-          {isTrafficPurchased && data.trafficGbAdded && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">
-                {t('successNotification.trafficAdded', 'Traffic added')}
-              </span>
-              <span className="text-lg font-bold text-success-400">+{data.trafficGbAdded} GB</span>
-            </div>
-          )}
-
-          {isTrafficPurchased && data.newTrafficLimitGb && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">
-                {t('successNotification.totalTraffic', 'Total traffic')}
-              </span>
-              <span className="font-semibold text-dark-100">{data.newTrafficLimitGb} GB</span>
-            </div>
-          )}
-
-          {/* New balance (for top-up) */}
-          {isBalanceTopup && formattedBalance && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">
-                {t('successNotification.newBalance', 'New balance')}
-              </span>
-              <span className="text-lg font-bold text-dark-100">{formattedBalance}</span>
-            </div>
-          )}
-
-          {/* Tariff name */}
-          {data.tariffName && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">{t('successNotification.tariff', 'Tariff')}</span>
-              <span className="font-semibold text-dark-100">{data.tariffName}</span>
-            </div>
-          )}
-
-          {/* Expiry date */}
-          {formattedExpiry && (
-            <div className="flex items-center justify-between rounded-xl bg-dark-800/50 px-4 py-3">
-              <span className="text-dark-400">
-                {t('successNotification.validUntil', 'Valid until')}
-              </span>
-              <span className="font-semibold text-dark-100">{formattedExpiry}</span>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="space-y-2 pt-2">
-            {isSubscription && (
-              <button
-                onClick={handleGoToSubscription}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 py-3.5 font-bold text-white shadow-lg shadow-accent-500/25 transition-all hover:from-accent-400 hover:to-accent-500 active:from-accent-600 active:to-accent-700"
-              >
-                <RocketIcon />
-                <span>{t('successNotification.goToSubscription', 'Go to Subscription')}</span>
-              </button>
-            )}
-
-            {isBalanceTopup && (
-              <button
-                onClick={handleGoToBalance}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-success-500 to-success-600 py-3.5 font-bold text-white shadow-lg shadow-success-500/25 transition-all hover:from-success-400 hover:to-success-500 active:from-success-600 active:to-success-700"
-              >
-                <WalletIcon />
-                <span>{t('successNotification.goToBalance', 'Go to Balance')}</span>
-              </button>
-            )}
-
-            {isDevicesPurchased && (
-              <button
-                onClick={handleGoToSubscription}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 py-3.5 font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-blue-400 hover:to-cyan-500 active:from-blue-600 active:to-cyan-700"
-              >
-                <DevicesIcon />
-                <span>{t('successNotification.goToSubscription', 'Go to Subscription')}</span>
-              </button>
-            )}
-
-            {isTrafficPurchased && (
-              <button
-                onClick={handleGoToSubscription}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-success-500 to-success-600 py-3.5 font-bold text-white shadow-lg shadow-success-500/25 transition-all hover:from-success-400 hover:to-success-500 active:from-success-600 active:to-success-700"
-              >
-                <TrafficIcon />
-                <span>{t('successNotification.goToSubscription', 'Go to Subscription')}</span>
-              </button>
-            )}
-
-            <button
-              onClick={handleClose}
-              className="w-full rounded-xl bg-dark-800 py-3 font-semibold text-dark-300 transition-colors hover:bg-dark-700 hover:text-dark-100"
-            >
-              {t('common.close', 'Close')}
-            </button>
+        <div className="flex flex-col items-center px-6 pb-6 pt-8 text-center">
+          {/* Icon circle */}
+          <div
+            className={`flex h-20 w-20 items-center justify-center rounded-full ${iconCircleBg} ${iconColor}`}
+          >
+            {icon}
           </div>
+
+          {/* Title */}
+          <h2 className="mt-6 text-[22px] font-bold text-apple-ink">{title}</h2>
+
+          {/* Subtitle */}
+          {fallbackSubtitle && (
+            <p className="mt-2 text-[14px] leading-snug text-apple-mute">{fallbackSubtitle}</p>
+          )}
+
+          {/* Amount card */}
+          {formattedAmount && (
+            <div className="mt-6 w-fit min-w-[180px] rounded-2xl bg-apple-elevated px-6 py-4">
+              <p className="text-[13px] text-apple-mute">{amountLabel}</p>
+              <p className="mt-1 text-[26px] font-bold leading-tight text-apple-ink">
+                {formattedAmount}
+                <span className="ml-1 text-[18px] text-apple-mute">{currencySymbol}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Add-on extras (kept compact under the amount) */}
+          {(isDevicesPurchased || isTrafficPurchased) && (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[13px] text-apple-mute">
+              {isDevicesPurchased && data.devicesAdded && (
+                <span className="rounded-full bg-apple-elevated px-3 py-1">
+                  {t('successNotification.devicesAdded', 'Добавлено устройств')}:{' '}
+                  <span className="font-semibold text-apple-ink">+{data.devicesAdded}</span>
+                </span>
+              )}
+              {isDevicesPurchased && data.newDeviceLimit && (
+                <span className="rounded-full bg-apple-elevated px-3 py-1">
+                  {t('successNotification.totalDevices', 'Всего')}:{' '}
+                  <span className="font-semibold text-apple-ink">{data.newDeviceLimit}</span>
+                </span>
+              )}
+              {isTrafficPurchased && data.trafficGbAdded && (
+                <span className="rounded-full bg-apple-elevated px-3 py-1">
+                  {t('successNotification.trafficAdded', 'Добавлено трафика')}:{' '}
+                  <span className="font-semibold text-apple-ink">+{data.trafficGbAdded} GB</span>
+                </span>
+              )}
+              {isTrafficPurchased && data.newTrafficLimitGb && (
+                <span className="rounded-full bg-apple-elevated px-3 py-1">
+                  {t('successNotification.totalTraffic', 'Всего')}:{' '}
+                  <span className="font-semibold text-apple-ink">{data.newTrafficLimitGb} GB</span>
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Tariff + expiry compact row (subscription) */}
+          {isSubscription && (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[13px] text-apple-mute">
+              {data.tariffName && (
+                <span className="rounded-full bg-apple-elevated px-3 py-1">
+                  <span className="font-semibold text-apple-ink">{data.tariffName}</span>
+                </span>
+              )}
+              {formattedExpiry && (
+                <span className="rounded-full bg-apple-elevated px-3 py-1">
+                  {t('successNotification.validUntil', 'До')}:{' '}
+                  <span className="font-semibold text-apple-ink">{formattedExpiry}</span>
+                </span>
+              )}
+            </div>
+          )}
+
+          {isBalanceTopup && formattedBalance && (
+            <p className="mt-3 text-[12px] text-apple-faint">
+              {t('successNotification.newBalance', 'Новый баланс')}:{' '}
+              <span className="font-semibold text-apple-mute">{formattedBalance}</span>
+            </p>
+          )}
+
+          {/* Action button — single, full-width, rounded */}
+          <button
+            onClick={handleAction}
+            className="mt-6 flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] px-6 text-[16px] font-medium text-white transition-opacity hover:opacity-90 active:opacity-80"
+          >
+            {actionLabel}
+          </button>
         </div>
       </div>
     </div>

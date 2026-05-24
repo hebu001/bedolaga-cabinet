@@ -304,13 +304,10 @@ export default function Subscription() {
   const [showTrafficTopup, setShowTrafficTopup] = useState(false);
   const [selectedTrafficPackage, setSelectedTrafficPackage] = useState<number | null>(null);
 
-  // Top-up sheet shown when traffic-purchase needs more funds. The TopUpPanel
-  // pre-fills the missing amount; saveTrafficCart was already called before
-  // opening so the webhook can auto-fulfill the GB purchase after payment.
-  const [topUpSheet, setTopUpSheet] = useState<{
-    missingKopeks: number;
-    gb: number;
-  } | null>(null);
+  // Top-up sheet shown when an add-on purchase (traffic / devices) needs more
+  // funds. The backend already saved the cart in Redis via the 402 response —
+  // the webhook will auto-fulfill the add-on after the top-up payment lands.
+  const [topUpSheet, setTopUpSheet] = useState<{ missingKopeks: number } | null>(null);
   const [showServerManagement, setShowServerManagement] = useState(false);
   const [selectedServersToUpdate, setSelectedServersToUpdate] = useState<string[]>([]);
 
@@ -507,7 +504,9 @@ export default function Subscription() {
     placeholderData: (prev) => prev,
   });
 
-  // Device purchase mutation
+  // Device purchase mutation. On 402 the backend saved the add_devices cart
+  // — we surface the in-page top-up sheet pre-filled with `missing_amount`.
+  // The webhook auto-completes the device add-on after payment.
   const devicePurchaseMutation = useMutation({
     mutationFn: () => subscriptionApi.purchaseDevices(deviceAddCount, subscriptionId),
     onSuccess: () => {
@@ -517,6 +516,12 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['device-price'] });
       queryClient.invalidateQueries({ queryKey: ['balance'] });
       setShowDeviceManage(false);
+    },
+    onError: (error: unknown) => {
+      const missing = extractInsufficientMissing(error);
+      if (missing != null) {
+        setTopUpSheet({ missingKopeks: missing });
+      }
     },
   });
 
@@ -578,7 +583,41 @@ export default function Subscription() {
     }
   }, [showTrafficTopup, trafficPackages]);
 
-  // Traffic purchase mutation
+  // Extract `missing_amount` from a 402 insufficient_funds response. Used by
+  // add-on purchase mutations (traffic / devices) to surface the in-page
+  // top-up sheet when the backend reports a shortage. The cart is already
+  // persisted in Redis by the 402 response, so payment → webhook chain
+  // auto-fulfills the add-on without further client work.
+  const extractInsufficientMissing = (error: unknown): number | null => {
+    const ax = error as {
+      response?: {
+        status?: number;
+        data?: {
+          detail?: {
+            // /traffic uses `missing_amount`, /devices uses `missing_kopeks`
+            missing_amount?: number;
+            missing_kopeks?: number;
+            code?: string;
+          };
+        };
+      };
+    };
+    if (ax?.response?.status !== 402) return null;
+    const detail = ax.response?.data?.detail;
+    if (!detail || typeof detail !== 'object') return null;
+    const value =
+      typeof detail.missing_amount === 'number'
+        ? detail.missing_amount
+        : typeof detail.missing_kopeks === 'number'
+          ? detail.missing_kopeks
+          : null;
+    return value != null && value > 0 ? value : null;
+  };
+
+  // Traffic purchase mutation. On 402 the backend already saved the cart in
+  // Redis with the prorated price — we just open the in-page top-up sheet
+  // pre-filled with `missing_amount` from the response, so the webhook can
+  // auto-fulfill the GB purchase after payment lands.
   const trafficPurchaseMutation = useMutation({
     mutationFn: (gb: number) => subscriptionApi.purchaseTraffic(gb, subscriptionId),
     onSuccess: () => {
@@ -588,6 +627,14 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['traffic-packages', subscriptionId] });
       setShowTrafficTopup(false);
       setSelectedTrafficPackage(null);
+    },
+    onError: (error: unknown) => {
+      // Insufficient funds — backend already saved the add_traffic cart;
+      // open the top-up sheet with the exact prorated `missing_amount`.
+      const missing = extractInsufficientMissing(error);
+      if (missing != null) {
+        setTopUpSheet({ missingKopeks: missing });
+      }
     },
   });
 
@@ -1101,13 +1148,6 @@ export default function Subscription() {
                                   maxLimit,
                                 );
                                 const delta = target - deviceCurrentLimit;
-                                const insufficient = !!(
-                                  delta > 0 &&
-                                  devicePriceData?.total_price_kopeks &&
-                                  purchaseOptions &&
-                                  devicePriceData.total_price_kopeks >
-                                    purchaseOptions.balance_kopeks
-                                );
                                 const unit = t('subscription.additionalOptions.devicesUnit');
                                 const pending =
                                   devicePurchaseMutation.isPending ||
@@ -1163,26 +1203,10 @@ export default function Subscription() {
                                       }}
                                     />
 
-                                    {/* Insufficient balance */}
-                                    {insufficient && (
-                                      <div className="mt-4">
-                                        <InsufficientBalancePrompt
-                                          missingAmountKopeks={
-                                            (devicePriceData?.total_price_kopeks || 0) -
-                                            (purchaseOptions?.balance_kopeks || 0)
-                                          }
-                                          compact
-                                          onBeforeTopUp={async () => {
-                                            await subscriptionApi.saveDevicesCart(
-                                              delta,
-                                              subscriptionId,
-                                            );
-                                          }}
-                                        />
-                                      </div>
-                                    )}
-
-                                    {/* CTA */}
+                                    {/* CTA — always send the request. On 402 the backend
+                                        saved the add_devices cart and the mutation onError
+                                        opens the in-page top-up sheet with the exact missing
+                                        amount returned by the server. */}
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -1193,7 +1217,7 @@ export default function Subscription() {
                                       disabled={
                                         delta === 0 ||
                                         pending ||
-                                        (delta > 0 && (!devicePriceData?.available || insufficient))
+                                        (delta > 0 && !devicePriceData?.available)
                                       }
                                       className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
                                       style={{
@@ -1204,7 +1228,7 @@ export default function Subscription() {
                                               ? '#ff453a'
                                               : 'rgba(255,255,255,0.08)',
                                         color: delta === 0 ? '#98989d' : '#fff',
-                                        opacity: (delta > 0 && insufficient) || pending ? 0.6 : 1,
+                                        opacity: pending ? 0.6 : 1,
                                       }}
                                     >
                                       {pending ? (
@@ -1296,12 +1320,6 @@ export default function Subscription() {
                                 const hasDiscount = !!(
                                   pkg.discount_percent && pkg.discount_percent > 0
                                 );
-                                const hasEnough =
-                                  !purchaseOptions ||
-                                  pkg.price_kopeks <= purchaseOptions.balance_kopeks;
-                                const missing = purchaseOptions
-                                  ? pkg.price_kopeks - purchaseOptions.balance_kopeks
-                                  : 0;
                                 const pending = trafficPurchaseMutation.isPending;
                                 return (
                                   <>
@@ -1354,19 +1372,16 @@ export default function Subscription() {
                                       />
                                     )}
 
-                                    {/* CTA — if balance is enough, buy; otherwise open the
-                                        in-page top-up sheet with the missing amount prefilled.
-                                        The webhook will auto-complete the GB purchase after
-                                        payment via the saved Redis cart. */}
+                                    {/* CTA — always send the request to /traffic. The backend
+                                        responds 200 if balance is sufficient and 402 otherwise
+                                        (saving the prorated cart in Redis). On 402 the mutation's
+                                        onError opens the top-up sheet with the exact missing
+                                        amount returned by the server. */}
                                     <button
                                       type="button"
                                       onClick={() => {
                                         haptic.buttonPressMedium();
-                                        if (hasEnough) {
-                                          trafficPurchaseMutation.mutate(pkg.gb);
-                                          return;
-                                        }
-                                        setTopUpSheet({ missingKopeks: missing, gb: pkg.gb });
+                                        trafficPurchaseMutation.mutate(pkg.gb);
                                       }}
                                       disabled={pending}
                                       className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
@@ -1438,21 +1453,11 @@ export default function Subscription() {
                             </button>
                           </div>
                           <div className="flex-1 overflow-y-auto">
+                            {/* Cart was already saved by the 402 response from
+                                /traffic — no onBeforeTopUp needed. */}
                             <TopUpPanel
                               methods={paymentMethods}
                               fixedAmountKopeks={topUpSheet.missingKopeks}
-                              onBeforeTopUp={async () => {
-                                // Persist the traffic cart in Redis so the webhook
-                                // auto-fulfills the GB purchase after payment.
-                                try {
-                                  await subscriptionApi.saveTrafficCart(
-                                    topUpSheet.gb,
-                                    subscriptionId,
-                                  );
-                                } catch {
-                                  // Backend may already have the cart — proceed anyway.
-                                }
-                              }}
                               onSuccess={() => setTopUpSheet(null)}
                             />
                           </div>

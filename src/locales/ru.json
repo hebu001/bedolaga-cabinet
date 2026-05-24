@@ -135,7 +135,8 @@
   },
   "successNotification": {
     "balanceTopup": {
-      "title": "Баланс пополнен!"
+      "title": "Баланс пополнен!",
+      "subtitle": "Ваш баланс успешно пополнен. Средства уже доступны."
     },
     "subscriptionActivated": {
       "title": "Подписка активирована!"
@@ -146,6 +147,16 @@
     "subscriptionPurchased": {
       "title": "Подписка оплачена!"
     },
+    "trafficPurchased": {
+      "title": "Трафик добавлен!"
+    },
+    "devicesPurchased": {
+      "title": "Устройства добавлены!"
+    },
+    "trafficAdded": "Добавлено трафика",
+    "totalTraffic": "Всего трафика",
+    "devicesAdded": "Добавлено устройств",
+    "totalDevices": "Всего устройств",
     "amount": "Сумма",
     "price": "Стоимость",
     "newBalance": "Новый баланс",
