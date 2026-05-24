@@ -404,7 +404,9 @@ export default function TopUpPanel({
           !paymentUrl &&
           (isPending || (fixedAmountKopeks == null && (!amount || parseFloat(amount) <= 0)))
         }
-        className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className={`flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 ${
+          paymentUrl ? 'bg-[#30d158]' : 'bg-[#F97315]'
+        }`}
       >
         {isPending ? (
           <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -426,7 +428,7 @@ export default function TopUpPanel({
       {showPicker &&
         createPortal(
           <div
-            className="apple-sheet-backdrop fixed inset-0 z-[101] flex items-end justify-center"
+            className="apple-sheet-backdrop fixed inset-0 z-[1100] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.6)' }}
             onClick={() => setShowPicker(false)}
           >

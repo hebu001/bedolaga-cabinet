@@ -349,7 +349,7 @@ export default function Dashboard() {
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <Link
-              to="/subscription/purchase"
+              to="/subscription/purchase?renew=1"
               onClick={() => haptic.buttonPressMedium()}
               className="flex h-14 w-full transform-gpu items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
               style={{ background: 'var(--figma-green)' }}
@@ -565,13 +565,17 @@ export default function Dashboard() {
           transition={{ duration: 0.4, delay: 0.3 }}
         >
           <Link
-            to="/subscription/purchase"
+            to={hasNoSubscription ? '/subscription/purchase' : '/subscription/purchase?renew=1'}
             onClick={() => haptic.buttonPressMedium()}
             className="flex h-14 w-full transform-gpu items-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
             style={{ background: 'var(--figma-green)' }}
           >
             <GlobeIcon />
-            <span>{t('dashboard.expired.renew')}</span>
+            <span>
+              {hasNoSubscription
+                ? t('dashboard.expired.buy', 'Купить подписку')
+                : t('dashboard.expired.renew')}
+            </span>
             {minPriceLabel && (
               <span className="ml-auto shrink-0 text-right text-white/70">{minPriceLabel}</span>
             )}

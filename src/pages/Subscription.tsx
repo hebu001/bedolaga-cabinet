@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
+import { balanceApi } from '../api/balance';
+import TopUpPanel from '../components/balance/TopUpPanel';
 import { DEVICE_ALIAS_MAX_LENGTH } from '../constants/devices';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform';
@@ -301,6 +303,14 @@ export default function Subscription() {
   const [targetDeviceLimit, setTargetDeviceLimit] = useState<number>(1);
   const [showTrafficTopup, setShowTrafficTopup] = useState(false);
   const [selectedTrafficPackage, setSelectedTrafficPackage] = useState<number | null>(null);
+
+  // Top-up sheet shown when traffic-purchase needs more funds. The TopUpPanel
+  // pre-fills the missing amount; saveTrafficCart was already called before
+  // opening so the webhook can auto-fulfill the GB purchase after payment.
+  const [topUpSheet, setTopUpSheet] = useState<{
+    missingKopeks: number;
+    gb: number;
+  } | null>(null);
   const [showServerManagement, setShowServerManagement] = useState(false);
   const [selectedServersToUpdate, setSelectedServersToUpdate] = useState<string[]>([]);
 
@@ -374,6 +384,13 @@ export default function Subscription() {
     queryFn: () => subscriptionApi.getPurchaseOptions(subscriptionId),
     staleTime: 0,
     refetchOnMount: 'always',
+  });
+
+  // Payment methods (needed for the in-page TopUp sheet on traffic shortage)
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: balanceApi.getPaymentMethods,
+    staleTime: 60_000,
   });
 
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
@@ -773,7 +790,7 @@ export default function Subscription() {
             ? '/subscription/purchase'
             : isMultiTariff
               ? `/subscriptions/${subscription.id}/renew`
-              : '/subscription/purchase';
+              : '/subscription/purchase?renew=1';
 
           return (
             <>
@@ -1337,35 +1354,26 @@ export default function Subscription() {
                                       />
                                     )}
 
-                                    {/* Insufficient balance */}
-                                    {!hasEnough && missing > 0 && (
-                                      <div className="mt-4">
-                                        <InsufficientBalancePrompt
-                                          missingAmountKopeks={missing}
-                                          compact
-                                          onBeforeTopUp={async () => {
-                                            await subscriptionApi.saveTrafficCart(
-                                              pkg.gb,
-                                              subscriptionId,
-                                            );
-                                          }}
-                                        />
-                                      </div>
-                                    )}
-
-                                    {/* CTA */}
+                                    {/* CTA — if balance is enough, buy; otherwise open the
+                                        in-page top-up sheet with the missing amount prefilled.
+                                        The webhook will auto-complete the GB purchase after
+                                        payment via the saved Redis cart. */}
                                     <button
                                       type="button"
                                       onClick={() => {
                                         haptic.buttonPressMedium();
-                                        trafficPurchaseMutation.mutate(pkg.gb);
+                                        if (hasEnough) {
+                                          trafficPurchaseMutation.mutate(pkg.gb);
+                                          return;
+                                        }
+                                        setTopUpSheet({ missingKopeks: missing, gb: pkg.gb });
                                       }}
-                                      disabled={pending || !hasEnough}
+                                      disabled={pending}
                                       className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
                                       style={{
                                         background: '#F97315',
                                         color: '#fff',
-                                        opacity: pending || !hasEnough ? 0.6 : 1,
+                                        opacity: pending ? 0.6 : 1,
                                       }}
                                     >
                                       {pending ? (
@@ -1386,6 +1394,67 @@ export default function Subscription() {
                                 );
                               })()
                             )}
+                          </div>
+                        </div>
+                      </div>,
+                      document.body,
+                    )}
+
+                  {/* Top-up sheet for traffic purchase shortage */}
+                  {topUpSheet &&
+                    paymentMethods &&
+                    paymentMethods.length > 0 &&
+                    createPortal(
+                      <div
+                        className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
+                        style={{ background: 'rgba(0,0,0,0.6)' }}
+                        onClick={() => setTopUpSheet(null)}
+                      >
+                        <div
+                          className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
+                            <h3 className="text-[22px] font-semibold text-white">
+                              {t('balance.topUp', 'Пополнить')}
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => setTopUpSheet(null)}
+                              aria-label={t('common.close', 'Закрыть')}
+                              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
+                            >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              >
+                                <path d="M6 6l12 12M18 6 6 18" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div className="flex-1 overflow-y-auto">
+                            <TopUpPanel
+                              methods={paymentMethods}
+                              fixedAmountKopeks={topUpSheet.missingKopeks}
+                              onBeforeTopUp={async () => {
+                                // Persist the traffic cart in Redis so the webhook
+                                // auto-fulfills the GB purchase after payment.
+                                try {
+                                  await subscriptionApi.saveTrafficCart(
+                                    topUpSheet.gb,
+                                    subscriptionId,
+                                  );
+                                } catch {
+                                  // Backend may already have the cart — proceed anyway.
+                                }
+                              }}
+                              onSuccess={() => setTopUpSheet(null)}
+                            />
                           </div>
                         </div>
                       </div>,

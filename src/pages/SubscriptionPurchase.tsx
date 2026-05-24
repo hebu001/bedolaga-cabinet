@@ -43,6 +43,10 @@ export default function SubscriptionPurchase() {
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
 
+  // ?renew=1 — auto-open the current tariff's purchase modal (skip the list).
+  // Used by "Продлить" CTAs on Dashboard / Subscription pages.
+  const renewIntent = searchParams.get('renew') === '1';
+
   const formatPrice = (kopeks: number) =>
     kopeks === 0
       ? t('subscription.free', 'Бесплатно')
@@ -388,6 +392,22 @@ export default function SubscriptionPurchase() {
       window.removeEventListener('keydown', onKey);
     };
   }, [showTariffListModal]);
+
+  // ?renew=1 — jump straight into the current tariff's purchase modal.
+  // If no current tariff, fall through to the tariff list.
+  const didAutoOpenRenewRef = useRef(false);
+  useEffect(() => {
+    if (!renewIntent || didAutoOpenRenewRef.current) return;
+    if (!isTariffsMode || tariffs.length === 0) return;
+    const current = tariffs.find(
+      (tariff) => tariff.is_current || tariff.id === subscription?.tariff_id,
+    );
+    if (!current) return;
+    didAutoOpenRenewRef.current = true;
+    setSelectedTariff(current);
+    setSelectedTariffPeriod(current.periods[0] || null);
+    setShowTariffPurchase(true);
+  }, [renewIntent, isTariffsMode, tariffs, subscription]);
 
   // Classic mode helpers
   const toggleServer = (uuid: string) => {

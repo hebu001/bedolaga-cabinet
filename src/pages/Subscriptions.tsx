@@ -46,7 +46,7 @@ function EmptyState({ onBuy }: { onBuy: () => void }) {
       </p>
       <button
         onClick={onBuy}
-        className="rounded-xl bg-accent-500 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-600"
+        className="rounded-full bg-accent-500 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-600"
       >
         {t('subscriptions.buy', 'Купить подписку')}
       </button>
