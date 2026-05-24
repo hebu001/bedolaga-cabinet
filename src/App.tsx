@@ -66,6 +66,8 @@ const QuickPurchase = lazyWithRetry(() => import('./pages/QuickPurchase'));
 const PurchaseSuccess = lazyWithRetry(() => import('./pages/PurchaseSuccess'));
 const RenewSubscription = lazyWithRetry(() => import('./pages/RenewSubscription'));
 const AutoLogin = lazyWithRetry(() => import('./pages/AutoLogin'));
+const TopUpMethodSelect = lazyWithRetry(() => import('./pages/TopUpMethodSelect'));
+const TopUpAmount = lazyWithRetry(() => import('./pages/TopUpAmount'));
 const TopUpResult = lazyWithRetry(() => import('./pages/TopUpResult'));
 const ConnectedAccounts = lazyWithRetry(() => import('./pages/ConnectedAccounts'));
 const LinkTelegramCallback = lazyWithRetry(() => import('./pages/LinkTelegramCallback'));
@@ -529,8 +531,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Top-up flow folded into /balance — legacy routes redirect */}
-        <Route path="/balance/top-up" element={<Navigate to="/balance" replace />} />
+        <Route
+          path="/balance/top-up"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <TopUpMethodSelect />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/balance/top-up/result"
           element={
@@ -543,7 +553,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/balance/top-up/:methodId" element={<Navigate to="/balance" replace />} />
+        <Route
+          path="/balance/top-up/:methodId"
+          element={
+            <ProtectedRoute>
+              <LazyPage>
+                <TopUpAmount />
+              </LazyPage>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/referral"
           element={

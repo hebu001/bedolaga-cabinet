@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
-import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { DEVICE_ALIAS_MAX_LENGTH } from '../constants/devices';
+import { WebBackButton } from '../components/WebBackButton';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform';
+import TrafficProgressBar from '../components/dashboard/TrafficProgressBar';
+import { HoverBorderGradient } from '../components/ui/hover-border-gradient';
+import { useTrafficZone } from '../hooks/useTrafficZone';
 import { formatTraffic } from '../utils/formatTraffic';
 import { getGlassColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
@@ -15,22 +18,24 @@ import { useCurrency } from '../hooks/useCurrency';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
 import { CopyIcon, CheckIcon } from '../components/icons';
-import { useHapticFeedback } from '../platform/hooks/useHaptic';
-import { useNotify } from '../platform/hooks/useNotify';
+import { useHaptic } from '../platform';
 import { resolveConnectionUrlForUi } from '../utils/connectionLink';
 import {
   getErrorMessage,
   getInsufficientBalanceError,
   getFlagEmoji,
 } from '../utils/subscriptionHelpers';
+import Twemoji from 'react-twemoji';
 
 /** Isolated countdown so 1s interval doesn't re-render the whole page */
 const CountdownTimer = memo(function CountdownTimer({
   endDate,
   isActive,
+  glassColors: g,
 }: {
   endDate: string;
   isActive: boolean;
+  glassColors: ReturnType<typeof getGlassColors>;
 }) {
   const { t } = useTranslation();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -52,6 +57,7 @@ const CountdownTimer = memo(function CountdownTimer({
   }, [endDate]);
 
   const isExpired = !isActive;
+  const isUrgent = countdown.days <= 3;
 
   const formattedDate = new Date(endDate).toLocaleDateString(undefined, {
     day: 'numeric',
@@ -59,219 +65,109 @@ const CountdownTimer = memo(function CountdownTimer({
     year: 'numeric',
   });
 
-  const units = [
-    { v: countdown.days, l: t('subscription.daysShort', 'дн') },
-    { v: countdown.hours, l: t('subscription.hoursShort', 'ч') },
-    { v: countdown.minutes, l: t('subscription.minutesShort', 'м') },
-    { v: countdown.seconds, l: t('subscription.secondsShort', 'с') },
-  ];
-
   return (
-    <div className="rounded-[14px] p-4" style={{ background: 'rgba(0,0,0,0.35)' }}>
-      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-apple-faint">
-        {isExpired ? t('subscription.statusShort', 'Статус') : t('dashboard.remaining')}
+    <div
+      className="min-w-0 overflow-hidden rounded-[14px] p-3.5"
+      style={{
+        background: isExpired
+          ? 'rgba(255,59,92,0.06)'
+          : isUrgent
+            ? 'rgba(255,184,0,0.06)'
+            : g.innerBg,
+        border: isExpired
+          ? '1px solid rgba(255,59,92,0.15)'
+          : isUrgent
+            ? '1px solid rgba(255,184,0,0.15)'
+            : `1px solid ${g.innerBorder}`,
+      }}
+    >
+      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
+        <div
+          className="flex h-6 w-6 items-center justify-center rounded-[7px]"
+          style={{
+            background: isExpired
+              ? 'rgba(255,59,92,0.1)'
+              : isUrgent
+                ? 'rgba(255,184,0,0.1)'
+                : g.hoverBg,
+          }}
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke={isExpired ? '#FF3B5C' : isUrgent ? '#FFB800' : g.textSecondary}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+        </div>
+        {t('dashboard.remaining')}
       </div>
       {isExpired ? (
-        <>
-          <div className="text-[20px] font-bold tracking-tight" style={{ color: '#ff453a' }}>
-            {t('subscription.expired')}
-          </div>
-          <div className="mt-1.5 text-[12px] text-apple-mute">
-            {t('subscription.endedOn', 'Срок действия истёк')}: {formattedDate}
-          </div>
-        </>
+        <div className="text-[18px] font-bold tracking-tight" style={{ color: '#FF3B5C' }}>
+          {t('subscription.expired')}
+        </div>
       ) : (
-        <>
-          <div className="flex items-baseline gap-2">
-            {units.map((u) => (
-              <div key={u.l} className="flex items-baseline gap-[3px]">
-                <span className="text-[26px] font-bold tabular-nums tracking-tight text-apple-ink">
-                  {String(u.v).padStart(2, '0')}
+        <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline gap-1 font-mono tabular-nums">
+            {countdown.days > 0 && (
+              <>
+                <span
+                  className="text-[20px] font-bold tracking-tight"
+                  style={{ color: isUrgent ? '#FFB800' : g.text }}
+                >
+                  {countdown.days}
                 </span>
-                <span className="text-[12px] text-apple-faint">{u.l}</span>
-              </div>
-            ))}
+                <span className="mr-1 text-[10px] font-medium text-dark-50/25">
+                  {t('subscription.daysShort')}
+                </span>
+              </>
+            )}
+            <span
+              className="text-[20px] font-bold tracking-tight"
+              style={{ color: isUrgent ? '#FFB800' : g.text }}
+            >
+              {String(countdown.hours).padStart(2, '0')}
+            </span>
+            <span
+              className="mx-[-1px] text-[16px] font-bold opacity-30"
+              style={{ color: isUrgent ? '#FFB800' : g.text }}
+            >
+              :
+            </span>
+            <span
+              className="text-[20px] font-bold tracking-tight"
+              style={{ color: isUrgent ? '#FFB800' : g.text }}
+            >
+              {String(countdown.minutes).padStart(2, '0')}
+            </span>
+            <span
+              className="mx-[-1px] text-[16px] font-bold opacity-30"
+              style={{ color: isUrgent ? '#FFB800' : g.text }}
+            >
+              :
+            </span>
+            <span
+              className="text-[20px] font-bold tracking-tight"
+              style={{ color: isUrgent ? '#FFB800' : g.text }}
+            >
+              {String(countdown.seconds).padStart(2, '0')}
+            </span>
           </div>
-          <div className="mt-1.5 text-[12px] text-apple-mute">
+          <div className="text-[10px] font-medium text-dark-50/25">
             {t('subscription.expiresAt')}: {formattedDate}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
 });
-
-// iOS Settings-style leading icon tile: colored rounded square + white glyph.
-const ROW_ICON = {
-  link: {
-    d: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71',
-    color: '#0A84FF',
-  },
-  device: {
-    d: 'M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 18h.01',
-    color: '#34C759',
-  },
-  autopay: {
-    d: 'M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
-    color: '#FF9F0A',
-  },
-  server: {
-    d: 'M5 2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 14h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2zM7 6h.01M7 18h.01',
-    color: '#5856D6',
-  },
-  reissue: { d: 'M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10', color: '#AF52DE' },
-  traffic: {
-    d: 'M7 16a4 4 0 0 1-.88-7.9A5 5 0 0 1 15.9 6 5 5 0 0 1 17 15.9M15 13l-3-3-3 3M12 10v8',
-    color: '#5AC8FA',
-  },
-} as const;
-
-const RowIcon = ({ icon }: { icon: keyof typeof ROW_ICON }) => {
-  const { d, color } = ROW_ICON[icon];
-  return (
-    <span
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-      style={{ background: color }}
-    >
-      <svg
-        width="17"
-        height="17"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d={d} />
-      </svg>
-    </span>
-  );
-};
-
-// Pill-style slider — track, filler and thumb share one height (apple-dark)
-const SLIDER_H = 28;
-const SLIDER_INSET = 14;
-const PillSlider = ({
-  min,
-  max,
-  value,
-  onChange,
-  'aria-label': ariaLabel,
-}: {
-  min: number;
-  max: number;
-  value: number;
-  onChange: (v: number) => void;
-  'aria-label'?: string;
-}) => {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState(false);
-  const span = Math.max(1, max - min);
-  const clamped = Math.min(Math.max(value, min), max);
-  const pct = ((clamped - min) / span) * 100;
-  const steps = max - min + 1;
-  const showDots = steps > 1;
-  // dots / fill edge travel within an inset on each side
-  const at = (p: number) => `calc(${SLIDER_INSET}px + (100% - ${2 * SLIDER_INSET}px) * ${p / 100})`;
-
-  // Map a pointer X to the nearest step — thumb follows the finger exactly
-  const valueFromX = (clientX: number) => {
-    const el = trackRef.current;
-    if (!el) return clamped;
-    const r = el.getBoundingClientRect();
-    const usable = Math.max(1, r.width - 2 * SLIDER_INSET);
-    const rel = (clientX - r.left - SLIDER_INSET) / usable;
-    return Math.min(max, Math.max(min, Math.round(min + rel * span)));
-  };
-  const apply = (clientX: number) => {
-    const v = valueFromX(clientX);
-    if (v !== clamped) onChange(v);
-  };
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      /* pointer may already be released */
-    }
-    setDragging(true);
-    apply(e.clientX);
-  };
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.buttons === 0) return;
-    apply(e.clientX);
-  };
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (clamped > min) onChange(clamped - 1);
-    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (clamped < max) onChange(clamped + 1);
-    }
-  };
-
-  return (
-    <div
-      ref={trackRef}
-      role="slider"
-      tabIndex={0}
-      aria-label={ariaLabel}
-      aria-valuemin={min}
-      aria-valuemax={max}
-      aria-valuenow={clamped}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={() => setDragging(false)}
-      onPointerCancel={() => setDragging(false)}
-      onKeyDown={onKeyDown}
-      className="relative w-full cursor-pointer touch-none select-none outline-none"
-      style={{ height: SLIDER_H }}
-    >
-      {/* track */}
-      <div
-        className="absolute inset-0 overflow-hidden rounded-full"
-        style={{ background: 'rgba(255,255,255,0.08)' }}
-      >
-        {/* filler — extends a little past the current dot */}
-        <div
-          className="absolute inset-y-0 left-0 rounded-full"
-          style={{
-            width: `calc(${at(pct)} + 14px)`,
-            background: '#F97315',
-            transition: dragging ? 'none' : 'width 0.12s ease-out',
-          }}
-        />
-      </div>
-      {/* step dots — the current one is enlarged, acts as the handle */}
-      {showDots &&
-        Array.from({ length: steps }).map((_, i) => {
-          const dotPct = (i / (steps - 1)) * 100;
-          const inRange = dotPct <= pct + 0.01;
-          const isCurrent = i === clamped - min;
-          const size = isCurrent ? 20 : 8;
-          return (
-            <span
-              key={i}
-              aria-hidden="true"
-              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                width: size,
-                height: size,
-                left: at(dotPct),
-                background: isCurrent
-                  ? 'rgba(0,0,0,0.6)'
-                  : inRange
-                    ? 'rgba(0,0,0,0.4)'
-                    : 'rgba(255,255,255,0.28)',
-              }}
-            />
-          );
-        })}
-    </div>
-  );
-};
 
 export default function Subscription() {
   const { t } = useTranslation();
@@ -282,8 +178,7 @@ export default function Subscription() {
   const subscriptionId = subIdParam ? parseInt(subIdParam, 10) : undefined;
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
-  const haptic = useHapticFeedback();
-  const notify = useNotify();
+  const haptic = useHaptic();
   const [copied, setCopied] = useState(false);
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -297,7 +192,9 @@ export default function Subscription() {
       : `${formatAmount(kopeks / 100)} ${currencySymbol}`;
 
   // Device/traffic topup state
-  const [showDeviceManage, setShowDeviceManage] = useState(false);
+  const [showDeviceTopup, setShowDeviceTopup] = useState(false);
+  const [devicesToAdd, setDevicesToAdd] = useState(1);
+  const [showDeviceReduction, setShowDeviceReduction] = useState(false);
   const [targetDeviceLimit, setTargetDeviceLimit] = useState<number>(1);
   const [showTrafficTopup, setShowTrafficTopup] = useState(false);
   const [selectedTrafficPackage, setSelectedTrafficPackage] = useState<number | null>(null);
@@ -366,7 +263,9 @@ export default function Subscription() {
   const shouldHideConnectionLink =
     subscription?.hide_subscription_link || connectionLink?.hide_link;
 
+  // Traffic zone (theme-aware) — called unconditionally at top level
   const usedPercent = trafficData?.traffic_used_percent ?? subscription?.traffic_used_percent ?? 0;
+  const zone = useTrafficZone(usedPercent);
 
   // Purchase options (needed for balance_kopeks in device/traffic/server management)
   const { data: purchaseOptions } = useQuery({
@@ -377,30 +276,6 @@ export default function Subscription() {
   });
 
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
-
-  // Price of the selected tariff (per-month / daily) — best-effort across modes
-  const tariffPriceLabel: string | null = (() => {
-    if (!subscription) return null;
-    if (subscription.daily_price_kopeks) return formatPrice(subscription.daily_price_kopeks);
-    if (purchaseOptions?.sales_mode === 'tariffs') {
-      const cur = purchaseOptions.tariffs?.find((tr) => tr.is_current);
-      return cur?.periods?.[0]?.price_per_month_label ?? null;
-    }
-    if (purchaseOptions?.sales_mode === 'classic') {
-      const per = purchaseOptions.periods?.find(
-        (p) => p.id === purchaseOptions.selection?.period_id,
-      );
-      return per?.per_month_price_label ?? per?.price_label ?? null;
-    }
-    return null;
-  })();
-
-  // Device limit included in the current tariff — reduction can't go below it
-  const currentTariff =
-    purchaseOptions?.sales_mode === 'tariffs'
-      ? purchaseOptions.tariffs?.find((tr) => tr.is_current)
-      : undefined;
-  const tariffDeviceLimit = currentTariff?.base_device_limit ?? currentTariff?.device_limit ?? 0;
 
   const autopayMutation = useMutation({
     mutationFn: (enabled: boolean) =>
@@ -424,24 +299,6 @@ export default function Subscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
-    onError: (error) => notify.error(getErrorMessage(error)),
-  });
-
-  // Inline device rename. Only one row is editable at a time —
-  // `editingDeviceHwid` doubles as the toggle and the target hwid.
-  const [editingDeviceHwid, setEditingDeviceHwid] = useState<string | null>(null);
-  const [editingDeviceName, setEditingDeviceName] = useState('');
-
-  const renameDeviceMutation = useMutation({
-    mutationFn: ({ hwid, name }: { hwid: string; name: string | null }) =>
-      subscriptionApi.renameDevice(hwid, name, subscriptionId),
-    onSuccess: () => {
-      setEditingDeviceHwid(null);
-      setEditingDeviceName('');
-      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
-    },
-    // Keep the row in edit mode on failure so the user can retry.
-    onError: (error) => notify.error(getErrorMessage(error)),
   });
 
   // Delete all devices mutation
@@ -450,7 +307,30 @@ export default function Subscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
     },
-    onError: (error) => notify.error(getErrorMessage(error)),
+  });
+
+  // Local device alias (rename) state. Only one device can be in edit-mode
+  // at a time — `editingDeviceHwid` doubles as both the toggle and the
+  // identifier of the row being edited.
+  const [editingDeviceHwid, setEditingDeviceHwid] = useState<string | null>(null);
+  const [editingDeviceName, setEditingDeviceName] = useState('');
+
+  const renameDeviceMutation = useMutation({
+    mutationFn: ({ hwid, name }: { hwid: string; name: string | null }) =>
+      subscriptionApi.renameDevice(hwid, name, subscriptionId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
+      // Soft success-tap, like other mutations on this page.
+      haptic.notification('success');
+      // Не сбрасываем edit-state, если пользователь уже перешёл на другой
+      // девайс пока шёл запрос — иначе теряем его новый input. Имя не чистим
+      // безусловно: оно либо принадлежит уже другому девайсу (нужно сохранить),
+      // либо инпут уже закрылся (значение не отображается).
+      setEditingDeviceHwid((current) => (current === variables.hwid ? null : current));
+    },
+    onError: () => {
+      haptic.notification('error');
+    },
   });
 
   // Pause subscription mutation
@@ -465,41 +345,31 @@ export default function Subscription() {
 
   // Auto-close all modals/forms when success notification appears
   const handleCloseAllModals = useCallback(() => {
-    setShowDeviceManage(false);
+    setShowDeviceTopup(false);
+    setShowDeviceReduction(false);
     setShowTrafficTopup(false);
     setShowServerManagement(false);
   }, []);
   useCloseOnSuccessNotification(handleCloseAllModals);
 
-  // Devices: one slider drives both add (above current limit) and reduce (below)
-  const deviceCurrentLimit = subscription?.device_limit ?? 0;
-  const deviceAddCount = Math.max(1, targetDeviceLimit - deviceCurrentLimit);
-
-  // Debounce the priced count so dragging the slider doesn't spam the API
-  const [debouncedAddCount, setDebouncedAddCount] = useState(deviceAddCount);
-  useEffect(() => {
-    const id = setTimeout(() => setDebouncedAddCount(deviceAddCount), 220);
-    return () => clearTimeout(id);
-  }, [deviceAddCount]);
-
-  // Device price query — priced for how many devices we'd add
+  // Device price query
   const { data: devicePriceData } = useQuery({
-    queryKey: ['device-price', debouncedAddCount, subscriptionId],
-    queryFn: () => subscriptionApi.getDevicePrice(debouncedAddCount, subscriptionId),
-    enabled: showDeviceManage && !!subscription,
-    placeholderData: (prev) => prev,
+    queryKey: ['device-price', devicesToAdd, subscriptionId],
+    queryFn: () => subscriptionApi.getDevicePrice(devicesToAdd, subscriptionId),
+    enabled: showDeviceTopup && !!subscription,
   });
 
   // Device purchase mutation
   const devicePurchaseMutation = useMutation({
-    mutationFn: () => subscriptionApi.purchaseDevices(deviceAddCount, subscriptionId),
+    mutationFn: () => subscriptionApi.purchaseDevices(devicesToAdd, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-price'] });
       queryClient.invalidateQueries({ queryKey: ['balance'] });
-      setShowDeviceManage(false);
+      setShowDeviceTopup(false);
+      setDevicesToAdd(1);
     },
   });
 
@@ -507,31 +377,20 @@ export default function Subscription() {
   const { data: deviceReductionInfo } = useQuery({
     queryKey: ['device-reduction-info', subscriptionId],
     queryFn: () => subscriptionApi.getDeviceReductionInfo(subscriptionId),
-    enabled: showDeviceManage && !!subscription,
+    enabled: showDeviceReduction && !!subscription,
   });
 
-  // Reset the slider to the current limit each time the panel opens
+  // Initialize target device limit when reduction info loads
   useEffect(() => {
-    if (showDeviceManage) setTargetDeviceLimit(deviceCurrentLimit);
-  }, [showDeviceManage, deviceCurrentLimit]);
-
-  // Lock body scroll + Escape-to-close while a bottom-sheet modal is open
-  useEffect(() => {
-    if (!showDeviceManage && !showTrafficTopup) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowDeviceManage(false);
-        setShowTrafficTopup(false);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [showDeviceManage, showTrafficTopup]);
+    if (deviceReductionInfo && showDeviceReduction) {
+      setTargetDeviceLimit(
+        Math.max(
+          deviceReductionInfo.min_device_limit,
+          deviceReductionInfo.current_device_limit - 1,
+        ),
+      );
+    }
+  }, [deviceReductionInfo, showDeviceReduction]);
 
   // Device reduction mutation
   const deviceReductionMutation = useMutation({
@@ -541,7 +400,7 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['device-reduction-info', subscriptionId] });
-      setShowDeviceManage(false);
+      setShowDeviceReduction(false);
     },
   });
 
@@ -551,15 +410,6 @@ export default function Subscription() {
     queryFn: () => subscriptionApi.getTrafficPackages(subscriptionId),
     enabled: showTrafficTopup && !!subscription,
   });
-
-  // Default the traffic-package slider to the first package once they load
-  useEffect(() => {
-    if (showTrafficTopup && trafficPackages && trafficPackages.length > 0) {
-      setSelectedTrafficPackage((prev) =>
-        prev !== null && trafficPackages.some((p) => p.gb === prev) ? prev : trafficPackages[0].gb,
-      );
-    }
-  }, [showTrafficTopup, trafficPackages]);
 
   // Traffic purchase mutation
   const trafficPurchaseMutation = useMutation({
@@ -728,7 +578,7 @@ export default function Subscription() {
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
       </div>
     );
   }
@@ -737,15 +587,15 @@ export default function Subscription() {
     return (
       <div className="mx-auto max-w-lg p-4 text-center">
         <div className="mb-4 text-4xl">😕</div>
-        <h2 className="mb-2 text-xl font-bold text-apple-ink">
+        <h2 className="mb-2 text-xl font-bold text-dark-50">
           {t('subscription.notFound', 'Подписка не найдена')}
         </h2>
-        <p className="mb-4 text-sm text-apple-ink/60">
+        <p className="mb-4 text-sm text-dark-50/60">
           {t('subscription.notFoundDesc', 'Возможно, подписка была удалена или не существует')}
         </p>
         <button
           onClick={() => navigate('/subscriptions')}
-          className="rounded-xl bg-apple-blue px-6 py-2.5 text-sm font-medium text-white"
+          className="rounded-xl bg-accent-500 px-6 py-2.5 text-sm font-medium text-white"
         >
           {t('subscription.backToList', 'Мои подписки')}
         </button>
@@ -754,7 +604,17 @@ export default function Subscription() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Page title */}
+      <div className="flex items-center gap-3">
+        <WebBackButton to={isMultiTariff ? '/subscriptions' : '/'} />
+        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
+          {isMultiTariff && subscription?.tariff_name
+            ? subscription.tariff_name
+            : t('subscription.title')}
+        </h1>
+      </div>
+
       {/* Current Subscription */}
       {subscription ? (
         (() => {
@@ -764,97 +624,105 @@ export default function Subscription() {
           const connectedDevices = devicesData?.total ?? 0;
           const isAtDeviceLimit =
             subscription.device_limit > 0 && connectedDevices >= subscription.device_limit;
-          const statusHex = subscription.is_active
-            ? '#30d158'
-            : subscription.is_limited
-              ? '#ff9f0a'
-              : '#ff453a';
-          const renewLink = subscription.is_trial
-            ? '/subscription/purchase'
-            : isMultiTariff
-              ? `/subscriptions/${subscription.id}/renew`
-              : '/subscription/purchase';
 
           return (
-            <>
-              {/* ─── Hero status card ─── */}
+            <div
+              className="relative overflow-hidden rounded-3xl backdrop-blur-xl"
+              style={{
+                background: g.cardBg,
+                border: subscription.is_trial
+                  ? '1px solid rgba(var(--color-accent-400), 0.15)'
+                  : isDark
+                    ? `1px solid ${g.cardBorder}`
+                    : `1px solid ${zone.mainHex}25`,
+                boxShadow: isDark
+                  ? g.shadow
+                  : `0 2px 16px ${zone.mainHex}12, 0 0 0 1px ${zone.mainHex}08`,
+                padding: '28px 28px 24px',
+              }}
+            >
+              {/* Trial shimmer border */}
+              {subscription.is_trial && (
+                <div
+                  className="pointer-events-none absolute inset-[-1px] animate-trial-glow rounded-3xl"
+                  aria-hidden="true"
+                />
+              )}
+
+              {/* Background glow */}
               <div
-                className="apple-card-grad relative overflow-hidden rounded-3xl bg-apple-card"
-                style={{ padding: '22px' }}
-              >
-                {/* Trial shimmer border */}
-                {subscription.is_trial && (
-                  <div
-                    className="pointer-events-none absolute inset-[-1px] animate-trial-glow rounded-3xl"
-                    aria-hidden="true"
-                  />
-                )}
-                <div className="relative">
-                  <div className="mb-1.5 flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-widest text-apple-mute">
-                      {subscription.is_trial
-                        ? t('subscription.trialStatus')
-                        : t('subscription.tariffBadge', 'Тариф')}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1.5">
-                      <span
-                        className="h-[7px] w-[7px] rounded-full"
-                        style={{ background: statusHex }}
-                        aria-hidden="true"
-                      />
-                      <span
-                        className="text-[11px] font-semibold uppercase tracking-widest"
-                        style={{ color: statusHex }}
-                      >
-                        {subscription.is_active
-                          ? t('subscription.active')
-                          : subscription.is_limited
-                            ? t('subscription.trafficLimited')
-                            : subscription.status === 'disabled'
-                              ? t('subscription.pause.suspended')
-                              : t('subscription.expired')}
-                      </span>
+                className="pointer-events-none absolute"
+                style={{
+                  top: -60,
+                  right: -60,
+                  width: 200,
+                  height: 200,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${zone.mainHex}${g.glowAlpha} 0%, transparent 70%)`,
+                  transition: 'background 0.8s ease',
+                }}
+                aria-hidden="true"
+              />
+
+              {/* ─── Header ─── */}
+              <div className="mb-6 flex items-start justify-between">
+                <div>
+                  {/* Zone indicator */}
+                  <div className="mb-1 flex items-center gap-2">
+                    <div
+                      className="h-2 w-2 rounded-full"
+                      style={{
+                        background: zone.mainHex,
+                        boxShadow: `0 0 8px ${zone.mainHex}80`,
+                        transition: 'all 0.6s ease',
+                      }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="font-mono text-[11px] font-semibold uppercase tracking-widest"
+                      style={{ color: zone.mainHex, transition: 'color 0.6s ease' }}
+                    >
+                      {isUnlimited ? t('dashboard.unlimited') : t(zone.labelKey)}
                     </span>
                   </div>
-                  <h2 className="truncate text-[28px] font-bold tracking-tight text-apple-ink">
+
+                  {/* Plan name */}
+                  <h2 className="text-lg font-bold tracking-tight text-dark-50">
                     {subscription.tariff_name || t('subscription.currentPlan')}
                   </h2>
-                  {tariffPriceLabel && (
-                    <div className="mt-0.5 text-[14px] text-apple-mute">{tariffPriceLabel}</div>
-                  )}
-                  <div className="mt-4">
-                    <CountdownTimer
-                      endDate={subscription.end_date}
-                      isActive={subscription.is_active || subscription.is_limited}
-                    />
-                  </div>
                 </div>
-              </div>
 
-              {/* ─── Primary actions ─── */}
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    haptic.buttonPressMedium();
-                    navigate(renewLink);
+                {/* Status badge */}
+                <span
+                  className="max-w-[55%] shrink-0 rounded-full px-3 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-wider"
+                  style={{
+                    background: subscription.is_active
+                      ? `${zone.mainHex}15`
+                      : subscription.is_limited
+                        ? 'rgba(255,184,0,0.12)'
+                        : 'rgba(255,59,92,0.12)',
+                    border: subscription.is_active
+                      ? `1px solid ${zone.mainHex}30`
+                      : subscription.is_limited
+                        ? '1px solid rgba(255,184,0,0.25)'
+                        : '1px solid rgba(255,59,92,0.25)',
+                    color: subscription.is_active
+                      ? zone.mainHex
+                      : subscription.is_limited
+                        ? '#FFB800'
+                        : '#FF3B5C',
                   }}
-                  className="flex flex-1 items-center justify-center rounded-full bg-apple-blue py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
                 >
                   {subscription.is_active
-                    ? t('subscription.extend')
-                    : t('subscription.getSubscription')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    haptic.buttonPressMedium();
-                    navigate('/subscription/purchase');
-                  }}
-                  className="flex flex-1 items-center justify-center rounded-full bg-white py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
-                >
-                  {t('subscription.switchTariff.title', 'Сменить тариф')}
-                </button>
+                    ? subscription.is_trial
+                      ? t('subscription.trialStatus')
+                      : t('subscription.active')
+                    : subscription.is_limited
+                      ? t('subscription.trafficLimited')
+                      : subscription.status === 'disabled'
+                        ? t('subscription.pause.suspended')
+                        : t('subscription.expired')}
+                </span>
               </div>
 
               {/* ─── Traffic Limited Banner ─── */}
@@ -877,7 +745,7 @@ export default function Subscription() {
                         height="16"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="#ff9f0a"
+                        stroke="#FFB800"
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -889,10 +757,10 @@ export default function Subscription() {
                       </svg>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold" style={{ color: '#ff9f0a' }}>
+                      <p className="text-sm font-semibold" style={{ color: '#FFB800' }}>
                         {t('subscription.trafficLimitedTitle')}
                       </p>
-                      <p className="mt-1 text-xs text-apple-mute">
+                      <p className="mt-1 text-xs text-dark-400">
                         {t('subscription.trafficLimitedDescription')}
                       </p>
                     </div>
@@ -900,613 +768,378 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* ─── Usage (traffic + devices) ─── */}
-              <div>
-                <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
-                  {t('subscription.usage', 'Использование')}
-                </div>
-                <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
-                  {/* Traffic row */}
-                  <div className="p-4">
-                    <div className="mb-2.5 flex items-center justify-between gap-2">
-                      <span className="text-[15px] text-apple-ink">
-                        {t('subscription.traffic')}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[13px] text-apple-mute">
-                          {isUnlimited
-                            ? formatTraffic(usedGb)
-                            : `${formatTraffic(usedGb)} / ${formatTraffic(subscription.traffic_limit_gb)}`}
-                        </span>
-                        <button
-                          onClick={() => {
-                            haptic.buttonPressMedium();
-                            refreshTrafficMutation.mutate();
-                          }}
-                          disabled={refreshTrafficMutation.isPending || trafficRefreshCooldown > 0}
-                          className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-apple-mute transition-colors hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <svg
-                            className={`h-3 w-3 ${refreshTrafficMutation.isPending ? 'animate-spin' : ''}`}
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            aria-hidden="true"
+              {/* ─── Trial Info Banner ─── */}
+              {subscription.is_trial && subscription.is_active && (
+                <div
+                  className="mb-6 rounded-[14px] p-4"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(var(--color-accent-400), 0.08), rgba(var(--color-accent-400), 0.03))',
+                    border: '1px solid rgba(var(--color-accent-400), 0.12)',
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
+                      style={{ background: 'rgba(var(--color-accent-400), 0.12)' }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="rgb(var(--color-accent-400))"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div
+                        className="text-sm font-semibold"
+                        style={{ color: 'rgb(var(--color-accent-400))' }}
+                      >
+                        {t('subscription.trialInfo.title')}
+                      </div>
+                      <div className="mt-1 text-[12px] text-dark-50/40">
+                        {t('subscription.trialInfo.description')}
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="font-mono text-[12px] font-semibold"
+                            style={{ color: 'rgb(var(--color-accent-400))' }}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-                            />
-                          </svg>
-                          {trafficRefreshCooldown > 0
-                            ? `${trafficRefreshCooldown}s`
-                            : t('common.refresh')}
-                        </button>
-                        {subscription.traffic_limit_gb > 0 &&
-                          (subscription.is_active || subscription.is_limited) &&
-                          !subscription.is_trial && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                haptic.buttonPressMedium();
-                                setShowDeviceManage(false);
-                                setShowServerManagement(false);
-                                setShowTrafficTopup(true);
-                              }}
-                              className="rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-80"
-                            >
-                              Докупить
-                            </button>
-                          )}
+                            {subscription.days_left > 0
+                              ? t('subscription.days', { count: subscription.days_left })
+                              : `${subscription.hours_left}${t('subscription.hours')} ${subscription.minutes_left}${t('subscription.minutes')}`}
+                          </span>
+                          <span className="text-[11px] text-dark-50/30">
+                            {t('subscription.trialInfo.remaining')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="font-mono text-[12px] font-semibold"
+                            style={{ color: 'rgb(var(--color-accent-400))' }}
+                          >
+                            {subscription.traffic_limit_gb || '∞'} {t('common.units.gb')}
+                          </span>
+                          <span className="text-[11px] text-dark-50/30">
+                            {t('subscription.traffic')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="font-mono text-[12px] font-semibold"
+                            style={{ color: 'rgb(var(--color-accent-400))' }}
+                          >
+                            {subscription.device_limit === 0 ? '∞' : subscription.device_limit}
+                          </span>
+                          <span className="text-[11px] text-dark-50/30">
+                            {t('subscription.devices')}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    {subscription.traffic_reset_mode &&
-                      subscription.traffic_reset_mode !== 'NO_RESET' && (
-                        <div className="mb-2 text-[11px] text-apple-faint">
-                          {t(`subscription.trafficReset.${subscription.traffic_reset_mode}`)}
-                        </div>
-                      )}
-                    <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full transition-[width] duration-500"
-                        style={{
-                          width: `${isUnlimited ? 100 : Math.min(100, Math.max(2, usedPercent))}%`,
-                          background: '#F97315',
-                        }}
-                      />
-                    </div>
-                  </div>
-                  {/* Devices row */}
-                  <div className="flex items-center justify-between gap-3 border-t border-apple-hairline p-4">
-                    <div className="min-w-0">
-                      <div className="text-[15px] text-apple-ink">{t('subscription.devices')}</div>
-                      <div className="mt-0.5 text-[13px] text-apple-mute">
-                        {subscription.device_limit === 0
-                          ? t('dashboard.devicesConnectedUnlimited', { used: connectedDevices })
-                          : t('dashboard.devicesOfMax', {
-                              used: connectedDevices,
-                              max: subscription.device_limit,
-                            })}
-                      </div>
-                    </div>
-                    {(subscription.is_active || subscription.is_limited) &&
-                      !subscription.is_trial &&
-                      subscription.device_limit !== 0 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            haptic.buttonPressMedium();
-                            setShowTrafficTopup(false);
-                            setShowServerManagement(false);
-                            setShowDeviceManage((v) => !v);
-                          }}
-                          className="shrink-0 rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-80"
-                        >
-                          Изменить
-                        </button>
-                      )}
-                  </div>
-                  {/* Manage devices — bottom-sheet modal */}
-                  {showDeviceManage &&
-                    createPortal(
-                      <div
-                        className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
-                        style={{ background: 'rgba(0,0,0,0.5)' }}
-                        onClick={() => setShowDeviceManage(false)}
-                      >
-                        <div
-                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {/* Close */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              haptic.buttonPressMedium();
-                              setShowDeviceManage(false);
-                            }}
-                            aria-label={t('common.close', 'Закрыть')}
-                            className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                          >
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            >
-                              <path d="M6 6l12 12M18 6 6 18" />
-                            </svg>
-                          </button>
-                          {/* Header */}
-                          <div className="px-7 pb-2 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
-                            Управление устройствами
-                          </div>
-                          {/* Body */}
-                          <div className="flex flex-col px-7 pb-7 pt-2">
-                            {!deviceReductionInfo && !devicePriceData ? (
-                              <div className="flex items-center justify-center py-8">
-                                <span className="h-6 w-6 animate-spin rounded-full border-2 border-apple-blue/30 border-t-apple-blue" />
-                              </div>
-                            ) : (
-                              (() => {
-                                const reduceOk =
-                                  !!deviceReductionInfo && deviceReductionInfo.available !== false;
-                                const addOk = devicePriceData?.available !== false;
-                                const connected =
-                                  deviceReductionInfo?.connected_devices_count ?? connectedDevices;
-                                const minLimit = Math.max(
-                                  reduceOk
-                                    ? deviceReductionInfo!.min_device_limit
-                                    : deviceCurrentLimit,
-                                  connected,
-                                  tariffDeviceLimit,
-                                );
-                                const maxLimit =
-                                  addOk && devicePriceData?.max_device_limit
-                                    ? devicePriceData.max_device_limit
-                                    : deviceCurrentLimit;
-                                if (minLimit >= maxLimit) {
-                                  return (
-                                    <div className="py-6 text-center text-sm text-apple-mute">
-                                      {devicePriceData?.reason ||
-                                        deviceReductionInfo?.reason ||
-                                        t('subscription.additionalOptions.devicesUnavailable')}
-                                    </div>
-                                  );
-                                }
-                                const target = Math.min(
-                                  Math.max(targetDeviceLimit, minLimit),
-                                  maxLimit,
-                                );
-                                const delta = target - deviceCurrentLimit;
-                                const insufficient = !!(
-                                  delta > 0 &&
-                                  devicePriceData?.total_price_kopeks &&
-                                  purchaseOptions &&
-                                  devicePriceData.total_price_kopeks >
-                                    purchaseOptions.balance_kopeks
-                                );
-                                const unit = t('subscription.additionalOptions.devicesUnit');
-                                const pending =
-                                  devicePurchaseMutation.isPending ||
-                                  deviceReductionMutation.isPending;
-                                return (
-                                  <>
-                                    {/* Status banner */}
-                                    <div
-                                      className="mb-4 mt-1 flex items-center gap-2 rounded-xl p-4 text-sm font-medium"
-                                      style={{
-                                        background:
-                                          delta > 0
-                                            ? 'rgba(249,115,21,0.16)'
-                                            : delta < 0
-                                              ? 'rgba(255,69,58,0.16)'
-                                              : 'rgba(255,255,255,0.06)',
-                                        color:
-                                          delta > 0 ? '#F97315' : delta < 0 ? '#ff6961' : '#98989d',
-                                      }}
-                                    >
-                                      <svg
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="shrink-0"
-                                        aria-hidden="true"
-                                      >
-                                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
-                                      </svg>
-                                      <span>
-                                        {delta > 0
-                                          ? `Подписка расширится до ${target} ${unit}`
-                                          : delta < 0
-                                            ? `Подписка сократится до ${target} ${unit}`
-                                            : `Количество устройств: ${target}`}
-                                      </span>
-                                    </div>
-
-                                    {/* Slider */}
-                                    <PillSlider
-                                      min={minLimit}
-                                      max={maxLimit}
-                                      value={target}
-                                      aria-label={unit}
-                                      onChange={(v) => {
-                                        haptic.buttonPressMedium();
-                                        setTargetDeviceLimit(v);
-                                      }}
-                                    />
-
-                                    {/* Insufficient balance */}
-                                    {insufficient && (
-                                      <div className="mt-4">
-                                        <InsufficientBalancePrompt
-                                          missingAmountKopeks={
-                                            (devicePriceData?.total_price_kopeks || 0) -
-                                            (purchaseOptions?.balance_kopeks || 0)
-                                          }
-                                          compact
-                                          onBeforeTopUp={async () => {
-                                            await subscriptionApi.saveDevicesCart(
-                                              delta,
-                                              subscriptionId,
-                                            );
-                                          }}
-                                        />
-                                      </div>
-                                    )}
-
-                                    {/* CTA */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        haptic.buttonPressMedium();
-                                        if (delta > 0) devicePurchaseMutation.mutate();
-                                        else if (delta < 0) deviceReductionMutation.mutate();
-                                      }}
-                                      disabled={
-                                        delta === 0 ||
-                                        pending ||
-                                        (delta > 0 && (!devicePriceData?.available || insufficient))
-                                      }
-                                      className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
-                                      style={{
-                                        background:
-                                          delta > 0
-                                            ? '#F97315'
-                                            : delta < 0
-                                              ? '#ff453a'
-                                              : 'rgba(255,255,255,0.08)',
-                                        color: delta === 0 ? '#98989d' : '#fff',
-                                        opacity: (delta > 0 && insufficient) || pending ? 0.6 : 1,
-                                      }}
-                                    >
-                                      {pending ? (
-                                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                      ) : delta > 0 ? (
-                                        `Расширить до ${target} ${unit} за ${devicePriceData?.total_price_label ?? ''}`
-                                      ) : delta < 0 ? (
-                                        `Уменьшить до ${target} ${unit}`
-                                      ) : (
-                                        'Измените количество устройств'
-                                      )}
-                                    </button>
-
-                                    {(devicePurchaseMutation.isError ||
-                                      deviceReductionMutation.isError) && (
-                                      <div className="mt-3 text-center text-sm text-apple-red">
-                                        {getErrorMessage(
-                                          devicePurchaseMutation.error ||
-                                            deviceReductionMutation.error,
-                                        )}
-                                      </div>
-                                    )}
-                                  </>
-                                );
-                              })()
-                            )}
-                          </div>
-                        </div>
-                      </div>,
-                      document.body,
-                    )}
-
-                  {/* Buy traffic — bottom-sheet modal */}
-                  {showTrafficTopup &&
-                    subscription.traffic_limit_gb > 0 &&
-                    createPortal(
-                      <div
-                        className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
-                        style={{ background: 'rgba(0,0,0,0.5)' }}
-                        onClick={() => {
-                          setShowTrafficTopup(false);
-                          setSelectedTrafficPackage(null);
-                        }}
-                      >
-                        <div
-                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {/* Close */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              haptic.buttonPressMedium();
-                              setShowTrafficTopup(false);
-                              setSelectedTrafficPackage(null);
-                            }}
-                            aria-label={t('common.close', 'Закрыть')}
-                            className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                          >
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            >
-                              <path d="M6 6l12 12M18 6 6 18" />
-                            </svg>
-                          </button>
-                          {/* Header */}
-                          <div className="px-7 pb-2 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
-                            {t('subscription.additionalOptions.buyTrafficTitle')}
-                          </div>
-                          {/* Body */}
-                          <div className="flex flex-col px-7 pb-7 pt-2">
-                            {!trafficPackages || trafficPackages.length === 0 ? (
-                              <div className="py-6 text-center text-sm text-apple-mute">
-                                {t('subscription.additionalOptions.trafficUnavailable')}
-                              </div>
-                            ) : (
-                              (() => {
-                                const foundIdx = trafficPackages.findIndex(
-                                  (p) => p.gb === selectedTrafficPackage,
-                                );
-                                const idx = foundIdx >= 0 ? foundIdx : 0;
-                                const pkg = trafficPackages[idx];
-                                const hasDiscount = !!(
-                                  pkg.discount_percent && pkg.discount_percent > 0
-                                );
-                                const hasEnough =
-                                  !purchaseOptions ||
-                                  pkg.price_kopeks <= purchaseOptions.balance_kopeks;
-                                const missing = purchaseOptions
-                                  ? pkg.price_kopeks - purchaseOptions.balance_kopeks
-                                  : 0;
-                                const pending = trafficPurchaseMutation.isPending;
-                                return (
-                                  <>
-                                    {/* Status banner */}
-                                    <div
-                                      className="mb-2 mt-1 flex items-center gap-2 rounded-xl p-4 text-sm font-medium"
-                                      style={{
-                                        background: 'rgba(249,115,21,0.16)',
-                                        color: '#F97315',
-                                      }}
-                                    >
-                                      <svg
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="shrink-0"
-                                        aria-hidden="true"
-                                      >
-                                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
-                                      </svg>
-                                      <span>
-                                        {pkg.is_unlimited
-                                          ? 'Безлимитный трафик'
-                                          : `Будет добавлено ${pkg.gb} ${t('common.units.gb')}`}
-                                        {hasDiscount ? ` · −${pkg.discount_percent}%` : ''}
-                                      </span>
-                                    </div>
-
-                                    {/* Info note */}
-                                    <div className="mb-4 text-[12px] leading-snug text-apple-faint">
-                                      {t('subscription.additionalOptions.trafficWarning')}
-                                    </div>
-
-                                    {/* Slider */}
-                                    {trafficPackages.length > 1 && (
-                                      <PillSlider
-                                        min={0}
-                                        max={trafficPackages.length - 1}
-                                        value={idx}
-                                        aria-label={t('common.units.gb')}
-                                        onChange={(v) => {
-                                          haptic.buttonPressMedium();
-                                          setSelectedTrafficPackage(trafficPackages[v].gb);
-                                        }}
-                                      />
-                                    )}
-
-                                    {/* Insufficient balance */}
-                                    {!hasEnough && missing > 0 && (
-                                      <div className="mt-4">
-                                        <InsufficientBalancePrompt
-                                          missingAmountKopeks={missing}
-                                          compact
-                                          onBeforeTopUp={async () => {
-                                            await subscriptionApi.saveTrafficCart(
-                                              pkg.gb,
-                                              subscriptionId,
-                                            );
-                                          }}
-                                        />
-                                      </div>
-                                    )}
-
-                                    {/* CTA */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        haptic.buttonPressMedium();
-                                        trafficPurchaseMutation.mutate(pkg.gb);
-                                      }}
-                                      disabled={pending || !hasEnough}
-                                      className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
-                                      style={{
-                                        background: '#F97315',
-                                        color: '#fff',
-                                        opacity: pending || !hasEnough ? 0.6 : 1,
-                                      }}
-                                    >
-                                      {pending ? (
-                                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                      ) : pkg.is_unlimited ? (
-                                        `${t('subscription.additionalOptions.buyUnlimited')} · ${formatPrice(pkg.price_kopeks)}`
-                                      ) : (
-                                        `Купить ${pkg.gb} ${t('common.units.gb')} за ${formatPrice(pkg.price_kopeks)}`
-                                      )}
-                                    </button>
-
-                                    {trafficPurchaseMutation.isError && (
-                                      <div className="mt-3 text-center text-sm text-apple-red">
-                                        {getErrorMessage(trafficPurchaseMutation.error)}
-                                      </div>
-                                    )}
-                                  </>
-                                );
-                              })()
-                            )}
-                          </div>
-                        </div>
-                      </div>,
-                      document.body,
-                    )}
-                </div>
-              </div>
-
-              {/* ─── Подключение ─── */}
-              {(subscription.subscription_url ||
-                (displayedConnectionUrl && !shouldHideConnectionLink)) && (
-                <div>
-                  <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
-                    {t('subscription.connectionLabel', 'Подключение')}
-                  </div>
-                  <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
-                    {displayedConnectionUrl && !shouldHideConnectionLink && (
-                      <div className="flex items-center gap-2.5 p-4">
-                        <RowIcon icon="link" />
-                        <code
-                          className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
-                          title={displayedConnectionUrl}
-                        >
-                          {displayedConnectionUrl}
-                        </code>
-                        <button
-                          onClick={() => {
-                            haptic.buttonPressMedium();
-                            copyUrl();
-                          }}
-                          className="flex shrink-0 items-center justify-center self-stretch rounded-[10px] px-3.5 transition-colors"
-                          style={{
-                            background: copied ? 'rgba(249, 115, 21,0.15)' : '#2c2c2e',
-                            color: copied ? '#F97315' : '#98989d',
-                          }}
-                          title={t('subscription.copyLink')}
-                        >
-                          {copied ? <CheckIcon /> : <CopyIcon />}
-                        </button>
-                      </div>
-                    )}
-                    {subscription.subscription_url && (
-                      <button
-                        type="button"
-                        disabled={isAtDeviceLimit}
-                        onClick={() => {
-                          haptic.buttonPressMedium();
-                          if (isAtDeviceLimit) {
-                            haptic.error();
-                            return;
-                          }
-                          navigate(
-                            subscriptionId ? `/connection?sub=${subscriptionId}` : '/connection',
-                          );
-                        }}
-                        className={`flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-apple-elevated disabled:cursor-not-allowed disabled:opacity-50 ${
-                          displayedConnectionUrl && !shouldHideConnectionLink
-                            ? 'border-t border-apple-hairline'
-                            : ''
-                        }`}
-                      >
-                        <RowIcon icon="device" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[15px] text-apple-ink">
-                            {t('dashboard.connectDevice')}
-                          </div>
-                          <div
-                            className={`mt-0.5 text-[13px] ${
-                              isAtDeviceLimit ? 'text-apple-red' : 'text-apple-faint'
-                            }`}
-                          >
-                            {isAtDeviceLimit
-                              ? t('dashboard.deviceLimitReached')
-                              : t('connection.openHint', 'Открыть в приложении · QR-код')}
-                          </div>
-                        </div>
-                        <span className="shrink-0 text-[18px] text-apple-faint">›</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
 
-              {/* ─── Докупленный трафик ─── */}
+              {/* ─── Traffic Progress ─── */}
+              <div className="mb-6">
+                <div className="mb-2.5 flex items-center justify-between">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-dark-50/40">
+                    {t('subscription.traffic')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] text-dark-50/30">
+                      {isUnlimited
+                        ? formatTraffic(usedGb)
+                        : `${formatTraffic(usedGb)} / ${formatTraffic(subscription.traffic_limit_gb)}`}
+                    </span>
+                    <button
+                      onClick={() => refreshTrafficMutation.mutate()}
+                      disabled={refreshTrafficMutation.isPending || trafficRefreshCooldown > 0}
+                      className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium text-dark-50/30 transition-colors hover:bg-dark-50/[0.05] hover:text-dark-50/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <svg
+                        className={`h-3 w-3 ${refreshTrafficMutation.isPending ? 'animate-spin' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                        />
+                      </svg>
+                      {trafficRefreshCooldown > 0
+                        ? `${trafficRefreshCooldown}s`
+                        : t('common.refresh')}
+                    </button>
+                  </div>
+                </div>
+                {subscription.traffic_reset_mode &&
+                  subscription.traffic_reset_mode !== 'NO_RESET' && (
+                    <div className="mb-2 text-[10px] text-dark-50/25">
+                      {t(`subscription.trafficReset.${subscription.traffic_reset_mode}`)}
+                    </div>
+                  )}
+                <TrafficProgressBar
+                  usedGb={usedGb}
+                  limitGb={subscription.traffic_limit_gb}
+                  percent={usedPercent}
+                  isUnlimited={isUnlimited}
+                  compact
+                />
+              </div>
+
+              {/* ─── Connect Device Button ─── */}
+              {subscription.subscription_url && (
+                <HoverBorderGradient
+                  as="button"
+                  accentColor={zone.mainHex}
+                  disabled={isAtDeviceLimit}
+                  onClick={() => {
+                    if (isAtDeviceLimit) {
+                      haptic.notification('error');
+                      return;
+                    }
+                    navigate(subscriptionId ? `/connection?sub=${subscriptionId}` : '/connection');
+                  }}
+                  className={`mb-5 flex w-full items-center gap-3.5 rounded-[14px] p-3.5 text-left transition-shadow duration-300${isAtDeviceLimit ? 'cursor-not-allowed opacity-50' : ''}`}
+                  style={{ fontFamily: 'inherit' }}
+                >
+                  <div
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] transition-colors duration-500"
+                    style={{ background: `${zone.mainHex}12` }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={zone.mainHex}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="2" y="3" width="20" height="14" rx="2" />
+                      <path d="M12 17v4M8 21h8" />
+                      <path d="M12 8v4M10 10h4" opacity="0.7" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold tracking-tight text-dark-50">
+                      {t('dashboard.connectDevice')}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-dark-50/30">
+                      {subscription.device_limit === 0
+                        ? t('dashboard.devicesConnectedUnlimited', { used: connectedDevices })
+                        : t('dashboard.devicesOfMax', {
+                            used: connectedDevices,
+                            max: subscription.device_limit,
+                          })}
+                    </div>
+                    {isAtDeviceLimit && (
+                      <div
+                        className="mt-1 text-[10px] font-medium"
+                        style={{ color: 'rgb(var(--color-warning-400))' }}
+                      >
+                        {t('dashboard.deviceLimitReached')}
+                      </div>
+                    )}
+                  </div>
+                  {subscription.device_limit === 0 ? (
+                    <div
+                      className="flex flex-shrink-0 items-center text-lg text-dark-50/40"
+                      aria-hidden="true"
+                    >
+                      ∞
+                    </div>
+                  ) : subscription.device_limit <= 10 ? (
+                    <div className="flex flex-shrink-0 gap-1.5" aria-hidden="true">
+                      {Array.from({ length: subscription.device_limit }, (_, i) => (
+                        <div
+                          key={i}
+                          className="h-[7px] w-[7px] rounded-full transition-[background-color,box-shadow] duration-300"
+                          style={{
+                            background: i < connectedDevices ? zone.mainHex : g.textGhost,
+                            boxShadow: i < connectedDevices ? `0 0 6px ${zone.mainHex}50` : 'none',
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex w-16 flex-shrink-0 items-center" aria-hidden="true">
+                      <div
+                        className="h-[6px] w-full overflow-hidden rounded-full"
+                        style={{ background: g.textGhost }}
+                      >
+                        <div
+                          className="h-full rounded-full transition-[width] duration-500"
+                          style={{
+                            width: `${Math.round((connectedDevices / subscription.device_limit) * 100)}%`,
+                            background: zone.mainHex,
+                            boxShadow: `0 0 8px ${zone.mainHex}40`,
+                            minWidth: connectedDevices > 0 ? '4px' : '0px',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </HoverBorderGradient>
+              )}
+
+              {/* ─── Subscription URL ─── */}
+              {displayedConnectionUrl && !shouldHideConnectionLink && (
+                <div className="mb-5 flex gap-2">
+                  <code
+                    className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] px-3 py-2 font-mono text-[11px] text-dark-50/30"
+                    style={{
+                      background: g.codeBg,
+                      border: `1px solid ${g.codeBorder}`,
+                    }}
+                    title={displayedConnectionUrl}
+                  >
+                    {displayedConnectionUrl}
+                  </code>
+                  <button
+                    onClick={copyUrl}
+                    className="flex h-auto items-center rounded-[10px] px-3 transition-colors duration-300"
+                    style={{
+                      background: copied ? 'rgba(var(--color-accent-400), 0.12)' : g.innerBorder,
+                      border: copied
+                        ? '1px solid rgba(var(--color-accent-400), 0.2)'
+                        : `1px solid ${g.trackBg}`,
+                      color: copied ? 'rgb(var(--color-accent-400))' : g.textMuted,
+                    }}
+                    title={t('subscription.copyLink')}
+                  >
+                    {copied ? <CheckIcon /> : <CopyIcon />}
+                  </button>
+                </div>
+              )}
+
+              {/* ─── Countdown ─── */}
+              <div className="mb-5">
+                <CountdownTimer
+                  endDate={subscription.end_date}
+                  isActive={subscription.is_active || subscription.is_limited}
+                  glassColors={g}
+                />
+              </div>
+
+              {/* ─── Locations ─── */}
+              {subscription.servers && subscription.servers.length > 0 && (
+                <div className="mb-5">
+                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
+                    {t('subscription.locationsLabel')}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {subscription.servers.map((server) => (
+                      <span
+                        key={server.uuid}
+                        className="inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[11px] font-medium text-dark-50/50"
+                        style={{
+                          background: g.innerBorder,
+                          border: `1px solid ${g.trackBg}`,
+                        }}
+                      >
+                        {server.country_code && (
+                          <span className="text-xs">{getFlagEmoji(server.country_code)}</span>
+                        )}
+                        <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+                          {server.name}
+                        </Twemoji>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ─── Purchased Traffic Packages ─── */}
               {subscription.traffic_purchases && subscription.traffic_purchases.length > 0 && (
-                <div>
-                  <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
+                <div className="mb-5">
+                  <div className="mb-2 text-[10px] font-medium uppercase tracking-wider text-dark-50/35">
                     {t('subscription.purchasedTraffic')}
                   </div>
-                  <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
-                    {subscription.traffic_purchases.map((purchase, i) => (
+                  <div className="space-y-2">
+                    {subscription.traffic_purchases.map((purchase) => (
                       <div
                         key={purchase.id}
-                        className={`p-4 ${i > 0 ? 'border-t border-apple-hairline' : ''}`}
+                        className="rounded-[12px] p-3"
+                        style={{
+                          background: g.innerBg,
+                          border: `1px solid ${g.innerBorder}`,
+                        }}
                       >
-                        <div className="mb-2.5 flex items-center gap-3">
-                          <RowIcon icon="traffic" />
-                          <span className="flex-1 text-[15px] font-medium text-apple-ink">
-                            {purchase.traffic_gb} {t('common.units.gb')}
-                          </span>
-                          <span
-                            className="text-[13px] font-medium"
-                            style={{
-                              color: purchase.days_remaining === 0 ? '#ff9f0a' : '#98989d',
-                            }}
-                          >
-                            {purchase.days_remaining === 0
-                              ? t('subscription.expired')
-                              : t('subscription.days', { count: purchase.days_remaining })}
-                          </span>
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="flex h-7 w-7 items-center justify-center rounded-[8px]"
+                              style={{ background: `${zone.mainHex}12` }}
+                            >
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke={zone.mainHex}
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                              </svg>
+                            </div>
+                            <span className="text-sm font-semibold text-dark-50">
+                              {purchase.traffic_gb} {t('common.units.gb')}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div
+                              className="text-[11px] font-medium"
+                              style={{
+                                color: purchase.days_remaining === 0 ? '#FF6B35' : g.textSecondary,
+                              }}
+                            >
+                              {purchase.days_remaining === 0
+                                ? t('subscription.expired')
+                                : t('subscription.days', { count: purchase.days_remaining })}
+                            </div>
+                            <div className="mt-0.5 font-mono text-[9px] text-dark-50/20">
+                              {t('subscription.trafficResetAt')}:{' '}
+                              {new Date(purchase.expires_at).toLocaleDateString(undefined, {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                              })}
+                            </div>
+                          </div>
                         </div>
-                        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="relative h-1.5 overflow-hidden rounded-full"
+                          style={{ background: g.trackBg }}
+                        >
                           <div
-                            className="h-full rounded-full transition-[width] duration-500"
+                            className="absolute inset-0 rounded-full transition-[width] duration-500"
                             style={{
                               width: `${purchase.progress_percent}%`,
-                              background: '#F97315',
+                              background: `linear-gradient(90deg, ${zone.mainHex}, ${zone.mainHex}80)`,
                             }}
                           />
                         </div>
-                        <div className="mt-1.5 flex justify-between text-[11px] text-apple-faint">
+                        <div className="mt-1 flex justify-between font-mono text-[9px] text-dark-50/20">
                           <span>{new Date(purchase.created_at).toLocaleDateString()}</span>
                           <span>{new Date(purchase.expires_at).toLocaleDateString()}</span>
                         </div>
@@ -1515,16 +1148,54 @@ export default function Subscription() {
                   </div>
                 </div>
               )}
-            </>
+
+              {/* ─── Autopay Toggle ─── */}
+              {!subscription.is_trial && !subscription.is_daily && (
+                <div
+                  className="flex items-center justify-between rounded-[14px] p-3.5"
+                  style={{
+                    background: g.innerBg,
+                    border: `1px solid ${g.innerBorder}`,
+                  }}
+                >
+                  <div>
+                    <div className="text-sm font-semibold text-dark-50">
+                      {t('subscription.autoRenewal')}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-dark-50/30">
+                      {t('subscription.daysBeforeExpiry', {
+                        count: subscription.autopay_days_before,
+                      })}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => autopayMutation.mutate(!subscription.autopay_enabled)}
+                    disabled={autopayMutation.isPending}
+                    className="relative h-7 w-[52px] rounded-full transition-colors duration-300"
+                    style={{
+                      background: subscription.autopay_enabled ? zone.mainHex : g.textGhost,
+                    }}
+                  >
+                    <span
+                      className="absolute top-[3px] h-[22px] w-[22px] rounded-full bg-white transition-[left] duration-300"
+                      style={{
+                        left: subscription.autopay_enabled ? '26px' : '3px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                      }}
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
           );
         })()
       ) : (
         <div
-          className={`relative overflow-hidden rounded-3xl py-12 text-center ${isDark ? 'apple-card-grad bg-apple-card' : 'bg-white'}`}
+          className="relative overflow-hidden rounded-3xl py-12 text-center"
           style={{
-            background: isDark ? 'transparent' : g.cardBg,
-            border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
-            boxShadow: isDark ? 'none' : g.shadow,
+            background: g.cardBg,
+            border: `1px solid ${g.cardBorder}`,
+            boxShadow: g.shadow,
           }}
         >
           <div
@@ -1547,27 +1218,27 @@ export default function Subscription() {
               />
             </svg>
           </div>
-          <div className="text-sm text-apple-ink/30">{t('subscription.noSubscription')}</div>
+          <div className="text-sm text-dark-50/30">{t('subscription.noSubscription')}</div>
         </div>
       )}
 
       {/* Daily Subscription Pause */}
       {subscription && subscription.is_daily && !subscription.is_trial && (
         <div
-          className={`relative overflow-hidden rounded-2xl ${isDark ? 'apple-card-grad bg-apple-card' : 'bg-white'}`}
+          className="relative overflow-hidden rounded-3xl"
           style={{
-            background: isDark ? 'transparent' : g.cardBg,
-            border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
-            boxShadow: isDark ? 'none' : g.shadow,
+            background: g.cardBg,
+            border: `1px solid ${g.cardBorder}`,
+            boxShadow: g.shadow,
             padding: '24px 28px',
           }}
         >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold tracking-tight text-apple-ink">
+              <h2 className="text-base font-bold tracking-tight text-dark-50">
                 {t('subscription.pause.title')}
               </h2>
-              <div className="mt-1 text-[12px] text-apple-ink/35">
+              <div className="mt-1 text-[12px] text-dark-50/35">
                 {subscription.is_limited
                   ? t('subscription.trafficLimited')
                   : subscription.status === 'disabled'
@@ -1578,25 +1249,22 @@ export default function Subscription() {
               </div>
             </div>
             <button
-              onClick={() => {
-                haptic.buttonPressMedium();
-                pauseMutation.mutate();
-              }}
+              onClick={() => pauseMutation.mutate()}
               disabled={pauseMutation.isPending}
               className="rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors duration-300"
               style={{
                 background:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgba(249, 115, 21, 0.12)'
+                    ? 'rgba(var(--color-accent-400), 0.12)'
                     : 'rgba(255,184,0,0.12)',
                 border:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? '1px solid rgba(249, 115, 21, 0.2)'
+                    ? '1px solid rgba(var(--color-accent-400), 0.2)'
                     : '1px solid rgba(255,184,0,0.2)',
                 color:
                   subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgb(249, 115, 21)'
-                    : '#ff9f0a',
+                    ? 'rgb(var(--color-accent-400))'
+                    : '#FFB800',
               }}
             >
               {pauseMutation.isPending ? (
@@ -1633,7 +1301,7 @@ export default function Subscription() {
                   style={{
                     background: 'rgba(255,59,92,0.08)',
                     border: '1px solid rgba(255,59,92,0.15)',
-                    color: '#ff453a',
+                    color: '#FF3B5C',
                   }}
                 >
                   {getErrorMessage(pauseMutation.error)}
@@ -1651,14 +1319,14 @@ export default function Subscription() {
               }}
             >
               <div className="flex items-start gap-3">
-                <div className="text-lg" style={{ color: '#ff9f0a' }}>
+                <div className="text-lg" style={{ color: '#FFB800' }}>
                   ⏸️
                 </div>
                 <div>
-                  <div className="text-sm font-semibold" style={{ color: '#ff9f0a' }}>
+                  <div className="text-sm font-semibold" style={{ color: '#FFB800' }}>
                     {t('subscription.pause.pausedInfo')}
                   </div>
-                  <div className="mt-1 text-[12px] text-apple-ink/35">
+                  <div className="mt-1 text-[12px] text-dark-50/35">
                     {t('subscription.pause.pausedDescription')}{' '}
                     {new Date(subscription.end_date).toLocaleDateString()} (
                     {t('subscription.pause.days', { count: subscription.days_left })})
@@ -1685,10 +1353,10 @@ export default function Subscription() {
               return (
                 <div className="mt-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-apple-ink/35">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-dark-50/35">
                       {t('subscription.pause.nextCharge')}
                     </span>
-                    <span className="font-mono text-[12px] font-semibold text-apple-ink">
+                    <span className="font-mono text-[12px] font-semibold text-dark-50">
                       {hours > 0
                         ? `${hours}${t('subscription.pause.hours')} ${minutes}${t('subscription.pause.minutes')}`
                         : `${minutes}${t('subscription.pause.minutes')}`}
@@ -1702,12 +1370,13 @@ export default function Subscription() {
                       className="absolute inset-0 rounded-full transition-[width] duration-500"
                       style={{
                         width: `${progress}%`,
-                        background: 'linear-gradient(90deg, rgb(249, 115, 21), rgb(249, 115, 21))',
+                        background:
+                          'linear-gradient(90deg, rgb(var(--color-accent-500)), rgb(var(--color-accent-400)))',
                       }}
                     />
                   </div>
                   {subscription.daily_price_kopeks && (
-                    <div className="mt-2 text-center text-[11px] text-apple-ink/25">
+                    <div className="mt-2 text-center text-[11px] text-dark-50/25">
                       {t('subscription.pause.willBeCharged')}:{' '}
                       {formatPrice(subscription.daily_price_kopeks)}
                     </div>
@@ -1719,11 +1388,8 @@ export default function Subscription() {
         </div>
       )}
 
-      {/* Purchase CTA — only when there is no subscription (active subs use the
-          Продлить / Сменить тариф buttons under the hero) */}
-      {!subscription && (
-        <PurchaseCTAButton subscription={subscription} isMultiTariff={isMultiTariff} />
-      )}
+      {/* Purchase / Renewal CTA */}
+      <PurchaseCTAButton subscription={subscription} isMultiTariff={isMultiTariff} />
 
       {/* Delete expired subscription */}
       {isMultiTariff &&
@@ -1811,7 +1477,7 @@ export default function Subscription() {
                   </button>
                   <button
                     onClick={() => setShowDeleteSheet(false)}
-                    className="flex-1 rounded-xl border border-apple-hairline py-2.5 text-sm font-medium transition-colors hover:bg-apple-elevated"
+                    className="flex-1 rounded-xl border border-dark-700 py-2.5 text-sm font-medium transition-colors hover:bg-dark-700"
                     style={{ color: g.textSecondary }}
                   >
                     {t('common.cancel', 'Отмена')}
@@ -1822,21 +1488,592 @@ export default function Subscription() {
           </div>
         )}
 
-      {/* Top-up / management forms — triggered from the Использование & Локации
-          actions; render only when one is open */}
+      {/* Additional Options (Buy Devices) */}
       {subscription &&
         (subscription.is_active || subscription.is_limited) &&
         !subscription.is_trial &&
-        subscription.device_limit !== 0 &&
-        showServerManagement && (
-          <div className="space-y-3">
+        subscription.device_limit !== 0 && (
+          <div
+            className="relative overflow-hidden rounded-3xl"
+            style={{
+              background: g.cardBg,
+              border: `1px solid ${g.cardBorder}`,
+              boxShadow: g.shadow,
+              padding: '24px 28px',
+            }}
+          >
+            <h2 className="mb-4 text-base font-bold tracking-tight text-dark-50">
+              {t('subscription.additionalOptions.title')}
+            </h2>
+
+            {/* Buy Devices */}
+            {!showDeviceTopup ? (
+              <button
+                onClick={() => setShowDeviceTopup(true)}
+                className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-dark-100">
+                      {t('subscription.additionalOptions.buyDevices')}
+                    </div>
+                    <div className="mt-1 text-sm text-dark-400">
+                      {t('subscription.additionalOptions.currentDeviceLimit', {
+                        count: subscription.device_limit,
+                      })}
+                    </div>
+                  </div>
+                  <svg
+                    className="h-5 w-5 text-dark-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            ) : (
+              <div
+                className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-medium text-dark-100">{t('subscription.buyDevices')}</h3>
+                  <button
+                    onClick={() => setShowDeviceTopup(false)}
+                    className="text-sm text-dark-400 hover:text-dark-200"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Check if completely unavailable (no subscription, price not set, etc.) */}
+                {devicePriceData?.available === false ? (
+                  <div className="py-4 text-center text-sm text-dark-400">
+                    {devicePriceData.reason ||
+                      t('subscription.additionalOptions.devicesUnavailable')}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Device selector - show even at max limit */}
+                    <div className="flex items-center justify-center gap-6">
+                      <button
+                        onClick={() => setDevicesToAdd(Math.max(1, devicesToAdd - 1))}
+                        disabled={devicesToAdd <= 1}
+                        className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
+                      >
+                        -
+                      </button>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-dark-100">{devicesToAdd}</div>
+                        <div className="text-sm text-dark-500">
+                          {t('subscription.additionalOptions.devicesUnit')}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setDevicesToAdd(devicesToAdd + 1)}
+                        disabled={
+                          devicePriceData?.max_device_limit
+                            ? (devicePriceData.current_device_limit || 0) + devicesToAdd >=
+                              devicePriceData.max_device_limit
+                            : false
+                        }
+                        className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Show limit info when at or near max */}
+                    {devicePriceData?.max_device_limit && (
+                      <div className="text-center text-sm text-dark-400">
+                        {t('subscription.additionalOptions.currentDeviceLimit', {
+                          count: devicePriceData.current_device_limit || subscription.device_limit,
+                        })}{' '}
+                        /{' '}
+                        {t('subscription.additionalOptions.maxDevices', {
+                          count: devicePriceData.max_device_limit,
+                        })}
+                      </div>
+                    )}
+
+                    {/* Price info - only when available */}
+                    {devicePriceData?.available && devicePriceData.price_per_device_label && (
+                      <div className="text-center">
+                        <div className="mb-2 text-sm text-dark-400">
+                          {/* Show original price with strikethrough if discount */}
+                          {devicePriceData.discount_percent &&
+                          devicePriceData.discount_percent > 0 &&
+                          devicePriceData.original_price_per_device_kopeks ? (
+                            <span>
+                              <span className="text-dark-500 line-through">
+                                {formatPrice(devicePriceData.original_price_per_device_kopeks)}
+                              </span>
+                              <span className="mx-1">{devicePriceData.price_per_device_label}</span>
+                            </span>
+                          ) : (
+                            devicePriceData.price_per_device_label
+                          )}
+                          /{t('subscription.perDevice').replace('/ ', '')} (
+                          {t('subscription.days', { count: devicePriceData.days_left })})
+                        </div>
+                        {/* Discount badge */}
+                        {devicePriceData.discount_percent &&
+                          devicePriceData.discount_percent > 0 && (
+                            <div className="mb-2">
+                              <span className="inline-block rounded-full bg-success-500/20 px-2.5 py-0.5 text-sm font-medium text-success-400">
+                                -{devicePriceData.discount_percent}%
+                              </span>
+                            </div>
+                          )}
+                        {/* Total price - show as free if 100% discount or 0 */}
+                        {devicePriceData.total_price_kopeks === 0 ? (
+                          <div className="text-2xl font-bold text-success-400">
+                            {t('subscription.switchTariff.free')}
+                          </div>
+                        ) : (
+                          <div className="text-2xl font-bold text-accent-400">
+                            {/* Show original total with strikethrough if discount */}
+                            {devicePriceData.discount_percent &&
+                              devicePriceData.discount_percent > 0 &&
+                              devicePriceData.base_total_price_kopeks && (
+                                <span className="mr-2 text-lg text-dark-500 line-through">
+                                  {formatPrice(devicePriceData.base_total_price_kopeks)}
+                                </span>
+                              )}
+                            {devicePriceData.total_price_label}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {devicePriceData?.available &&
+                      purchaseOptions &&
+                      devicePriceData.total_price_kopeks &&
+                      devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks && (
+                        <InsufficientBalancePrompt
+                          missingAmountKopeks={
+                            devicePriceData.total_price_kopeks - purchaseOptions.balance_kopeks
+                          }
+                          compact
+                          onBeforeTopUp={async () => {
+                            await subscriptionApi.saveDevicesCart(devicesToAdd, subscriptionId);
+                          }}
+                        />
+                      )}
+
+                    <button
+                      onClick={() => devicePurchaseMutation.mutate()}
+                      disabled={
+                        devicePurchaseMutation.isPending ||
+                        !devicePriceData?.available ||
+                        !!(
+                          devicePriceData?.total_price_kopeks &&
+                          purchaseOptions &&
+                          devicePriceData.total_price_kopeks > purchaseOptions.balance_kopeks
+                        )
+                      }
+                      className="btn-primary w-full py-3"
+                    >
+                      {devicePurchaseMutation.isPending ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        </span>
+                      ) : (
+                        t('subscription.additionalOptions.buy')
+                      )}
+                    </button>
+
+                    {devicePurchaseMutation.isError && (
+                      <div className="text-center text-sm text-error-400">
+                        {getErrorMessage(devicePurchaseMutation.error)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Reduce Devices */}
+            <div className="mt-4">
+              {!showDeviceReduction ? (
+                <button
+                  onClick={() => setShowDeviceReduction(true)}
+                  className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-dark-100">
+                        {t('subscription.additionalOptions.reduceDevices')}
+                      </div>
+                      <div className="mt-1 text-sm text-dark-400">
+                        {t('subscription.additionalOptions.reduceDevicesDescription')}
+                      </div>
+                    </div>
+                    <svg
+                      className="h-5 w-5 text-dark-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+              ) : (
+                <div
+                  className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-medium text-dark-100">
+                      {t('subscription.additionalOptions.reduceDevicesTitle')}
+                    </h3>
+                    <button
+                      onClick={() => setShowDeviceReduction(false)}
+                      className="text-sm text-dark-400 hover:text-dark-200"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {deviceReductionInfo?.available === false ? (
+                    <div className="py-4 text-center text-sm text-dark-400">
+                      {deviceReductionInfo.reason ||
+                        t('subscription.additionalOptions.reduceUnavailable')}
+                    </div>
+                  ) : deviceReductionInfo ? (
+                    <div className="space-y-4">
+                      {/* Device limit selector */}
+                      <div className="flex items-center justify-center gap-6">
+                        <button
+                          onClick={() =>
+                            setTargetDeviceLimit(
+                              Math.max(
+                                Math.max(
+                                  deviceReductionInfo.min_device_limit,
+                                  deviceReductionInfo.connected_devices_count,
+                                ),
+                                targetDeviceLimit - 1,
+                              ),
+                            )
+                          }
+                          disabled={
+                            targetDeviceLimit <=
+                            Math.max(
+                              deviceReductionInfo.min_device_limit,
+                              deviceReductionInfo.connected_devices_count,
+                            )
+                          }
+                          className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
+                        >
+                          -
+                        </button>
+                        <div className="text-center">
+                          <div className="text-4xl font-bold text-dark-100">
+                            {targetDeviceLimit}
+                          </div>
+                          <div className="text-sm text-dark-500">
+                            {t('subscription.additionalOptions.devicesUnit')}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() =>
+                            setTargetDeviceLimit(
+                              Math.min(
+                                deviceReductionInfo.current_device_limit - 1,
+                                targetDeviceLimit + 1,
+                              ),
+                            )
+                          }
+                          disabled={
+                            targetDeviceLimit >= deviceReductionInfo.current_device_limit - 1
+                          }
+                          className="btn-secondary flex h-12 w-12 items-center justify-center !p-0 text-2xl"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Info */}
+                      <div className="space-y-1 text-center text-sm text-dark-400">
+                        <div>
+                          {t('subscription.additionalOptions.currentDeviceLimit', {
+                            count: deviceReductionInfo.current_device_limit,
+                          })}
+                        </div>
+                        <div>
+                          {t('subscription.additionalOptions.minDeviceLimit', {
+                            count: deviceReductionInfo.min_device_limit,
+                          })}
+                        </div>
+                        <div>
+                          {t('subscription.additionalOptions.connectedDevices', {
+                            count: deviceReductionInfo.connected_devices_count,
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Warning if connected devices block reduction */}
+                      {deviceReductionInfo.connected_devices_count >
+                        deviceReductionInfo.min_device_limit && (
+                        <div className="rounded-lg bg-warning-500/10 p-3 text-center text-sm text-warning-400">
+                          {t('subscription.additionalOptions.disconnectDevicesFirst', {
+                            count: deviceReductionInfo.connected_devices_count,
+                          })}
+                        </div>
+                      )}
+
+                      {/* New limit preview */}
+                      <div className="text-center">
+                        <div className="text-sm text-dark-400">
+                          {t('subscription.additionalOptions.newDeviceLimit', {
+                            count: targetDeviceLimit,
+                          })}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => deviceReductionMutation.mutate()}
+                        disabled={
+                          deviceReductionMutation.isPending ||
+                          targetDeviceLimit >= deviceReductionInfo.current_device_limit ||
+                          targetDeviceLimit < deviceReductionInfo.min_device_limit ||
+                          targetDeviceLimit < deviceReductionInfo.connected_devices_count
+                        }
+                        className="btn-primary w-full py-3"
+                      >
+                        {deviceReductionMutation.isPending ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            {t('subscription.additionalOptions.reducing')}
+                          </span>
+                        ) : (
+                          t('subscription.additionalOptions.reduce')
+                        )}
+                      </button>
+
+                      {deviceReductionMutation.isError && (
+                        <div className="text-center text-sm text-error-400">
+                          {getErrorMessage(deviceReductionMutation.error)}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-4">
+                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-accent-400/30 border-t-accent-400" />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Buy Traffic */}
+            {subscription.traffic_limit_gb > 0 && (
+              <div className="mt-4">
+                {!showTrafficTopup ? (
+                  <button
+                    onClick={() => setShowTrafficTopup(true)}
+                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-dark-100">
+                          {t('subscription.additionalOptions.buyTraffic')}
+                        </div>
+                        <div className="mt-1 text-sm text-dark-400">
+                          {t('subscription.additionalOptions.currentTrafficLimit', {
+                            limit: subscription.traffic_limit_gb,
+                            used: subscription.traffic_used_gb.toFixed(1),
+                          })}
+                        </div>
+                      </div>
+                      <svg
+                        className="h-5 w-5 text-dark-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                ) : (
+                  <div
+                    className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="font-medium text-dark-100">
+                        {t('subscription.additionalOptions.buyTrafficTitle')}
+                      </h3>
+                      <button
+                        onClick={() => {
+                          setShowTrafficTopup(false);
+                          setSelectedTrafficPackage(null);
+                        }}
+                        className="text-sm text-dark-400 hover:text-dark-200"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div
+                      className={`mb-4 rounded-lg p-2 text-xs ${isDark ? 'bg-dark-700/30 text-dark-500' : 'bg-champagne-300/40 text-champagne-600'}`}
+                    >
+                      ⚠️ {t('subscription.additionalOptions.trafficWarning')}
+                    </div>
+
+                    {!trafficPackages || trafficPackages.length === 0 ? (
+                      <div className="py-4 text-center text-sm text-dark-400">
+                        {t('subscription.additionalOptions.trafficUnavailable')}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          {trafficPackages.map((pkg) => (
+                            <button
+                              key={pkg.gb}
+                              onClick={() => setSelectedTrafficPackage(pkg.gb)}
+                              className={`rounded-xl border p-4 text-center transition-all ${
+                                selectedTrafficPackage === pkg.gb
+                                  ? 'border-accent-500 bg-accent-500/10'
+                                  : isDark
+                                    ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
+                                    : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
+                              }`}
+                            >
+                              <div className="text-lg font-semibold text-dark-100">
+                                {pkg.is_unlimited
+                                  ? '♾️ ' + t('subscription.additionalOptions.unlimited')
+                                  : `${pkg.gb} ${t('common.units.gb')}`}
+                              </div>
+                              {/* Discount badge */}
+                              {pkg.discount_percent && pkg.discount_percent > 0 && (
+                                <div className="mb-1">
+                                  <span className="inline-block rounded-full bg-success-500/20 px-2 py-0.5 text-xs font-medium text-success-400">
+                                    -{pkg.discount_percent}%
+                                  </span>
+                                </div>
+                              )}
+                              {/* Price with original strikethrough if discount */}
+                              <div className="font-medium text-accent-400">
+                                {pkg.discount_percent &&
+                                pkg.discount_percent > 0 &&
+                                pkg.base_price_kopeks ? (
+                                  <>
+                                    <span className="mr-1 text-sm text-dark-500 line-through">
+                                      {formatPrice(pkg.base_price_kopeks)}
+                                    </span>
+                                    {formatPrice(pkg.price_kopeks)}
+                                  </>
+                                ) : (
+                                  formatPrice(pkg.price_kopeks)
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        {selectedTrafficPackage !== null &&
+                          (() => {
+                            const selectedPkg = trafficPackages.find(
+                              (p) => p.gb === selectedTrafficPackage,
+                            );
+                            const hasEnoughBalance =
+                              !selectedPkg ||
+                              !purchaseOptions ||
+                              selectedPkg.price_kopeks <= purchaseOptions.balance_kopeks;
+                            const missingAmount =
+                              selectedPkg && purchaseOptions
+                                ? selectedPkg.price_kopeks - purchaseOptions.balance_kopeks
+                                : 0;
+
+                            return (
+                              <>
+                                {!hasEnoughBalance && missingAmount > 0 && (
+                                  <InsufficientBalancePrompt
+                                    missingAmountKopeks={missingAmount}
+                                    compact
+                                    className="mb-3"
+                                    onBeforeTopUp={async () => {
+                                      await subscriptionApi.saveTrafficCart(
+                                        selectedTrafficPackage,
+                                        subscriptionId,
+                                      );
+                                    }}
+                                  />
+                                )}
+                                <button
+                                  onClick={() =>
+                                    trafficPurchaseMutation.mutate(selectedTrafficPackage)
+                                  }
+                                  disabled={trafficPurchaseMutation.isPending || !hasEnoughBalance}
+                                  className="btn-primary w-full py-3"
+                                >
+                                  {trafficPurchaseMutation.isPending ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                    </span>
+                                  ) : selectedPkg?.is_unlimited ? (
+                                    t('subscription.additionalOptions.buyUnlimited')
+                                  ) : (
+                                    t('subscription.additionalOptions.buyTrafficGb', {
+                                      gb: selectedTrafficPackage,
+                                    })
+                                  )}
+                                </button>
+                              </>
+                            );
+                          })()}
+
+                        {trafficPurchaseMutation.isError && (
+                          <div className="text-center text-sm text-error-400">
+                            {getErrorMessage(trafficPurchaseMutation.error)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Server Management - only in classic mode */}
             {!isTariffsMode && (
-              <div>
-                {showServerManagement && (
-                  <div className="apple-card-grad rounded-2xl bg-apple-card p-5">
+              <div className="mt-4">
+                {!showServerManagement ? (
+                  <button
+                    onClick={() => setShowServerManagement(true)}
+                    className={`w-full rounded-xl border p-4 text-left transition-colors ${isDark ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600' : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-dark-100">
+                          {t('subscription.additionalOptions.manageServers')}
+                        </div>
+                        <div className="mt-1 text-sm text-dark-400">
+                          {t('subscription.servers', { count: subscription.servers?.length || 0 })}
+                        </div>
+                      </div>
+                      <svg
+                        className="h-5 w-5 text-dark-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                ) : (
+                  <div
+                    className={`rounded-xl border p-5 ${isDark ? 'border-dark-700/50 bg-dark-800/50' : 'border-champagne-300/60 bg-champagne-200/40'}`}
+                  >
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-medium text-apple-ink">
+                      <h3 className="font-medium text-dark-100">
                         {t('subscription.additionalOptions.manageServersTitle')}
                       </h3>
                       <button
@@ -1844,7 +2081,7 @@ export default function Subscription() {
                           setShowServerManagement(false);
                           setSelectedServersToUpdate([]);
                         }}
-                        className="text-sm text-apple-mute hover:text-apple-ink"
+                        className="text-sm text-dark-400 hover:text-dark-200"
                       >
                         ✕
                       </button>
@@ -1852,18 +2089,18 @@ export default function Subscription() {
 
                     {countriesLoading ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
                       </div>
                     ) : countriesData && countriesData.countries.length > 0 ? (
                       <div className="space-y-4">
                         <div
-                          className={`rounded-lg p-2 text-xs ${isDark ? 'bg-apple-elevated/30 text-apple-mute' : 'bg-champagne-300/40 text-champagne-600'}`}
+                          className={`rounded-lg p-2 text-xs ${isDark ? 'bg-dark-700/30 text-dark-500' : 'bg-champagne-300/40 text-champagne-600'}`}
                         >
                           {t('subscription.serverManagement.statusLegend')}
                         </div>
 
                         {countriesData.discount_percent > 0 && (
-                          <div className="rounded-lg border border-apple-green/30 bg-apple-green/10 p-2 text-xs text-apple-green">
+                          <div className="rounded-lg border border-success-500/30 bg-success-500/10 p-2 text-xs text-success-400">
                             🎁{' '}
                             {t('subscription.serverManagement.discountBanner', {
                               percent: countriesData.discount_percent,
@@ -1896,12 +2133,12 @@ export default function Subscription() {
                                   className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${
                                     isSelected
                                       ? willBeAdded
-                                        ? 'border-apple-green bg-apple-green/10'
-                                        : 'border-apple-blue bg-apple-blue/10'
+                                        ? 'border-success-500 bg-success-500/10'
+                                        : 'border-accent-500 bg-accent-500/10'
                                       : willBeRemoved
-                                        ? 'border-apple-red/50 bg-apple-red/5'
+                                        ? 'border-error-500/50 bg-error-500/5'
                                         : isDark
-                                          ? 'border-apple-hairline/50 bg-apple-card/50 hover:border-apple-hairline'
+                                          ? 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600'
                                           : 'border-champagne-300/60 bg-champagne-200/40 hover:border-champagne-400'
                                   } ${!country.is_available && !isCurrentlyConnected ? 'cursor-not-allowed opacity-50' : ''}`}
                                 >
@@ -1916,22 +2153,22 @@ export default function Subscription() {
                                             : '⚪'}
                                     </span>
                                     <div>
-                                      <div className="flex items-center gap-2 font-medium text-apple-ink">
+                                      <div className="flex items-center gap-2 font-medium text-dark-100">
                                         {country.name}
                                         {country.has_discount && !isCurrentlyConnected && (
-                                          <span className="rounded bg-apple-green/20 px-1.5 py-0.5 text-xs text-apple-green">
+                                          <span className="rounded bg-success-500/20 px-1.5 py-0.5 text-xs text-success-400">
                                             -{country.discount_percent}%
                                           </span>
                                         )}
                                       </div>
                                       {willBeAdded && (
-                                        <div className="text-xs text-apple-green">
+                                        <div className="text-xs text-success-400">
                                           +{formatPrice(country.price_kopeks)}{' '}
                                           {t('subscription.serverManagement.forDays', {
                                             days: countriesData.days_left,
                                           })}
                                           {country.has_discount && (
-                                            <span className="ml-1 text-apple-mute line-through">
+                                            <span className="ml-1 text-dark-500 line-through">
                                               {formatPrice(
                                                 Math.round(
                                                   (country.base_price_kopeks *
@@ -1944,18 +2181,18 @@ export default function Subscription() {
                                         </div>
                                       )}
                                       {!willBeAdded && !isCurrentlyConnected && (
-                                        <div className="text-xs text-apple-mute">
+                                        <div className="text-xs text-dark-500">
                                           {formatPrice(country.price_per_month_kopeks)}
                                           {t('subscription.serverManagement.perMonth')}
                                           {country.has_discount && (
-                                            <span className="ml-1 text-apple-faint line-through">
+                                            <span className="ml-1 text-dark-600 line-through">
                                               {formatPrice(country.base_price_kopeks)}
                                             </span>
                                           )}
                                         </div>
                                       )}
                                       {!country.is_available && !isCurrentlyConnected && (
-                                        <div className="text-xs text-apple-mute">
+                                        <div className="text-xs text-dark-500">
                                           {t('subscription.serverManagement.unavailable')}
                                         </div>
                                       )}
@@ -1999,24 +2236,24 @@ export default function Subscription() {
 
                           return hasChanges ? (
                             <div
-                              className={`space-y-3 border-t pt-3 ${isDark ? 'border-apple-hairline/50' : 'border-champagne-300/60'}`}
+                              className={`space-y-3 border-t pt-3 ${isDark ? 'border-dark-700/50' : 'border-champagne-300/60'}`}
                             >
                               {added.length > 0 && (
                                 <div className="text-sm">
-                                  <span className="text-apple-green">
+                                  <span className="text-success-400">
                                     {t('subscription.serverManagement.toAdd')}
                                   </span>{' '}
-                                  <span className="text-apple-mute">
+                                  <span className="text-dark-300">
                                     {addedServers.map((s) => s.name).join(', ')}
                                   </span>
                                 </div>
                               )}
                               {removed.length > 0 && (
                                 <div className="text-sm">
-                                  <span className="text-apple-red">
+                                  <span className="text-error-400">
                                     {t('subscription.serverManagement.toDisconnect')}
                                   </span>{' '}
-                                  <span className="text-apple-mute">
+                                  <span className="text-dark-300">
                                     {countriesData.countries
                                       .filter((c) => removed.includes(c.uuid))
                                       .map((s) => s.name)
@@ -2026,10 +2263,10 @@ export default function Subscription() {
                               )}
                               {totalCost > 0 && (
                                 <div className="text-center">
-                                  <div className="text-sm text-apple-mute">
+                                  <div className="text-sm text-dark-400">
                                     {t('subscription.serverManagement.paymentProrated')}
                                   </div>
-                                  <div className="text-xl font-bold text-white">
+                                  <div className="text-xl font-bold text-accent-400">
                                     {formatPrice(totalCost)}
                                   </div>
                                 </div>
@@ -2063,20 +2300,20 @@ export default function Subscription() {
                               </button>
                             </div>
                           ) : (
-                            <div className="py-2 text-center text-sm text-apple-mute">
+                            <div className="py-2 text-center text-sm text-dark-500">
                               {t('subscription.serverManagement.selectServersHint')}
                             </div>
                           );
                         })()}
 
                         {updateCountriesMutation.isError && (
-                          <div className="text-center text-sm text-apple-red">
+                          <div className="text-center text-sm text-error-400">
                             {getErrorMessage(updateCountriesMutation.error)}
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="py-4 text-center text-sm text-apple-mute">
+                      <div className="py-4 text-center text-sm text-dark-400">
                         {t('subscription.serverManagement.noServersAvailable')}
                       </div>
                     )}
@@ -2087,20 +2324,80 @@ export default function Subscription() {
           </div>
         )}
 
-      {/* ─── Подключённые устройства ─── */}
+      {/* Reissue Subscription — standalone block, not dependent on device_limit */}
+      {subscription &&
+        (subscription.is_active || subscription.is_limited) &&
+        !subscription.is_trial && (
+          <div
+            className="relative overflow-hidden rounded-3xl"
+            style={{
+              background: g.cardBg,
+              border: `1px solid ${g.cardBorder}`,
+              boxShadow: g.shadow,
+              padding: '16px 20px',
+            }}
+          >
+            <button
+              onClick={handleRevoke}
+              disabled={revokeMutation.isPending || revokeCooldown > 0}
+              className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-left transition-colors hover:bg-amber-500/20 disabled:opacity-50"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-amber-400">
+                    {t('subscription.revoke.button')}
+                  </div>
+                  <div className="mt-1 text-sm text-dark-400">
+                    {revokeCooldown > 0
+                      ? t('subscription.revoke.cooldown', {
+                          minutes: Math.floor(revokeCooldown / 60),
+                          seconds: revokeCooldown % 60,
+                        })
+                      : t('subscription.revoke.description')}
+                  </div>
+                </div>
+                <div className="text-amber-400">
+                  {revokeMutation.isPending ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-400/30 border-t-amber-400" />
+                  ) : (
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </button>
+            {revokeMutation.error && (
+              <p className="mt-2 text-sm text-red-400">{getErrorMessage(revokeMutation.error)}</p>
+            )}
+          </div>
+        )}
+
+      {/* My Devices Section */}
       {subscription && (
-        <div>
-          <div className="mb-2.5 flex items-center justify-between px-1.5">
-            <span className="text-[13px] font-semibold text-apple-mute">
+        <div
+          className="relative overflow-hidden rounded-3xl"
+          style={{
+            background: g.cardBg,
+            border: `1px solid ${g.cardBorder}`,
+            boxShadow: g.shadow,
+            padding: '24px 28px',
+          }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-bold tracking-tight text-dark-50">
               {t('subscription.myDevices')}
-              {devicesData && devicesData.devices.length > 0 && (
-                <span className="ml-1.5 text-apple-faint">
-                  {devicesData.device_limit === 0
-                    ? `· ${devicesData.total}`
-                    : `· ${devicesData.total}/${devicesData.device_limit}`}
-                </span>
-              )}
-            </span>
+            </h2>
             {devicesData && devicesData.devices.length > 0 && (
               <button
                 onClick={() => {
@@ -2109,302 +2406,236 @@ export default function Subscription() {
                   }
                 }}
                 disabled={deleteAllDevicesMutation.isPending}
-                className="text-[13px] font-medium text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
+                className="text-[11px] font-medium transition-colors"
+                style={{ color: '#FF3B5C' }}
               >
                 {t('subscription.deleteAllDevices')}
               </button>
             )}
           </div>
 
-          <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
-            {devicesLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <div className="h-7 w-7 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
+          {devicesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div
+                className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+                style={{
+                  borderColor: 'rgb(var(--color-accent-500))',
+                  borderTopColor: 'transparent',
+                }}
+              />
+            </div>
+          ) : devicesData && devicesData.devices.length > 0 ? (
+            <div className="space-y-2">
+              <div className="mb-2 font-mono text-[11px] text-dark-50/30">
+                {devicesData.device_limit === 0
+                  ? `${devicesData.total} · ∞`
+                  : `${devicesData.total} / ${t('subscription.devices', { count: devicesData.device_limit })}`}
               </div>
-            ) : devicesData && devicesData.devices.length > 0 ? (
-              devicesData.devices.map((device, i) => {
+              {devicesData.devices.map((device) => {
                 const isEditing = editingDeviceHwid === device.hwid;
                 // Display priority: user alias → device model → platform.
-                const deviceName =
+                const displayName =
                   (device.local_name && device.local_name.trim()) ||
                   device.device_model ||
                   device.platform;
-                const submitRename = () =>
-                  renameDeviceMutation.mutate({
-                    hwid: device.hwid,
-                    name: editingDeviceName.trim() || null,
-                  });
-                const cancelRename = () => {
-                  setEditingDeviceHwid(null);
-                  setEditingDeviceName('');
-                };
 
                 return (
                   <div
                     key={device.hwid}
-                    className={`flex items-center gap-3 p-4 ${
-                      i !== devicesData.devices.length - 1 ? 'border-b border-apple-hairline' : ''
-                    }`}
+                    className="flex items-center justify-between rounded-[12px] p-3.5"
+                    style={{
+                      background: g.innerBg,
+                      border: `1px solid ${g.innerBorder}`,
+                    }}
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-apple-elevated">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#F97315"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
+                        style={{ background: g.trackBg }}
                       >
-                        <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                      </svg>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={g.textSecondary}
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            autoFocus
+                            value={editingDeviceName}
+                            maxLength={DEVICE_ALIAS_MAX_LENGTH}
+                            placeholder={device.device_model || device.platform}
+                            onChange={(e) => setEditingDeviceName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const trimmed = editingDeviceName.trim();
+                                renameDeviceMutation.mutate({
+                                  hwid: device.hwid,
+                                  name: trimmed || null,
+                                });
+                              } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                setEditingDeviceHwid(null);
+                                setEditingDeviceName('');
+                              }
+                            }}
+                            className="w-full rounded-md border-none bg-transparent px-2 py-1 text-sm font-semibold text-dark-50 outline-none focus:ring-1"
+                            style={{
+                              background: g.trackBg,
+                              boxShadow: `inset 0 0 0 1px ${g.innerBorder}`,
+                            }}
+                          />
+                        ) : (
+                          <div className="truncate text-sm font-semibold text-dark-50">
+                            {displayName}
+                          </div>
+                        )}
+                        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-dark-50/30">
+                          <span className="truncate">{device.platform}</span>
+                          <span className="font-mono text-dark-50/20">
+                            {device.hwid.slice(0, 8).toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="flex flex-shrink-0 items-center gap-1">
                       {isEditing ? (
-                        <input
-                          type="text"
-                          autoFocus
-                          value={editingDeviceName}
-                          maxLength={DEVICE_ALIAS_MAX_LENGTH}
-                          placeholder={device.device_model || device.platform}
-                          onChange={(e) => setEditingDeviceName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              submitRename();
-                            } else if (e.key === 'Escape') {
-                              e.preventDefault();
-                              cancelRename();
-                            }
-                          }}
-                          className="w-full rounded-lg bg-apple-elevated px-2.5 py-1 text-[15px] text-apple-ink outline-none ring-1 ring-apple-hairline focus:ring-apple-blue"
-                        />
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const trimmed = editingDeviceName.trim();
+                              renameDeviceMutation.mutate({
+                                hwid: device.hwid,
+                                name: trimmed || null,
+                              });
+                            }}
+                            disabled={renameDeviceMutation.isPending}
+                            className="p-2 transition-colors"
+                            style={{ color: g.textSecondary }}
+                            title={t('subscription.renameDeviceSave', 'Сохранить')}
+                            aria-label={t('subscription.renameDeviceSave', 'Сохранить')}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingDeviceHwid(null);
+                              setEditingDeviceName('');
+                            }}
+                            disabled={renameDeviceMutation.isPending}
+                            className="p-2 transition-colors"
+                            style={{ color: g.textFaint }}
+                            title={t('subscription.renameDeviceCancel', 'Отмена')}
+                            aria-label={t('subscription.renameDeviceCancel', 'Отмена')}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </>
                       ) : (
-                        <div className="truncate text-[15px] text-apple-ink">{deviceName}</div>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingDeviceHwid(device.hwid);
+                              setEditingDeviceName(device.local_name || '');
+                            }}
+                            className="p-2 transition-colors"
+                            style={{ color: g.textFaint }}
+                            title={t('subscription.renameDevice', 'Переименовать')}
+                            aria-label={t('subscription.renameDevice', 'Переименовать')}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(t('subscription.confirmDeleteDevice'))) {
+                                deleteDeviceMutation.mutate(device.hwid);
+                              }
+                            }}
+                            disabled={deleteDeviceMutation.isPending}
+                            className="p-2 transition-colors"
+                            style={{ color: g.textFaint }}
+                            title={t('subscription.deleteDevice')}
+                            aria-label={t('subscription.deleteDevice')}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                          </button>
+                        </>
                       )}
-                      <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-apple-faint">
-                        <span>{device.platform}</span>
-                        <span className="font-mono">{device.hwid.slice(0, 8).toUpperCase()}</span>
-                      </div>
                     </div>
-                    {isEditing ? (
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          onClick={submitRename}
-                          disabled={renameDeviceMutation.isPending}
-                          aria-label={t('subscription.renameDeviceSave')}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-apple-blue transition-opacity hover:opacity-80 disabled:opacity-50"
-                        >
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M5 13l4 4L19 7" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={cancelRename}
-                          disabled={renameDeviceMutation.isPending}
-                          aria-label={t('subscription.renameDeviceCancel')}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-apple-faint transition-opacity hover:opacity-80 disabled:opacity-50"
-                        >
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingDeviceHwid(device.hwid);
-                            setEditingDeviceName(device.local_name || '');
-                          }}
-                          aria-label={t('subscription.renameDevice')}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-apple-faint transition-opacity hover:opacity-80"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(t('subscription.confirmDeleteDevice'))) {
-                              deleteDeviceMutation.mutate(device.hwid);
-                            }
-                          }}
-                          disabled={deleteDeviceMutation.isPending}
-                          aria-label={t('subscription.deleteDevice')}
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-apple-red transition-opacity hover:opacity-80 disabled:opacity-50"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
                   </div>
                 );
-              })
-            ) : (
-              <div className="py-10 text-center text-[13px] text-apple-mute">
-                {t('subscription.noDevices')}
-              </div>
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-[12px] text-dark-50/25">
+              {t('subscription.noDevices')}
+            </div>
+          )}
         </div>
       )}
-
-      {/* ─── Управление ─── */}
-      {subscription &&
-        !subscription.is_trial &&
-        (!subscription.is_daily || subscription.is_active || subscription.is_limited) && (
-          <div>
-            <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
-              {t('subscription.management', 'Управление')}
-            </div>
-            <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
-              {/* Autopay */}
-              {!subscription.is_daily && (
-                <div className="flex items-center gap-3 p-4">
-                  <RowIcon icon="autopay" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[15px] text-apple-ink">
-                      {t('subscription.autoRenewal')}
-                    </div>
-                    <div className="mt-0.5 text-[13px] text-apple-mute">
-                      {tariffPriceLabel
-                        ? t('subscription.autopayChargeHint', {
-                            price: tariffPriceLabel,
-                            defaultValue: `Списывать ${tariffPriceLabel} с баланса`,
-                          })
-                        : t('subscription.daysBeforeExpiry', {
-                            count: subscription.autopay_days_before,
-                          })}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      haptic.buttonPressMedium();
-                      autopayMutation.mutate(!subscription.autopay_enabled);
-                    }}
-                    disabled={autopayMutation.isPending}
-                    className="relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors duration-300 disabled:opacity-50"
-                    style={{
-                      background: subscription.autopay_enabled ? '#30d158' : '#39393d',
-                    }}
-                  >
-                    <span
-                      className="absolute top-[3px] h-[24px] w-[24px] rounded-full bg-white transition-[left] duration-300"
-                      style={{
-                        left: subscription.autopay_enabled ? '23px' : '3px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                      }}
-                    />
-                  </button>
-                </div>
-              )}
-              {/* Server management */}
-              {!isTariffsMode && (subscription.is_active || subscription.is_limited) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    haptic.buttonPressMedium();
-                    setShowDeviceManage(false);
-                    setShowTrafficTopup(false);
-                    setShowServerManagement(true);
-                  }}
-                  className="flex w-full items-center gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated"
-                >
-                  <RowIcon icon="server" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[15px] text-apple-ink">
-                      {t('subscription.additionalOptions.manageServers', 'Управление серверами')}
-                    </div>
-                    <div className="mt-0.5 text-[13px] text-apple-mute">
-                      {t('subscription.servers', {
-                        count: subscription.servers?.length || 0,
-                      })}
-                    </div>
-                  </div>
-                  <span className="shrink-0 text-[18px] text-apple-faint">›</span>
-                </button>
-              )}
-              {/* Reissue link */}
-              {(subscription.is_active || subscription.is_limited) && (
-                <button
-                  onClick={handleRevoke}
-                  disabled={revokeMutation.isPending || revokeCooldown > 0}
-                  className="flex w-full items-center gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated disabled:opacity-50"
-                >
-                  <RowIcon icon="reissue" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[15px] text-apple-ink">
-                      {t('subscription.revoke.button')}
-                    </div>
-                    <div className="mt-0.5 text-[13px] text-apple-mute">
-                      {revokeCooldown > 0
-                        ? t('subscription.revoke.cooldown', {
-                            minutes: Math.floor(revokeCooldown / 60),
-                            seconds: revokeCooldown % 60,
-                          })
-                        : t('subscription.revoke.description')}
-                    </div>
-                  </div>
-                  {revokeMutation.isPending ? (
-                    <div className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-apple-mute/30 border-t-apple-mute" />
-                  ) : (
-                    <span className="shrink-0 text-[18px] text-apple-faint">›</span>
-                  )}
-                </button>
-              )}
-            </div>
-            {revokeMutation.error && (
-              <p className="mt-2 px-1.5 text-[13px] text-apple-red">
-                {getErrorMessage(revokeMutation.error)}
-              </p>
-            )}
-          </div>
-        )}
     </div>
   );
 }
