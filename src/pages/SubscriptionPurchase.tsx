@@ -100,49 +100,6 @@ export default function SubscriptionPurchase() {
     missingKopeks: number;
     trafficGb?: number;
   } | null>(null);
-  // True while pre-flight runs (renew / purchase-tariff that backend uses to
-  // save the cart in Redis via expected 402). We wait for it to land before
-  // opening the top-up sheet so the cart is guaranteed to be there by the
-  // time the webhook fires.
-  const [topUpPreflightLoading, setTopUpPreflightLoading] = useState(false);
-
-  // Trigger pre-flight + open the top-up sheet for a tariff purchase/renewal
-  // when the user's balance is short. Pre-flight is what makes the backend
-  // persist the cart; without it the webhook would just credit the balance
-  // and the subscription would not auto-renew.
-  const openTopUpSheetWithPreflight = useCallback(
-    async (params: {
-      tariffId: number;
-      periodDays: number;
-      missingKopeks: number;
-      trafficGb?: number;
-    }) => {
-      if (topUpPreflightLoading) return;
-      setTopUpPreflightLoading(true);
-      try {
-        const isRenewalOfCurrent = !!subscription?.id && params.tariffId === subscription.tariff_id;
-        if (isRenewalOfCurrent && subscription?.id) {
-          await subscriptionApi.renewSubscription(params.periodDays, subscription.id);
-        } else {
-          await subscriptionApi.purchaseTariff(
-            params.tariffId,
-            params.periodDays,
-            params.trafficGb,
-          );
-        }
-        // If we somehow succeeded, the purchase is already done — refresh and bail.
-        queryClient.invalidateQueries({ queryKey: ['subscription'] });
-        queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
-        navigate('/subscriptions', { replace: true });
-      } catch {
-        // Expected: 402 insufficient_funds — backend saved the cart, now open the sheet.
-        setTopUpSheet(params);
-      } finally {
-        setTopUpPreflightLoading(false);
-      }
-    },
-    [navigate, queryClient, subscription, topUpPreflightLoading],
-  );
 
   // Sales mode detection
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
@@ -387,7 +344,9 @@ export default function SubscriptionPurchase() {
   // top-up sheet from onError (apstream pattern — same mutation drives both
   // success and insufficient-balance branches).
   const tariffPurchaseMutation = useMutation({
-    mutationFn: () => {
+    // Return type is unioned (renew vs purchase-tariff); onSuccess ignores the
+    // body, so widen to unknown to keep useMutation's TData inference happy.
+    mutationFn: (): Promise<unknown> => {
       if (!selectedTariff) {
         throw new Error('Tariff not selected');
       }
@@ -401,6 +360,16 @@ export default function SubscriptionPurchase() {
           : selectedTariffPeriod?.days || 30;
       const trafficGb =
         useCustomTraffic && selectedTariff.custom_traffic_enabled ? customTrafficGb : undefined;
+      // Renewal of the current tariff → /subscription/renew so the backend
+      // persists cart_mode='extend' (on 402) and routes through
+      // _auto_extend_subscription, which emits the "Подписка продлена"
+      // notification. Genuine tariff purchase/switch → /purchase-tariff.
+      const isRenewalOfCurrent =
+        !!subscription?.id &&
+        (selectedTariff.is_current || selectedTariff.id === subscription.tariff_id);
+      if (isRenewalOfCurrent && subscription?.id) {
+        return subscriptionApi.renewSubscription(days, subscription.id);
+      }
       return subscriptionApi.purchaseTariff(selectedTariff.id, days, trafficGb);
     },
     onSuccess: () => {
