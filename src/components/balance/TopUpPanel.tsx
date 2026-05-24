@@ -49,20 +49,9 @@ interface TopUpPanelProps {
    * in advance — the user only needs to pick a payment method.
    */
   fixedAmountKopeks?: number;
-  /**
-   * Optional hook executed right before `createTopUp` is called. Errors
-   * are swallowed silently — used for pre-flight calls (e.g. cart save
-   * via expected 402) that should not block payment creation.
-   */
-  onBeforeTopUp?: () => Promise<void>;
 }
 
-export default function TopUpPanel({
-  methods,
-  onSuccess,
-  fixedAmountKopeks,
-  onBeforeTopUp,
-}: TopUpPanelProps) {
+export default function TopUpPanel({ methods, onSuccess, fixedAmountKopeks }: TopUpPanelProps) {
   const { t } = useTranslation();
   const { formatAmount, currencySymbol, convertToRub } = useCurrency();
   const { openInvoice, openTelegramLink, openLink } = usePlatform();
@@ -160,18 +149,8 @@ export default function TopUpPanel({
     unknown,
     number
   >({
-    mutationFn: async (amountKopeks: number) => {
-      // Optional pre-flight (e.g. backend cart save via expected 402).
-      // Failures are intentional and must not block payment creation.
-      if (onBeforeTopUp) {
-        try {
-          await onBeforeTopUp();
-        } catch {
-          /* expected for cart pre-flight that returns 402 */
-        }
-      }
-      return balanceApi.createTopUp(amountKopeks, method!.id, selectedOption || undefined);
-    },
+    mutationFn: (amountKopeks: number) =>
+      balanceApi.createTopUp(amountKopeks, method!.id, selectedOption || undefined),
     onSuccess: (data) => {
       const redirectUrl = data.payment_url || data.invoice_url;
       if (redirectUrl) {
@@ -426,7 +405,7 @@ export default function TopUpPanel({
       {showPicker &&
         createPortal(
           <div
-            className="apple-sheet-backdrop fixed inset-0 z-[1010] flex items-end justify-center"
+            className="apple-sheet-backdrop fixed inset-0 z-[1100] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.6)' }}
             onClick={() => setShowPicker(false)}
           >
