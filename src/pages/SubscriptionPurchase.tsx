@@ -339,14 +339,8 @@ export default function SubscriptionPurchase() {
   });
 
   // Tariff purchase mutation
-  // On 402 (insufficient_funds) the backend ALSO persists a cart in Redis so
-  // the top-up webhook can auto-complete the purchase. We open the inline
-  // top-up sheet from onError (apstream pattern — same mutation drives both
-  // success and insufficient-balance branches).
   const tariffPurchaseMutation = useMutation({
-    // Return type is unioned (renew vs purchase-tariff); onSuccess ignores the
-    // body, so widen to unknown to keep useMutation's TData inference happy.
-    mutationFn: (): Promise<unknown> => {
+    mutationFn: () => {
       if (!selectedTariff) {
         throw new Error('Tariff not selected');
       }
@@ -360,16 +354,6 @@ export default function SubscriptionPurchase() {
           : selectedTariffPeriod?.days || 30;
       const trafficGb =
         useCustomTraffic && selectedTariff.custom_traffic_enabled ? customTrafficGb : undefined;
-      // Renewal of the current tariff → /subscription/renew so the backend
-      // persists cart_mode='extend' (on 402) and routes through
-      // _auto_extend_subscription, which emits the "Подписка продлена"
-      // notification. Genuine tariff purchase/switch → /purchase-tariff.
-      const isRenewalOfCurrent =
-        !!subscription?.id &&
-        (selectedTariff.is_current || selectedTariff.id === subscription.tariff_id);
-      if (isRenewalOfCurrent && subscription?.id) {
-        return subscriptionApi.renewSubscription(days, subscription.id);
-      }
       return subscriptionApi.purchaseTariff(selectedTariff.id, days, trafficGb);
     },
     onSuccess: () => {
@@ -377,27 +361,6 @@ export default function SubscriptionPurchase() {
       queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       navigate('/subscriptions', { replace: true });
-    },
-    onError: (error: unknown) => {
-      const insufficient = getInsufficientBalanceError(error);
-      if (insufficient && selectedTariff) {
-        const isDailyTariff =
-          selectedTariff.is_daily ||
-          (selectedTariff.daily_price_kopeks && selectedTariff.daily_price_kopeks > 0);
-        const days = isDailyTariff
-          ? 1
-          : useCustomDays
-            ? customDays
-            : selectedTariffPeriod?.days || 30;
-        const trafficGb =
-          useCustomTraffic && selectedTariff.custom_traffic_enabled ? customTrafficGb : undefined;
-        setTopUpSheet({
-          tariffId: selectedTariff.id,
-          periodDays: days,
-          missingKopeks: insufficient.missingAmount ?? 0,
-          trafficGb,
-        });
-      }
     },
   });
 
@@ -1074,10 +1037,15 @@ export default function SubscriptionPurchase() {
                           <button
                             onClick={() => {
                               haptic.buttonPressMedium();
-                              // Always run the mutation. On 402 it both persists
-                              // the cart in Redis AND triggers onError, which opens
-                              // the inline top-up sheet (see mutation definition).
-                              tariffPurchaseMutation.mutate();
+                              if (hasEnoughBalance || missingAmount <= 0) {
+                                tariffPurchaseMutation.mutate();
+                              } else {
+                                setTopUpSheet({
+                                  tariffId: selectedTariff.id,
+                                  periodDays: 1,
+                                  missingKopeks: missingAmount,
+                                });
+                              }
                             }}
                             disabled={tariffPurchaseMutation.isPending}
                             className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
@@ -1118,12 +1086,8 @@ export default function SubscriptionPurchase() {
                                 {getErrorMessage(tariffPurchaseMutation.error)}
                               </div>
                             )}
-                          {/* Inline prompt — only shown when the top-up sheet
-                              is closed (e.g. user dismissed it) so we don't
-                              stack two "пополнить" CTAs on top of each other. */}
                           {tariffPurchaseMutation.isError &&
-                            getInsufficientBalanceError(tariffPurchaseMutation.error) &&
-                            !topUpSheet && (
+                            getInsufficientBalanceError(tariffPurchaseMutation.error) && (
                               <InsufficientBalancePrompt
                                 missingAmountKopeks={
                                   getInsufficientBalanceError(tariffPurchaseMutation.error)
@@ -1625,10 +1589,22 @@ export default function SubscriptionPurchase() {
                                     <button
                                       onClick={() => {
                                         haptic.buttonPressMedium();
-                                        // Always run the mutation. 402 persists
-                                        // the cart and opens the top-up sheet
-                                        // via onError (see mutation definition).
-                                        tariffPurchaseMutation.mutate();
+                                        if (hasEnoughBalance || missingAmount <= 0) {
+                                          tariffPurchaseMutation.mutate();
+                                        } else {
+                                          setTopUpSheet({
+                                            tariffId: selectedTariff.id,
+                                            periodDays: useCustomDays
+                                              ? customDays
+                                              : selectedTariffPeriod?.days || 30,
+                                            missingKopeks: missingAmount,
+                                            trafficGb:
+                                              useCustomTraffic &&
+                                              selectedTariff.custom_traffic_enabled
+                                                ? customTrafficGb
+                                                : undefined,
+                                          });
+                                        }
                                       }}
                                       disabled={tariffPurchaseMutation.isPending}
                                       className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
@@ -1675,10 +1651,8 @@ export default function SubscriptionPurchase() {
                               {getErrorMessage(tariffPurchaseMutation.error)}
                             </div>
                           )}
-                        {/* Inline prompt — only shown when the top-up sheet is closed. */}
                         {tariffPurchaseMutation.isError &&
-                          getInsufficientBalanceError(tariffPurchaseMutation.error) &&
-                          !topUpSheet && (
+                          getInsufficientBalanceError(tariffPurchaseMutation.error) && (
                             <InsufficientBalancePrompt
                               missingAmountKopeks={
                                 getInsufficientBalanceError(tariffPurchaseMutation.error)
@@ -1780,6 +1754,18 @@ export default function SubscriptionPurchase() {
                     <TopUpPanel
                       methods={paymentMethods}
                       fixedAmountKopeks={topUpSheet.missingKopeks}
+                      onBeforeTopUp={async () => {
+                        // Pre-flight purchaseTariff — backend returns 402 and
+                        // persists the cart in Redis. The webhook then runs
+                        // auto_purchase_saved_cart_after_topup once the top-up
+                        // payment is credited. The 402 is expected; TopUpPanel
+                        // swallows the error and proceeds to createTopUp.
+                        await subscriptionApi.purchaseTariff(
+                          topUpSheet.tariffId,
+                          topUpSheet.periodDays,
+                          topUpSheet.trafficGb,
+                        );
+                      }}
                       onSuccess={() => setTopUpSheet(null)}
                     />
                   </div>
