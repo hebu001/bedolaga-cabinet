@@ -16,9 +16,9 @@ import type {
   Tariff,
   TariffPeriod,
   ClassicPurchaseOptions,
-  PaymentMethod,
 } from '../types';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
+import TopUpPanel from '../components/balance/TopUpPanel';
 import { useCurrency } from '../hooks/useCurrency';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
@@ -29,12 +29,6 @@ import {
   getInsufficientBalanceError,
   type PurchaseStep,
 } from '../utils/subscriptionHelpers';
-import {
-  savePurchaseIntent,
-  loadPurchaseIntent,
-  clearPurchaseIntent,
-} from '../utils/purchaseIntentStorage';
-import { saveTopUpPendingInfo } from '../utils/topUpStorage';
 
 export default function SubscriptionPurchase() {
   const { t } = useTranslation();
@@ -48,10 +42,6 @@ export default function SubscriptionPurchase() {
   const haptic = useHapticFeedback();
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
-
-  const autoMode = searchParams.get('auto') === '1';
-  // ?renew=1 — auto-open the current tariff's payment modal (skip the list)
-  const renewIntent = searchParams.get('renew') === '1';
 
   const formatPrice = (kopeks: number) =>
     kopeks === 0
@@ -81,19 +71,35 @@ export default function SubscriptionPurchase() {
     refetchOnMount: 'always',
   });
 
-  // Payment methods for direct payment
-  const { data: paymentMethods } = useQuery({
-    queryKey: ['payment-methods'],
-    queryFn: balanceApi.getPaymentMethods,
-    staleTime: 60000,
-  });
-
   // Active promo discount
   const { data: activeDiscount } = useQuery({
     queryKey: ['active-discount'],
     queryFn: promoApi.getActiveDiscount,
     staleTime: 30000,
   });
+
+  // Payment methods — used by the inline top-up sheet when balance is short.
+  // Free top-up flow lives on /balance; this query is loaded lazily so it
+  // does not slow down the initial render.
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: balanceApi.getPaymentMethods,
+    staleTime: 60_000,
+  });
+
+  // Inline top-up sheet context — populated when the user clicks "Оплатить"
+  // and balance is insufficient. The TopUpPanel inside the sheet uses
+  // `fixedAmountKopeks` (the missing amount) and `onBeforeTopUp` (a pre-flight
+  // purchaseTariff call that triggers backend cart persistence via 402).
+  // When the top-up payment succeeds, the backend webhook automatically
+  // completes the purchase from the saved cart — no client-side return path
+  // is required.
+  const [topUpSheet, setTopUpSheet] = useState<{
+    tariffId: number;
+    periodDays: number;
+    missingKopeks: number;
+    trafficGb?: number;
+  } | null>(null);
 
   // Sales mode detection
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
@@ -174,14 +180,6 @@ export default function SubscriptionPurchase() {
   const [useCustomDays, setUseCustomDays] = useState(false);
   const [useCustomTraffic, setUseCustomTraffic] = useState(false);
 
-  // Direct payment state
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
-  const [selectedPaymentOption, setSelectedPaymentOption] = useState<string | null>(null);
-  const [showPaymentMethodPicker, setShowPaymentMethodPicker] = useState(false);
-  const [isDirectPaying, setIsDirectPaying] = useState(false);
-  const [directPayError, setDirectPayError] = useState<string | null>(null);
-  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
-  const autoProcessedRef = useRef(false);
   // Swipe-left to go back (must be before early returns per Rules of Hooks)
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -198,20 +196,8 @@ export default function SubscriptionPurchase() {
     touchStartY.current = null;
   };
 
-  // Auto-select first payment method
-  useEffect(() => {
-    if (paymentMethods && paymentMethods.length > 0 && !selectedPaymentMethod) {
-      const first = paymentMethods.find((m) => m.is_available);
-      if (first) {
-        setSelectedPaymentMethod(first.id);
-        setSelectedPaymentOption(first.options?.[0]?.id ?? null);
-      }
-    }
-  }, [paymentMethods, selectedPaymentMethod]);
-
   // Refs for auto-scroll
   const switchModalRef = useRef<HTMLDivElement>(null);
-  const didAutoOpenRenewRef = useRef(false);
 
   // Tariff switch
   const [switchTariffId, setSwitchTariffId] = useState<number | null>(null);
@@ -354,9 +340,7 @@ export default function SubscriptionPurchase() {
 
   // Tariff purchase mutation
   const tariffPurchaseMutation = useMutation({
-    // Return type is unioned (renew vs purchase-tariff); onSuccess ignores the
-    // body, so widen to unknown to keep useMutation's TData inference happy.
-    mutationFn: (): Promise<unknown> => {
+    mutationFn: () => {
       if (!selectedTariff) {
         throw new Error('Tariff not selected');
       }
@@ -370,157 +354,15 @@ export default function SubscriptionPurchase() {
           : selectedTariffPeriod?.days || 30;
       const trafficGb =
         useCustomTraffic && selectedTariff.custom_traffic_enabled ? customTrafficGb : undefined;
-      // Renewing the current tariff → use the dedicated POST /subscription/renew
-      // (just extends the expiry, responds fast). purchase-tariff re-assigns the
-      // tariff with a heavy panel re-sync and would hang the pay button ~30s.
-      // A genuine tariff change (different tariff picked) keeps purchase-tariff.
-      const isRenewalOfCurrent =
-        renewIntent && (selectedTariff.is_current || selectedTariff.id === subscription?.tariff_id);
-      if (isRenewalOfCurrent && subscription?.id) {
-        return subscriptionApi.renewSubscription(days, subscription.id);
-      }
       return subscriptionApi.purchaseTariff(selectedTariff.id, days, trafficGb);
     },
     onSuccess: () => {
-      clearPurchaseIntent();
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       navigate('/subscriptions', { replace: true });
     },
   });
-
-  // Direct payment handler: create top-up for exact missing amount and redirect
-  const handleDirectPay = async (
-    missingKopeks: number,
-    tariffId: number,
-    tariffName: string,
-    periodDays: number,
-    totalPriceKopeks: number,
-    trafficGb?: number,
-  ) => {
-    if (!selectedPaymentMethod || isDirectPaying) return;
-    setIsDirectPaying(true);
-    setDirectPayError(null);
-
-    try {
-      // Save purchase intent before redirecting (frontend fallback for the
-      // ?auto=1 return path).
-      savePurchaseIntent({
-        tariff_id: tariffId,
-        tariff_name: tariffName,
-        period_days: periodDays,
-        traffic_gb: trafficGb,
-        total_price_kopeks: totalPriceKopeks,
-        created_at: Date.now(),
-      });
-
-      // Pre-flight so the backend persists a server-side cart: hit the
-      // renew / purchase-tariff endpoint. With insufficient balance it
-      // returns 402 and saves the cart in Redis — the top-up webhook then
-      // auto-completes the renewal server-side, without depending on the
-      // user returning to the cabinet.
-      const isRenewalOfCurrent =
-        renewIntent && !!subscription && tariffId === subscription.tariff_id;
-      try {
-        if (isRenewalOfCurrent) {
-          await subscriptionApi.renewSubscription(periodDays, subscription?.id);
-        } else {
-          await subscriptionApi.purchaseTariff(tariffId, periodDays, trafficGb);
-        }
-        // Unexpectedly succeeded — balance was already sufficient, done.
-        clearPurchaseIntent();
-        queryClient.invalidateQueries({ queryKey: ['subscription'] });
-        queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
-        navigate('/subscriptions', { replace: true });
-        return;
-      } catch {
-        // Expected: 402 insufficient_funds — the backend cart is now saved.
-        // Any other error: fall through to top-up; the renewal still
-        // recovers via the ?auto=1 return path.
-      }
-
-      // Create top-up for the missing amount
-      const topUpAmount = Math.max(missingKopeks, 100); // Minimum 1 ruble
-      const result = await balanceApi.createTopUp(
-        topUpAmount,
-        selectedPaymentMethod,
-        selectedPaymentOption ?? undefined,
-      );
-
-      // Save top-up info for TopUpResult polling
-      saveTopUpPendingInfo({
-        amount_kopeks: result.amount_kopeks,
-        method_id: selectedPaymentMethod,
-        method_name: selectedPaymentMethod,
-        payment_id: result.payment_id,
-        created_at: Date.now(),
-      });
-
-      // Redirect to payment
-      window.location.href = result.payment_url;
-    } catch (err) {
-      clearPurchaseIntent();
-      const msg =
-        err instanceof AxiosError
-          ? err.response?.data?.detail?.message ||
-            err.response?.data?.detail ||
-            t('subscription.directPayError', 'Payment error. Please try again.')
-          : t('subscription.directPayError', 'Payment error. Please try again.');
-      setDirectPayError(
-        typeof msg === 'string'
-          ? msg
-          : t('subscription.directPayError', 'Payment error. Please try again.'),
-      );
-      setIsDirectPaying(false);
-    }
-  };
-
-  // Available payment methods filtered by amount
-  const getAvailablePaymentMethods = useCallback(
-    (amountKopeks: number): PaymentMethod[] => {
-      if (!paymentMethods) return [];
-      return paymentMethods.filter(
-        (m) =>
-          m.is_available &&
-          amountKopeks >= m.min_amount_kopeks &&
-          amountKopeks <= m.max_amount_kopeks,
-      );
-    },
-    [paymentMethods],
-  );
-
-  // Auto-purchase on return from payment (when ?auto=1)
-  useEffect(() => {
-    if (!autoMode || autoProcessedRef.current || !purchaseOptions) return;
-    const intent = loadPurchaseIntent();
-    if (!intent) return;
-
-    const balance = purchaseOptions.balance_kopeks;
-    if (balance >= intent.total_price_kopeks) {
-      autoProcessedRef.current = true;
-      clearPurchaseIntent();
-
-      // Find the tariff and set state, then trigger purchase
-      if (isTariffsMode && tariffs.length > 0) {
-        const tariff = tariffs.find((t) => t.id === intent.tariff_id);
-        if (tariff) {
-          // Directly call purchaseTariff
-          subscriptionApi
-            .purchaseTariff(intent.tariff_id, intent.period_days, intent.traffic_gb)
-            .then(() => {
-              queryClient.invalidateQueries({ queryKey: ['subscription'] });
-              queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
-              navigate('/subscription', { replace: true });
-            })
-            .catch(() => {
-              // If auto-purchase fails, navigate normally
-              navigate('/subscription/purchase', { replace: true });
-            });
-        }
-      }
-    }
-  }, [autoMode, purchaseOptions, isTariffsMode, tariffs, queryClient, navigate]);
 
   // Auto-scroll effects
   useEffect(() => {
@@ -546,21 +388,6 @@ export default function SubscriptionPurchase() {
       window.removeEventListener('keydown', onKey);
     };
   }, [showTariffListModal]);
-
-  // ?renew=1 — jump straight into the current tariff's payment modal.
-  // If there is no current tariff, fall through to the tariff list.
-  useEffect(() => {
-    if (!renewIntent || didAutoOpenRenewRef.current) return;
-    if (!isTariffsMode || tariffs.length === 0) return;
-    const current = tariffs.find(
-      (tariff) => tariff.is_current || tariff.id === subscription?.tariff_id,
-    );
-    if (!current) return;
-    didAutoOpenRenewRef.current = true;
-    setSelectedTariff(current);
-    setSelectedTariffPeriod(current.periods[0] || null);
-    setShowTariffPurchase(true);
-  }, [renewIntent, isTariffsMode, tariffs, subscription]);
 
   // Classic mode helpers
   const toggleServer = (uuid: string) => {
@@ -1167,7 +994,6 @@ export default function SubscriptionPurchase() {
                       const missingAmount = purchaseOptions
                         ? dailyPrice - purchaseOptions.balance_kopeks
                         : dailyPrice;
-                      const availableMethods = getAvailablePaymentMethods(missingAmount);
 
                       return (
                         <div className="mt-6">
@@ -1211,25 +1037,20 @@ export default function SubscriptionPurchase() {
                           <button
                             onClick={() => {
                               haptic.buttonPressMedium();
-                              if (
-                                hasEnoughBalance ||
-                                !purchaseOptions ||
-                                availableMethods.length === 0
-                              ) {
+                              if (hasEnoughBalance || missingAmount <= 0) {
                                 tariffPurchaseMutation.mutate();
                               } else {
-                                setSelectedPaymentMethod(availableMethods[0]?.id ?? null);
-                                setSelectedPaymentOption(
-                                  availableMethods[0]?.options?.[0]?.id ?? null,
-                                );
-                                setShowPaymentMethodPicker(false);
-                                setShowPaymentSheet(true);
+                                setTopUpSheet({
+                                  tariffId: selectedTariff.id,
+                                  periodDays: 1,
+                                  missingKopeks: missingAmount,
+                                });
                               }
                             }}
-                            disabled={tariffPurchaseMutation.isPending || isDirectPaying}
+                            disabled={tariffPurchaseMutation.isPending}
                             className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                           >
-                            {tariffPurchaseMutation.isPending || isDirectPaying ? (
+                            {tariffPurchaseMutation.isPending ? (
                               <span className="flex items-center justify-center gap-2">
                                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                                 {t('common.loading')}
@@ -1237,250 +1058,21 @@ export default function SubscriptionPurchase() {
                             ) : (
                               <>
                                 {t('subscription.paySubscription', 'Оплатить')}
-                                {!hasEnoughBalance && missingAmount > 0 ? (
-                                  <span className="text-white/90">
-                                    {formatPrice(missingAmount)}
-                                  </span>
-                                ) : (
-                                  <span className="text-white/90">{formatPrice(dailyPrice)}</span>
-                                )}
+                                <span className="text-white/90">
+                                  {hasEnoughBalance
+                                    ? formatPrice(dailyPrice)
+                                    : formatPrice(missingAmount)}
+                                </span>
                               </>
                             )}
                           </button>
 
-                          {/* Payment Method Bottom Sheet for Daily */}
-                          {showPaymentSheet &&
-                            !hasEnoughBalance &&
-                            availableMethods.length > 0 &&
-                            createPortal(
-                              <>
-                                <div
-                                  className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
-                                  style={{ background: 'rgba(0,0,0,0.6)' }}
-                                  onClick={() => setShowPaymentSheet(false)}
-                                >
-                                  <div
-                                    className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
-                                      <h3 className="text-[22px] font-semibold text-white">
-                                        {t('subscription.paymentConfirm', 'Подтверждение оплаты')}
-                                      </h3>
-                                      <button
-                                        type="button"
-                                        onClick={() => setShowPaymentSheet(false)}
-                                        aria-label="Close"
-                                        className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                      >
-                                        <svg
-                                          width="18"
-                                          height="18"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          strokeWidth="2"
-                                          strokeLinecap="round"
-                                        >
-                                          <path d="M6 6l12 12M18 6 6 18" />
-                                        </svg>
-                                      </button>
-                                    </div>
-                                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
-                                      <div className="apple-card-grad rounded-xl bg-apple-card p-4">
-                                        <p className="text-[14px] text-apple-ink">
-                                          Подписка · ежедневная оплата
-                                        </p>
-                                        <hr className="my-2.5 border-apple-hairline" />
-                                        <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
-                                      </div>
-                                      {(() => {
-                                        const activeMethod =
-                                          availableMethods.find(
-                                            (m) => m.id === selectedPaymentMethod,
-                                          ) ?? availableMethods[0];
-                                        if (!activeMethod) return null;
-                                        return (
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              if (availableMethods.length > 1)
-                                                setShowPaymentMethodPicker(true);
-                                            }}
-                                            className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
-                                            style={{
-                                              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                            }}
-                                          >
-                                            <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
-                                              <img src="/SBP.svg" alt="" className="h-6" />
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                              <div className="truncate text-sm font-medium text-white">
-                                                {activeMethod.name}
-                                              </div>
-                                              {activeMethod.description && (
-                                                <div className="mt-0.5 truncate text-xs text-apple-mute">
-                                                  {activeMethod.description}
-                                                </div>
-                                              )}
-                                            </div>
-                                            {availableMethods.length > 1 && (
-                                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-elevated text-apple-mute">
-                                                <svg
-                                                  width="16"
-                                                  height="16"
-                                                  viewBox="0 0 24 24"
-                                                  fill="currentColor"
-                                                  aria-hidden="true"
-                                                >
-                                                  <circle cx="5" cy="12" r="2" />
-                                                  <circle cx="12" cy="12" r="2" />
-                                                  <circle cx="19" cy="12" r="2" />
-                                                </svg>
-                                              </span>
-                                            )}
-                                          </button>
-                                        );
-                                      })()}
-                                    </div>
-                                    <div className="shrink-0 px-7 pb-7 pt-3">
-                                      {selectedPaymentMethod && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            handleDirectPay(
-                                              missingAmount,
-                                              selectedTariff.id,
-                                              selectedTariff.name,
-                                              1,
-                                              dailyPrice,
-                                            );
-                                            setShowPaymentSheet(false);
-                                          }}
-                                          disabled={isDirectPaying}
-                                          className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                        >
-                                          {isDirectPaying ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                              {t('common.loading')}
-                                            </span>
-                                          ) : (
-                                            t(
-                                              'subscription.payAndActivate',
-                                              'Оплатить и активировать',
-                                            )
-                                          )}
-                                        </button>
-                                      )}
-                                      {directPayError && (
-                                        <div className="mt-3 text-center text-sm text-apple-red">
-                                          {directPayError}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                {showPaymentMethodPicker && (
-                                  <div
-                                    className="apple-sheet-backdrop fixed inset-0 z-[1001] flex items-end justify-center"
-                                    style={{ background: 'rgba(0,0,0,0.6)' }}
-                                    onClick={() => setShowPaymentMethodPicker(false)}
-                                  >
-                                    <div
-                                      className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
-                                        <h3 className="text-[22px] font-semibold text-white">
-                                          {t(
-                                            'subscription.changePaymentMethod',
-                                            'Изменить способ оплаты',
-                                          )}
-                                        </h3>
-                                        <button
-                                          type="button"
-                                          onClick={() => setShowPaymentMethodPicker(false)}
-                                          aria-label="Close"
-                                          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                        >
-                                          <svg
-                                            width="18"
-                                            height="18"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                          >
-                                            <path d="M6 6l12 12M18 6 6 18" />
-                                          </svg>
-                                        </button>
-                                      </div>
-                                      <div className="flex flex-col gap-2 overflow-y-auto px-7 pb-7 pt-1">
-                                        {availableMethods.map((method) => (
-                                          <button
-                                            key={method.id}
-                                            type="button"
-                                            onClick={() => {
-                                              setSelectedPaymentMethod(method.id);
-                                              setSelectedPaymentOption(
-                                                method.options?.[0]?.id ?? null,
-                                              );
-                                              setDirectPayError(null);
-                                              setShowPaymentMethodPicker(false);
-                                            }}
-                                            className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
-                                            style={{
-                                              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                            }}
-                                          >
-                                            <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
-                                              <img src="/SBP.svg" alt="" className="h-6" />
-                                            </span>
-                                            <div className="min-w-0 flex-1">
-                                              <div className="truncate text-sm font-medium text-white">
-                                                {method.name}
-                                              </div>
-                                              {method.description && (
-                                                <div className="mt-0.5 truncate text-xs text-apple-mute">
-                                                  {method.description}
-                                                </div>
-                                              )}
-                                            </div>
-                                            {selectedPaymentMethod === method.id && (
-                                              <span
-                                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                                                style={{ background: '#F97315' }}
-                                              >
-                                                <svg
-                                                  width="14"
-                                                  height="14"
-                                                  viewBox="0 0 24 24"
-                                                  fill="none"
-                                                  stroke="#fff"
-                                                  strokeWidth="3"
-                                                  strokeLinecap="round"
-                                                  strokeLinejoin="round"
-                                                >
-                                                  <path d="M5 13l4 4L19 7" />
-                                                </svg>
-                                              </span>
-                                            )}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </>,
-                              document.body,
-                            )}
-
+                          {/* Fallback prompt — used only when the top-up sheet
+                              cannot be opened (e.g. payment methods config error). */}
                           {purchaseOptions &&
                             !hasEnoughBalance &&
-                            availableMethods.length === 0 && (
+                            missingAmount > 0 &&
+                            (!paymentMethods || paymentMethods.length === 0) && (
                               <InsufficientBalancePrompt
                                 missingAmountKopeks={missingAmount}
                                 compact
@@ -1496,12 +1088,14 @@ export default function SubscriptionPurchase() {
                             )}
                           {tariffPurchaseMutation.isError &&
                             getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                              <div className="mt-3 text-center text-sm text-apple-red">
-                                {t(
-                                  'subscription.directPayError',
-                                  'Payment error. Please try again.',
-                                )}
-                              </div>
+                              <InsufficientBalancePrompt
+                                missingAmountKopeks={
+                                  getInsufficientBalanceError(tariffPurchaseMutation.error)
+                                    ?.missingAmount ?? 0
+                                }
+                                compact
+                                className="mt-3"
+                              />
                             )}
                         </div>
                       );
@@ -1947,7 +1541,6 @@ export default function SubscriptionPurchase() {
                                 const missingAmount = purchaseOptions
                                   ? totalPrice - purchaseOptions.balance_kopeks
                                   : totalPrice;
-                                const methods = getAvailablePaymentMethods(missingAmount);
 
                                 return (
                                   <>
@@ -1996,25 +1589,27 @@ export default function SubscriptionPurchase() {
                                     <button
                                       onClick={() => {
                                         haptic.buttonPressMedium();
-                                        if (
-                                          hasEnoughBalance ||
-                                          !purchaseOptions ||
-                                          methods.length === 0
-                                        ) {
+                                        if (hasEnoughBalance || missingAmount <= 0) {
                                           tariffPurchaseMutation.mutate();
                                         } else {
-                                          setSelectedPaymentMethod(methods[0]?.id ?? null);
-                                          setSelectedPaymentOption(
-                                            methods[0]?.options?.[0]?.id ?? null,
-                                          );
-                                          setShowPaymentMethodPicker(false);
-                                          setShowPaymentSheet(true);
+                                          setTopUpSheet({
+                                            tariffId: selectedTariff.id,
+                                            periodDays: useCustomDays
+                                              ? customDays
+                                              : selectedTariffPeriod?.days || 30,
+                                            missingKopeks: missingAmount,
+                                            trafficGb:
+                                              useCustomTraffic &&
+                                              selectedTariff.custom_traffic_enabled
+                                                ? customTrafficGb
+                                                : undefined,
+                                          });
                                         }
                                       }}
-                                      disabled={tariffPurchaseMutation.isPending || isDirectPaying}
+                                      disabled={tariffPurchaseMutation.isPending}
                                       className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                                     >
-                                      {tariffPurchaseMutation.isPending || isDirectPaying ? (
+                                      {tariffPurchaseMutation.isPending ? (
                                         <span className="flex items-center justify-center gap-2">
                                           <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                                           {t('common.loading')}
@@ -2031,258 +1626,17 @@ export default function SubscriptionPurchase() {
                                       )}
                                     </button>
 
-                                    {/* Payment Method Bottom Sheet */}
-                                    {showPaymentSheet &&
+                                    {/* Fallback prompt — used only when the top-up sheet
+                                        cannot be opened (e.g. payment methods config error). */}
+                                    {purchaseOptions &&
                                       !hasEnoughBalance &&
-                                      methods.length > 0 &&
-                                      createPortal(
-                                        <>
-                                          <div
-                                            className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
-                                            style={{ background: 'rgba(0,0,0,0.6)' }}
-                                            onClick={() => setShowPaymentSheet(false)}
-                                          >
-                                            <div
-                                              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
-                                              onClick={(e) => e.stopPropagation()}
-                                            >
-                                              <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
-                                                <h3 className="text-[22px] font-semibold text-white">
-                                                  {t(
-                                                    'subscription.paymentConfirm',
-                                                    'Подтверждение оплаты',
-                                                  )}
-                                                </h3>
-                                                <button
-                                                  type="button"
-                                                  onClick={() => setShowPaymentSheet(false)}
-                                                  aria-label="Close"
-                                                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                                >
-                                                  <svg
-                                                    width="18"
-                                                    height="18"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                    strokeLinecap="round"
-                                                  >
-                                                    <path d="M6 6l12 12M18 6 6 18" />
-                                                  </svg>
-                                                </button>
-                                              </div>
-                                              <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-7 pb-2">
-                                                <div className="apple-card-grad rounded-xl bg-apple-card p-4">
-                                                  <p className="text-[14px] text-apple-ink">
-                                                    Подписка ·{' '}
-                                                    {useCustomDays
-                                                      ? `${customDays} дн.`
-                                                      : selectedTariffPeriod?.label}
-                                                  </p>
-                                                  <hr className="my-2.5 border-apple-hairline" />
-                                                  <p className="text-[14px] text-apple-ink">{`Количество устройств: ${selectedTariff.device_limit === 0 ? '∞' : selectedTariff.device_limit}`}</p>
-                                                </div>
-                                                {(() => {
-                                                  const activeMethod =
-                                                    methods.find(
-                                                      (m) => m.id === selectedPaymentMethod,
-                                                    ) ?? methods[0];
-                                                  if (!activeMethod) return null;
-                                                  return (
-                                                    <button
-                                                      type="button"
-                                                      onClick={() => {
-                                                        if (methods.length > 1)
-                                                          setShowPaymentMethodPicker(true);
-                                                      }}
-                                                      className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
-                                                      style={{
-                                                        boxShadow:
-                                                          'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                                      }}
-                                                    >
-                                                      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
-                                                        <img
-                                                          src="/SBP.svg"
-                                                          alt=""
-                                                          className="h-6"
-                                                        />
-                                                      </span>
-                                                      <div className="min-w-0 flex-1">
-                                                        <div className="truncate text-sm font-medium text-white">
-                                                          {activeMethod.name}
-                                                        </div>
-                                                        {activeMethod.description && (
-                                                          <div className="mt-0.5 truncate text-xs text-apple-mute">
-                                                            {activeMethod.description}
-                                                          </div>
-                                                        )}
-                                                      </div>
-                                                      {methods.length > 1 && (
-                                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-elevated text-apple-mute">
-                                                          <svg
-                                                            width="16"
-                                                            height="16"
-                                                            viewBox="0 0 24 24"
-                                                            fill="currentColor"
-                                                            aria-hidden="true"
-                                                          >
-                                                            <circle cx="5" cy="12" r="2" />
-                                                            <circle cx="12" cy="12" r="2" />
-                                                            <circle cx="19" cy="12" r="2" />
-                                                          </svg>
-                                                        </span>
-                                                      )}
-                                                    </button>
-                                                  );
-                                                })()}
-                                              </div>
-                                              <div className="shrink-0 px-7 pb-7 pt-3">
-                                                {selectedPaymentMethod && (
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                      handleDirectPay(
-                                                        missingAmount,
-                                                        selectedTariff.id,
-                                                        selectedTariff.name,
-                                                        useCustomDays
-                                                          ? customDays
-                                                          : selectedTariffPeriod?.days || 30,
-                                                        totalPrice,
-                                                        useCustomTraffic &&
-                                                          selectedTariff.custom_traffic_enabled
-                                                          ? customTrafficGb
-                                                          : undefined,
-                                                      );
-                                                      setShowPaymentSheet(false);
-                                                    }}
-                                                    disabled={isDirectPaying}
-                                                    className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                                                  >
-                                                    {isDirectPaying ? (
-                                                      <span className="flex items-center justify-center gap-2">
-                                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                                        {t('common.loading')}
-                                                      </span>
-                                                    ) : (
-                                                      t(
-                                                        'subscription.payAndActivate',
-                                                        'Оплатить и активировать',
-                                                      )
-                                                    )}
-                                                  </button>
-                                                )}
-                                                {directPayError && (
-                                                  <div className="mt-3 text-center text-sm text-apple-red">
-                                                    {directPayError}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </div>
-                                          {showPaymentMethodPicker && (
-                                            <div
-                                              className="apple-sheet-backdrop fixed inset-0 z-[1001] flex items-end justify-center"
-                                              style={{ background: 'rgba(0,0,0,0.6)' }}
-                                              onClick={() => setShowPaymentMethodPicker(false)}
-                                            >
-                                              <div
-                                                className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
-                                                onClick={(e) => e.stopPropagation()}
-                                              >
-                                                <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
-                                                  <h3 className="text-[22px] font-semibold text-white">
-                                                    {t(
-                                                      'subscription.changePaymentMethod',
-                                                      'Изменить способ оплаты',
-                                                    )}
-                                                  </h3>
-                                                  <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                      setShowPaymentMethodPicker(false)
-                                                    }
-                                                    aria-label="Close"
-                                                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                                                  >
-                                                    <svg
-                                                      width="18"
-                                                      height="18"
-                                                      viewBox="0 0 24 24"
-                                                      fill="none"
-                                                      stroke="currentColor"
-                                                      strokeWidth="2"
-                                                      strokeLinecap="round"
-                                                    >
-                                                      <path d="M6 6l12 12M18 6 6 18" />
-                                                    </svg>
-                                                  </button>
-                                                </div>
-                                                <div className="flex flex-col gap-2 overflow-y-auto px-7 pb-7 pt-1">
-                                                  {methods.map((method) => (
-                                                    <button
-                                                      key={method.id}
-                                                      type="button"
-                                                      onClick={() => {
-                                                        setSelectedPaymentMethod(method.id);
-                                                        setSelectedPaymentOption(
-                                                          method.options?.[0]?.id ?? null,
-                                                        );
-                                                        setDirectPayError(null);
-                                                        setShowPaymentMethodPicker(false);
-                                                      }}
-                                                      className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3 text-left"
-                                                      style={{
-                                                        boxShadow:
-                                                          'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                                                      }}
-                                                    >
-                                                      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg border border-white/10">
-                                                        <img
-                                                          src="/SBP.svg"
-                                                          alt=""
-                                                          className="h-6"
-                                                        />
-                                                      </span>
-                                                      <div className="min-w-0 flex-1">
-                                                        <div className="truncate text-sm font-medium text-white">
-                                                          {method.name}
-                                                        </div>
-                                                        {method.description && (
-                                                          <div className="mt-0.5 truncate text-xs text-apple-mute">
-                                                            {method.description}
-                                                          </div>
-                                                        )}
-                                                      </div>
-                                                      {selectedPaymentMethod === method.id && (
-                                                        <span
-                                                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                                                          style={{ background: '#F97315' }}
-                                                        >
-                                                          <svg
-                                                            width="14"
-                                                            height="14"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="#fff"
-                                                            strokeWidth="3"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                          >
-                                                            <path d="M5 13l4 4L19 7" />
-                                                          </svg>
-                                                        </span>
-                                                      )}
-                                                    </button>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </>,
-                                        document.body,
+                                      missingAmount > 0 &&
+                                      (!paymentMethods || paymentMethods.length === 0) && (
+                                        <InsufficientBalancePrompt
+                                          missingAmountKopeks={missingAmount}
+                                          compact
+                                          className="mt-4"
+                                        />
                                       )}
                                   </>
                                 );
@@ -2299,9 +1653,14 @@ export default function SubscriptionPurchase() {
                           )}
                         {tariffPurchaseMutation.isError &&
                           getInsufficientBalanceError(tariffPurchaseMutation.error) && (
-                            <div className="mt-3 text-center text-sm text-apple-red">
-                              {t('subscription.directPayError', 'Payment error. Please try again.')}
-                            </div>
+                            <InsufficientBalancePrompt
+                              missingAmountKopeks={
+                                getInsufficientBalanceError(tariffPurchaseMutation.error)
+                                  ?.missingAmount ?? 0
+                              }
+                              compact
+                              className="mt-3"
+                            />
                           )}
                       </div>
                     )}
@@ -2345,6 +1704,71 @@ export default function SubscriptionPurchase() {
                     {t('subscription.purchaseTitle', 'Покупка подписки')}
                   </div>
                   <div className="px-7 pb-7 pt-2">{tariffListBody}</div>
+                </div>
+              </div>,
+              document.body,
+            )}
+
+          {/* Inline top-up sheet — opens when the user clicks "Оплатить" but
+              balance is insufficient. Reuses the same TopUpPanel as /balance,
+              with the missing amount pre-filled (no input field) and a
+              pre-flight that triggers backend cart persistence so the webhook
+              auto-completes the purchase after the top-up payment. */}
+          {topUpSheet &&
+            paymentMethods &&
+            paymentMethods.length > 0 &&
+            createPortal(
+              <div
+                className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
+                style={{ background: 'rgba(0,0,0,0.6)' }}
+                onClick={() => setTopUpSheet(null)}
+              >
+                <div
+                  className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
+                    <h3 className="text-[22px] font-semibold text-white">
+                      {t('balance.topUp', 'Пополнить')}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setTopUpSheet(null)}
+                      aria-label={t('common.close', 'Закрыть')}
+                      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      >
+                        <path d="M6 6l12 12M18 6 6 18" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    <TopUpPanel
+                      methods={paymentMethods}
+                      fixedAmountKopeks={topUpSheet.missingKopeks}
+                      onBeforeTopUp={async () => {
+                        // Pre-flight purchaseTariff — backend returns 402 and
+                        // persists the cart in Redis. The webhook then runs
+                        // auto_purchase_saved_cart_after_topup once the top-up
+                        // payment is credited. The 402 is expected; TopUpPanel
+                        // swallows the error and proceeds to createTopUp.
+                        await subscriptionApi.purchaseTariff(
+                          topUpSheet.tariffId,
+                          topUpSheet.periodDays,
+                          topUpSheet.trafficGb,
+                        );
+                      }}
+                      onSuccess={() => setTopUpSheet(null)}
+                    />
+                  </div>
                 </div>
               </div>,
               document.body,
@@ -2734,59 +2158,10 @@ export default function SubscriptionPurchase() {
 
                       {!preview.can_purchase &&
                         (preview.missing_amount_kopeks > 0 ? (
-                          (() => {
-                            const methods = getAvailablePaymentMethods(
-                              preview.missing_amount_kopeks,
-                            );
-                            if (methods.length > 0) {
-                              return (
-                                <div className="space-y-3">
-                                  <div className="space-y-2">
-                                    {methods.map((method) => (
-                                      <button
-                                        key={method.id}
-                                        onClick={() => {
-                                          setSelectedPaymentMethod(method.id);
-                                          setSelectedPaymentOption(method.options?.[0]?.id ?? null);
-                                          setDirectPayError(null);
-                                        }}
-                                        className={`w-full rounded-xl border p-3 text-left text-sm transition-all ${
-                                          selectedPaymentMethod === method.id
-                                            ? 'border-accent-500 bg-accent-500/10 text-dark-100'
-                                            : 'border-dark-700/50 bg-dark-800 text-dark-300 hover:border-dark-600'
-                                        }`}
-                                      >
-                                        <div className="flex items-center gap-2 font-medium">
-                                          <img
-                                            src="/SBP.svg"
-                                            alt=""
-                                            className="h-[30px] w-[24px] flex-shrink-0"
-                                          />
-                                          {method.name}
-                                        </div>
-                                        {method.description && (
-                                          <div className="mt-0.5 text-xs text-dark-500">
-                                            {method.description}
-                                          </div>
-                                        )}
-                                      </button>
-                                    ))}
-                                  </div>
-                                  {directPayError && (
-                                    <div className="text-center text-sm text-error-400">
-                                      {directPayError}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            }
-                            return (
-                              <InsufficientBalancePrompt
-                                missingAmountKopeks={preview.missing_amount_kopeks}
-                                compact
-                              />
-                            );
-                          })()
+                          <InsufficientBalancePrompt
+                            missingAmountKopeks={preview.missing_amount_kopeks}
+                            compact
+                          />
                         ) : preview.status_message ? (
                           <div className="rounded-lg bg-error-500/10 px-4 py-3 text-center text-sm text-error-400">
                             {preview.status_message}

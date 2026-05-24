@@ -773,7 +773,7 @@ export default function Subscription() {
             ? '/subscription/purchase'
             : isMultiTariff
               ? `/subscriptions/${subscription.id}/renew`
-              : '/subscription/purchase?renew=1';
+              : '/subscription/purchase';
 
           return (
             <>

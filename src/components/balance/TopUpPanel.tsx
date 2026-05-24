@@ -43,9 +43,26 @@ interface Selectable {
 interface TopUpPanelProps {
   methods: PaymentMethod[];
   onSuccess: () => void;
+  /**
+   * If provided, hides the amount input and uses this exact amount.
+   * Used by SubscriptionPurchase modal where the missing amount is known
+   * in advance — the user only needs to pick a payment method.
+   */
+  fixedAmountKopeks?: number;
+  /**
+   * Optional hook executed right before `createTopUp` is called. Errors
+   * are swallowed silently — used for pre-flight calls (e.g. cart save
+   * via expected 402) that should not block payment creation.
+   */
+  onBeforeTopUp?: () => Promise<void>;
 }
 
-export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
+export default function TopUpPanel({
+  methods,
+  onSuccess,
+  fixedAmountKopeks,
+  onBeforeTopUp,
+}: TopUpPanelProps) {
   const { t } = useTranslation();
   const { formatAmount, currencySymbol, convertToRub } = useCurrency();
   const { openInvoice, openTelegramLink, openLink } = usePlatform();
@@ -143,8 +160,18 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
     unknown,
     number
   >({
-    mutationFn: (amountKopeks: number) =>
-      balanceApi.createTopUp(amountKopeks, method!.id, selectedOption || undefined),
+    mutationFn: async (amountKopeks: number) => {
+      // Optional pre-flight (e.g. backend cart save via expected 402).
+      // Failures are intentional and must not block payment creation.
+      if (onBeforeTopUp) {
+        try {
+          await onBeforeTopUp();
+        } catch {
+          /* expected for cart pre-flight that returns 402 */
+        }
+      }
+      return balanceApi.createTopUp(amountKopeks, method!.id, selectedOption || undefined);
+    },
     onSuccess: (data) => {
       const redirectUrl = data.payment_url || data.invoice_url;
       if (redirectUrl) {
@@ -201,17 +228,26 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
       );
       return;
     }
-    const amountCurrency = parseFloat(amount);
-    if (isNaN(amountCurrency) || amountCurrency <= 0) {
-      setError(t('balance.errors.enterAmount'));
-      return;
+    let amountKopeks: number;
+    if (fixedAmountKopeks != null) {
+      // Caller already knows the exact amount — skip input parsing and clamp
+      // to the chosen method's min/max so we never trigger backend validation errors.
+      const minK = method.min_amount_kopeks ?? 0;
+      const maxK = method.max_amount_kopeks ?? Number.MAX_SAFE_INTEGER;
+      amountKopeks = Math.max(minK, Math.min(maxK, fixedAmountKopeks));
+    } else {
+      const amountCurrency = parseFloat(amount);
+      if (isNaN(amountCurrency) || amountCurrency <= 0) {
+        setError(t('balance.errors.enterAmount'));
+        return;
+      }
+      const amountRubles = convertToRub(amountCurrency);
+      if (amountRubles < minRubles || amountRubles > maxRubles) {
+        setError(t('balance.errors.amountRange', { min: minRubles, max: maxRubles }));
+        return;
+      }
+      amountKopeks = Math.round(amountRubles * 100);
     }
-    const amountRubles = convertToRub(amountCurrency);
-    if (amountRubles < minRubles || amountRubles > maxRubles) {
-      setError(t('balance.errors.amountRange', { min: minRubles, max: maxRubles }));
-      return;
-    }
-    const amountKopeks = Math.round(amountRubles * 100);
     if (isStarsMethod) {
       starsPaymentMutation.mutate(amountKopeks);
     } else {
@@ -220,6 +256,7 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
   }, [
     amount,
     convertToRub,
+    fixedAmountKopeks,
     isStarsMethod,
     maxRubles,
     method,
@@ -260,41 +297,55 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 px-7 pb-7 pt-1">
-      {/* Amount */}
-      <div>
-        <div className="mb-2 text-[13px] text-apple-mute">
-          {t('balance.enterAmount')} ·{' '}
-          <span className="tabular-nums">
-            {formatAmount(minRubles, 0)} – {formatAmount(maxRubles, 0)} {currencySymbol}
-          </span>
+      {/* Amount — input form (free top-up) OR readonly display (fixed amount from caller) */}
+      {fixedAmountKopeks != null ? (
+        <div>
+          <div className="mb-2 text-[13px] text-apple-mute">
+            {t('balance.topUpAmount', 'Сумма пополнения')}
+          </div>
+          <div className="flex h-14 w-full items-center justify-between rounded-2xl bg-apple-elevated px-4">
+            <span className="text-[22px] font-semibold tabular-nums text-apple-ink">
+              {formatAmount(fixedAmountKopeks / 100)}
+            </span>
+            <span className="text-[17px] font-medium text-apple-mute">{currencySymbol}</span>
+          </div>
         </div>
-        <div className="relative">
-          <input
-            ref={inputRef}
-            type="number"
-            inputMode="decimal"
-            enterKeyHint="done"
-            value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              setPaymentUrl(null);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-            placeholder="0"
-            className="h-14 w-full rounded-2xl bg-apple-elevated px-4 pr-11 text-[22px] font-semibold text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60"
-            autoComplete="off"
-            autoFocus
-          />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[17px] font-medium text-apple-mute">
-            {currencySymbol}
-          </span>
+      ) : (
+        <div>
+          <div className="mb-2 text-[13px] text-apple-mute">
+            {t('balance.enterAmount')} ·{' '}
+            <span className="tabular-nums">
+              {formatAmount(minRubles, 0)} – {formatAmount(maxRubles, 0)} {currencySymbol}
+            </span>
+          </div>
+          <div className="relative">
+            <input
+              ref={inputRef}
+              type="number"
+              inputMode="decimal"
+              enterKeyHint="done"
+              value={amount}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                setPaymentUrl(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              placeholder="0"
+              className="h-14 w-full rounded-2xl bg-apple-elevated px-4 pr-11 text-[22px] font-semibold text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60"
+              autoComplete="off"
+              autoFocus
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[17px] font-medium text-apple-mute">
+              {currencySymbol}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Payment method — collapsed row */}
       <button
@@ -349,7 +400,10 @@ export default function TopUpPanel({ methods, onSuccess }: TopUpPanelProps) {
       <button
         type="button"
         onClick={paymentUrl ? handleOpenPayment : handleSubmit}
-        disabled={!paymentUrl && (isPending || !amount || parseFloat(amount) <= 0)}
+        disabled={
+          !paymentUrl &&
+          (isPending || (fixedAmountKopeks == null && (!amount || parseFloat(amount) <= 0)))
+        }
         className="flex h-14 w-full items-center justify-center rounded-full bg-[#F97315] text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {isPending ? (
