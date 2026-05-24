@@ -1755,16 +1755,32 @@ export default function SubscriptionPurchase() {
                       methods={paymentMethods}
                       fixedAmountKopeks={topUpSheet.missingKopeks}
                       onBeforeTopUp={async () => {
-                        // Pre-flight purchaseTariff — backend returns 402 and
-                        // persists the cart in Redis. The webhook then runs
-                        // auto_purchase_saved_cart_after_topup once the top-up
-                        // payment is credited. The 402 is expected; TopUpPanel
-                        // swallows the error and proceeds to createTopUp.
-                        await subscriptionApi.purchaseTariff(
-                          topUpSheet.tariffId,
-                          topUpSheet.periodDays,
-                          topUpSheet.trafficGb,
-                        );
+                        // Pre-flight to make the backend persist a cart in
+                        // Redis. The webhook later picks it up via
+                        // auto_purchase_saved_cart_after_topup. The 402 we
+                        // expect here is swallowed by TopUpPanel so createTopUp
+                        // still runs.
+                        //
+                        // For renewals of the CURRENT tariff we hit
+                        // /subscription/renew (cart_mode='extend') — this is
+                        // the path that reliably produces the "Подписка
+                        // продлена" notification. Genuine purchases of a
+                        // different tariff go through /purchase-tariff
+                        // (cart_mode='tariff_purchase').
+                        const isRenewalOfCurrent =
+                          !!subscription?.id && topUpSheet.tariffId === subscription.tariff_id;
+                        if (isRenewalOfCurrent && subscription?.id) {
+                          await subscriptionApi.renewSubscription(
+                            topUpSheet.periodDays,
+                            subscription.id,
+                          );
+                        } else {
+                          await subscriptionApi.purchaseTariff(
+                            topUpSheet.tariffId,
+                            topUpSheet.periodDays,
+                            topUpSheet.trafficGb,
+                          );
+                        }
                       }}
                       onSuccess={() => setTopUpSheet(null)}
                     />

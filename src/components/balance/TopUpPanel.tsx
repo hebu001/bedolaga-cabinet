@@ -426,7 +426,7 @@ export default function TopUpPanel({
       {showPicker &&
         createPortal(
           <div
-            className="apple-sheet-backdrop fixed inset-0 z-[101] flex items-end justify-center"
+            className="apple-sheet-backdrop fixed inset-0 z-[1010] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.6)' }}
             onClick={() => setShowPicker(false)}
           >
