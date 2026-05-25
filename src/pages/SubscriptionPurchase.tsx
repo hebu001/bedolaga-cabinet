@@ -767,44 +767,6 @@ export default function SubscriptionPurchase() {
       {/* Tariffs Section */}
       {isTariffsMode && tariffs.length > 0 && (
         <div className="space-y-3">
-          {/* Expired subscription notice */}
-          {isTariffsMode &&
-            purchaseOptions &&
-            'subscription_is_expired' in purchaseOptions &&
-            purchaseOptions.subscription_is_expired && (
-              <div
-                className="flex items-start gap-3 rounded-2xl p-4"
-                style={{ background: 'rgba(255,69,58,0.12)' }}
-              >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
-                  style={{ background: 'rgba(255,69,58,0.16)' }}
-                >
-                  <svg
-                    width="17"
-                    height="17"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#ff453a"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <div className="text-[14px] font-semibold" style={{ color: '#ff453a' }}>
-                    {t('subscription.expiredBanner.title')}
-                  </div>
-                  <div className="mt-0.5 text-[12px] text-apple-mute">
-                    {t('subscription.expiredBanner.selectTariff')}
-                  </div>
-                </div>
-              </div>
-            )}
-
           {/* Switch Tariff Preview Modal */}
           {switchTariffId && (
             <div
