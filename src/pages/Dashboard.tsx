@@ -462,73 +462,98 @@ export default function Dashboard() {
               transition={{ type: 'tween', duration: 0.15, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="space-y-2 rounded-2xl border border-white/10 bg-black/40 p-3 backdrop-blur-2xl">
-                <div className="mb-1 font-mono text-[11px] text-white/30">
-                  {devicesData.device_limit === 0
-                    ? `${devicesData.total} · ∞`
-                    : `${devicesData.total} / ${devicesData.device_limit}`}
-                </div>
+              <div className="space-y-1.5 rounded-2xl bg-black/40 p-2 backdrop-blur-2xl">
                 {devicesData.devices.length > 0 ? (
-                  devicesData.devices.map((device) => (
-                    <div
-                      key={device.hwid}
-                      className="flex items-center justify-between rounded-xl bg-white/5 p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white/5">
+                  devicesData.devices.map((device) => {
+                    const platform = (device.platform || '').toLowerCase();
+                    const isMobile = /(android|ios|iphone|ipad|mobile)/.test(platform);
+                    const isDesktop = /(windows|win|mac|linux|desktop)/.test(platform);
+                    const displayName =
+                      device.local_name?.trim() ||
+                      device.device_model?.trim() ||
+                      device.platform ||
+                      t('subscription.deviceFallback', 'Устройство');
+                    const subtitle = device.local_name?.trim()
+                      ? device.device_model || device.platform
+                      : device.platform;
+                    return (
+                      <div
+                        key={device.hwid}
+                        className="flex items-center justify-between gap-2 rounded-xl bg-white/5 p-2.5"
+                      >
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-white/5">
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="rgba(255,255,255,0.55)"
+                              strokeWidth="1.7"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              {isDesktop ? (
+                                <>
+                                  <rect x="2" y="4" width="20" height="13" rx="2" />
+                                  <path d="M8 21h8M12 17v4" />
+                                </>
+                              ) : isMobile ? (
+                                <>
+                                  <rect x="7" y="2" width="10" height="20" rx="2.5" />
+                                  <path d="M11 18h2" />
+                                </>
+                              ) : (
+                                <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                              )}
+                            </svg>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="truncate text-[13px] font-semibold text-white">
+                              {displayName}
+                            </div>
+                            {subtitle && subtitle !== displayName && (
+                              <div className="truncate text-[11px] text-white/40">{subtitle}</div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            haptic.buttonPressMedium();
+                            if (confirm(t('subscription.confirmDeleteDevice'))) {
+                              deleteDeviceMutation.mutate(device.hwid);
+                            }
+                          }}
+                          disabled={deleteDeviceMutation.isPending}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-red-500/15 hover:text-red-400 disabled:opacity-50"
+                          title={t('subscription.deleteDevice')}
+                        >
                           <svg
-                            width="16"
-                            height="16"
+                            width="15"
+                            height="15"
                             viewBox="0 0 24 24"
                             fill="none"
-                            stroke="rgba(255,255,255,0.4)"
-                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            strokeWidth="1.7"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             aria-hidden="true"
                           >
-                            <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                            <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                           </svg>
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-white">
-                            {device.device_model || device.platform}
-                          </div>
-                          <div className="text-[11px] text-white/30">{device.platform}</div>
-                        </div>
+                        </button>
                       </div>
-                      <button
-                        onClick={() => {
-                          haptic.buttonPressMedium();
-                          if (confirm(t('subscription.confirmDeleteDevice'))) {
-                            deleteDeviceMutation.mutate(device.hwid);
-                          }
-                        }}
-                        disabled={deleteDeviceMutation.isPending}
-                        className="p-2 text-white/20 transition-colors hover:text-red-400"
-                        title={t('subscription.deleteDevice')}
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
-                  <div className="py-3 text-center text-sm text-white/30">
-                    {t('subscription.noDevicesConnected', {
-                      defaultValue: 'Нет подключенных устройств',
-                    })}
+                  <div className="flex flex-col items-center gap-1.5 py-4 text-center">
+                    <span className="text-[20px] opacity-30">📱</span>
+                    <div className="text-[12px] text-white/40">
+                      {t('subscription.noDevicesConnected', {
+                        defaultValue: 'Нет подключенных устройств',
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
