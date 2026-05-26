@@ -584,10 +584,10 @@ export default function SetupWizard({
         animate="animate"
         exit="exit"
         transition={pageTransition}
-        className="z-10 flex w-full grow flex-col"
+        className="z-10 flex min-h-0 w-full grow flex-col"
       >
         <div
-          className="flex-1 touch-pan-y space-y-4 overflow-y-auto px-1 pb-4 pt-2"
+          className="min-h-0 flex-1 touch-pan-y space-y-4 overflow-y-auto px-1 pb-4 pt-2"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <h2 className="text-center text-[22px] font-bold text-white">
