@@ -577,10 +577,6 @@ export default function SetupWizard({
         className="z-10 flex w-full grow flex-col"
       >
         <div className="flex-1 space-y-4 overflow-y-auto px-1 pb-4 pt-2">
-          <h2 className="text-center text-[22px] font-bold text-white">
-            {t('subscription.connection.androidTvTitle', 'Установка на Android TV')}
-          </h2>
-
           {/* Install app block (Google Play / APK from RemnaWave config) */}
           {installButtons.length > 0 && (
             <div className="rounded-2xl bg-white/5 p-4">
@@ -631,7 +627,10 @@ export default function SetupWizard({
           </div>
         </div>
 
-        <div className="mt-auto pb-10 pt-3">
+        <div
+          className="mt-auto pt-3"
+          style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}
+        >
           <button
             onClick={() => {
               haptic.buttonPressMedium();
