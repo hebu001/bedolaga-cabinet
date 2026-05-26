@@ -68,11 +68,20 @@ export default function TelegramRedirect() {
   const redirectTo = getSafeRedirectUrl(searchParams.get('redirect'));
 
   useEffect(() => {
+    // All timers scheduled inside this effect funnel through `timers` so the
+    // cleanup can cancel everything when the effect re-runs (deps change
+    // during loginWithTelegram) or the page unmounts — preventing
+    // setState-on-unmounted-component warnings and stray late navigations.
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      timers.push(setTimeout(fn, ms));
+    };
+
     // If already authenticated, redirect immediately
     if (isAuthenticated && !authLoading) {
       setStatus('success');
-      setTimeout(() => navigate(redirectTo), 500);
-      return;
+      schedule(() => navigate(redirectTo), 500);
+      return () => timers.forEach(clearTimeout);
     }
 
     const initTelegram = async () => {
@@ -82,7 +91,7 @@ export default function TelegramRedirect() {
       if (!isInTelegramWebApp() || !initData) {
         // Not in Telegram, show message and redirect to login
         setStatus('not-telegram');
-        setTimeout(() => navigate('/login'), 2000);
+        schedule(() => navigate('/login'), 2000);
         return;
       }
 
@@ -91,11 +100,8 @@ export default function TelegramRedirect() {
       try {
         await loginWithTelegram(initData);
         setStatus('success');
-
         // Small delay for nice UX
-        setTimeout(() => {
-          navigate(redirectTo);
-        }, 800);
+        schedule(() => navigate(redirectTo), 800);
       } catch (err: unknown) {
         console.error('Telegram auth failed:', err);
         const error = err as { response?: { data?: { detail?: string } } };
@@ -105,7 +111,9 @@ export default function TelegramRedirect() {
     };
 
     // Small delay to show loading screen
-    setTimeout(initTelegram, 300);
+    schedule(initTelegram, 300);
+
+    return () => timers.forEach(clearTimeout);
   }, [loginWithTelegram, navigate, isAuthenticated, authLoading, redirectTo, t]);
 
   // Handle retry with limit to prevent infinite loops
