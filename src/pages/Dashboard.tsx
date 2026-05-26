@@ -443,11 +443,10 @@ export default function Dashboard() {
                 haptic.buttonPressMedium();
                 setShowDevicePanel(!showDevicePanel);
               }}
-              className="flex h-9 items-center gap-2 rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              className="flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               data-onboarding="connect-devices"
             >
-              {t('dashboard.devicesLabel', 'Устройства')} {deviceCount}/
-              {subscription?.device_limit ?? 0}
+              {`${t('dashboard.devicesLabel', 'Устройства')} ${deviceCount}/${subscription?.device_limit ?? 0}`}
             </button>
           </motion.div>
         )}
