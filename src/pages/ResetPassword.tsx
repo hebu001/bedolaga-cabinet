@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/auth';
@@ -14,6 +14,15 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [status, setStatus] = useState<'form' | 'loading' | 'success' | 'error'>('form');
   const [error, setError] = useState('');
+  // Track the post-success redirect timer so unmount cancels it instead of
+  // firing navigate() on a torn-down component.
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +48,7 @@ export default function ResetPassword() {
     try {
       await authApi.resetPassword(token, password);
       setStatus('success');
-      setTimeout(() => navigate('/login', { replace: true }), 2000);
+      redirectTimerRef.current = setTimeout(() => navigate('/login', { replace: true }), 2000);
     } catch (err: unknown) {
       setStatus('error');
       const error = err as { response?: { data?: { detail?: string } } };
