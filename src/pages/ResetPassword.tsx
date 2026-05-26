@@ -149,7 +149,10 @@ export default function ResetPassword() {
                 </div>
 
                 {error && (
-                  <div className="rounded-xl border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-400">
+                  <div
+                    role="alert"
+                    className="rounded-xl border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-400"
+                  >
                     {error}
                   </div>
                 )}
