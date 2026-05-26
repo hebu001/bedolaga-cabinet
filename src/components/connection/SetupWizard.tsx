@@ -644,10 +644,7 @@ export default function SetupWizard({
           </div>
         </div>
 
-        <div
-          className="mt-auto pt-3"
-          style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
-        >
+        <div className="mt-auto pt-3" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           <button
             onClick={() => {
               haptic.buttonPressMedium();
