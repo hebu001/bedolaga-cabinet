@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
@@ -182,6 +182,16 @@ export default function SetupWizard({
   // Steps: 0 = intro (auto-detected platform), 1 = download app, 2 = add subscription, 3 = QR (other device)
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState(false);
+
+  // Step 4 (Android TV) hides the floating MobileBottomNav so the Back button is reachable
+  useEffect(() => {
+    if (step === 4) {
+      document.body.setAttribute('data-hide-bottom-nav', '1');
+      return () => {
+        document.body.removeAttribute('data-hide-bottom-nav');
+      };
+    }
+  }, [step]);
 
   const detectedPlatform = useMemo(() => detectPlatform(), []);
 
@@ -576,7 +586,14 @@ export default function SetupWizard({
         transition={pageTransition}
         className="z-10 flex w-full grow flex-col"
       >
-        <div className="flex-1 space-y-4 overflow-y-auto px-1 pb-4 pt-2">
+        <div
+          className="flex-1 touch-pan-y space-y-4 overflow-y-auto px-1 pb-4 pt-2"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          <h2 className="text-center text-[22px] font-bold text-white">
+            {t('subscription.connection.androidTvTitle', 'Установка на Android TV')}
+          </h2>
+
           {/* Install app block (Google Play / APK from RemnaWave config) */}
           {installButtons.length > 0 && (
             <div className="rounded-2xl bg-white/5 p-4">
@@ -629,7 +646,7 @@ export default function SetupWizard({
 
         <div
           className="mt-auto pt-3"
-          style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}
+          style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}
         >
           <button
             onClick={() => {

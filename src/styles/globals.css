@@ -1866,3 +1866,10 @@ input[type='checkbox']:hover:not(:checked) {
     animation: none;
   }
 }
+
+/* SetupWizard step 4 (Android TV) hides the mobile bottom nav so the back button is reachable */
+body[data-hide-bottom-nav='1'] nav.fixed.lg\:hidden {
+  transform: translateY(120%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
