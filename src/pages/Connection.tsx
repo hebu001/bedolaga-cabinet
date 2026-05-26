@@ -64,7 +64,7 @@ export default function Connection() {
   const handleGoBack = useCallback(() => {
     haptic.buttonPressMedium();
     navigate(-1);
-  }, [navigate]);
+  }, [navigate, haptic]);
 
   const handleOpenQR = useCallback(() => {
     if (!qrConnectionUrl) return;
@@ -104,7 +104,7 @@ export default function Connection() {
         username: user?.username ?? undefined,
       });
     },
-    [appConfig?.subscriptionUrl, user?.username],
+    [appConfig, user],
   );
 
   const openDeepLink = useCallback(
@@ -208,15 +208,21 @@ export default function Connection() {
   // No subscription
   if (!appConfig.hasSubscription) {
     return (
-      <div className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5" style={{ touchAction: 'none', overscrollBehavior: 'none' }}>
+      <div
+        className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5"
+        style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+      >
         {/* Hero area — large status text */}
         <div className="relative flex flex-1 items-center justify-center">
-          <div className="relative z-10 text-center px-4">
+          <div className="relative z-10 px-4 text-center">
             <h1
-              className="text-3xl sm:text-4xl font-black text-white leading-tight uppercase"
+              className="text-3xl font-black uppercase leading-tight text-white sm:text-4xl"
               style={{ letterSpacing: '0.1em', fontStretch: 'expanded' }}
             >
-              {t('subscription.connection.noSubscription', 'Для подключения нужна активная подписка')}
+              {t(
+                'subscription.connection.noSubscription',
+                'Для подключения нужна активная подписка',
+              )}
             </h1>
           </div>
         </div>
@@ -225,7 +231,7 @@ export default function Connection() {
         <div className="mt-auto space-y-2 pb-2">
           <button
             onClick={handleGoBack}
-            className="w-full h-14 rounded-full bg-white/15 text-white font-medium text-base transition-all active:scale-[0.97] hover:bg-white/10"
+            className="h-14 w-full rounded-full bg-white/15 text-base font-medium text-white transition-all hover:bg-white/10 active:scale-[0.97]"
           >
             {t('common.close', 'Закрыть')}
           </button>
@@ -241,6 +247,7 @@ export default function Connection() {
       isTelegramWebApp={isTelegramWebApp}
       onGoBack={handleGoBack}
       onOpenQR={handleOpenQR}
+      connectionUrl={qrConnectionUrl}
     />
   );
 }

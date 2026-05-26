@@ -37,8 +37,8 @@ export function resolveConnectionUrlForUi(input: ResolveConnectionUrlInput): str
   const defaultUrl =
     input.fallbackUrl ?? input.subscriptionUrl ?? input.displayLink ?? input.happSchemeLink ?? null;
 
-  if (!isHappCryptolinkMode(input.mode)) return defaultUrl;
-
+  // Backend may already provide a happ://crypt URL even when connect_mode is
+  // not recognized as HAPP (e.g. mode is empty or named differently). Prefer it.
   const backendCryptLink =
     [
       input.happCryptLink,
@@ -49,6 +49,8 @@ export function resolveConnectionUrlForUi(input: ResolveConnectionUrlInput): str
       input.subscriptionUrl,
     ].find((value) => isHappCryptDeepLink(value)) ?? null;
   if (backendCryptLink) return backendCryptLink;
+
+  if (!isHappCryptolinkMode(input.mode)) return defaultUrl;
 
   const sourceSubscriptionUrl =
     [input.subscriptionUrl, input.displayLink, input.fallbackUrl].find((value) =>

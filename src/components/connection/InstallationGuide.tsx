@@ -7,6 +7,7 @@ interface Props {
   isTelegramWebApp: boolean;
   onGoBack: () => void;
   onOpenQR?: () => void;
+  connectionUrl?: string | null;
 }
 
 export default function InstallationGuide({
@@ -15,6 +16,7 @@ export default function InstallationGuide({
   isTelegramWebApp,
   onGoBack,
   onOpenQR,
+  connectionUrl,
 }: Props) {
   return (
     <SetupWizard
@@ -23,6 +25,7 @@ export default function InstallationGuide({
       isTelegramWebApp={isTelegramWebApp}
       onGoBack={onGoBack}
       onOpenQR={onOpenQR}
+      connectionUrl={connectionUrl}
     />
   );
 }

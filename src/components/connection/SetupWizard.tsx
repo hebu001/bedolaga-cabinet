@@ -4,10 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import ProgressRing from './ProgressRing';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
-import type {
-  AppConfig,
-  RemnawavePlatformData,
-} from '@/types';
+import type { AppConfig, RemnawavePlatformData } from '@/types';
 
 /* ─── Platform detection ─── */
 const platformOrder = ['ios', 'android', 'macos', 'windows', 'linux', 'androidTV', 'appleTV'];
@@ -35,25 +32,59 @@ const platformLabels: Record<string, string> = {
 
 /* ─── Icons ─── */
 const UnplugIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m19 5 3-3" /><path d="m2 22 3-3" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="84"
+    height="84"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.25"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="m19 5 3-3" />
+    <path d="m2 22 3-3" />
     <path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z" />
-    <path d="M7.5 13.5 10 11" /><path d="M10.5 16.5 13 14" />
+    <path d="M7.5 13.5 10 11" />
+    <path d="M10.5 16.5 13 14" />
     <path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z" />
   </svg>
 );
 
 const CloudDownloadIcon = ({ size = 84 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={size > 24 ? 1.25 : 2.4} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 13v8l-4-4" /><path d="m12 21 4-4" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={size > 24 ? 1.25 : 2.4}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 13v8l-4-4" />
+    <path d="m12 21 4-4" />
     <path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284" />
   </svg>
 );
 
 const CircleFadingPlusIcon = ({ size = 84 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={size > 24 ? 1.25 : 2.4} strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={size > 24 ? 1.25 : 2.4}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M12 2a10 10 0 0 1 7.38 16.75" />
-    <path d="M12 8v8" /><path d="M16 12H8" />
+    <path d="M12 8v8" />
+    <path d="M16 12H8" />
     <path d="M2.5 8.875a10 10 0 0 0-.5 3" />
     <path d="M2.83 16a10 10 0 0 0 2.43 3.4" />
     <path d="M4.636 5.235a10 10 0 0 1 .891-.857" />
@@ -62,20 +93,52 @@ const CircleFadingPlusIcon = ({ size = 84 }: { size?: number }) => (
 );
 
 const ArrowRightIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="-mr-4">
-    <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="-mr-4"
+  >
+    <path d="M5 12h14" />
+    <path d="m12 5 7 7-7 7" />
   </svg>
 );
 
 const CopyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
   </svg>
 );
 
 const CheckIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20 6 9 17l-5-5" />
   </svg>
 );
@@ -101,6 +164,9 @@ interface SetupWizardProps {
   isTelegramWebApp: boolean;
   onGoBack: () => void;
   onOpenQR?: () => void;
+  // Pre-resolved connection URL from Connection.tsx (handles HAPP cryptolink
+  // via @kastov/cryptohapp). Falls back to subscription URL in other modes.
+  connectionUrl?: string | null;
 }
 
 export default function SetupWizard({
@@ -108,6 +174,7 @@ export default function SetupWizard({
   onOpenDeepLink,
   isTelegramWebApp: _isTelegramWebApp,
   onGoBack,
+  connectionUrl,
 }: SetupWizardProps) {
   const { t } = useTranslation();
   const haptic = useHapticFeedback();
@@ -163,7 +230,7 @@ export default function SetupWizard({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }, [appConfig.subscriptionUrl]);
+  }, [appConfig.subscriptionUrl, haptic]);
 
   const handleInstallApp = useCallback(() => {
     if (downloadUrl) {
@@ -171,11 +238,38 @@ export default function SetupWizard({
     }
   }, [downloadUrl]);
 
-  const handleAddSubscription = useCallback(() => {
-    if (selectedApp?.deepLink) {
-      onOpenDeepLink(selectedApp.deepLink);
+  // Backend pre-resolves the happ://crypt... URL into the `subscriptionLink`
+  // button inside one of the app's blocks (same source the legacy
+  // BlockButtons used). This is the only place the cryptolink lives for
+  // most setups — connection-link endpoint doesn't always expose it.
+  const subscriptionLinkUrl = useMemo(() => {
+    if (!selectedApp?.blocks) return null;
+    for (const block of selectedApp.blocks) {
+      if (!block.buttons) continue;
+      for (const btn of block.buttons) {
+        if (btn.type !== 'subscriptionLink') continue;
+        const url = btn.resolvedUrl || btn.url || btn.link;
+        if (url) return url;
+      }
     }
-  }, [selectedApp, onOpenDeepLink]);
+    return null;
+  }, [selectedApp]);
+
+  // Priority: subscriptionLink (resolved by backend, holds happ://crypt) →
+  // pre-resolved connectionUrl from Connection.tsx → app's own deepLink →
+  // raw subscriptionUrl as last resort.
+  const addSubscriptionUrl =
+    subscriptionLinkUrl ||
+    connectionUrl ||
+    selectedApp?.deepLink ||
+    appConfig.subscriptionUrl ||
+    null;
+
+  const handleAddSubscription = useCallback(() => {
+    if (addSubscriptionUrl) {
+      onOpenDeepLink(addSubscriptionUrl);
+    }
+  }, [addSubscriptionUrl, onOpenDeepLink]);
 
   const progressPercents = [0, 33, 66];
   const currentProgress = step <= 2 ? progressPercents[step] || 0 : 0;
@@ -189,10 +283,10 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="flex flex-col items-center grow z-10 w-full"
+      className="z-10 flex w-full grow flex-col items-center"
     >
       {/* Ring + icon area */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <div className="relative">
           <ProgressRing percent={currentProgress} size={160} />
           <div className="absolute inset-0 flex items-center justify-center text-white/80">
@@ -202,12 +296,15 @@ export default function SetupWizard({
       </div>
 
       {/* Text */}
-      <div className="flex flex-col gap-3 text-center px-4">
+      <div className="flex flex-col gap-3 px-4 text-center">
         <p className="text-4xl font-medium leading-10">
           {t('subscription.connection.setupOn', 'Настройка на')} {currentPlatformLabel}
         </p>
-        <p className="text-base text-white/80 max-w-[280px] mx-auto">
-          {t('subscription.connection.stepsInfo', 'Настройка приложения происходит в 3 шага и занимает пару минут')}
+        <p className="mx-auto max-w-[280px] text-base text-white/80">
+          {t(
+            'subscription.connection.stepsInfo',
+            'Настройка приложения происходит в 3 шага и занимает пару минут',
+          )}
         </p>
       </div>
 
@@ -228,16 +325,22 @@ export default function SetupWizard({
           animation: radiate-rings 2.5s infinite;
         }
       `}</style>
-      <div className="flex flex-col gap-2.5 w-full mt-auto pt-6 pb-10">
+      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
         <button
-          onClick={() => { haptic.buttonPressMedium(); setStep(1); }}
-          className="w-full h-14 rounded-full bg-[var(--figma-green)] text-white font-medium text-base transition-all active:scale-[0.97] radiate-button will-change-[box-shadow]"
+          onClick={() => {
+            haptic.buttonPressMedium();
+            setStep(1);
+          }}
+          className="radiate-button h-14 w-full rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all will-change-[box-shadow] active:scale-[0.97]"
         >
           {t('subscription.connection.startSetup', 'Начать настройку на этом устройстве')}
         </button>
         <button
-          onClick={() => { haptic.buttonPressMedium(); setStep(3); }}
-          className="w-full h-14 rounded-full bg-white text-black font-medium text-base transition-all active:scale-[0.97] hover:brightness-95"
+          onClick={() => {
+            haptic.buttonPressMedium();
+            setStep(3);
+          }}
+          className="h-14 w-full rounded-full bg-white text-base font-medium text-black transition-all hover:brightness-95 active:scale-[0.97]"
         >
           {t('subscription.connection.setupOther', 'Установить на другом устройстве')}
         </button>
@@ -254,10 +357,10 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="flex flex-col items-center grow z-10 w-full"
+      className="z-10 flex w-full grow flex-col items-center"
     >
       {/* Ring + icon */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <div className="relative">
           <ProgressRing percent={currentProgress} size={160} />
           <div className="absolute inset-0 flex items-center justify-center text-white/80">
@@ -267,27 +370,36 @@ export default function SetupWizard({
       </div>
 
       {/* Text */}
-      <div className="flex flex-col gap-3 text-center px-4">
+      <div className="flex flex-col gap-3 px-4 text-center">
         <p className="text-4xl font-medium leading-10">
           {t('subscription.connection.appTitle', 'Приложение')}
         </p>
-        <p className="text-base text-white/80 max-w-[280px] mx-auto">
-          {t('subscription.connection.installAppDesc', 'Установите приложение и вернитесь к этому экрану')}
+        <p className="mx-auto max-w-[280px] text-base text-white/80">
+          {t(
+            'subscription.connection.installAppDesc',
+            'Установите приложение и вернитесь к этому экрану',
+          )}
         </p>
       </div>
 
       {/* Buttons */}
-      <div className="flex flex-col gap-2.5 w-full mt-auto pt-6 pb-10">
+      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
         <button
-          onClick={() => { haptic.buttonPressMedium(); handleInstallApp(); }}
-          className="w-full h-14 rounded-full bg-[var(--figma-green)] text-white font-medium text-base transition-all active:scale-[0.97] flex items-center justify-center gap-2"
+          onClick={() => {
+            haptic.buttonPressMedium();
+            handleInstallApp();
+          }}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97]"
         >
           <CloudDownloadIcon size={20} />
           {t('subscription.connection.installApp', 'Установить приложение')}
         </button>
         <button
-          onClick={() => { haptic.buttonPressMedium(); setStep(2); }}
-          className="w-full h-14 rounded-full bg-white text-black font-medium text-base transition-all active:scale-[0.97] hover:brightness-95 flex items-center justify-center gap-2"
+          onClick={() => {
+            haptic.buttonPressMedium();
+            setStep(2);
+          }}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-white text-base font-medium text-black transition-all hover:brightness-95 active:scale-[0.97]"
         >
           {t('subscription.connection.nextStep', 'Следующий шаг')}
           <ArrowRightIcon />
@@ -305,10 +417,10 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="flex flex-col items-center grow z-10 w-full"
+      className="z-10 flex w-full grow flex-col items-center"
     >
       {/* Ring + icon */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <div className="relative">
           <ProgressRing percent={currentProgress} size={160} />
           <div className="absolute inset-0 flex items-center justify-center text-white/80">
@@ -318,27 +430,37 @@ export default function SetupWizard({
       </div>
 
       {/* Text */}
-      <div className="flex flex-col gap-3 text-center px-4">
+      <div className="flex flex-col gap-3 px-4 text-center">
         <p className="text-4xl font-medium leading-10">
           {t('subscription.connection.subscriptionTitle', 'Подписка')}
         </p>
-        <p className="text-base text-white/80 max-w-[280px] mx-auto">
-          {t('subscription.connection.addSubDesc', 'Добавьте подписку в приложение с помощью кнопки ниже')}
+        <p className="mx-auto max-w-[280px] text-base text-white/80">
+          {t(
+            'subscription.connection.addSubDesc',
+            'Добавьте подписку в приложение с помощью кнопки ниже',
+          )}
         </p>
       </div>
 
       {/* Buttons */}
-      <div className="flex flex-col gap-2.5 w-full mt-auto pt-6 pb-10">
+      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
         <button
-          onClick={() => { haptic.buttonPressMedium(); handleAddSubscription(); }}
-          className="w-full h-14 rounded-full bg-[var(--figma-green)] text-white font-medium text-base transition-all active:scale-[0.97] flex items-center justify-center gap-2"
+          onClick={() => {
+            haptic.buttonPressMedium();
+            handleAddSubscription();
+          }}
+          disabled={!addSubscriptionUrl}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           <CircleFadingPlusIcon size={20} />
           {t('subscription.connection.addSub', 'Добавить подписку')}
         </button>
         <button
-          onClick={() => { haptic.buttonPressMedium(); onGoBack(); }}
-          className="w-full h-14 rounded-full bg-white text-black font-medium text-base transition-all active:scale-[0.97] hover:brightness-95 flex items-center justify-center gap-2"
+          onClick={() => {
+            haptic.buttonPressMedium();
+            onGoBack();
+          }}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-white text-base font-medium text-black transition-all hover:brightness-95 active:scale-[0.97]"
         >
           {t('subscription.connection.done', 'Готово')}
         </button>
@@ -355,15 +477,15 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="flex flex-col items-center grow z-10 w-full"
+      className="z-10 flex w-full grow flex-col items-center"
     >
       {/* QR */}
-      <div className="flex-1 flex items-center justify-center w-full">
-        <div className="flex flex-col items-center gap-4 w-full text-center">
+      <div className="flex w-full flex-1 items-center justify-center">
+        <div className="flex w-full flex-col items-center gap-4 text-center">
           <p className="text-base text-white/80">
             {t('subscription.connection.qrScanHint', 'Отсканируйте QR-код на другом устройстве')}
           </p>
-          <div className="rounded-3xl bg-white p-6 mx-auto">
+          <div className="mx-auto rounded-3xl bg-white p-6">
             <QRCodeSVG
               value={appConfig.subscriptionUrl || ''}
               size={220}
@@ -375,26 +497,29 @@ export default function SetupWizard({
       </div>
 
       {/* Subscription URL bar + Back */}
-      <div className="flex flex-col gap-2.5 w-full mt-auto pt-6 pb-10">
+      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
         {appConfig.subscriptionUrl && (
           <button
             onClick={handleCopyUrl}
-            className="w-full h-14 rounded-2xl bg-white text-black flex items-center px-4 transition-all active:scale-[0.97] relative"
+            className="relative flex h-14 w-full items-center rounded-2xl bg-white px-4 text-black transition-all active:scale-[0.97]"
           >
-            <div className="flex-1 text-left overflow-hidden">
-              <div className="text-sm truncate pr-2">{appConfig.subscriptionUrl}</div>
-              <small className="text-gray-500 text-xs">
+            <div className="flex-1 overflow-hidden text-left">
+              <div className="truncate pr-2 text-sm">{appConfig.subscriptionUrl}</div>
+              <small className="text-xs text-gray-500">
                 {t('subscription.connection.yourLink', 'Ваша ссылка на подписку')}
               </small>
             </div>
-            <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl shrink-0">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100">
               {copied ? <CheckIcon /> : <CopyIcon />}
             </div>
           </button>
         )}
         <button
-          onClick={() => { haptic.buttonPressMedium(); setStep(0); }}
-          className="w-full h-14 rounded-full bg-white/15 text-white font-medium text-base transition-all active:scale-[0.97] hover:bg-white/10"
+          onClick={() => {
+            haptic.buttonPressMedium();
+            setStep(0);
+          }}
+          className="h-14 w-full rounded-full bg-white/15 text-base font-medium text-white transition-all hover:bg-white/10 active:scale-[0.97]"
         >
           {t('common.back', 'Назад')}
         </button>
@@ -405,25 +530,28 @@ export default function SetupWizard({
   /* ─── Main render ─── */
   const renderStep = () => {
     switch (step) {
-      case 0: return renderIntro();
-      case 1: return renderDownloadApp();
-      case 2: return renderAddSubscription();
-      case 3: return renderQR();
-      default: return renderIntro();
+      case 0:
+        return renderIntro();
+      case 1:
+        return renderDownloadApp();
+      case 2:
+        return renderAddSubscription();
+      case 3:
+        return renderQR();
+      default:
+        return renderIntro();
     }
   };
 
   return (
     <div
-      className="flex flex-col items-center w-full h-full pb-4"
+      className="flex h-full w-full flex-col items-center pb-4"
       style={{
         touchAction: 'none',
         overscrollBehavior: 'none',
       }}
     >
-      <AnimatePresence mode="wait">
-        {renderStep()}
-      </AnimatePresence>
+      <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
     </div>
   );
 }
