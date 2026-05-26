@@ -422,7 +422,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
 
   if (!botUsername || botUsername === 'your_bot') {
     return (
-      <div className="py-4 text-center text-sm text-gray-500">
+      <div className="py-4 text-center text-sm text-dark-400">
         {t('auth.telegramNotConfigured')}
       </div>
     );
@@ -549,7 +549,7 @@ export default function TelegramLoginButton({ referralCode }: TelegramLoginButto
       )}
 
       <div className="text-center">
-        <p className="mb-2 text-xs text-gray-500">{t('auth.orOpenInApp')}</p>
+        <p className="mb-2 text-xs text-dark-400">{t('auth.orOpenInApp')}</p>
         <a
           href={
             referralCode
