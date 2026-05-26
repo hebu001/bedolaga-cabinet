@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import TvQuickConnect from './TvQuickConnect';
 import ProgressRing from './ProgressRing';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 import type { AppConfig, RemnawavePlatformData } from '@/types';
@@ -177,7 +176,7 @@ export default function SetupWizard({
   onGoBack,
   connectionUrl,
 }: SetupWizardProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const haptic = useHapticFeedback();
   // Steps: 0 = intro (auto-detected platform), 1 = download app, 2 = add subscription, 3 = QR (other device)
   const [step, setStep] = useState(0);
@@ -515,31 +514,6 @@ export default function SetupWizard({
             </div>
           </button>
         )}
-        {appConfig.subscriptionUrl && (
-          <button
-            onClick={() => {
-              haptic.buttonPressMedium();
-              setStep(4);
-            }}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#F97315] text-base font-medium text-white transition-all hover:opacity-90 active:scale-[0.97]"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.7}
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125z"
-              />
-            </svg>
-            {t('subscription.connection.installOnAndroidTv', 'Установка на Android TV')}
-          </button>
-        )}
         <button
           onClick={() => {
             haptic.buttonPressMedium();
@@ -553,101 +527,6 @@ export default function SetupWizard({
     </motion.div>
   );
 
-  /* ─── Step 4 — Android TV (install app + HAPP pairing via 5-digit code / QR) ─── */
-  const localized = (text: { [k: string]: string } | undefined): string => {
-    if (!text) return '';
-    const lang = i18n.language || 'ru';
-    return text[lang] || text.en || text.ru || Object.values(text)[0] || '';
-  };
-
-  const renderAndroidTv = () => {
-    const tvPlatform = appConfig.platforms?.androidTV;
-    const tvApp = tvPlatform?.apps?.find((a) => a.featured) || tvPlatform?.apps?.[0];
-    const installBlock = tvApp?.blocks?.[0];
-    const installButtons = installBlock?.buttons || [];
-
-    return (
-      <motion.div
-        key="step-androidtv"
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        transition={pageTransition}
-        className="fixed inset-0 z-[60] flex flex-col bg-black"
-      >
-        <div
-          className="flex-1 space-y-4 overflow-y-auto px-4 pb-4"
-          style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
-        >
-          {/* Install app block (Google Play / APK from RemnaWave config) */}
-          {installButtons.length > 0 && (
-            <div className="rounded-2xl bg-white/5 p-4">
-              <h3 className="text-base font-semibold text-white">
-                {localized(installBlock?.title) ||
-                  t('subscription.connection.installAppTitle', 'Установка приложения')}
-              </h3>
-              <p className="mt-1 text-sm text-white/60">
-                {localized(installBlock?.description) ||
-                  t(
-                    'subscription.connection.installAppDesc',
-                    'Откройте страницу в Google Play и установите приложение. Или установите приложение из APK файла напрямую, если Google Play не работает.',
-                  )}
-              </p>
-              <div className="mt-3 flex flex-col gap-2">
-                {installButtons.map((btn, idx) => {
-                  const url = btn.resolvedUrl || btn.url || btn.link;
-                  if (!url) return null;
-                  const label =
-                    localized(btn.text) || t('subscription.connection.openLink', 'Открыть ссылку');
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        haptic.buttonPressMedium();
-                        onOpenDeepLink(url);
-                      }}
-                      className="flex h-12 w-full items-center justify-center rounded-full bg-white text-[14px] font-medium text-black transition-opacity hover:opacity-90 active:scale-[0.97]"
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* HAPP pairing */}
-          <div>
-            <p className="mb-3 text-center text-sm text-white/60">
-              {t(
-                'subscription.connection.androidTvHint',
-                'Откройте HAPP на телевизоре — появится 5-значный код. Введите его ниже или отсканируйте QR с экрана.',
-              )}
-            </p>
-            <TvQuickConnect subscriptionUrl={appConfig.subscriptionUrl || ''} isLight={false} />
-          </div>
-        </div>
-
-        <div
-          className="px-4 pt-3"
-          style={{ paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom))' }}
-        >
-          <button
-            onClick={() => {
-              haptic.buttonPressMedium();
-              setStep(3);
-            }}
-            className="h-14 w-full rounded-full bg-white/15 text-base font-medium text-white transition-all hover:bg-white/10 active:scale-[0.97]"
-          >
-            {t('common.back', 'Назад')}
-          </button>
-        </div>
-      </motion.div>
-    );
-  };
-
   /* ─── Main render ─── */
   const renderStep = () => {
     switch (step) {
@@ -659,8 +538,6 @@ export default function SetupWizard({
         return renderAddSubscription();
       case 3:
         return renderQR();
-      case 4:
-        return renderAndroidTv();
       default:
         return renderIntro();
     }
