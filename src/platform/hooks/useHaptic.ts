@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { usePlatform } from '@/platform/hooks/usePlatform';
 import type { HapticImpactStyle, HapticNotificationType } from '@/platform/types';
 
@@ -61,12 +61,15 @@ export function useHaptic(): HapticMethods {
     haptic.selection();
   }, [haptic]);
 
-  return {
-    impact,
-    notification,
-    selection,
-    isAvailable: capabilities.hasHapticFeedback,
-  };
+  return useMemo(
+    () => ({
+      impact,
+      notification,
+      selection,
+      isAvailable: capabilities.hasHapticFeedback,
+    }),
+    [impact, notification, selection, capabilities.hasHapticFeedback],
+  );
 }
 
 /**
@@ -103,24 +106,27 @@ export function useHapticClick(
 export function useHapticFeedback() {
   const haptic = useHaptic();
 
-  return {
-    // Common actions
-    buttonPress: useCallback(() => haptic.impact('light'), [haptic]),
-    buttonPressMedium: useCallback(() => haptic.impact('medium'), [haptic]),
-    buttonPressHeavy: useCallback(() => haptic.impact('heavy'), [haptic]),
-    toggle: useCallback(() => haptic.impact('rigid'), [haptic]),
+  return useMemo(
+    () => ({
+      // Common actions
+      buttonPress: () => haptic.impact('light'),
+      buttonPressMedium: () => haptic.impact('medium'),
+      buttonPressHeavy: () => haptic.impact('heavy'),
+      toggle: () => haptic.impact('rigid'),
 
-    // Notifications
-    success: useCallback(() => haptic.notification('success'), [haptic]),
-    warning: useCallback(() => haptic.notification('warning'), [haptic]),
-    error: useCallback(() => haptic.notification('error'), [haptic]),
+      // Notifications
+      success: () => haptic.notification('success'),
+      warning: () => haptic.notification('warning'),
+      error: () => haptic.notification('error'),
 
-    // Selection
-    selectionChanged: useCallback(() => haptic.selection(), [haptic]),
+      // Selection
+      selectionChanged: () => haptic.selection(),
 
-    // Raw access
-    impact: haptic.impact,
-    notification: haptic.notification,
-    selection: haptic.selection,
-  };
+      // Raw access
+      impact: haptic.impact,
+      notification: haptic.notification,
+      selection: haptic.selection,
+    }),
+    [haptic],
+  );
 }
