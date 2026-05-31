@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { HoverBorderGradient } from '../ui/hover-border-gradient';
+import { SubscriptionIcon } from '@/components/icons';
 import type { Subscription } from '../../types';
 
 interface PurchaseCTAButtonProps {
@@ -73,21 +74,10 @@ export default function PurchaseCTAButton({
                 background: isExpired
                   ? 'rgba(255,59,92,0.12)'
                   : 'rgba(var(--color-accent-400), 0.12)',
+                color: accentColor,
               }}
             >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={accentColor}
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-              </svg>
+              <SubscriptionIcon className="h-[18px] w-[18px]" />
             </div>
             <div>
               <div className="text-[15px] font-semibold text-dark-50">{buttonText}</div>
