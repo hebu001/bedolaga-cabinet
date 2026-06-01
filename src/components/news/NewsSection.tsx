@@ -469,11 +469,20 @@ export default function NewsSection() {
 
         {/* Grid */}
         {items.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             {featured && <FeaturedCard item={featured} onClick={handleFeaturedClick} />}
-            {regular.map((item, i) => (
-              <NewsCardWrapper key={item.id} item={item} index={i} onCardClick={handleCardClick} />
-            ))}
+            {regular.length > 0 && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child:nth-child(odd)]:col-span-2">
+                {regular.map((item, i) => (
+                  <NewsCardWrapper
+                    key={item.id}
+                    item={item}
+                    index={i}
+                    onCardClick={handleCardClick}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
