@@ -8,14 +8,14 @@ interface FortuneWheelProps {
   onSpinComplete: () => void;
 }
 
-// Pre-generate sparkle positions (shown only while spinning). The old formula
-// `20 + (i*10)%60 / 15 + (i*13)%70` left the first ~6 sparkles colinear (the
-// modulo never wrapped for small i), so they lined up as a diagonal streak
-// through the centre. Scatter them on a phyllotaxis (golden-angle) spiral
-// inside the wheel instead — well-distributed, never colinear.
+// Pre-generate sparkle positions (shown only while spinning). They must stay in
+// the OUTER ring of the wheel and never near the hub — the old formula scattered
+// some right onto the centre, so during a spin the sparkles bunched into / streaked
+// through the middle. Distribute by golden angle at a large radius (34–43% from
+// centre) so they ring the wheel and the centre stays clear.
 const SPARKLE_POSITIONS = Array.from({ length: 8 }, (_, i) => {
-  const angle = i * 2.39996; // golden angle (radians)
-  const radius = 16 + (i % 4) * 8; // 16–40% from centre, kept within the wheel
+  const angle = i * 2.39996; // golden angle (radians) → evenly spread, never colinear
+  const radius = 34 + (i % 4) * 3; // 34–43% from centre: outer ring only, never central
   return {
     top: `${(50 + radius * Math.sin(angle)).toFixed(1)}%`,
     left: `${(50 + radius * Math.cos(angle)).toFixed(1)}%`,
