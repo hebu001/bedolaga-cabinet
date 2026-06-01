@@ -214,6 +214,21 @@ const FortuneWheel = memo(function FortuneWheel({
             <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.7" />
             </filter>
+
+            {/* LED glow as a soft gradient instead of a CSS blur. CSS filters on
+                cx/cy-positioned SVG elements mis-render under the spin's GPU
+                compositing — phantom streaks toward the centre that are often
+                invisible in screen recordings but visible live. */}
+            <radialGradient id="ledGlowGrad">
+              <stop offset="0%" stopColor="#FEF08A" stopOpacity="0.95" />
+              <stop offset="45%" stopColor="#FDE047" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#FDE047" stopOpacity="0" />
+            </radialGradient>
+
+            {/* SVG-native emoji shadow (not a CSS filter) for the same reason */}
+            <filter id="emojiShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.5" />
+            </filter>
           </defs>
 
           {/* Background shadow */}
@@ -270,9 +285,9 @@ const FortuneWheel = memo(function FortuneWheel({
                     className="led-glow"
                     cx={dotX}
                     cy={dotY}
-                    r={5}
-                    fill="#FEF08A"
-                    style={{ filter: 'blur(2px)', animationDelay: delay }}
+                    r={9}
+                    fill="url(#ledGlowGrad)"
+                    style={{ animationDelay: delay }}
                   />
                   <circle
                     className="led-dot"
@@ -339,7 +354,7 @@ const FortuneWheel = memo(function FortuneWheel({
                   dominantBaseline="middle"
                   fontSize={prizes.length <= 6 ? '32' : '26'}
                   transform={`rotate(${pos.rotation}, ${pos.x}, ${pos.y})`}
-                  style={{ filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.5))' }}
+                  filter="url(#emojiShadow)"
                 >
                   {prize.emoji}
                 </text>
