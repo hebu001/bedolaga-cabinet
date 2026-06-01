@@ -8,21 +8,6 @@ interface FortuneWheelProps {
   onSpinComplete: () => void;
 }
 
-// Pre-generate sparkle positions (shown only while spinning). They must stay in
-// the OUTER ring of the wheel and never near the hub — the old formula scattered
-// some right onto the centre, so during a spin the sparkles bunched into / streaked
-// through the middle. Distribute by golden angle at a large radius (34–43% from
-// centre) so they ring the wheel and the centre stays clear.
-const SPARKLE_POSITIONS = Array.from({ length: 8 }, (_, i) => {
-  const angle = i * 2.39996; // golden angle (radians) → evenly spread, never colinear
-  const radius = 34 + (i % 4) * 3; // 34–43% from centre: outer ring only, never central
-  return {
-    top: `${(50 + radius * Math.sin(angle)).toFixed(1)}%`,
-    left: `${(50 + radius * Math.cos(angle)).toFixed(1)}%`,
-    delay: `${i * 0.15}s`,
-  };
-});
-
 const FortuneWheel = memo(function FortuneWheel({
   prizes,
   isSpinning,
@@ -423,25 +408,6 @@ const FortuneWheel = memo(function FortuneWheel({
           />
         )}
       </div>
-
-      {/* Sparkle effects when spinning - optimized with pre-calculated positions */}
-      {isSpinning && (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {SPARKLE_POSITIONS.map((pos, i) => (
-            <div
-              key={`sparkle-${i}`}
-              className="absolute h-2 w-2 animate-ping rounded-full bg-yellow-300"
-              style={{
-                top: pos.top,
-                left: pos.left,
-                animationDelay: pos.delay,
-                animationDuration: '1.5s',
-                opacity: 0.7,
-              }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 });
