@@ -8,12 +8,20 @@ interface FortuneWheelProps {
   onSpinComplete: () => void;
 }
 
-// Pre-generate sparkle positions to avoid recalculating on each render
-const SPARKLE_POSITIONS = Array.from({ length: 8 }, (_, i) => ({
-  top: `${20 + ((i * 10) % 60)}%`,
-  left: `${15 + ((i * 13) % 70)}%`,
-  delay: `${i * 0.15}s`,
-}));
+// Pre-generate sparkle positions (shown only while spinning). The old formula
+// `20 + (i*10)%60 / 15 + (i*13)%70` left the first ~6 sparkles colinear (the
+// modulo never wrapped for small i), so they lined up as a diagonal streak
+// through the centre. Scatter them on a phyllotaxis (golden-angle) spiral
+// inside the wheel instead — well-distributed, never colinear.
+const SPARKLE_POSITIONS = Array.from({ length: 8 }, (_, i) => {
+  const angle = i * 2.39996; // golden angle (radians)
+  const radius = 16 + (i % 4) * 8; // 16–40% from centre, kept within the wheel
+  return {
+    top: `${(50 + radius * Math.sin(angle)).toFixed(1)}%`,
+    left: `${(50 + radius * Math.cos(angle)).toFixed(1)}%`,
+    delay: `${i * 0.15}s`,
+  };
+});
 
 const FortuneWheel = memo(function FortuneWheel({
   prizes,
@@ -206,17 +214,6 @@ const FortuneWheel = memo(function FortuneWheel({
             <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.7" />
             </filter>
-
-            {/* LED glow as a soft radial gradient instead of a CSS blur filter.
-                A `filter: blur()` on cx/cy-positioned SVG circles mis-renders under
-                GPU compositing during the spin — the blurs streak toward the
-                view-box origin and draw a line of lights through the centre. A
-                gradient fill needs no filter, so that artefact can't occur. */}
-            <radialGradient id="ledGlowGrad">
-              <stop offset="0%" stopColor="#FEF08A" stopOpacity="0.95" />
-              <stop offset="45%" stopColor="#FDE047" stopOpacity="0.55" />
-              <stop offset="100%" stopColor="#FDE047" stopOpacity="0" />
-            </radialGradient>
           </defs>
 
           {/* Background shadow */}
@@ -253,20 +250,10 @@ const FortuneWheel = memo(function FortuneWheel({
                 0%, 100% { opacity: 0; }
                 10%, 30% { opacity: 0.4; }
               }
-              /* --led-dur drives both the speed and the per-dot delay, so they
-                 scale together and the chase stays in order at the faster spin
-                 speed (the delay used to be a fixed 6s value, which scrambled
-                 the order once the duration dropped to 2s). */
-              .led-dot, .led-glow {
-                --led-dur: 6s;
-                animation-duration: var(--led-dur);
-                animation-timing-function: linear;
-                animation-iteration-count: infinite;
-                animation-delay: calc(var(--led-i, 0) / 20 * var(--led-dur));
-              }
-              .led-dot { animation-name: ledChase; }
-              .led-glow { opacity: 0; animation-name: ledGlow; }
-              .led-spinning .led-dot, .led-spinning .led-glow { --led-dur: 2s; }
+              .led-dot { animation: ledChase 6s linear infinite; }
+              .led-glow { opacity: 0; animation: ledGlow 6s linear infinite; }
+              .led-spinning .led-dot { animation-duration: 2s; }
+              .led-spinning .led-glow { animation-duration: 2s; }
             `}
           </style>
           <g className={isSpinning ? 'led-spinning' : undefined}>
@@ -275,11 +262,26 @@ const FortuneWheel = memo(function FortuneWheel({
               const ledRadius = outerRadius + 3;
               const dotX = center + ledRadius * Math.cos(angle);
               const dotY = center + ledRadius * Math.sin(angle);
+              // Delay as fraction of full cycle — CSS handles speed via animation-duration
+              const delay = `${(i / 20) * 6}s`;
               return (
-                // --led-i (dot index) drives the staggered chase delay in CSS
-                <g key={`led-${i}`} style={{ '--led-i': i } as React.CSSProperties}>
-                  <circle className="led-glow" cx={dotX} cy={dotY} r={9} fill="url(#ledGlowGrad)" />
-                  <circle className="led-dot" cx={dotX} cy={dotY} r={3.5} strokeWidth="1" />
+                <g key={`led-${i}`}>
+                  <circle
+                    className="led-glow"
+                    cx={dotX}
+                    cy={dotY}
+                    r={5}
+                    fill="#FEF08A"
+                    style={{ filter: 'blur(2px)', animationDelay: delay }}
+                  />
+                  <circle
+                    className="led-dot"
+                    cx={dotX}
+                    cy={dotY}
+                    r={3.5}
+                    strokeWidth="1"
+                    style={{ animationDelay: delay }}
+                  />
                 </g>
               );
             })}
