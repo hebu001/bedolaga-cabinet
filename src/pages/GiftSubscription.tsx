@@ -1291,19 +1291,6 @@ export default function GiftSubscription() {
   return (
     <div className="min-h-dvh">
       <div className="mx-auto max-w-lg px-4 py-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-6 flex items-center gap-3"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-apple-blue/15">
-            <GiftIcon className="h-5 w-5 text-apple-blue" />
-          </div>
-          <h1 className="text-2xl font-bold text-apple-ink">{t('gift.pageTitle')}</h1>
-        </motion.div>
-
         {/* Tab bar */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
