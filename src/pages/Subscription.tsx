@@ -14,6 +14,7 @@ import { getGlassColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
 import { CopyIcon, CheckIcon } from '../components/icons';
@@ -125,6 +126,10 @@ const ROW_ICON = {
   traffic: {
     d: 'M7 16a4 4 0 0 1-.88-7.9A5 5 0 0 1 15.9 6 5 5 0 0 1 17 15.9M15 13l-3-3-3 3M12 10v8',
     color: '#5AC8FA',
+  },
+  gift: {
+    d: 'M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z',
+    color: '#FF375F',
   },
 } as const;
 
@@ -279,6 +284,7 @@ export default function Subscription() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { formatAmount, currencySymbol } = useCurrency();
+  const { giftEnabled } = useFeatureFlags();
   const navigate = useNavigate();
   const { subscriptionId: subIdParam } = useParams<{ subscriptionId?: string }>();
   const subscriptionId = subIdParam ? parseInt(subIdParam, 10) : undefined;
@@ -2469,6 +2475,24 @@ export default function Subscription() {
                   ) : (
                     <span className="shrink-0 text-[18px] text-apple-faint">›</span>
                   )}
+                </button>
+              )}
+              {/* Gift subscription */}
+              {giftEnabled && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptic.buttonPressMedium();
+                    navigate('/gift');
+                  }}
+                  className="flex w-full items-center gap-3 border-t border-apple-hairline p-4 text-left transition-colors hover:bg-apple-elevated"
+                >
+                  <RowIcon icon="gift" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[15px] text-apple-ink">{t('gift.title')}</div>
+                    <div className="mt-0.5 text-[13px] text-apple-mute">{t('gift.subtitle')}</div>
+                  </div>
+                  <span className="shrink-0 text-[18px] text-apple-faint">›</span>
                 </button>
               )}
             </div>

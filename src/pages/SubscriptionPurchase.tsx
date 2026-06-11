@@ -1133,7 +1133,7 @@ export default function SubscriptionPurchase() {
                               >
                                 {displayDiscount && displayDiscount > 0 && (
                                   <div
-                                    className="absolute -right-2 -top-2 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                                    className="absolute right-2 top-2 z-[1] rounded-full px-2 py-0.5 text-xs font-medium text-white"
                                     style={{
                                       background: promoPeriod.isPromoGroup ? '#30d158' : '#F97315',
                                     }}
