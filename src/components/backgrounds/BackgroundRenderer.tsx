@@ -57,6 +57,7 @@ function RenderBackground({ config }: { config: AnimationConfig }) {
 
   return createPortal(
     <div
+      key={bgType}
       className="pointer-events-none fixed inset-0"
       style={{
         zIndex: -2,
@@ -88,8 +89,10 @@ export function BackgroundRenderer() {
     staleTime: 30_000,
   });
 
-  const effectiveConfig = config ?? DEFAULT_ANIMATION_CONFIG;
-  return <RenderBackground config={effectiveConfig} />;
+  // Until we have a config (cached or fetched), render nothing — never flash the
+  // default aurora background under the user's actual selection on reload.
+  if (!config) return null;
+  return <RenderBackground config={config} />;
 }
 
 export function StaticBackgroundRenderer({ config }: { config: AnimationConfig }) {
