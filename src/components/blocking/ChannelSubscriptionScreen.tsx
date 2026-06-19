@@ -88,25 +88,27 @@ export default function ChannelSubscriptionScreen() {
             default and would otherwise show the same text on every locale */}
         <p className="mb-6 text-lg text-gray-400">{t('blocking.channel.defaultMessage')}</p>
 
-        {/* Channel list (only unsubscribed channels) */}
+        {/* Channel list (only unsubscribed channels) — one big orange button each */}
         {channels.length > 0 && (
           <div className="mb-6 space-y-3">
-            {channels.map((ch) => (
-              <div
-                key={ch.channel_id}
-                className="flex items-center justify-between rounded-xl border border-red-500/30 bg-red-500/10 p-3"
-              >
-                <span className="text-sm font-medium text-white">{ch.title || ch.channel_id}</span>
-                {ch.channel_link && (
-                  <button
-                    onClick={() => safeOpenUrl(ch.channel_link)}
-                    className="rounded-lg bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-400 hover:bg-blue-500/30"
-                  >
-                    {t('blocking.channel.openChannel')}
-                  </button>
-                )}
-              </div>
-            ))}
+            {channels.map((ch) =>
+              ch.channel_link ? (
+                <button
+                  key={ch.channel_id}
+                  onClick={() => safeOpenUrl(ch.channel_link)}
+                  className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#F97315] px-6 py-4 text-base font-semibold text-white transition-opacity hover:opacity-90 active:scale-[0.98]"
+                >
+                  {t('blocking.channel.openChannel')}
+                </button>
+              ) : (
+                <div
+                  key={ch.channel_id}
+                  className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm font-medium text-white"
+                >
+                  {ch.title || ch.channel_id}
+                </div>
+              ),
+            )}
           </div>
         )}
 
@@ -114,7 +116,7 @@ export default function ChannelSubscriptionScreen() {
         {channels.length === 0 && channelInfo?.channel_link && (
           <button
             onClick={() => safeOpenUrl(channelInfo.channel_link)}
-            className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4 font-semibold text-white transition-all duration-200 hover:from-blue-600 hover:to-cyan-600"
+            className="mb-6 flex w-full items-center justify-center gap-3 rounded-xl bg-[#F97315] px-6 py-4 text-base font-semibold text-white transition-opacity hover:opacity-90 active:scale-[0.98]"
           >
             {t('blocking.channel.openChannel')}
           </button>
