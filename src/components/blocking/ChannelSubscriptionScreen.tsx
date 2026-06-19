@@ -84,10 +84,9 @@ export default function ChannelSubscriptionScreen() {
         {/* Title */}
         <h1 className="mb-4 text-2xl font-bold text-white">{t('blocking.channel.title')}</h1>
 
-        {/* Message */}
-        <p className="mb-6 text-lg text-gray-400">
-          {channelInfo?.message || t('blocking.channel.defaultMessage')}
-        </p>
+        {/* Message — always localized; the server message is a single-language
+            default and would otherwise show the same text on every locale */}
+        <p className="mb-6 text-lg text-gray-400">{t('blocking.channel.defaultMessage')}</p>
 
         {/* Channel list (only unsubscribed channels) */}
         {channels.length > 0 && (
