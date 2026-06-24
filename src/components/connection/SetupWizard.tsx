@@ -181,6 +181,7 @@ export default function SetupWizard({
   // Steps: 0 = intro (auto-detected platform), 1 = download app, 2 = add subscription, 3 = QR (other device)
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   const detectedPlatform = useMemo(() => detectPlatform(), []);
 
@@ -242,6 +243,13 @@ export default function SetupWizard({
       window.open(downloadUrl, '_blank', 'noopener,noreferrer');
     }
   }, [downloadUrl]);
+
+  // Confirm from the "important info" modal: open the download page, then dismiss.
+  const handleConfirmInstall = useCallback(() => {
+    haptic.buttonPressMedium();
+    handleInstallApp();
+    setShowInstallModal(false);
+  }, [handleInstallApp, haptic]);
 
   // Backend pre-resolves the happ://crypt... URL into the `subscriptionLink`
   // button inside one of the app's blocks (same source the legacy
@@ -392,7 +400,7 @@ export default function SetupWizard({
         <button
           onClick={() => {
             haptic.buttonPressMedium();
-            handleInstallApp();
+            setShowInstallModal(true);
           }}
           className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97]"
         >
@@ -557,6 +565,80 @@ export default function SetupWizard({
       }}
     >
       <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
+
+      {/* Important-info modal before opening the download page */}
+      <AnimatePresence>
+        {showInstallModal && (
+          <motion.div
+            className="fixed inset-0 z-[120] flex items-center justify-center p-5"
+            style={{ touchAction: 'auto' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setShowInstallModal(false)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+            {/* Card */}
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              className="relative w-full max-w-sm rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6"
+              initial={{ scale: 0.94, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close */}
+              <button
+                onClick={() => {
+                  haptic.buttonPressMedium();
+                  setShowInstallModal(false);
+                }}
+                aria-label={t('common.close', 'Закрыть')}
+                className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/60 transition-colors hover:text-white active:scale-95"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+
+              {/* Title */}
+              <h2 className="max-w-[78%] text-[32px] font-semibold leading-[1.1] text-white">
+                {t('subscription.connection.installModalTitle', 'Важная информация')}
+              </h2>
+
+              {/* Body */}
+              <p className="mt-4 text-base leading-relaxed text-white/70">
+                {t('subscription.connection.installModalBody', {
+                  app: selectedApp?.name || t('subscription.connection.appTitle', 'Приложение'),
+                  defaultValue:
+                    'После установки приложения {{app}}, обязательно вернитесь на этот экран и нажмите «Следующий шаг», чтобы добавить конфигурацию в приложение, без этого VPN работать не будет',
+                })}
+              </p>
+
+              {/* Confirm — orange */}
+              <button
+                onClick={handleConfirmInstall}
+                className="mt-7 flex h-14 w-full items-center justify-center rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all hover:brightness-95 active:scale-[0.97]"
+              >
+                {t('subscription.connection.installModalConfirm', 'Хорошо, перейти к установке')}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
