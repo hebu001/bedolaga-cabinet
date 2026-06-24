@@ -199,10 +199,15 @@ export default function SetupWizard({
   const currentPlatform = availablePlatforms[0] || 'ios';
   const currentPlatformLabel = platformLabels[currentPlatform] || currentPlatform;
 
-  // Get the selected platform's first (or featured) app
+  // Get the selected platform's first (or featured) app.
+  // On Apple platforms prefer the INCY client when the backend lists it.
   const selectedApp = useMemo(() => {
     const data = appConfig.platforms[currentPlatform] as RemnawavePlatformData | undefined;
     if (!data?.apps?.length) return null;
+    if (currentPlatform === 'ios' || currentPlatform === 'macos') {
+      const incy = data.apps.find((a) => /incy/i.test(a.name));
+      if (incy) return incy;
+    }
     return data.apps.find((a) => a.featured) || data.apps[0];
   }, [appConfig.platforms, currentPlatform]);
 
