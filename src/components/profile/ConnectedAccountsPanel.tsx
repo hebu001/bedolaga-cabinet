@@ -12,6 +12,7 @@ import { getTelegramInitData } from '../../hooks/useTelegramSDK';
 import { usePlatform, useIsTelegram } from '@/platform/hooks/usePlatform';
 import { useAuthStore } from '../../store/auth';
 import { isValidEmail } from '../../utils/validation';
+import { localizeServerMessage } from '../../utils/serverMessages';
 import type { LinkedProvider } from '../../types';
 
 const OAUTH_PROVIDERS = ['google', 'yandex', 'discord', 'vk'];
@@ -118,7 +119,7 @@ function TelegramLinkWidget() {
       if (mountedRef.current) {
         showToast({
           type: 'error',
-          message: getErrorDetail(err) || t('profile.accounts.linkError'),
+          message: localizeServerMessage(getErrorDetail(err), t) || t('profile.accounts.linkError'),
         });
       }
     } finally {
@@ -200,7 +201,7 @@ function TelegramLinkWidget() {
       if (mountedRef.current) {
         showToast({
           type: 'error',
-          message: getErrorDetail(err) || t('profile.accounts.linkError'),
+          message: localizeServerMessage(getErrorDetail(err), t) || t('profile.accounts.linkError'),
         });
       }
     }
@@ -433,7 +434,7 @@ export default function ConnectedAccountsPanel() {
       } else if (detail?.includes('already have a verified email')) {
         setEmailError(t('profile.alreadyHaveEmail'));
       } else {
-        setEmailError(detail || t('common.error'));
+        setEmailError(localizeServerMessage(detail, t) || t('common.error'));
       }
       setEmailSuccess(null);
     },
@@ -509,7 +510,7 @@ export default function ConnectedAccountsPanel() {
     } catch (err: unknown) {
       showToast({
         type: 'error',
-        message: getErrorDetail(err) || t('profile.accounts.linkError'),
+        message: localizeServerMessage(getErrorDetail(err), t) || t('profile.accounts.linkError'),
       });
       setLinkingProvider(null);
     }
@@ -530,7 +531,10 @@ export default function ConnectedAccountsPanel() {
         showToast({ type: 'success', message: t('profile.accounts.linkSuccess') });
       }
     } catch (err: unknown) {
-      showToast({ type: 'error', message: getErrorDetail(err) || t('profile.accounts.linkError') });
+      showToast({
+        type: 'error',
+        message: localizeServerMessage(getErrorDetail(err), t) || t('profile.accounts.linkError'),
+      });
     } finally {
       setLinkingProvider(null);
     }

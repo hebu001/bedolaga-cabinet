@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/auth';
 import { useShallow } from 'zustand/shallow';
 import { authApi } from '../api/auth';
 import { isValidEmail } from '../utils/validation';
+import { localizeServerMessage } from '../utils/serverMessages';
 import {
   brandingApi,
   getCachedBranding,
@@ -193,8 +194,8 @@ export default function Login() {
             continue;
           }
 
-          // Show backend error detail if available, otherwise generic message
-          setError(detail || t('auth.telegramRequired'));
+          // Show backend error detail (localized) if available, otherwise generic message
+          setError(localizeServerMessage(detail, t) || t('auth.telegramRequired'));
         }
       }
 
@@ -275,7 +276,7 @@ export default function Login() {
       } else if (status === 429) {
         setError(t('auth.tooManyAttempts', 'Too many attempts. Please try again later'));
       } else {
-        setError(detail || t('common.error'));
+        setError(localizeServerMessage(detail, t) || t('common.error'));
       }
     } finally {
       setIsLoading(false);
@@ -298,7 +299,7 @@ export default function Login() {
     } catch (err: unknown) {
       const error = err as { response?: { status?: number; data?: { detail?: string } } };
       const detail = error.response?.data?.detail;
-      setForgotPasswordError(detail || t('common.error'));
+      setForgotPasswordError(localizeServerMessage(detail, t) || t('common.error'));
     } finally {
       setForgotPasswordLoading(false);
     }

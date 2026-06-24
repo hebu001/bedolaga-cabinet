@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/auth';
+import { localizeServerMessage } from '../utils/serverMessages';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function ResetPassword() {
@@ -52,7 +53,7 @@ export default function ResetPassword() {
     } catch (err: unknown) {
       setStatus('error');
       const error = err as { response?: { data?: { detail?: string } } };
-      setError(error.response?.data?.detail || t('common.error'));
+      setError(localizeServerMessage(error.response?.data?.detail, t) || t('common.error'));
     }
   };
 

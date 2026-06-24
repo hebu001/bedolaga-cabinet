@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/auth';
 import { useAuthStore } from '../store/auth';
 import { useShallow } from 'zustand/shallow';
+import { localizeServerMessage } from '../utils/serverMessages';
 import { consumeCampaignSlug, getPendingCampaignSlug } from '../utils/campaign';
 import { tokenStorage } from '../utils/token';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -56,7 +57,9 @@ export default function VerifyEmail() {
       } catch (err: unknown) {
         setStatus('error');
         const error = err as { response?: { data?: { detail?: string } } };
-        setError(error.response?.data?.detail || t('emailVerification.failed'));
+        setError(
+          localizeServerMessage(error.response?.data?.detail, t) || t('emailVerification.failed'),
+        );
       }
     };
 

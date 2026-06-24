@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
+import { localizeServerMessage } from '../utils/serverMessages';
 
 export default function TelegramCallback() {
   const { t } = useTranslation();
@@ -55,7 +56,7 @@ export default function TelegramCallback() {
         navigate('/');
       } catch (err: unknown) {
         const error = err as { response?: { data?: { detail?: string } } };
-        setError(error.response?.data?.detail || t('common.error'));
+        setError(localizeServerMessage(error.response?.data?.detail, t) || t('common.error'));
       }
     };
 

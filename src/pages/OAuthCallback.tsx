@@ -10,6 +10,7 @@ import {
   clearOAuthState,
   getErrorDetail,
 } from '../utils/oauth';
+import { localizeServerMessage } from '../utils/serverMessages';
 import type { ServerCompleteResponse } from '../types';
 
 type CallbackMode = 'login' | 'link-browser' | 'link-server';
@@ -92,7 +93,9 @@ export default function OAuthCallback() {
           }
         } catch (err: unknown) {
           setErrorMode('link-browser');
-          setError(getErrorDetail(err) || t('profile.accounts.linkError'));
+          setError(
+            localizeServerMessage(getErrorDetail(err), t) || t('profile.accounts.linkError'),
+          );
         }
         return;
       }
@@ -107,7 +110,7 @@ export default function OAuthCallback() {
           await loginWithOAuth(provider, code, state, deviceId);
           navigate('/', { replace: true });
         } catch (err: unknown) {
-          const detail = getErrorDetail(err);
+          const detail = localizeServerMessage(getErrorDetail(err), t);
           setError(detail || t('auth.oauthError', 'Authorization was denied or failed'));
         }
         return;
@@ -122,7 +125,7 @@ export default function OAuthCallback() {
         setServerCompleteResponse(response);
       } catch (err: unknown) {
         setErrorMode('link-server');
-        setError(getErrorDetail(err) || t('profile.accounts.linkError'));
+        setError(localizeServerMessage(getErrorDetail(err), t) || t('profile.accounts.linkError'));
       }
     };
 

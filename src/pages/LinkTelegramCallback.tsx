@@ -5,6 +5,7 @@ import { authApi } from '../api/auth';
 import { useToast } from '../components/Toast';
 import { LINK_TELEGRAM_STATE_KEY } from './ConnectedAccounts';
 import { getErrorDetail } from '../utils/oauth';
+import { localizeServerMessage } from '../utils/serverMessages';
 
 export default function LinkTelegramCallback() {
   const { t } = useTranslation();
@@ -73,7 +74,7 @@ export default function LinkTelegramCallback() {
       } catch (err: unknown) {
         showToast({
           type: 'error',
-          message: getErrorDetail(err) || t('profile.accounts.linkError'),
+          message: localizeServerMessage(getErrorDetail(err), t) || t('profile.accounts.linkError'),
         });
         navigate('/profile/accounts', { replace: true });
       }
