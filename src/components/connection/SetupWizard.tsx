@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import ProgressRing from './ProgressRing';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
+import { usePlatform } from '../../platform/hooks/usePlatform';
 import type { AppConfig, RemnawavePlatformData } from '@/types';
 
 /* ─── Platform detection ─── */
@@ -178,6 +179,7 @@ export default function SetupWizard({
 }: SetupWizardProps) {
   const { t } = useTranslation();
   const haptic = useHapticFeedback();
+  const { openLink } = usePlatform();
   // Steps: 0 = intro (auto-detected platform), 1 = download app, 2 = add subscription, 3 = QR (other device)
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -239,10 +241,11 @@ export default function SetupWizard({
   }, [appConfig.subscriptionUrl, haptic]);
 
   const handleInstallApp = useCallback(() => {
-    if (downloadUrl) {
-      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
-    }
-  }, [downloadUrl]);
+    if (!downloadUrl) return;
+    // Use the platform opener: in Telegram this opens via the SDK (no extra
+    // native "Open link?" confirmation that window.open triggers).
+    openLink(downloadUrl);
+  }, [downloadUrl, openLink]);
 
   // Confirm from the "important info" modal: open the download page, then dismiss.
   const handleConfirmInstall = useCallback(() => {
