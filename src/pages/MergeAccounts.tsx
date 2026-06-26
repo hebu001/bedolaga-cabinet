@@ -212,7 +212,7 @@ function AccountCard({ account, label, isSelected, onSelect, showRadio }: Accoun
 function LoadingSkeleton() {
   return (
     <motion.div
-      className="space-y-6"
+      className="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-6"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
@@ -465,7 +465,7 @@ export default function MergeAccounts() {
 
   return (
     <motion.div
-      className="mx-auto max-w-lg space-y-6"
+      className="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-6"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
