@@ -339,6 +339,9 @@ export default function ConnectedAccountsPanel() {
   const [emailConfirmPassword, setEmailConfirmPassword] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+  // Occupied-email merge: a code is mailed to the existing account; confirm it here.
+  const [mergeCodeMode, setMergeCodeMode] = useState(false);
+  const [mergeCode, setMergeCode] = useState('');
   const setUser = useAuthStore((state) => state.setUser);
 
   const { data: emailAuthConfig } = useQuery<EmailAuthEnabled>({
@@ -413,8 +416,17 @@ export default function ConnectedAccountsPanel() {
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       authApi.registerEmail(email, password),
     onSuccess: async (response) => {
-      if (response.merge_required && response.merge_token) {
+      if (response.merge_token) {
         navigate(`/merge/${response.merge_token}`, { replace: true });
+        return;
+      }
+      // Email occupied by another account → a confirmation code was mailed to it.
+      // Show the code box to confirm the merge instead of finishing here.
+      if (response.merge_required) {
+        setMergeCodeMode(true);
+        setMergeCode('');
+        setEmailError(null);
+        setEmailSuccess(t('profile.mergeCodeSent'));
         return;
       }
       setEmailSuccess(t('profile.emailSent'));
@@ -458,6 +470,36 @@ export default function ConnectedAccountsPanel() {
       return;
     }
     registerEmailMutation.mutate({ email: emailValue, password: emailPassword });
+  };
+
+  const verifyMergeMutation = useMutation({
+    mutationFn: (code: string) => authApi.verifyEmailMerge(code),
+    onSuccess: (response) => {
+      if (response.merge_token) {
+        navigate(`/merge/${response.merge_token}`, { replace: true });
+      }
+    },
+    onError: (err: { response?: { data?: { detail?: string } } }) => {
+      setEmailError(localizeServerMessage(err.response?.data?.detail, t) || t('common.error'));
+      setEmailSuccess(null);
+    },
+  });
+
+  const handleVerifyMerge = (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailError(null);
+    if (mergeCode.length !== 6) {
+      setEmailError(t('profile.invalidMergeCode'));
+      return;
+    }
+    verifyMergeMutation.mutate(mergeCode);
+  };
+
+  const cancelMergeCode = () => {
+    setMergeCodeMode(false);
+    setMergeCode('');
+    setEmailError(null);
+    setEmailSuccess(null);
   };
 
   const canUnlink = (provider: LinkedProvider): boolean => {
@@ -687,84 +729,141 @@ export default function ConnectedAccountsPanel() {
                       <p className="mb-3 text-sm text-apple-mute">
                         {t('profile.linkEmailDescription')}
                       </p>
-                      <form onSubmit={handleEmailSubmit} className="space-y-3">
-                        <div>
-                          <label
-                            htmlFor="email-link-input"
-                            className="mb-1.5 block text-[13px] font-medium text-apple-mute"
-                          >
-                            Email
-                          </label>
-                          <input
-                            id="email-link-input"
-                            type="email"
-                            value={emailValue}
-                            onChange={(e) => setEmailValue(e.target.value)}
-                            placeholder="email@example.com"
-                            className={inputCls}
-                            autoComplete="email"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="email-link-password"
-                            className="mb-1.5 block text-[13px] font-medium text-apple-mute"
-                          >
-                            {t('auth.password')}
-                          </label>
-                          <input
-                            id="email-link-password"
-                            type="password"
-                            value={emailPassword}
-                            onChange={(e) => setEmailPassword(e.target.value)}
-                            placeholder={t('profile.passwordPlaceholder')}
-                            className={inputCls}
-                            autoComplete="new-password"
-                          />
-                          <p className="mt-1 text-xs text-apple-faint">
-                            {t('profile.passwordHint')}
-                          </p>
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="email-link-confirm"
-                            className="mb-1.5 block text-[13px] font-medium text-apple-mute"
-                          >
-                            {t('auth.confirmPassword')}
-                          </label>
-                          <input
-                            id="email-link-confirm"
-                            type="password"
-                            value={emailConfirmPassword}
-                            onChange={(e) => setEmailConfirmPassword(e.target.value)}
-                            placeholder={t('profile.confirmPasswordPlaceholder')}
-                            className={inputCls}
-                            autoComplete="new-password"
-                          />
-                        </div>
-
-                        {emailError && (
-                          <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red">
-                            {emailError}
+                      {mergeCodeMode ? (
+                        <form onSubmit={handleVerifyMerge} className="space-y-3">
+                          <div>
+                            <label
+                              htmlFor="email-merge-code"
+                              className="mb-1.5 block text-[13px] font-medium text-apple-mute"
+                            >
+                              {t('profile.mergeCodeLabel')}
+                            </label>
+                            <input
+                              id="email-merge-code"
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="one-time-code"
+                              maxLength={6}
+                              value={mergeCode}
+                              onChange={(e) => {
+                                setMergeCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                                setEmailError(null);
+                              }}
+                              placeholder="000000"
+                              className={`${inputCls} text-center text-lg font-semibold tracking-[0.5em]`}
+                              autoFocus
+                            />
                           </div>
-                        )}
-                        {emailSuccess && (
-                          <div className="rounded-xl border border-apple-green/30 bg-apple-green/10 p-3 text-sm text-apple-green">
-                            {emailSuccess}
-                          </div>
-                        )}
 
-                        <button
-                          type="submit"
-                          disabled={registerEmailMutation.isPending}
-                          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-                        >
-                          {registerEmailMutation.isPending && (
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                          {emailError && (
+                            <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red">
+                              {emailError}
+                            </div>
                           )}
-                          {t('profile.linkEmail')}
-                        </button>
-                      </form>
+                          {emailSuccess && (
+                            <div className="rounded-xl border border-apple-green/30 bg-apple-green/10 p-3 text-sm text-apple-green">
+                              {emailSuccess}
+                            </div>
+                          )}
+
+                          <button
+                            type="submit"
+                            disabled={verifyMergeMutation.isPending || mergeCode.length !== 6}
+                            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                          >
+                            {verifyMergeMutation.isPending && (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                            )}
+                            {t('profile.confirmAndMerge')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelMergeCode}
+                            className="w-full py-1 text-center text-[13px] text-apple-mute transition-colors hover:text-apple-ink"
+                          >
+                            {t('common.cancel')}
+                          </button>
+                        </form>
+                      ) : (
+                        <form onSubmit={handleEmailSubmit} className="space-y-3">
+                          <div>
+                            <label
+                              htmlFor="email-link-input"
+                              className="mb-1.5 block text-[13px] font-medium text-apple-mute"
+                            >
+                              Email
+                            </label>
+                            <input
+                              id="email-link-input"
+                              type="email"
+                              value={emailValue}
+                              onChange={(e) => setEmailValue(e.target.value)}
+                              placeholder="email@example.com"
+                              className={inputCls}
+                              autoComplete="email"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="email-link-password"
+                              className="mb-1.5 block text-[13px] font-medium text-apple-mute"
+                            >
+                              {t('auth.password')}
+                            </label>
+                            <input
+                              id="email-link-password"
+                              type="password"
+                              value={emailPassword}
+                              onChange={(e) => setEmailPassword(e.target.value)}
+                              placeholder={t('profile.passwordPlaceholder')}
+                              className={inputCls}
+                              autoComplete="new-password"
+                            />
+                            <p className="mt-1 text-xs text-apple-faint">
+                              {t('profile.passwordHint')}
+                            </p>
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="email-link-confirm"
+                              className="mb-1.5 block text-[13px] font-medium text-apple-mute"
+                            >
+                              {t('auth.confirmPassword')}
+                            </label>
+                            <input
+                              id="email-link-confirm"
+                              type="password"
+                              value={emailConfirmPassword}
+                              onChange={(e) => setEmailConfirmPassword(e.target.value)}
+                              placeholder={t('profile.confirmPasswordPlaceholder')}
+                              className={inputCls}
+                              autoComplete="new-password"
+                            />
+                          </div>
+
+                          {emailError && (
+                            <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red">
+                              {emailError}
+                            </div>
+                          )}
+                          {emailSuccess && (
+                            <div className="rounded-xl border border-apple-green/30 bg-apple-green/10 p-3 text-sm text-apple-green">
+                              {emailSuccess}
+                            </div>
+                          )}
+
+                          <button
+                            type="submit"
+                            disabled={registerEmailMutation.isPending}
+                            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                          >
+                            {registerEmailMutation.isPending && (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                            )}
+                            {t('profile.linkEmail')}
+                          </button>
+                        </form>
+                      )}
                     </div>
                   </motion.div>
                 )}
