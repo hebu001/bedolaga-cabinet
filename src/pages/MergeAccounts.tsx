@@ -11,6 +11,8 @@ import { Button } from '@/components/primitives/Button';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import { cn } from '@/lib/utils';
 import ProviderIcon from '../components/ProviderIcon';
+import { localizeServerMessage } from '../utils/serverMessages';
+import { getApiErrorMessage } from '../utils/api-error';
 import type { MergeAccountPreview } from '../types';
 
 // -- Icons --
@@ -279,7 +281,7 @@ function ExpiredState() {
 
 // -- Error State --
 
-function ErrorState() {
+function ErrorState({ message }: { message?: string }) {
   const { t } = useTranslation();
 
   return (
@@ -296,7 +298,7 @@ function ErrorState() {
       </motion.div>
 
       <motion.div variants={staggerItem} className="text-center">
-        <p className="text-lg font-medium text-dark-100">{t('merge.error')}</p>
+        <p className="text-lg font-medium text-dark-100">{message || t('merge.error')}</p>
       </motion.div>
 
       <motion.div variants={staggerItem}>
@@ -324,7 +326,7 @@ export default function MergeAccounts() {
   const [expiresIn, setExpiresIn] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
 
-  // Fetch merge preview (no auth required)
+  // Fetch merge preview (JWT-authed: the backend binds the merge to its initiator)
   const { data, isLoading, error } = useQuery({
     queryKey: ['merge-preview', mergeToken],
     queryFn: () => {
@@ -414,10 +416,10 @@ export default function MergeAccounts() {
       showToast({ type: 'success', message: t('merge.success') });
       navigate('/profile/accounts', { replace: true });
     },
-    onError: () => {
+    onError: (err: unknown) => {
       showToast({
         type: 'error',
-        message: t('merge.error'),
+        message: localizeServerMessage(getApiErrorMessage(err, ''), t) || t('merge.error'),
       });
     },
   });
@@ -447,9 +449,10 @@ export default function MergeAccounts() {
     return <LoadingSkeleton />;
   }
 
-  // Fetch error (404 = expired/invalid token)
+  // Fetch error (404 = expired/invalid token) — surface the real server reason
   if (error || !data) {
-    return <ErrorState />;
+    const detail = error ? getApiErrorMessage(error, '') : '';
+    return <ErrorState message={localizeServerMessage(detail, t) || undefined} />;
   }
 
   // Timer expired
