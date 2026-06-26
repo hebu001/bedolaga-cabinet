@@ -29,7 +29,7 @@ const LINK_SCRIPT_LOAD_TIMEOUT_MS = 8000;
 
 // Apple-dark helpers
 const inputCls =
-  'w-full rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60 disabled:opacity-50';
+  'w-full rounded-xl border border-apple-hairline bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none transition-colors placeholder:text-apple-faint focus:border-apple-blue disabled:opacity-50';
 
 function PrimaryButton({
   children,
