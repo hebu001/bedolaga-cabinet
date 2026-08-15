@@ -4419,6 +4419,8 @@
     "title": "Profile",
     "accountInfo": "Account Information",
     "telegramId": "Telegram ID",
+    "copyTelegramId": "Click to copy Telegram ID",
+    "telegramIdCopied": "Telegram ID copied",
     "username": "Username",
     "name": "Name",
     "registeredAt": "Registered",

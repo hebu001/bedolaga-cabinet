@@ -4985,6 +4985,8 @@
     "title": "Профиль",
     "accountInfo": "Информация об аккаунте",
     "telegramId": "Telegram ID",
+    "copyTelegramId": "Нажмите, чтобы скопировать Telegram ID",
+    "telegramIdCopied": "Telegram ID скопирован",
     "username": "Имя пользователя",
     "name": "Имя",
     "registeredAt": "Дата регистрации",

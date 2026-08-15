@@ -236,10 +236,13 @@ export default function Profile() {
 
   // Referral copy state
   const [copiedLink, setCopiedLink] = useState<'cabinet' | 'bot' | null>(null);
+  const [telegramIdCopied, setTelegramIdCopied] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const telegramIdCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     return () => {
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      if (telegramIdCopyTimerRef.current) clearTimeout(telegramIdCopyTimerRef.current);
     };
   }, []);
 
@@ -325,6 +328,18 @@ export default function Profile() {
       setCopiedLink(type);
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       copyTimerRef.current = setTimeout(() => setCopiedLink(null), 2000);
+    } catch {
+      // clipboard write failed silently
+    }
+  };
+
+  const copyTelegramId = async () => {
+    if (!user?.telegram_id) return;
+    try {
+      await copyToClipboard(String(user.telegram_id));
+      setTelegramIdCopied(true);
+      if (telegramIdCopyTimerRef.current) clearTimeout(telegramIdCopyTimerRef.current);
+      telegramIdCopyTimerRef.current = setTimeout(() => setTelegramIdCopied(false), 2000);
     } catch {
       // clipboard write failed silently
     }
@@ -616,7 +631,31 @@ export default function Profile() {
         <div className="space-y-1">
           <div className="flex items-center justify-between border-b border-apple-hairline py-3">
             <span className="text-apple-mute">{t('profile.telegramId')}</span>
-            <span className="font-medium text-apple-ink">{user?.telegram_id}</span>
+            {user?.telegram_id ? (
+              <button
+                type="button"
+                onClick={copyTelegramId}
+                className="group inline-flex min-h-9 items-center gap-2 rounded-xl px-2.5 text-apple-ink transition-colors hover:bg-apple-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97315]/60"
+                aria-label={t(
+                  telegramIdCopied ? 'profile.telegramIdCopied' : 'profile.copyTelegramId',
+                )}
+                title={t(telegramIdCopied ? 'profile.telegramIdCopied' : 'profile.copyTelegramId')}
+              >
+                <span className="font-medium tabular-nums">{user.telegram_id}</span>
+                <span
+                  className={`transition-colors ${
+                    telegramIdCopied
+                      ? 'text-apple-green'
+                      : 'text-apple-faint group-hover:text-[#F97315]'
+                  }`}
+                  aria-hidden="true"
+                >
+                  {telegramIdCopied ? <CheckIcon /> : <CopyIcon />}
+                </span>
+              </button>
+            ) : (
+              <span className="font-medium text-apple-ink">—</span>
+            )}
           </div>
           {user?.username && (
             <div className="flex items-center justify-between border-b border-apple-hairline py-3">

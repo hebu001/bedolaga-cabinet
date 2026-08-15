@@ -3841,6 +3841,8 @@
     "title": "پروفایل",
     "accountInfo": "اطلاعات حساب",
     "telegramId": "شناسه تلگرام",
+    "copyTelegramId": "برای کپی شناسه تلگرام کلیک کنید",
+    "telegramIdCopied": "شناسه تلگرام کپی شد",
     "username": "نام کاربری",
     "name": "نام",
     "registeredAt": "تاریخ ثبت نام",

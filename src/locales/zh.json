@@ -3840,6 +3840,8 @@
     "title": "个人资料",
     "accountInfo": "账户信息",
     "telegramId": "Telegram ID",
+    "copyTelegramId": "点击复制 Telegram ID",
+    "telegramIdCopied": "Telegram ID 已复制",
     "username": "用户名",
     "name": "姓名",
     "registeredAt": "注册时间",
