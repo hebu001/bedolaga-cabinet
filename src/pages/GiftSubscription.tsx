@@ -19,6 +19,11 @@ import { cn } from '../lib/utils';
 import { copyToClipboard } from '../utils/clipboard';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
+import {
+  buildGiftActivationLinks,
+  buildGiftShareMessage,
+  normalizeGiftClaimCode,
+} from '../utils/giftShare';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
 
@@ -962,8 +967,8 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
   const { t } = useTranslation();
   const [showToast, setShowToast] = useState(false);
 
-  const shortCode = gift.token.slice(0, 12);
-  const giftCode = `GIFT-${shortCode}`;
+  const claimCode = normalizeGiftClaimCode(gift.token);
+  const giftCode = `GIFT-${claimCode}`;
   const isActivated = isGiftActivated(gift);
   const isAvailable = !isActivated && isGiftAvailable(gift.status);
 
@@ -975,19 +980,18 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
 
   const buildShareMessage = useCallback(() => {
     const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
-    // Encode underscores as %5F so Telegram auto-link detection doesn't strip them
-    const safeCode = shortCode.replace(/_/g, '%5F');
-    const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFT%5F${safeCode}` : null;
-    const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${safeCode}`;
-    return [
+    const activationLinks = buildGiftActivationLinks(
+      claimCode,
+      botUsername,
+      window.location.origin,
+    );
+    return buildGiftShareMessage(
       t('gift.shareText'),
-      '',
-      botLink ? `${t('gift.shareModalActivateVia')} ${botLink}` : null,
-      `${t('gift.shareModalActivateViaCabinet')} ${cabinetLink}`,
-    ]
-      .filter(Boolean)
-      .join('\n');
-  }, [shortCode, t]);
+      t('gift.shareModalActivateVia'),
+      t('gift.shareModalActivateViaCabinet'),
+      activationLinks,
+    );
+  }, [claimCode, t]);
 
   const handleShare = useCallback(async () => {
     const message = buildShareMessage();
@@ -1032,7 +1036,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
         <>
           {/* Gift code display */}
           <div className="mb-3 rounded-xl bg-apple-elevated px-4 py-4 text-center">
-            <p className="font-mono text-base font-bold tracking-[0.15em] text-apple-blue">
+            <p className="break-all font-mono text-sm font-bold tracking-[0.08em] text-apple-blue">
               {giftCode}
             </p>
           </div>

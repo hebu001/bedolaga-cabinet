@@ -8,6 +8,11 @@ import { Spinner } from '@/components/ui/Spinner';
 import { AnimatedCheckmark } from '@/components/ui/AnimatedCheckmark';
 import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
 import { cn } from '@/lib/utils';
+import {
+  buildGiftActivationLinks,
+  buildGiftShareMessage,
+  normalizeGiftClaimCode,
+} from '@/utils/giftShare';
 
 const MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -52,22 +57,16 @@ function CodeOnlySuccessState({
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
-  const shortCode = purchaseToken.slice(0, 12);
-  const giftCode = `GIFT-${shortCode}`;
+  const claimCode = normalizeGiftClaimCode(purchaseToken);
+  const giftCode = `GIFT-${claimCode}`;
   const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
-  // Encode underscores as %5F so Telegram auto-link detection doesn't strip them
-  const safeCode = shortCode.replace(/_/g, '%5F');
-  const botLink = botUsername ? `https://t.me/${botUsername}?start=GIFT%5F${safeCode}` : null;
-  const cabinetLink = `${window.location.origin}/gift?tab=activate&code=${safeCode}`;
-
-  const fullMessage = [
+  const activationLinks = buildGiftActivationLinks(claimCode, botUsername, window.location.origin);
+  const fullMessage = buildGiftShareMessage(
     t('gift.shareText', 'I have a gift for you! Activate it here:'),
-    '',
-    botLink ? `${t('gift.shareModalActivateVia', 'Activate via bot:')} ${botLink}` : null,
-    `${t('gift.shareModalActivateViaCabinet', 'Or via website:')} ${cabinetLink}`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+    t('gift.shareModalActivateVia', 'Activate via bot:'),
+    t('gift.shareModalActivateViaCabinet', 'Or via website:'),
+    activationLinks,
+  );
 
   const handleCopy = async () => {
     try {
@@ -103,7 +102,9 @@ function CodeOnlySuccessState({
         <p className="mb-1 text-xs font-medium uppercase tracking-wider text-dark-400">
           {t('gift.codeLabel', 'Gift code')}
         </p>
-        <p className="select-all font-mono text-lg font-bold text-accent-400">{giftCode}</p>
+        <p className="select-all break-all font-mono text-base font-bold text-accent-400 sm:text-lg">
+          {giftCode}
+        </p>
       </div>
 
       {/* Share message preview */}
@@ -112,13 +113,13 @@ function CodeOnlySuccessState({
           {t('gift.shareText', 'I have a gift for you! Activate it here:')}
         </p>
 
-        {botLink && (
+        {activationLinks.botLink && (
           <div className="mb-2">
             <p className="mb-1 text-xs font-medium text-dark-400">
               {t('gift.shareModalActivateVia', 'Activate via bot:')}
             </p>
             <p className="truncate rounded-lg bg-dark-900/60 px-3 py-2 text-sm text-accent-400">
-              {botLink}
+              {activationLinks.botLink}
             </p>
           </div>
         )}
@@ -128,7 +129,7 @@ function CodeOnlySuccessState({
             {t('gift.shareModalActivateViaCabinet', 'Or via website:')}
           </p>
           <p className="truncate rounded-lg bg-dark-900/60 px-3 py-2 text-sm text-accent-400">
-            {cabinetLink}
+            {activationLinks.cabinetLink}
           </p>
         </div>
       </div>
