@@ -138,9 +138,13 @@ export const authApi = {
   },
 
   refreshToken: async (refreshToken: string): Promise<TokenResponse> => {
-    const response = await apiClient.post<TokenResponse>('/cabinet/auth/refresh', {
-      refresh_token: refreshToken,
-    });
+    const response = await apiClient.post<TokenResponse>(
+      '/cabinet/auth/refresh',
+      {
+        refresh_token: refreshToken,
+      },
+      { headers: { 'X-Refresh-Token-Rotation': '1' } },
+    );
     return response.data;
   },
 

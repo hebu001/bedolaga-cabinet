@@ -204,9 +204,14 @@ export const useAuthStore = create<AuthState>()(
             if (!isTokenValid(accessToken)) {
               const newToken = await tokenRefreshManager.refreshAccessToken();
               if (newToken) {
+                const rotatedRefreshToken = tokenStorage.getRefreshToken();
+                if (!rotatedRefreshToken) {
+                  clearSession();
+                  return;
+                }
                 const user = await authApi.getMe();
                 await get().checkAdminStatus();
-                applySession(newToken, refreshToken, user);
+                applySession(newToken, rotatedRefreshToken, user);
               } else {
                 clearSession();
               }
@@ -221,9 +226,14 @@ export const useAuthStore = create<AuthState>()(
               const newToken = await tokenRefreshManager.refreshAccessToken();
               if (newToken) {
                 try {
+                  const rotatedRefreshToken = tokenStorage.getRefreshToken();
+                  if (!rotatedRefreshToken) {
+                    clearSession();
+                    return;
+                  }
                   const user = await authApi.getMe();
                   await get().checkAdminStatus();
-                  applySession(newToken, refreshToken, user);
+                  applySession(newToken, rotatedRefreshToken, user);
                 } catch {
                   clearSession();
                 }

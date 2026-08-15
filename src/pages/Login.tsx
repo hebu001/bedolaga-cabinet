@@ -24,6 +24,11 @@ import TelegramLoginButton from '../components/TelegramLoginButton';
 import OAuthProviderIcon from '../components/OAuthProviderIcon';
 import { saveOAuthState } from '../utils/oauth';
 import { getPendingReferralCode } from '../utils/referral';
+import {
+  clearTelegramAuthRecoveryAttempt,
+  isInvalidTelegramInitDataError,
+  tryTelegramAuthRelaunch,
+} from '../utils/telegramAuthRecovery';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -162,7 +167,9 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate, getReturnUrl]);
 
-  // Try Telegram WebApp authentication on mount (with auto-retry on 401)
+  // Try Telegram WebApp authentication on mount. Repeating the same request on
+  // 401 is useless because Telegram can reopen a WebView with identical cached
+  // initData; use a unique startapp relaunch once to obtain a fresh context.
   // Wait for auth store initialization to complete to avoid race conditions
   // with stale tokens triggering interceptor refresh/redirect loops
   useEffect(() => {
@@ -176,27 +183,31 @@ export default function Login() {
       setIsTelegramWebApp(true);
       setIsLoading(true);
 
-      const MAX_RETRIES = 1;
-      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        try {
-          await loginWithTelegram(initData);
-          navigate(getReturnUrl(), { replace: true });
-          return;
-        } catch (err) {
-          const error = err as { response?: { status?: number; data?: { detail?: string } } };
-          const status = error.response?.status;
-          const detail = error.response?.data?.detail;
-          if (import.meta.env.DEV)
-            console.warn(`Telegram auth attempt ${attempt + 1} failed:`, status, detail);
-
-          if (status === 401 && attempt < MAX_RETRIES) {
-            await new Promise((r) => setTimeout(r, 1500));
-            continue;
-          }
-
-          // Show backend error detail (localized) if available, otherwise generic message
-          setError(localizeServerMessage(detail, t) || t('auth.telegramRequired'));
+      try {
+        await loginWithTelegram(initData);
+        clearTelegramAuthRecoveryAttempt();
+        navigate(getReturnUrl(), { replace: true });
+        return;
+      } catch (err) {
+        const error = err as { response?: { status?: number; data?: { detail?: string } } };
+        const status = error.response?.status;
+        const detail = error.response?.data?.detail;
+        if (import.meta.env.DEV) {
+          console.warn('Telegram auth failed:', status, detail);
         }
+
+        if (isInvalidTelegramInitDataError(err) && (await tryTelegramAuthRelaunch())) {
+          // Normally Telegram replaces this WebView immediately. If a client
+          // ignores openTelegramLink, restore the compact manual retry UI.
+          window.setTimeout(() => {
+            setError(localizeServerMessage(detail, t) || t('auth.telegramRequired'));
+            setIsLoading(false);
+          }, 5000);
+          return;
+        }
+
+        // Show backend error detail (localized) if available, otherwise generic message
+        setError(localizeServerMessage(detail, t) || t('auth.telegramRequired'));
       }
 
       setIsLoading(false);

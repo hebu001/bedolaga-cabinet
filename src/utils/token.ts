@@ -14,6 +14,11 @@ interface JWTPayload {
   [key: string]: unknown;
 }
 
+interface RefreshResponse {
+  access_token?: string;
+  refresh_token?: string;
+}
+
 export function decodeJWT(token: string): JWTPayload | null {
   try {
     const parts = token.split('.');
@@ -191,16 +196,24 @@ class TokenRefreshManager {
   // Uses plain axios (not apiClient) to avoid circular dependency
   private async doRefresh(refreshToken: string): Promise<string | null> {
     try {
-      const response = await axios.post<{ access_token?: string }>(
+      const response = await axios.post<RefreshResponse>(
         this.refreshEndpoint,
         { refresh_token: refreshToken },
-        { headers: { 'Content-Type': 'application/json' } },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Refresh-Token-Rotation': '1',
+          },
+        },
       );
 
       const newAccessToken = response.data.access_token;
 
       if (newAccessToken) {
-        tokenStorage.setAccessToken(newAccessToken);
+        // New backends rotate the refresh token on every successful refresh.
+        // Keep the old value as a rolling-deploy fallback for an older API.
+        const newRefreshToken = response.data.refresh_token || refreshToken;
+        tokenStorage.setTokens(newAccessToken, newRefreshToken);
         return newAccessToken;
       }
 

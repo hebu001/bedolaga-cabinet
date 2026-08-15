@@ -7,6 +7,11 @@ import { useShallow } from 'zustand/shallow';
 import { brandingApi } from '../api/branding';
 import { isInTelegramWebApp, getTelegramInitData } from '../hooks/useTelegramSDK';
 import { tokenStorage } from '../utils/token';
+import {
+  clearTelegramAuthRecoveryAttempt,
+  isInvalidTelegramInitDataError,
+  tryTelegramAuthRelaunch,
+} from '../utils/telegramAuthRecovery';
 
 // Validate redirect URL to prevent open redirect attacks
 const getSafeRedirectUrl = (url: string | null): string => {
@@ -99,12 +104,20 @@ export default function TelegramRedirect() {
 
       try {
         await loginWithTelegram(initData);
+        clearTelegramAuthRecoveryAttempt();
         setStatus('success');
         // Small delay for nice UX
         schedule(() => navigate(redirectTo), 800);
       } catch (err: unknown) {
         console.error('Telegram auth failed:', err);
         const error = err as { response?: { data?: { detail?: string } } };
+        if (isInvalidTelegramInitDataError(err) && (await tryTelegramAuthRelaunch())) {
+          schedule(() => {
+            setErrorMessage(error.response?.data?.detail || t('auth.telegramRequired'));
+            setStatus('error');
+          }, 5000);
+          return;
+        }
         setErrorMessage(error.response?.data?.detail || t('auth.telegramRequired'));
         setStatus('error');
       }
