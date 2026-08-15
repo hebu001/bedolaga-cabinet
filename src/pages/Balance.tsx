@@ -36,7 +36,7 @@ const WalletIcon = ({ className = 'h-8 w-8' }: { className?: string }) => (
 const cardCls = 'apple-card-grad rounded-2xl bg-apple-card';
 
 export default function Balance() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const queryClient = useQueryClient();
   const { formatAmount, currencySymbol } = useCurrency();
@@ -337,7 +337,18 @@ export default function Balance() {
                                   {getTypeLabel(tx.type)}
                                 </span>
                                 <span className="text-xs font-bold text-apple-ink">
-                                  {new Date(tx.created_at).toLocaleDateString()}
+                                  {new Date(tx.created_at).toLocaleString(
+                                    i18n.resolvedLanguage ?? i18n.language,
+                                    {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hourCycle: 'h23',
+                                      timeZone: 'Europe/Moscow',
+                                    },
+                                  )}
                                 </span>
                               </div>
                               {tx.description && (
