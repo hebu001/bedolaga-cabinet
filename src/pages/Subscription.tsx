@@ -515,10 +515,26 @@ export default function Subscription() {
   // The webhook auto-completes the device add-on after payment.
   const devicePurchaseMutation = useMutation({
     mutationFn: () => subscriptionApi.purchaseDevices(deviceAddCount, subscriptionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+    onSuccess: async () => {
+      // Renewal and purchase screens derive their initial device count from
+      // cached pricing data. Wait for those queries to refresh before closing
+      // the sheet, otherwise the user can immediately open a stale checkout.
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['subscription'],
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['purchase-options'],
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['renewal-options'],
+          refetchType: 'all',
+        }),
+      ]);
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
-      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
       queryClient.invalidateQueries({ queryKey: ['device-price'] });
       queryClient.invalidateQueries({ queryKey: ['balance'] });
       setShowDeviceManage(false);
@@ -564,10 +580,23 @@ export default function Subscription() {
   // Device reduction mutation
   const deviceReductionMutation = useMutation({
     mutationFn: () => subscriptionApi.reduceDevices(targetDeviceLimit, subscriptionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['subscription'],
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['purchase-options'],
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['renewal-options'],
+          refetchType: 'all',
+        }),
+      ]);
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
-      queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
       queryClient.invalidateQueries({ queryKey: ['device-reduction-info', subscriptionId] });
       setShowDeviceManage(false);
     },
@@ -1061,7 +1090,9 @@ export default function Subscription() {
                             })}
                       </div>
                     </div>
-                    {(subscription.is_active || subscription.is_limited) &&
+                    {(subscription.is_active ||
+                      subscription.is_limited ||
+                      subscription.is_expired) &&
                       !subscription.is_trial &&
                       subscription.device_limit !== 0 && (
                         <button
@@ -1129,11 +1160,18 @@ export default function Subscription() {
                                 const addOk = devicePriceData?.available !== false;
                                 const connected =
                                   deviceReductionInfo?.connected_devices_count ?? connectedDevices;
+                                // An expired subscription may be reduced below the number of
+                                // connected devices. The backend removes excess HWIDs before
+                                // saving the lower limit, so renewal pricing can immediately
+                                // use the cheaper device count.
+                                const connectedDeviceFloor = subscription.is_expired
+                                  ? 0
+                                  : connected;
                                 const minLimit = Math.max(
                                   reduceOk
                                     ? deviceReductionInfo!.min_device_limit
                                     : deviceCurrentLimit,
-                                  connected,
+                                  connectedDeviceFloor,
                                   tariffDeviceLimit,
                                 );
                                 const maxLimit =
@@ -1208,6 +1246,13 @@ export default function Subscription() {
                                         setTargetDeviceLimit(v);
                                       }}
                                     />
+
+                                    {subscription.is_expired && delta < 0 && connected > target && (
+                                      <div className="mt-4 rounded-xl bg-apple-red/10 px-4 py-3 text-[13px] leading-5 text-apple-red">
+                                        Лишние подключённые устройства будут отключены при
+                                        уменьшении лимита.
+                                      </div>
+                                    )}
 
                                     {/* CTA — always send the request. On 402 the backend
                                         saved the add_devices cart and the mutation onError

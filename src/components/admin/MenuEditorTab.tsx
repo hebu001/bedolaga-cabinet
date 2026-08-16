@@ -84,6 +84,22 @@ const LinkIcon = () => (
   </svg>
 );
 
+const CallbackIcon = () => (
+  <svg
+    className="h-3.5 w-3.5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8.25 6.75h9m-9 5.25h9m-9 5.25h5.25M3.75 5.25v3m0 3v3m0 3v1.5"
+    />
+  </svg>
+);
+
 const ArrowUpIcon = () => (
   <svg
     className="h-3.5 w-3.5"
@@ -120,7 +136,7 @@ function configsEqual(a: MenuConfig, b: MenuConfig): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-const DEFAULT_CONFIG: MenuConfig = { rows: [] };
+const DEFAULT_CONFIG: MenuConfig = { rows: [], callback_actions: [] };
 
 interface MaxPerRowSelectorProps {
   value: number;
@@ -156,6 +172,7 @@ interface ButtonChipProps {
   onMoveUp: (() => void) | null;
   onMoveDown: (() => void) | null;
   isBuiltin: boolean;
+  callbackActions: string[];
 }
 
 function ButtonChip({
@@ -167,13 +184,18 @@ function ButtonChip({
   onMoveUp,
   onMoveDown,
   isBuiltin,
+  callbackActions,
 }: ButtonChipProps) {
   const { t } = useTranslation();
 
   const displayName =
     button.labels.ru ||
     button.labels.en ||
-    (isBuiltin ? t(`admin.buttons.sections.${button.id}`) : button.id);
+    (isBuiltin
+      ? t(`admin.buttons.sections.${button.id}`)
+      : button.type === 'callback' && button.callback_data
+        ? t(`admin.menuEditor.callbackActions.${button.callback_data}`)
+        : button.id);
 
   const styleOption = STYLE_OPTIONS.find((s) => s.value === button.style);
   const colorDotClass = styleOption?.colorClass || 'bg-apple-faint';
@@ -217,8 +239,24 @@ function ButtonChip({
           {displayName}
         </span>
         {!isBuiltin && (
-          <span className="text-apple-faint" title="URL">
-            <LinkIcon />
+          <span
+            className={`flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-medium uppercase tracking-wide ${
+              button.type === 'callback'
+                ? 'bg-[#F97315]/10 text-[#F97315]'
+                : 'bg-apple-elevated text-apple-faint'
+            }`}
+            title={
+              button.type === 'callback'
+                ? t('admin.menuEditor.callbackButton')
+                : t('admin.menuEditor.urlButton')
+            }
+          >
+            {button.type === 'callback' ? <CallbackIcon /> : <LinkIcon />}
+            <span className="hidden sm:inline">
+              {button.type === 'callback'
+                ? t('admin.menuEditor.callbackBadge')
+                : t('admin.menuEditor.urlBadge')}
+            </span>
           </span>
         )}
         <Toggle checked={button.enabled} onChange={() => onUpdate({ enabled: !button.enabled })} />
@@ -278,8 +316,8 @@ function ButtonChip({
             />
           </div>
 
-          {/* URL input + open mode (custom buttons only) */}
-          {!isBuiltin && (
+          {/* URL input + open mode */}
+          {button.type === 'custom' && (
             <>
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">URL</label>
@@ -312,6 +350,29 @@ function ButtonChip({
                 </div>
               </div>
             </>
+          )}
+
+          {/* Telegram callback action */}
+          {button.type === 'callback' && (
+            <div>
+              <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
+                {t('admin.menuEditor.callbackAction')}
+              </label>
+              <select
+                value={button.callback_data || ''}
+                onChange={(event) => onUpdate({ callback_data: event.target.value || null })}
+                className="w-full appearance-none rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
+              >
+                {callbackActions.map((action) => (
+                  <option key={action} value={action}>
+                    {t(`admin.menuEditor.callbackActions.${action}`)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-[10px] leading-relaxed text-apple-faint">
+                {t('admin.menuEditor.callbackHint')}
+              </p>
+            </div>
           )}
 
           {/* Localized labels */}
@@ -362,7 +423,9 @@ interface SortableRowProps {
   onRemoveButton: (rowId: string, buttonId: string) => void;
   onAddBuiltin: (rowId: string, sectionId: string) => void;
   onAddCustom: (rowId: string) => void;
+  onAddCallback: (rowId: string) => void;
   onReorderButton: (rowId: string, buttonIndex: number, direction: 'up' | 'down') => void;
+  callbackActions: string[];
 }
 
 function SortableRow({
@@ -377,7 +440,9 @@ function SortableRow({
   onRemoveButton,
   onAddBuiltin,
   onAddCustom,
+  onAddCallback,
   onReorderButton,
+  callbackActions,
 }: SortableRowProps) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -446,6 +511,7 @@ function SortableRow({
                 : null
             }
             isBuiltin={button.type === 'builtin'}
+            callbackActions={callbackActions}
           />
         ))}
 
@@ -455,6 +521,8 @@ function SortableRow({
           usedBuiltinIds={usedBuiltinIds}
           onAddBuiltin={onAddBuiltin}
           onAddCustom={onAddCustom}
+          onAddCallback={onAddCallback}
+          canAddCallback={callbackActions.length > 0}
         />
       </div>
     </div>
@@ -466,9 +534,18 @@ interface InlineAddPanelProps {
   usedBuiltinIds: Set<string>;
   onAddBuiltin: (rowId: string, sectionId: string) => void;
   onAddCustom: (rowId: string) => void;
+  onAddCallback: (rowId: string) => void;
+  canAddCallback: boolean;
 }
 
-function InlineAddPanel({ rowId, usedBuiltinIds, onAddBuiltin, onAddCustom }: InlineAddPanelProps) {
+function InlineAddPanel({
+  rowId,
+  usedBuiltinIds,
+  onAddBuiltin,
+  onAddCustom,
+  onAddCallback,
+  canAddCallback,
+}: InlineAddPanelProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -518,6 +595,18 @@ function InlineAddPanel({ rowId, usedBuiltinIds, onAddBuiltin, onAddCustom }: In
         <LinkIcon />
         {t('admin.menuEditor.addUrlButton')}
       </button>
+      {canAddCallback && (
+        <button
+          onClick={() => {
+            onAddCallback(rowId);
+            setIsOpen(false);
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-apple-ink transition-colors hover:bg-apple-card"
+        >
+          <CallbackIcon />
+          {t('admin.menuEditor.addCallbackButton')}
+        </button>
+      )}
       <button
         onClick={() => setIsOpen(false)}
         className="flex w-full items-center justify-center rounded-lg py-1.5 text-xs text-apple-faint transition-colors hover:text-apple-mute"
@@ -676,6 +765,7 @@ export function MenuEditorTab() {
       labels: {},
       url: null,
       open_in: 'external',
+      callback_data: null,
     };
     setDraftConfig((prev) => ({
       ...prev,
@@ -695,11 +785,33 @@ export function MenuEditorTab() {
       labels: {},
       url: '',
       open_in: 'external',
+      callback_data: null,
     };
     setDraftConfig((prev) => ({
       ...prev,
       rows: prev.rows.map((r) =>
         r.id === rowId ? { ...r, buttons: [...r.buttons, newButton] } : r,
+      ),
+    }));
+  }, []);
+
+  const addCallbackButton = useCallback((rowId: string) => {
+    const callbackData = draftConfigRef.current.callback_actions[0] || null;
+    const newButton: MenuButtonConfig = {
+      id: generateId(),
+      type: 'callback',
+      style: 'default',
+      icon_custom_emoji_id: '',
+      enabled: true,
+      labels: {},
+      url: null,
+      open_in: 'external',
+      callback_data: callbackData,
+    };
+    setDraftConfig((prev) => ({
+      ...prev,
+      rows: prev.rows.map((row) =>
+        row.id === rowId ? { ...row, buttons: [...row.buttons, newButton] } : row,
       ),
     }));
   }, []);
@@ -759,6 +871,12 @@ export function MenuEditorTab() {
             notify.error(t('admin.menuEditor.invalidUrl'));
             return;
           }
+        } else if (
+          btn.type === 'callback' &&
+          (!btn.callback_data || !currentDraft.callback_actions.includes(btn.callback_data))
+        ) {
+          notify.error(t('admin.menuEditor.invalidCallback'));
+          return;
         }
       }
     }
@@ -829,7 +947,9 @@ export function MenuEditorTab() {
                 onRemoveButton={removeButton}
                 onAddBuiltin={addBuiltinButton}
                 onAddCustom={addCustomButton}
+                onAddCallback={addCallbackButton}
                 onReorderButton={reorderButton}
+                callbackActions={draftConfig.callback_actions}
               />
             ))}
           </div>

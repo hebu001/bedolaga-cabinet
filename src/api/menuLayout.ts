@@ -4,13 +4,14 @@ export type OpenIn = 'external' | 'webapp';
 
 export interface MenuButtonConfig {
   id: string;
-  type: 'builtin' | 'custom';
+  type: 'builtin' | 'custom' | 'callback';
   style: 'primary' | 'success' | 'danger' | 'default';
   icon_custom_emoji_id: string;
   enabled: boolean;
   labels: Record<string, string>;
   url: string | null;
   open_in: OpenIn;
+  callback_data: string | null;
 }
 
 export interface MenuRowConfig {
@@ -21,6 +22,7 @@ export interface MenuRowConfig {
 
 export interface MenuConfig {
   rows: MenuRowConfig[];
+  callback_actions: string[];
 }
 
 export const BOT_LOCALES = ['ru', 'en', 'ua', 'zh', 'fa'] as const;
@@ -46,7 +48,7 @@ export const STYLE_OPTIONS = [
   { value: 'danger' as const, colorClass: 'bg-red-500' },
 ];
 
-const DEFAULT_CONFIG: MenuConfig = { rows: [] };
+const DEFAULT_CONFIG: MenuConfig = { rows: [], callback_actions: [] };
 
 const DEFAULT_BUTTON: Omit<MenuButtonConfig, 'id' | 'type'> = {
   style: 'primary',
@@ -55,6 +57,7 @@ const DEFAULT_BUTTON: Omit<MenuButtonConfig, 'id' | 'type'> = {
   labels: {},
   url: null,
   open_in: 'external',
+  callback_data: null,
 };
 
 function normalizeConfig(data: MenuConfig): MenuConfig {
@@ -71,6 +74,9 @@ function normalizeConfig(data: MenuConfig): MenuConfig {
         labels: { ...(btn.labels || {}) },
       })),
     })),
+    callback_actions: Array.isArray(data.callback_actions)
+      ? data.callback_actions.filter((action): action is string => typeof action === 'string')
+      : [],
   };
 }
 

@@ -368,6 +368,42 @@ export default function SubscriptionPurchase() {
     },
   });
 
+  // Renewal price includes devices purchased above the tariff's base limit.
+  // Let the user drop those add-ons directly from the price breakdown and
+  // wait for fresh pricing before showing the updated total.
+  const extraDevicesReductionMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedTariff) {
+        throw new Error('Tariff not selected');
+      }
+
+      const baseDeviceLimit =
+        selectedTariff.base_device_limit ??
+        Math.max(1, selectedTariff.device_limit - (selectedTariff.extra_devices_count ?? 0));
+
+      return subscriptionApi.reduceDevices(baseDeviceLimit, subscriptionId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['subscription'],
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['purchase-options'],
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['renewal-options'],
+          refetchType: 'all',
+        }),
+      ]);
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['device-reduction-info'] });
+    },
+  });
+
   // Auto-scroll effects
   useEffect(() => {
     if (switchTariffId && switchModalRef.current) {
@@ -408,6 +444,28 @@ export default function SubscriptionPurchase() {
     setSelectedTariffPeriod(current.periods[0] || null);
     setShowTariffPurchase(true);
   }, [renewIntent, isTariffsMode, tariffs, subscription]);
+
+  // React Query can expose cached tariff data while the always-on-mount
+  // refetch is still running. Keep the opened tariff attached to the latest
+  // response so renewed prices (including changed extra-device costs) update
+  // immediately instead of only after leaving and reopening this page.
+  useEffect(() => {
+    if (!selectedTariff) return;
+
+    const refreshedTariff = tariffs.find((tariff) => tariff.id === selectedTariff.id);
+    if (!refreshedTariff || refreshedTariff === selectedTariff) return;
+
+    const selectedDays = selectedTariffPeriod?.days;
+    const refreshedPeriod =
+      selectedDays == null
+        ? null
+        : (refreshedTariff.periods.find((period) => period.days === selectedDays) ??
+          refreshedTariff.periods[0] ??
+          null);
+
+    setSelectedTariff(refreshedTariff);
+    setSelectedTariffPeriod(refreshedPeriod);
+  }, [tariffs, selectedTariff, selectedTariffPeriod?.days]);
 
   // Classic mode helpers
   const toggleServer = (uuid: string) => {
@@ -1454,10 +1512,37 @@ export default function SubscriptionPurchase() {
                                                   )}
                                                 </span>
                                               </div>
-                                              <div className="flex justify-between text-sm text-apple-mute">
-                                                <span>
-                                                  {t('subscription.extraDevices')} (
-                                                  {selectedTariffPeriod.extra_devices_count})
+                                              <div className="flex items-center justify-between gap-3 text-sm text-apple-mute">
+                                                <span className="flex min-w-0 items-center gap-2">
+                                                  <span>
+                                                    {t('subscription.extraDevices')} (
+                                                    {selectedTariffPeriod.extra_devices_count})
+                                                  </span>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      extraDevicesReductionMutation.mutate()
+                                                    }
+                                                    disabled={
+                                                      extraDevicesReductionMutation.isPending
+                                                    }
+                                                    aria-label={t(
+                                                      'subscription.removeExtraDevices',
+                                                      'Убрать доп. устройства',
+                                                    )}
+                                                    className="shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-opacity disabled:cursor-wait disabled:opacity-60"
+                                                    style={{
+                                                      color: '#F97315',
+                                                      background: 'rgba(249,115,21,0.14)',
+                                                    }}
+                                                  >
+                                                    {extraDevicesReductionMutation.isPending
+                                                      ? '…'
+                                                      : t(
+                                                          'subscription.removeExtraDevicesShort',
+                                                          'Убрать',
+                                                        )}
+                                                  </button>
                                                 </span>
                                                 <span className="text-apple-ink">
                                                   +
@@ -1467,6 +1552,13 @@ export default function SubscriptionPurchase() {
                                                   )}
                                                 </span>
                                               </div>
+                                              {extraDevicesReductionMutation.isError && (
+                                                <div className="text-[11px] text-apple-red">
+                                                  {getErrorMessage(
+                                                    extraDevicesReductionMutation.error,
+                                                  )}
+                                                </div>
+                                              )}
                                             </>
                                           ) : null}
                                         </>
