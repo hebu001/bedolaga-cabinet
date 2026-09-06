@@ -99,7 +99,7 @@ test('known trial balance preserves activation/top-up choices and stale data blo
   const available = renderTrial({ balanceKopeks: 10000, balanceRubles: 100 });
   const button = nodes(available.tree).find((node) => node.type === 'button');
   assert.equal(button.props.disabled, false);
-  assert.match(button.props.className, /text-black/);
+  assert.match(button.props.className, /text-white/);
   button.props.onClick();
   assert.equal(available.state.mutations, 1);
   const insufficient = renderTrial({ balanceKopeks: 0, balanceRubles: 0 });
@@ -130,7 +130,7 @@ test('free trial stays available when the balance endpoint fails', () => {
   assert.doesNotMatch(text(tree), /currentBalance|loadError|insufficientBalance/);
   const button = nodes(tree).find((node) => node.type === 'button');
   assert.equal(button.props.disabled, false);
-  assert.match(button.props.className, /text-black/);
+  assert.match(button.props.className, /text-white/);
   button.props.onClick();
   assert.equal(state.mutations, 1);
 });
