@@ -63,21 +63,27 @@ async function startNginx(directory, origin = '', caFile) {
     config,
     `daemon off; master_process off; pid ${directory}/nginx.pid; error_log ${directory}/error.log warn; events {} http { types { text/html html; application/javascript js; application/json json; } ${configuration} }`,
   );
-  const check = spawnSync(
-    nginx,
-    ['-t', '-p', `${directory}/`, '-c', config, '-e', `${directory}/error.log`],
-    { encoding: 'utf8' },
-  );
-  assert.equal(check.status, 0, check.error?.message || check.stderr);
-  const process = spawn(
-    nginx,
-    ['-p', `${directory}/`, '-c', config, '-e', `${directory}/error.log`],
-    { stdio: ['ignore', 'pipe', 'pipe'] },
-  );
-  let stderr = '';
-  process.stderr.on('data', (chunk) => {
-    stderr += chunk;
-  });
+  const stderrFile = path.join(directory, 'stderr.log');
+  const readStderr = () => fs.readFileSync(stderrFile, 'utf8');
+  // nginx reopens /dev/stderr from the real generated API include. Node's
+  // default child stderr pipe is a socket on Linux and cannot be reopened;
+  // inherit a regular file descriptor for both syntax check and runtime.
+  const stderrFd = fs.openSync(stderrFile, 'a');
+  let process;
+  try {
+    const check = spawnSync(
+      nginx,
+      ['-t', '-p', `${directory}/`, '-c', config, '-e', `${directory}/error.log`],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', stderrFd] },
+    );
+    assert.equal(check.status, 0, check.error?.message || readStderr());
+    process = spawn(nginx, ['-p', `${directory}/`, '-c', config, '-e', `${directory}/error.log`], {
+      stdio: ['ignore', 'pipe', stderrFd],
+    });
+  } finally {
+    // The child owns its inherited descriptor after spawn, including on exit.
+    fs.closeSync(stderrFd);
+  }
   const exited = once(process, 'exit');
   const address = `http://127.0.0.1:${port}`;
   for (let attempt = 0; attempt < 60; attempt++) {
@@ -86,7 +92,7 @@ async function startNginx(directory, origin = '', caFile) {
     } catch {}
     if (attempt === 59) {
       process.kill();
-      throw new Error(`nginx startup failed: ${stderr}`);
+      throw new Error(`nginx startup failed: ${readStderr()}`);
     }
     await delay(25);
   }
@@ -95,7 +101,7 @@ async function startNginx(directory, origin = '', caFile) {
     async stop() {
       process.kill('SIGQUIT');
       await exited;
-      return stderr;
+      return readStderr();
     },
   };
 }
