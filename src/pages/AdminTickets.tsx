@@ -94,7 +94,11 @@ export default function AdminTickets() {
       }),
   });
 
-  const { data: selectedTicket, isLoading: ticketLoading } = useQuery({
+  const {
+    data: selectedTicket,
+    isLoading: ticketLoading,
+    refetch: refreshTicketMedia,
+  } = useQuery({
     queryKey: ['admin-ticket', selectedTicketId],
     queryFn: () => adminApi.getTicket(selectedTicketId!),
     enabled: !!selectedTicketId,
@@ -571,7 +575,16 @@ export default function AdminTickets() {
                         dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
                       />
                     )}
-                    <MessageMediaGrid message={msg} translateError={t('support.imageLoadFailed')} />
+                    <MessageMediaGrid
+                      message={msg}
+                      translateError={t('support.imageLoadFailed')}
+                      translateRetry={t('common.retry')}
+                      onRefreshMedia={async () =>
+                        (
+                          await refreshTicketMedia({ cancelRefetch: false, throwOnError: true })
+                        ).data?.messages.find((message) => message.id === msg.id)
+                      }
+                    />
                   </div>
                 ))}
               </div>

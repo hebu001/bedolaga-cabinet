@@ -148,7 +148,11 @@ export default function Support() {
     enabled: supportConfig?.tickets_enabled === true,
   });
 
-  const { data: ticketDetail, isLoading: detailLoading } = useQuery({
+  const {
+    data: ticketDetail,
+    isLoading: detailLoading,
+    refetch: refreshTicketMedia,
+  } = useQuery({
     queryKey: ['ticket', selectedTicket?.id],
     queryFn: () => ticketsApi.getTicket(selectedTicket!.id),
     enabled: !!selectedTicket,
@@ -649,6 +653,12 @@ export default function Support() {
                       <MessageMediaGrid
                         message={msg}
                         translateError={t('support.imageLoadFailed')}
+                        translateRetry={t('common.retry')}
+                        onRefreshMedia={async () =>
+                          (
+                            await refreshTicketMedia({ cancelRefetch: false, throwOnError: true })
+                          ).data?.messages.find((message) => message.id === msg.id)
+                        }
                       />
                     </div>
                   ))}

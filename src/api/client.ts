@@ -12,7 +12,7 @@ import {
 import { useBlockingStore } from '../store/blocking';
 import { API } from '../config/constants';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 tokenRefreshManager.setRefreshEndpoint(`${API_BASE_URL}/cabinet/auth/refresh`);
 

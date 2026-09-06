@@ -1,4 +1,5 @@
-import apiClient from './client';
+import apiClient, { API_BASE_URL } from './client';
+import { signedMediaUrl } from '../utils/ticketMedia';
 import type {
   Ticket,
   TicketDetail,
@@ -80,8 +81,6 @@ export const ticketsApi = {
   },
 
   // Get media URL for display
-  getMediaUrl: (fileId: string): string => {
-    const baseUrl = import.meta.env.VITE_API_URL || '';
-    return `${baseUrl}/cabinet/media/${fileId}`;
-  },
+  getMediaUrl: (fileId: string, token?: string | null): string | null =>
+    signedMediaUrl(API_BASE_URL, fileId, token),
 };

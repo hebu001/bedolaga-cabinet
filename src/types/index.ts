@@ -486,6 +486,7 @@ export interface TicketMediaItem {
   type: 'photo' | 'video' | 'document';
   file_id: string;
   caption?: string | null;
+  token?: string | null;
 }
 
 export interface TicketMessage {
@@ -496,6 +497,7 @@ export interface TicketMessage {
   media_type: string | null;
   media_file_id: string | null;
   media_caption: string | null;
+  media_token?: string | null;
   media_items?: TicketMediaItem[] | null;
   created_at: string;
 }

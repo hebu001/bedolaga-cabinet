@@ -2,55 +2,68 @@ import { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ticketsApi } from '../../api/tickets';
 
-export interface MediaItem {
-  type: string;
-  file_id: string;
-  caption?: string | null;
-}
-
-interface MessageLike {
-  has_media?: boolean;
-  media_type?: string | null;
-  media_file_id?: string | null;
-  media_caption?: string | null;
-  media_items?: MediaItem[] | null;
-}
-
-/**
- * Normalize message media into a unified list.
- * If media_items is present, use it. Otherwise fall back to legacy single-media fields.
- */
-function getItems(message: MessageLike): MediaItem[] {
-  if (message.media_items && message.media_items.length > 0) {
-    return message.media_items;
-  }
-  if (message.media_file_id && message.media_type) {
-    return [
-      {
-        type: message.media_type,
-        file_id: message.media_file_id,
-        caption: message.media_caption,
-      },
-    ];
-  }
-  return [];
-}
+import { useTicketMedia } from '../../hooks/useTicketMedia';
+import {
+  getMessageMedia,
+  isMediaTokenExpired,
+  type MediaItem,
+  type MediaMessage,
+} from '../../utils/ticketMedia';
+import { getSessionGeneration, isCurrentSession } from '../../utils/session';
+export type { MediaItem } from '../../utils/ticketMedia';
 
 export function MessageMediaGrid({
   message,
-  translateError = 'Failed to load image',
+  translateError = 'Failed to load attachment',
+  translateRetry = 'Retry',
+  onRefreshMedia,
 }: {
-  message: MessageLike;
+  message: MediaMessage;
   translateError?: string;
+  translateRetry?: string;
+  onRefreshMedia?: () => Promise<MediaMessage | undefined>;
 }) {
-  const items = getItems(message);
+  const { items, refreshing, failed, failedUrls, refreshMedia, mediaFailed } = useTicketMedia(
+    message,
+    onRefreshMedia,
+  );
+  const mediaUrl = (item: MediaItem): string | null => {
+    if (isMediaTokenExpired(item.token)) return null;
+    const url = ticketsApi.getMediaUrl(item.file_id, item.token);
+    return url && !failedUrls.has(url) ? url : null;
+  };
   const photoItems = items.filter((i) => i.type === 'photo');
   const otherItems = items.filter((i) => i.type !== 'photo');
 
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
-  const openFullscreen = useCallback((idx: number) => setFullscreenIndex(idx), []);
+  const openFullscreen = (idx: number) => {
+    setFullscreenIndex(idx);
+    if (isMediaTokenExpired(photoItems[idx]?.token)) void refreshMedia(true);
+  };
   const closeFullscreen = useCallback(() => setFullscreenIndex(null), []);
+
+  const openDocument = async (event: React.MouseEvent<HTMLAnchorElement>, item: MediaItem) => {
+    // Date is checked at activation as background timers can be throttled.
+    if (mediaUrl(item)) return;
+    event.preventDefault();
+    if (refreshing) return;
+    const owner = getSessionGeneration();
+    const popup = window.open('about:blank', '_blank');
+    if (popup) popup.opener = null;
+    const fresh = await refreshMedia(true);
+    const replacement =
+      fresh && getMessageMedia(fresh).find((candidate) => candidate.file_id === item.file_id);
+    const url =
+      replacement && !isMediaTokenExpired(replacement.token)
+        ? ticketsApi.getMediaUrl(replacement.file_id, replacement.token)
+        : null;
+    if (url && isCurrentSession(owner)) {
+      if (popup) popup.location.replace(url);
+      // If popup blocking denied the window, the updated signed anchor remains
+      // available for the user's next click; never navigate to an unsigned URL.
+    } else popup?.close();
+  };
 
   // Escape + arrow keys for fullscreen nav
   useEffect(() => {
@@ -109,12 +122,18 @@ export function MessageMediaGrid({
                 className="group relative aspect-square overflow-hidden rounded-lg bg-dark-800"
                 onClick={() => openFullscreen(originalIdx)}
               >
-                <img
-                  src={ticketsApi.getMediaUrl(item.file_id)}
-                  alt={item.caption || 'Attached photo'}
-                  className="h-full w-full object-cover transition-opacity group-hover:opacity-90"
-                  loading="lazy"
-                />
+                {mediaUrl(item) ? (
+                  <img
+                    src={mediaUrl(item)!}
+                    alt={item.caption || 'Attached photo'}
+                    className="h-full w-full object-cover transition-opacity group-hover:opacity-90"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={() => mediaFailed(ticketsApi.getMediaUrl(item.file_id, item.token)!)}
+                  />
+                ) : (
+                  <span className="p-2 text-xs text-dark-400">{translateError}</span>
+                )}
                 {isLastVisible && (
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/60 text-2xl font-semibold text-white">
                     +{hiddenCount}
@@ -128,16 +147,21 @@ export function MessageMediaGrid({
 
       {/* Non-photo media rendered inline */}
       {otherItems.map((item) => {
-        const mediaUrl = ticketsApi.getMediaUrl(item.file_id);
+        const url = mediaUrl(item);
         if (item.type === 'video') {
           return (
             <div key={item.file_id}>
-              <video
-                src={mediaUrl}
-                controls
-                className="max-h-64 max-w-full rounded-lg"
-                preload="metadata"
-              />
+              {url ? (
+                <video
+                  src={url}
+                  controls
+                  className="max-h-64 max-w-full rounded-lg"
+                  preload="metadata"
+                  onError={() => mediaFailed(url)}
+                />
+              ) : (
+                <span className="text-xs text-dark-400">{translateError}</span>
+              )}
               {item.caption && <p className="mt-1 text-xs text-dark-400">{item.caption}</p>}
             </div>
           );
@@ -145,7 +169,9 @@ export function MessageMediaGrid({
         return (
           <a
             key={item.file_id}
-            href={mediaUrl}
+            href={url || undefined}
+            onClick={(event) => void openDocument(event, item)}
+            referrerPolicy="no-referrer"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-dark-700 px-3 py-2 text-sm text-dark-200 transition-colors hover:bg-dark-600"
@@ -235,21 +261,46 @@ export function MessageMediaGrid({
               className="flex h-full w-full items-center justify-center overflow-auto"
               onClick={closeFullscreen}
             >
-              <img
-                src={ticketsApi.getMediaUrl(photoItems[fullscreenIndex].file_id)}
-                alt={photoItems[fullscreenIndex].caption || 'Attached photo'}
-                className="max-h-full max-w-full object-contain"
-                style={{ touchAction: 'pinch-zoom' }}
-                onClick={(e) => e.stopPropagation()}
-              />
+              {mediaUrl(photoItems[fullscreenIndex]) ? (
+                <img
+                  src={mediaUrl(photoItems[fullscreenIndex])!}
+                  alt={photoItems[fullscreenIndex].caption || 'Attached photo'}
+                  className="max-h-full max-w-full object-contain"
+                  style={{ touchAction: 'pinch-zoom' }}
+                  referrerPolicy="no-referrer"
+                  onError={() =>
+                    mediaFailed(
+                      ticketsApi.getMediaUrl(
+                        photoItems[fullscreenIndex].file_id,
+                        photoItems[fullscreenIndex].token,
+                      )!,
+                    )
+                  }
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span className="text-sm text-white">{translateError}</span>
+              )}
             </div>
           </div>,
           document.body,
         )}
 
-      {/* Fallback: error state */}
-      {photoItems.length === 0 && otherItems.length === 0 && (
-        <div className="text-xs text-dark-400">{translateError}</div>
+      {(failed || items.some((item) => isMediaTokenExpired(item.token))) && (
+        <div className="flex items-center gap-2 text-xs text-dark-400" role="status">
+          <span>{translateError}</span>
+          {onRefreshMedia && (
+            <button
+              type="button"
+              disabled={refreshing}
+              onClick={() => void refreshMedia(true)}
+              className="underline disabled:opacity-50"
+              aria-busy={refreshing}
+            >
+              {translateRetry}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

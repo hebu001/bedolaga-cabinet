@@ -311,6 +311,12 @@ export default function AdminUserDetail() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<AdminTicketDetail | null>(null);
   const [ticketDetailLoading, setTicketDetailLoading] = useState(false);
+  const selectedTicketIdRef = useRef(selectedTicketId);
+  selectedTicketIdRef.current = selectedTicketId;
+  const ticketLoadSequence = useRef(0);
+  const ticketLoad = useRef<{ id: number; promise: Promise<AdminTicketDetail | undefined> } | null>(
+    null,
+  );
   const [replyText, setReplyText] = useState('');
   const [replySending, setReplySending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -418,15 +424,31 @@ export default function AdminUserDetail() {
     }
   }, [userId]);
 
-  const loadTicketDetail = useCallback(async (ticketId: number) => {
+  const loadTicketDetail = useCallback(async (ticketId: number, background = false) => {
+    if (selectedTicketIdRef.current !== ticketId) return undefined;
+    if (ticketLoad.current?.id === ticketId) return ticketLoad.current.promise;
+    const sequence = ++ticketLoadSequence.current;
+    if (!background) setTicketDetailLoading(true);
+    const promise = (async () => {
+      try {
+        const data = await adminApi.getTicket(ticketId);
+        if (sequence === ticketLoadSequence.current && selectedTicketIdRef.current === ticketId)
+          setSelectedTicket(data);
+        return data;
+      } catch (error) {
+        if (!background) console.error('Failed to load ticket detail:', error);
+        return undefined;
+      } finally {
+        if (sequence === ticketLoadSequence.current && selectedTicketIdRef.current === ticketId)
+          setTicketDetailLoading(false);
+      }
+    })();
+    const active = { id: ticketId, promise };
+    ticketLoad.current = active;
     try {
-      setTicketDetailLoading(true);
-      const data = await adminApi.getTicket(ticketId);
-      setSelectedTicket(data);
-    } catch (error) {
-      console.error('Failed to load ticket detail:', error);
+      return await promise;
     } finally {
-      setTicketDetailLoading(false);
+      if (ticketLoad.current === active) ticketLoad.current = null;
     }
   }, []);
 
@@ -3235,7 +3257,16 @@ export default function AdminUserDetail() {
                             dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
                           />
                         )}
-                        <MessageMediaGrid message={msg} />
+                        <MessageMediaGrid
+                          message={msg}
+                          translateError={t('support.imageLoadFailed')}
+                          translateRetry={t('common.retry')}
+                          onRefreshMedia={async () =>
+                            (await loadTicketDetail(selectedTicket.id, true))?.messages.find(
+                              (message) => message.id === msg.id,
+                            )
+                          }
+                        />
                       </div>
                     ))}
                     <div ref={messagesEndRef} />
