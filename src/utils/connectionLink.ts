@@ -67,3 +67,8 @@ export function resolveConnectionUrlForUi(input: ResolveConnectionUrlInput): str
 
   return defaultUrl;
 }
+
+/** Only ordinary subscription URLs may be shown/copied. Never fabricate a URL from ciphertext. */
+export function resolvePlainSubscriptionUrl(input: ResolveConnectionUrlInput): string | null {
+  return [input.subscriptionUrl, input.fallbackUrl, input.displayLink].find(isHttpUrl) ?? null;
+}

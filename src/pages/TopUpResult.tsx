@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -13,10 +13,10 @@ import { AnimatedCheckmark } from '@/components/ui/AnimatedCheckmark';
 import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
 import { loadTopUpPendingInfo, clearTopUpPendingInfo } from '../utils/topUpStorage';
 import { isPaidStatus, isFailedStatus } from '../utils/paymentStatus';
+import { getTopUpIdentity, paymentPollInterval, safeTopUpReturnPath } from '../utils/topUpFlow';
 
 // ── Constants ────────────────────────────────────────────────
 const MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes
-const POLL_INTERVAL_MS = 3_000;
 
 // ── Sub-components ───────────────────────────────────────────
 
@@ -60,13 +60,19 @@ function PendingState({ amountKopeks }: { amountKopeks: number | null }) {
   );
 }
 
-function SuccessState({ amountKopeks }: { amountKopeks: number | null }) {
+function SuccessState({
+  amountKopeks,
+  returnPath,
+}: {
+  amountKopeks: number | null;
+  returnPath?: string;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleGoToBalance = useCallback(() => {
-    navigate('/balance', { replace: true });
-  }, [navigate]);
+    navigate(returnPath || '/balance', { replace: true });
+  }, [navigate, returnPath]);
 
   return (
     <motion.div
@@ -88,9 +94,11 @@ function SuccessState({ amountKopeks }: { amountKopeks: number | null }) {
       <button
         type="button"
         onClick={handleGoToBalance}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-black transition-colors hover:opacity-90"
       >
-        {t('balance.topUpResult.goToBalance')}
+        {returnPath
+          ? t('balance.topUpResult.continuePurchase', 'Продолжить покупку')
+          : t('balance.topUpResult.goToBalance')}
       </button>
     </motion.div>
   );
@@ -126,13 +134,21 @@ function FailedState({ amountKopeks }: { amountKopeks: number | null }) {
         onClick={handleTryAgain}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-elevated px-6 py-3 text-sm font-medium text-apple-ink transition-colors hover:bg-apple-elevated"
       >
-        {t('balance.topUpResult.tryAgain')}
+        {t('balance.topUpResult.goToBalance')}
       </button>
     </motion.div>
   );
 }
 
-function TimeoutState({ onRetry, onGoBack }: { onRetry: () => void; onGoBack: () => void }) {
+function TimeoutState({
+  onRetry,
+  onGoBack,
+  unknown = false,
+}: {
+  onRetry?: () => void;
+  onGoBack: () => void;
+  unknown?: boolean;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -158,17 +174,30 @@ function TimeoutState({ onRetry, onGoBack }: { onRetry: () => void; onGoBack: ()
         </svg>
       </div>
       <div>
-        <h1 className="text-xl font-bold text-apple-ink">{t('balance.topUpResult.timeout')}</h1>
-        <p className="mt-2 text-sm text-apple-mute">{t('balance.topUpResult.timeoutDesc')}</p>
+        <h1 className="text-xl font-bold text-apple-ink">
+          {unknown
+            ? t('balance.topUpResult.unverified', 'Не удалось проверить платёж')
+            : t('balance.topUpResult.timeout')}
+        </h1>
+        <p className="mt-2 text-sm text-apple-mute">
+          {unknown
+            ? t(
+                'balance.topUpResult.unverifiedDesc',
+                'Статус оплаты пока неизвестен. Проверьте историю операций или повторите проверку позже.',
+              )
+            : t('balance.topUpResult.timeoutDesc')}
+        </p>
       </div>
       <div className="flex w-full flex-col gap-3">
-        <button
-          type="button"
-          onClick={onRetry}
-          className="w-full rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
-        >
-          {t('common.retry')}
-        </button>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="w-full rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-black transition-colors hover:opacity-90"
+          >
+            {t('common.retry')}
+          </button>
+        )}
         <button
           type="button"
           onClick={onGoBack}
@@ -188,124 +217,118 @@ export default function TopUpResult() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const refreshUser = useAuthStore((state) => state.refreshUser);
+  const userId = useAuthStore((state) => state.user?.id);
   const haptic = useHaptic();
-  const pollStart = useRef(Date.now());
+  const [pollStartedAt, setPollStartedAt] = useState(Date.now);
   const [pollTimedOut, setPollTimedOut] = useState(false);
   const hapticFiredRef = useRef(false);
   const cleanedUpRef = useRef(false);
+  // Token-only sign-in can mount this route before /auth/me supplies the user.
+  // Re-read the user-bound identity when it arrives, while retaining the current
+  // payment snapshot after terminal cleanup removes its storage entry.
+  const pendingInfo = useMemo(() => loadTopUpPendingInfo(userId), [userId]);
+  const identity = useMemo(
+    () => getTopUpIdentity(searchParams, pendingInfo),
+    [searchParams, pendingInfo],
+  );
+  const matchingSavedPayment =
+    !!identity &&
+    pendingInfo?.method_id === identity.method &&
+    (identity.reference
+      ? pendingInfo.payment_id === identity.reference
+      : pendingInfo.local_payment_id === identity.id);
+  const returnPath = matchingSavedPayment ? safeTopUpReturnPath(pendingInfo?.return_to) : undefined;
 
-  // Load saved payment info from sessionStorage (once on mount)
-  const [pendingInfo] = useState(() => loadTopUpPendingInfo());
+  const resolvedIdRef = useRef<{ reference: string; id: number } | null>(null);
 
-  // Fallback: read method from query params (for external browser redirects where sessionStorage is unavailable)
-  const methodFromUrl = searchParams.get('method');
-
-  // Detect if user arrived via redirect with success param (no polling needed)
-  const redirectStatus = searchParams.get('status') || searchParams.get('payment');
-  const isRedirectSuccess = redirectStatus
-    ? isPaidStatus(redirectStatus)
-    : searchParams.get('success') === 'true';
-  const isRedirectFailed = redirectStatus ? isFailedStatus(redirectStatus) : false;
-
-  // Determine if we can poll by specific payment_id (need method + numeric payment_id)
-  const parsedPaymentId = pendingInfo?.payment_id ? parseInt(pendingInfo.payment_id, 10) : NaN;
-  const canPollById =
-    !!(pendingInfo?.method_id && !isNaN(parsedPaymentId)) &&
-    !isRedirectSuccess &&
-    !isRedirectFailed;
-
-  // Fallback: poll by method via /latest endpoint when no sessionStorage data
-  const canPollByMethod =
-    !canPollById && !!methodFromUrl && !isRedirectSuccess && !isRedirectFailed;
-
-  // Poll payment status by specific ID (primary path — sessionStorage available)
-  const { data: paymentStatus, refetch } = useQuery({
-    queryKey: ['topup-status', pendingInfo?.method_id, parsedPaymentId],
-    queryFn: () => balanceApi.getPendingPayment(pendingInfo!.method_id, parsedPaymentId),
-    enabled: canPollById && !pollTimedOut,
-    refetchInterval: (query) => {
-      const payment = query.state.data;
-      if (!payment) return POLL_INTERVAL_MS;
-
-      if (payment.is_paid || isPaidStatus(payment.status) || isFailedStatus(payment.status)) {
-        return false;
+  // Redirect query parameters are hints only. No /latest fallback: an older paid
+  // order cannot establish the outcome of the payment the user just attempted.
+  const {
+    data: effectivePayment,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['topup-status', identity?.method, identity?.id, identity?.reference ?? null],
+    queryFn: async ({ signal }) => {
+      if (!identity) throw new Error('Missing payment identity');
+      const reference = identity.reference ?? '';
+      const localId =
+        identity.id ??
+        (resolvedIdRef.current && resolvedIdRef.current.reference === reference
+          ? resolvedIdRef.current.id
+          : null);
+      const payment = localId
+        ? await balanceApi.getPendingPayment(identity.method, localId, signal)
+        : await balanceApi.resolveCreatedPayment(
+            {
+              method: identity.method,
+              reference,
+              paymentUrl: identity.paymentUrl ?? '',
+              amountKopeks: identity.amountKopeks ?? 0,
+            },
+            signal,
+          );
+      if (
+        (localId && payment.id !== localId) ||
+        payment.method !== identity.method ||
+        (identity.paymentUrl && payment.payment_url !== identity.paymentUrl)
+      ) {
+        throw new Error('Payment identity mismatch');
       }
-
-      if (Date.now() - pollStart.current > MAX_POLL_MS) {
-        setPollTimedOut(true);
-        return false;
-      }
-
-      return POLL_INTERVAL_MS;
+      resolvedIdRef.current = { reference, id: payment.id };
+      return payment;
     },
+    enabled: !!identity && !pollTimedOut,
+    refetchInterval: (query) =>
+      paymentPollInterval(
+        pollStartedAt,
+        Date.now(),
+        !!query.state.data &&
+          (query.state.data.is_paid ||
+            isPaidStatus(query.state.data.status) ||
+            isFailedStatus(query.state.data.status)),
+      ),
     retry: 2,
+    refetchOnWindowFocus: false,
   });
 
-  // Poll payment status by method latest (fallback — external browser, no sessionStorage)
-  const { data: latestPayment, refetch: refetchLatest } = useQuery({
-    queryKey: ['topup-status-latest', methodFromUrl],
-    queryFn: () => balanceApi.getLatestPayment(methodFromUrl!),
-    enabled: canPollByMethod && !pollTimedOut,
-    refetchInterval: (query) => {
-      const payment = query.state.data;
-      if (!payment) return POLL_INTERVAL_MS;
+  const resolvedPaid =
+    !!effectivePayment && (effectivePayment.is_paid || isPaidStatus(effectivePayment.status));
+  const resolvedFailed =
+    !resolvedPaid && !!effectivePayment && isFailedStatus(effectivePayment.status);
 
-      if (payment.is_paid || isPaidStatus(payment.status) || isFailedStatus(payment.status)) {
-        return false;
-      }
-
-      if (Date.now() - pollStart.current > MAX_POLL_MS) {
-        setPollTimedOut(true);
-        return false;
-      }
-
-      return POLL_INTERVAL_MS;
-    },
-    retry: 2,
-  });
-
-  // Merge both polling sources
-  const effectivePayment = paymentStatus ?? latestPayment;
+  // An independent wall-clock deadline also stops polling when every request fails,
+  // the browser is offline, or there has never been a successful response.
+  useEffect(() => {
+    if (!identity || resolvedPaid || resolvedFailed || pollTimedOut) return;
+    const timer = window.setTimeout(
+      () => setPollTimedOut(true),
+      Math.max(0, pollStartedAt + MAX_POLL_MS - Date.now()),
+    );
+    return () => window.clearTimeout(timer);
+  }, [identity, resolvedPaid, resolvedFailed, pollTimedOut, pollStartedAt]);
 
   const handleRetryPoll = useCallback(() => {
-    pollStart.current = Date.now();
+    setPollStartedAt(Date.now());
     setPollTimedOut(false);
-    if (canPollById) {
-      refetch();
-    } else {
-      refetchLatest();
-    }
-  }, [canPollById, setPollTimedOut, refetch, refetchLatest]);
+    if (identity) void refetch();
+  }, [identity, refetch]);
 
   const handleGoBack = useCallback(() => {
-    clearTopUpPendingInfo();
+    // Keep unresolved identity so a later return can check the same payment.
     navigate('/balance', { replace: true });
   }, [navigate]);
 
-  // Redirect to balance if absolutely no data source available
-  useEffect(() => {
-    if (!pendingInfo && !redirectStatus && !methodFromUrl) {
-      navigate('/balance', { replace: true });
-    }
-  }, [pendingInfo, redirectStatus, methodFromUrl, navigate]);
-
-  // Determine current visual state
-  const amountKopeks = effectivePayment?.amount_kopeks ?? pendingInfo?.amount_kopeks ?? null;
-
-  const resolvedPaid =
-    isRedirectSuccess ||
-    effectivePayment?.is_paid ||
-    (effectivePayment && isPaidStatus(effectivePayment.status));
-
-  const resolvedFailed =
-    isRedirectFailed || (effectivePayment && isFailedStatus(effectivePayment.status));
+  const amountKopeks =
+    effectivePayment?.amount_kopeks ??
+    (matchingSavedPayment ? (pendingInfo?.amount_kopeks ?? null) : null);
 
   // Clean up sessionStorage and invalidate queries when payment resolves
   useEffect(() => {
     if (cleanedUpRef.current) return;
     if (resolvedPaid) {
       cleanedUpRef.current = true;
-      clearTopUpPendingInfo();
+      if (matchingSavedPayment) clearTopUpPendingInfo();
       queryClient.invalidateQueries({ queryKey: ['balance'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({
@@ -316,9 +339,9 @@ export default function TopUpResult() {
       refreshUser();
     } else if (resolvedFailed) {
       cleanedUpRef.current = true;
-      clearTopUpPendingInfo();
+      if (matchingSavedPayment) clearTopUpPendingInfo();
     }
-  }, [resolvedPaid, resolvedFailed, queryClient, refreshUser]);
+  }, [resolvedPaid, resolvedFailed, queryClient, refreshUser, matchingSavedPayment]);
 
   // Haptic feedback on status resolution (fire once)
   useEffect(() => {
@@ -340,9 +363,15 @@ export default function TopUpResult() {
         aria-atomic="true"
       >
         {resolvedPaid ? (
-          <SuccessState amountKopeks={amountKopeks} />
+          <SuccessState amountKopeks={amountKopeks} returnPath={returnPath} />
         ) : resolvedFailed ? (
           <FailedState amountKopeks={amountKopeks} />
+        ) : !identity || isError ? (
+          <TimeoutState
+            unknown
+            onRetry={identity ? handleRetryPoll : undefined}
+            onGoBack={handleGoBack}
+          />
         ) : pollTimedOut ? (
           <TimeoutState onRetry={handleRetryPoll} onGoBack={handleGoBack} />
         ) : (

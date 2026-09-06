@@ -63,8 +63,9 @@ export default function Subscriptions() {
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const [trialError, setTrialError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['subscriptions-list'],
+    retry: 1,
     queryFn: () => subscriptionApi.getSubscriptions(),
     staleTime: 30_000,
     refetchOnMount: 'always',
@@ -72,7 +73,7 @@ export default function Subscriptions() {
 
   const subscriptions = data?.subscriptions ?? [];
   const isMultiTariff = data?.multi_tariff_enabled ?? false;
-  const hasNoSubscriptions = !isLoading && subscriptions.length === 0;
+  const hasNoSubscriptions = !!data && !isLoading && !isError && subscriptions.length === 0;
 
   // Если у юзера нет подписок — проверяем доступность триала, иначе
   // (в multi-tariff) ему вообще негде увидеть оффер.
@@ -83,7 +84,12 @@ export default function Subscriptions() {
     staleTime: 30_000,
   });
 
-  const { data: balanceData } = useQuery({
+  const {
+    data: balanceData,
+    isFetching: balanceLoading,
+    isError: balanceError,
+    refetch: refetchBalance,
+  } = useQuery({
     queryKey: ['balance'],
     queryFn: balanceApi.getBalance,
     enabled: hasNoSubscriptions && !!trialInfo?.is_available,
@@ -107,7 +113,7 @@ export default function Subscriptions() {
   });
 
   // Single-tariff mode with one subscription: skip list, go directly to detail
-  if (data && !isMultiTariff && subscriptions.length === 1) {
+  if (data && !isError && !isMultiTariff && subscriptions.length === 1) {
     return <Navigate to={`/subscriptions/${subscriptions[0].id}`} replace />;
   }
 
@@ -142,6 +148,18 @@ export default function Subscriptions() {
         )}
       </div>
 
+      {isError && (
+        <div
+          role="alert"
+          className="rounded-2xl border p-5"
+          style={{ background: g.cardBg, borderColor: g.cardBorder }}
+        >
+          <p>{t(data ? 'common.staleData' : 'common.loadError')}</p>
+          <button onClick={() => void refetch()} className="mt-3 underline">
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
       {/* Loading */}
       {isLoading && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -159,8 +177,13 @@ export default function Subscriptions() {
       {hasNoSubscriptions && !trialLoading && trialInfo?.is_available && (
         <TrialOfferCard
           trialInfo={trialInfo}
-          balanceKopeks={balanceData?.balance_kopeks ?? 0}
-          balanceRubles={balanceData?.balance_rubles ?? 0}
+          balanceKopeks={balanceData?.balance_kopeks}
+          balanceRubles={balanceData?.balance_rubles}
+          balanceLoading={balanceLoading}
+          balanceError={balanceError}
+          onRetryBalance={() => {
+            void refetchBalance();
+          }}
           activateTrialMutation={activateTrialMutation}
           trialError={trialError}
         />

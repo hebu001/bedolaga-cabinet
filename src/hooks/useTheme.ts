@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { EnabledThemes, DEFAULT_ENABLED_THEMES } from '../types/theme';
 import { themeColorsApi } from '../api/themeColors';
 import { STORAGE_KEYS } from '../config/constants';
@@ -8,37 +9,13 @@ type Theme = 'dark' | 'light';
 const THEME_KEY = STORAGE_KEYS.THEME;
 const ENABLED_THEMES_KEY = STORAGE_KEYS.ENABLED_THEMES;
 
-// Fetch enabled themes from API
-async function fetchEnabledThemes(): Promise<EnabledThemes> {
-  try {
-    const data = await themeColorsApi.getEnabledThemes();
-    // Cache in localStorage for faster subsequent loads
-    localStorage.setItem(ENABLED_THEMES_KEY, JSON.stringify(data));
-    return data;
-  } catch {
-    // Ignore errors, use cached or default
-  }
-  // Try to get from cache
-  const cached = localStorage.getItem(ENABLED_THEMES_KEY);
-  if (cached) {
-    try {
-      return JSON.parse(cached);
-    } catch {
-      // Ignore parse errors
-    }
-  }
-  return DEFAULT_ENABLED_THEMES;
-}
-
 // Get cached enabled themes synchronously
 function getCachedEnabledThemes(): EnabledThemes {
-  const cached = localStorage.getItem(ENABLED_THEMES_KEY);
-  if (cached) {
-    try {
-      return JSON.parse(cached);
-    } catch {
-      // Ignore parse errors
-    }
+  try {
+    const cached = localStorage.getItem(ENABLED_THEMES_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // Storage may be unavailable in a private WebView.
   }
   return DEFAULT_ENABLED_THEMES;
 }
@@ -49,14 +26,26 @@ const THEME_CHANGED_EVENT = 'themeChanged';
 
 // Update cache (called from admin settings)
 export function updateEnabledThemesCache(themes: EnabledThemes) {
-  localStorage.setItem(ENABLED_THEMES_KEY, JSON.stringify(themes));
+  try {
+    localStorage.setItem(ENABLED_THEMES_KEY, JSON.stringify(themes));
+  } catch {}
   // Dispatch custom event for same-tab updates
   window.dispatchEvent(new CustomEvent(ENABLED_THEMES_CHANGED_EVENT, { detail: themes }));
 }
 
 export function useTheme() {
   const [enabledThemes, setEnabledThemes] = useState<EnabledThemes>(getCachedEnabledThemes);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const {
+    data: fetchedThemes,
+    isFetching: isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['enabled-themes'],
+    queryFn: themeColorsApi.getEnabledThemes,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
   const [theme, setThemeState] = useState<Theme>(() => {
     const enabled = getCachedEnabledThemes();
@@ -86,18 +75,17 @@ export function useTheme() {
   const themeRef = useRef(theme);
   themeRef.current = theme;
 
-  // Fetch enabled themes on mount
+  // All theme consumers share one query, including the header and admin panel.
   useEffect(() => {
-    fetchEnabledThemes().then((data) => {
-      setEnabledThemes(data);
-      setIsLoading(false);
-      // If current theme is disabled, switch to enabled one
-      if (!data[themeRef.current]) {
-        const newTheme = data.dark ? 'dark' : 'light';
-        setThemeState(newTheme);
-      }
-    });
-  }, []);
+    if (!fetchedThemes) return;
+    setEnabledThemes(fetchedThemes);
+    try {
+      localStorage.setItem(ENABLED_THEMES_KEY, JSON.stringify(fetchedThemes));
+    } catch {}
+    if (!fetchedThemes[themeRef.current]) {
+      setThemeState(fetchedThemes.dark ? 'dark' : 'light');
+    }
+  }, [fetchedThemes]);
 
   // Listen for localStorage changes (when admin updates enabled themes from other tabs)
   useEffect(() => {
@@ -105,6 +93,7 @@ export function useTheme() {
       if (e.key === ENABLED_THEMES_KEY && e.newValue) {
         try {
           const data = JSON.parse(e.newValue) as EnabledThemes;
+          queryClient.setQueryData(['enabled-themes'], data);
           setEnabledThemes(data);
           // If current theme is now disabled, switch to enabled one
           if (!data[theme]) {
@@ -119,12 +108,13 @@ export function useTheme() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [theme]);
+  }, [theme, queryClient]);
 
   // Listen for same-tab enabled themes changes (from admin settings)
   useEffect(() => {
     const handleEnabledThemesChange = (e: CustomEvent<EnabledThemes>) => {
       const data = e.detail;
+      queryClient.setQueryData(['enabled-themes'], data);
       setEnabledThemes(data);
       // If current theme is now disabled, switch to enabled one
       if (!data[theme]) {
@@ -142,7 +132,7 @@ export function useTheme() {
         ENABLED_THEMES_CHANGED_EVENT,
         handleEnabledThemesChange as EventListener,
       );
-  }, [theme]);
+  }, [theme, queryClient]);
 
   // Apply theme to document - also check if theme is disabled and switch
   useEffect(() => {
@@ -227,16 +217,9 @@ export function useTheme() {
   // Check if theme switching is available (both themes enabled and loaded)
   const canToggle = !isLoading && enabledThemes.dark && enabledThemes.light;
 
-  // Refresh enabled themes from API
   const refreshEnabledThemes = useCallback(() => {
-    fetchEnabledThemes().then((data) => {
-      setEnabledThemes(data);
-      if (!data[theme]) {
-        const newTheme = data.dark ? 'dark' : 'light';
-        setThemeState(newTheme);
-      }
-    });
-  }, [theme]);
+    void refetch();
+  }, [refetch]);
 
   return {
     theme,

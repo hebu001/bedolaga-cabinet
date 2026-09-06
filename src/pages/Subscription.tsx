@@ -18,9 +18,10 @@ import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
 import { CopyIcon, CheckIcon } from '../components/icons';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useNotify } from '../platform/hooks/useNotify';
-import { resolveConnectionUrlForUi } from '../utils/connectionLink';
+import { resolvePlainSubscriptionUrl } from '../utils/connectionLink';
 import {
   getErrorMessage,
   getInsufficientBalanceError,
@@ -166,12 +167,14 @@ const PillSlider = ({
   value,
   onChange,
   'aria-label': ariaLabel,
+  'aria-valuetext': ariaValueText,
 }: {
   min: number;
   max: number;
   value: number;
   onChange: (v: number) => void;
   'aria-label'?: string;
+  'aria-valuetext'?: string;
 }) => {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -197,6 +200,7 @@ const PillSlider = ({
     if (v !== clamped) onChange(v);
   };
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.focus();
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
@@ -210,7 +214,10 @@ const PillSlider = ({
     apply(e.clientX);
   };
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+    if (e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      onChange(e.key === 'Home' ? min : max);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
       e.preventDefault();
       if (clamped > min) onChange(clamped - 1);
     } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
@@ -228,12 +235,13 @@ const PillSlider = ({
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={clamped}
+      aria-valuetext={ariaValueText}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={() => setDragging(false)}
       onPointerCancel={() => setDragging(false)}
       onKeyDown={onKeyDown}
-      className="relative w-full cursor-pointer touch-none select-none outline-none"
+      className="relative w-full cursor-pointer touch-none select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-black"
       style={{ height: SLIDER_H }}
     >
       {/* track */}
@@ -336,15 +344,25 @@ export default function Subscription() {
   });
   const isMultiTariff = multiSubData?.multi_tariff_enabled ?? false;
 
-  const { data: subscriptionResponse, isLoading } = useQuery({
+  const {
+    data: subscriptionResponse,
+    isLoading,
+    error: subscriptionError,
+    refetch: refetchSubscription,
+  } = useQuery({
     queryKey: ['subscription', subscriptionId],
     queryFn: () => subscriptionApi.getSubscription(subscriptionId),
     retry: false,
     staleTime: 0,
     refetchOnMount: 'always',
   });
-  const { data: connectionLink, isLoading: isConnectionLinkLoading } = useQuery({
-    queryKey: ['connection-link', subscriptionId],
+  const {
+    data: connectionLink,
+    isLoading: isConnectionLinkLoading,
+    isError: connectionLinkError,
+    refetch: refetchConnectionLink,
+  } = useQuery({
+    queryKey: ['connectionLink', subscriptionId],
     queryFn: () => subscriptionApi.getConnectionLink(subscriptionId),
     retry: false,
     staleTime: 0,
@@ -354,7 +372,7 @@ export default function Subscription() {
   const subscription = subscriptionResponse?.subscription ?? null;
   const displayedConnectionUrl = useMemo(
     () =>
-      resolveConnectionUrlForUi({
+      resolvePlainSubscriptionUrl({
         mode: connectionLink?.connect_mode,
         happSchemeLink: connectionLink?.happ_scheme_link,
         displayLink: connectionLink?.display_link,
@@ -377,7 +395,10 @@ export default function Subscription() {
     ],
   );
   const shouldHideConnectionLink =
-    subscription?.hide_subscription_link || connectionLink?.hide_link;
+    subscription?.hide_subscription_link ||
+    isConnectionLinkLoading ||
+    connectionLinkError ||
+    connectionLink?.hide_link;
 
   const usedPercent = trafficData?.traffic_used_percent ?? subscription?.traffic_used_percent ?? 0;
 
@@ -503,7 +524,7 @@ export default function Subscription() {
   }, [deviceAddCount]);
 
   // Device price query — priced for how many devices we'd add
-  const { data: devicePriceData } = useQuery({
+  const { data: devicePriceData, isFetching: devicePriceFetching } = useQuery({
     queryKey: ['device-price', debouncedAddCount, subscriptionId],
     queryFn: () => subscriptionApi.getDevicePrice(debouncedAddCount, subscriptionId),
     enabled: showDeviceManage && !!subscription,
@@ -559,23 +580,14 @@ export default function Subscription() {
     if (showDeviceManage) setTargetDeviceLimit(deviceCurrentLimit);
   }, [showDeviceManage, deviceCurrentLimit]);
 
-  // Lock body scroll + Escape-to-close while a bottom-sheet modal is open
-  useEffect(() => {
-    if (!showDeviceManage && !showTrafficTopup) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowDeviceManage(false);
-        setShowTrafficTopup(false);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [showDeviceManage, showTrafficTopup]);
+  const deviceDialogRef = useRef<HTMLDivElement>(null);
+  const trafficDialogRef = useRef<HTMLDivElement>(null);
+  const topUpDialogRef = useRef<HTMLDivElement>(null);
+  useModalFocus(showDeviceManage, deviceDialogRef, () => setShowDeviceManage(false));
+  useModalFocus(showTrafficTopup, trafficDialogRef, () => setShowTrafficTopup(false));
+  useModalFocus(!!topUpSheet && !!paymentMethods?.length, topUpDialogRef, () =>
+    setTopUpSheet(null),
+  );
 
   // Device reduction mutation
   const deviceReductionMutation = useMutation({
@@ -765,7 +777,7 @@ export default function Subscription() {
     mutationFn: () => subscriptionApi.revokeSubscription(subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['connection-link', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['connectionLink', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
       // RemnaWave resets device HWIDs on revoke — make sure the cabinet
       // re-reads the now-empty device list instead of showing the stale cache.
@@ -801,11 +813,17 @@ export default function Subscription() {
     refreshTrafficMutation.mutate();
   }, [subscription, refreshTrafficMutation, subscriptionId]);
 
-  const copyUrl = () => {
-    if (displayedConnectionUrl) {
-      navigator.clipboard.writeText(displayedConnectionUrl);
+  const [copyError, setCopyError] = useState(false);
+  const copyUrl = async () => {
+    if (!displayedConnectionUrl) return;
+    setCopied(false);
+    setCopyError(false);
+    try {
+      await navigator.clipboard.writeText(displayedConnectionUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyError(true);
     }
   };
 
@@ -832,7 +850,29 @@ export default function Subscription() {
     );
   }
 
-  if (!subscription && subscriptionId) {
+  if (
+    subscriptionError &&
+    !subscription &&
+    (subscriptionError as { response?: { status?: number } }).response?.status !== 404
+  ) {
+    return (
+      <div role="alert" className="mx-auto max-w-lg p-4 text-center">
+        <p>{t('common.loadError')}</p>
+        <button
+          onClick={() => void refetchSubscription()}
+          className="mt-4 rounded-xl bg-apple-elevated px-6 py-2.5"
+        >
+          {t('common.retry')}
+        </button>
+      </div>
+    );
+  }
+
+  if (
+    subscriptionId &&
+    (!subscription ||
+      (subscriptionError as { response?: { status?: number } } | null)?.response?.status === 404)
+  ) {
     return (
       <div className="mx-auto max-w-lg p-4 text-center">
         <div className="mb-4 text-4xl">😕</div>
@@ -844,7 +884,7 @@ export default function Subscription() {
         </p>
         <button
           onClick={() => navigate('/subscriptions')}
-          className="rounded-xl bg-apple-blue px-6 py-2.5 text-sm font-medium text-white"
+          className="rounded-xl bg-apple-blue px-6 py-2.5 text-sm font-medium text-black"
         >
           {t('subscription.backToList', 'Мои подписки')}
         </button>
@@ -854,6 +894,14 @@ export default function Subscription() {
 
   return (
     <div className="space-y-4">
+      {subscriptionError && (
+        <div role="alert" className="rounded-2xl bg-apple-card p-4">
+          <p>{t('common.staleData')}</p>
+          <button onClick={() => void refetchSubscription()} className="mt-2 underline">
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
       {/* Current Subscription */}
       {subscription ? (
         (() => {
@@ -938,7 +986,7 @@ export default function Subscription() {
                     haptic.buttonPressMedium();
                     navigate(renewLink);
                   }}
-                  className="flex flex-1 items-center justify-center rounded-full bg-apple-blue py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+                  className="flex flex-1 items-center justify-center rounded-full bg-apple-blue py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
                 >
                   {subscription.is_active
                     ? t('subscription.extend')
@@ -1118,6 +1166,11 @@ export default function Subscription() {
                         onClick={() => setShowDeviceManage(false)}
                       >
                         <div
+                          ref={deviceDialogRef}
+                          role="dialog"
+                          aria-modal="true"
+                          aria-label={t('subscription.devicesTitle')}
+                          tabIndex={-1}
                           className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -1268,7 +1321,10 @@ export default function Subscription() {
                                       disabled={
                                         delta === 0 ||
                                         pending ||
-                                        (delta > 0 && !devicePriceData?.available)
+                                        (delta > 0 &&
+                                          (!devicePriceData?.available ||
+                                            devicePriceFetching ||
+                                            deviceAddCount !== debouncedAddCount))
                                       }
                                       className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
                                       style={{
@@ -1278,7 +1334,7 @@ export default function Subscription() {
                                             : delta < 0
                                               ? '#ff453a'
                                               : 'rgba(255,255,255,0.08)',
-                                        color: delta === 0 ? '#98989d' : '#fff',
+                                        color: delta === 0 ? '#98989d' : '#111',
                                         opacity: pending ? 0.6 : 1,
                                       }}
                                     >
@@ -1325,6 +1381,11 @@ export default function Subscription() {
                         }}
                       >
                         <div
+                          ref={trafficDialogRef}
+                          role="dialog"
+                          aria-modal="true"
+                          aria-label={t('subscription.additionalOptions.buyTrafficTitle')}
+                          tabIndex={-1}
                           className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -1415,7 +1476,10 @@ export default function Subscription() {
                                         min={0}
                                         max={trafficPackages.length - 1}
                                         value={idx}
-                                        aria-label={t('common.units.gb')}
+                                        aria-label={t(
+                                          'subscription.additionalOptions.buyTrafficTitle',
+                                        )}
+                                        aria-valuetext={`${trafficPackages[idx].gb} ${t('common.units.gb')}`}
                                         onChange={(v) => {
                                           haptic.buttonPressMedium();
                                           setSelectedTrafficPackage(trafficPackages[v].gb);
@@ -1438,7 +1502,7 @@ export default function Subscription() {
                                       className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
                                       style={{
                                         background: '#F97315',
-                                        color: '#fff',
+                                        color: '#111',
                                         opacity: pending ? 0.6 : 1,
                                       }}
                                     >
@@ -1477,6 +1541,11 @@ export default function Subscription() {
                         onClick={() => setTopUpSheet(null)}
                       >
                         <div
+                          ref={topUpDialogRef}
+                          role="dialog"
+                          aria-modal="true"
+                          aria-label={t('balance.topUp')}
+                          tabIndex={-1}
                           className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
                           onClick={(e) => e.stopPropagation()}
                         >
@@ -1530,12 +1599,14 @@ export default function Subscription() {
                     {displayedConnectionUrl && !shouldHideConnectionLink && (
                       <div className="flex items-center gap-2.5 p-4">
                         <RowIcon icon="link" />
-                        <code
-                          className="block min-w-0 flex-1 truncate whitespace-nowrap rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
+                        <input
+                          readOnly
+                          aria-label={t('subscription.copyLink')}
+                          value={displayedConnectionUrl}
+                          onFocus={(event) => event.currentTarget.select()}
+                          className="block min-w-0 flex-1 truncate rounded-[10px] bg-apple-elevated px-3 py-2.5 font-mono text-[12px] text-apple-mute"
                           title={displayedConnectionUrl}
-                        >
-                          {displayedConnectionUrl}
-                        </code>
+                        />
                         <button
                           onClick={() => {
                             haptic.buttonPressMedium();
@@ -1547,8 +1618,30 @@ export default function Subscription() {
                             color: copied ? '#F97315' : '#98989d',
                           }}
                           title={t('subscription.copyLink')}
+                          aria-label={t(copied ? 'common.copied' : 'subscription.copyLink')}
                         >
                           {copied ? <CheckIcon /> : <CopyIcon />}
+                        </button>
+                      </div>
+                    )}
+                    {copyError && (
+                      <p role="alert" className="px-4 pb-3 text-sm text-apple-mute">
+                        {t('common.copyFailed')}
+                      </p>
+                    )}
+                    {copied && (
+                      <span role="status" className="sr-only">
+                        {t('common.copied')}
+                      </span>
+                    )}
+                    {connectionLinkError && (
+                      <div role="alert" className="p-4 text-sm">
+                        <p>{t('subscription.connection.linkUnavailable')}</p>
+                        <button
+                          onClick={() => void refetchConnectionLink()}
+                          className="mt-2 underline"
+                        >
+                          {t('common.retry')}
                         </button>
                       </div>
                     )}

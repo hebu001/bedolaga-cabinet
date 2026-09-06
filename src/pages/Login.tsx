@@ -525,6 +525,8 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowEmailForm(!showEmailForm)}
+                    aria-expanded={showEmailForm}
+                    aria-controls="email-auth-form"
                     className="flex items-center gap-1.5 rounded-full border border-dark-700 bg-dark-800/60 px-3.5 py-1.5 text-xs font-medium text-dark-300 transition-all hover:border-dark-600 hover:bg-dark-700 hover:text-dark-200"
                   >
                     <svg
@@ -556,10 +558,17 @@ export default function Login() {
 
                 {/* Collapsible email form */}
                 <div
+                  id="email-auth-form"
+                  inert={!showEmailForm}
+                  aria-hidden={!showEmailForm}
                   className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
                     showEmailForm ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
                   }`}
-                  style={{ transform: 'translateZ(0)' }}
+                  style={{
+                    transform: 'translateZ(0)',
+                    // Older Safari/WebViews do not implement inert.
+                    visibility: showEmailForm ? 'visible' : 'hidden',
+                  }}
                 >
                   <div className="overflow-hidden">
                     <div className="space-y-4 pb-1 pt-1">

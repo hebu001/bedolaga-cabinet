@@ -15,6 +15,8 @@ services:
         VITE_APP_LOGO: ${VITE_APP_LOGO:-V}
     container_name: cabinet_frontend
     restart: unless-stopped
+    environment:
+      CABINET_BACKEND_ORIGIN: ${CABINET_BACKEND_ORIGIN:-}
     env_file:
       - .env # Загрузить переменные из .env файла
     ports:

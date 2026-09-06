@@ -25,11 +25,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run regression tests
+        run: npm test
 
       - name: Build application
         run: npm run build
@@ -38,6 +41,9 @@ jobs:
           VITE_TELEGRAM_BOT_USERNAME:
           VITE_APP_NAME: Bedolaga Cabinet
           VITE_APP_LOGO: V
+
+      - name: Enforce bundle budgets
+        run: npm run check:bundle
 
       - name: Create dist archive
         run: |

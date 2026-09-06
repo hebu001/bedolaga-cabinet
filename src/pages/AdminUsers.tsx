@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useCurrency } from '../hooks/useCurrency';
-import { adminUsersApi, type UserListItem, type UsersStatsResponse } from '../api/adminUsers';
+import { adminUsersApi, type UserListItem } from '../api/adminUsers';
+import { adminUsersQueryOptions } from '../utils/adminUsersQuery';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 const BackIcon = () => (
@@ -81,6 +83,7 @@ function StatCard({ title, value, subtitle, color }: StatCardProps) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const styles: Record<string, string> = {
     active: 'bg-apple-green/15 text-apple-green',
     blocked: 'bg-apple-red/15 text-apple-red',
@@ -94,23 +97,22 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles[status] || styles.active}`}
     >
-      {status}
+      {t(`admin.users.status.${status}`, { defaultValue: status })}
     </span>
   );
 }
 
 interface UserRowProps {
   user: UserListItem;
-  onClick: () => void;
   formatAmount: (rubAmount: number) => string;
 }
 
-function UserRow({ user, onClick, formatAmount }: UserRowProps) {
+function UserRow({ user, formatAmount }: UserRowProps) {
   const { t } = useTranslation();
   return (
-    <div
-      onClick={onClick}
-      className="flex cursor-pointer items-start gap-3 rounded-2xl bg-apple-card p-3 transition-all hover:bg-apple-elevated sm:items-center sm:gap-4 sm:p-4"
+    <Link
+      to={`/admin/users/${user.id}`}
+      className="flex cursor-pointer items-start gap-3 rounded-2xl bg-apple-card p-3 transition-all hover:bg-apple-elevated focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#F97315] sm:items-center sm:gap-4 sm:p-4"
     >
       {/* Avatar */}
       <div
@@ -176,7 +178,7 @@ function UserRow({ user, onClick, formatAmount }: UserRowProps) {
       </div>
 
       <ChevronRightIcon />
-    </div>
+    </Link>
   );
 }
 
@@ -186,54 +188,46 @@ export default function AdminUsers() {
   const navigate = useNavigate();
   const { capabilities } = usePlatform();
 
-  const [users, setUsers] = useState<UserListItem[]>([]);
-  const [stats, setStats] = useState<UsersStatsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [emailSearch, setEmailSearch] = useState('');
+  const [settledSearch, setSettledSearch] = useState({ search: '', email: '' });
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('created_at');
   const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
 
   const limit = 20;
-
-  const loadUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const params: Record<string, unknown> = { offset, limit, sort_by: sortBy };
-      if (search) params.search = search;
-      if (emailSearch) params.email = emailSearch;
-      if (statusFilter) params.status = statusFilter;
-
-      const data = await adminUsersApi.getUsers(
-        params as Parameters<typeof adminUsersApi.getUsers>[0],
-      );
-      setUsers(data.users);
-      setTotal(data.total);
-    } catch (error) {
-      console.error('Failed to load users:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, search, emailSearch, statusFilter, sortBy]);
-
-  const loadStats = useCallback(async () => {
-    try {
-      const data = await adminUsersApi.getStats();
-      setStats(data);
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-    }
-  }, []);
-
+  const isDebouncing = search !== settledSearch.search || emailSearch !== settledSearch.email;
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    if (!isDebouncing) return;
+    const timeout = window.setTimeout(() => {
+      // Commit both fields and the first page together, avoiding a request with old filters.
+      setSettledSearch({ search, email: emailSearch });
+      setOffset(0);
+    }, 300);
+    return () => window.clearTimeout(timeout);
+  }, [search, emailSearch, isDebouncing]);
 
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
+  const usersQuery = useQuery({
+    ...adminUsersQueryOptions({
+      offset,
+      limit,
+      sort_by: sortBy as 'created_at' | 'balance' | 'last_activity' | 'total_spent',
+      search: settledSearch.search || undefined,
+      email: settledSearch.email || undefined,
+      status: (statusFilter || undefined) as 'active' | 'blocked' | 'deleted' | undefined,
+    }),
+    enabled: !isDebouncing,
+    placeholderData: keepPreviousData,
+  });
+  const statsQuery = useQuery({
+    queryKey: ['admin-users-stats'],
+    queryFn: ({ signal }) => adminUsersApi.getStats(signal),
+  });
+  const users = usersQuery.data?.users ?? [];
+  const total = usersQuery.data?.total ?? 0;
+  const stats = statsQuery.data;
+  const loading = usersQuery.isPending;
+  const busy = isDebouncing || usersQuery.isFetching;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,6 +245,7 @@ export default function AdminUsers() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
+              aria-label={t('common.back')}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />
@@ -263,12 +258,16 @@ export default function AdminUsers() {
         </div>
         <button
           onClick={() => {
-            loadUsers();
-            loadStats();
+            void usersQuery.refetch();
+            void statsQuery.refetch();
           }}
-          className="rounded-lg p-2 transition-colors hover:bg-apple-elevated"
+          disabled={isDebouncing || usersQuery.isFetching || statsQuery.isFetching}
+          aria-label={t('common.refresh')}
+          className="rounded-lg p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
         >
-          <RefreshIcon className={loading ? 'animate-spin' : ''} />
+          <RefreshIcon
+            className={usersQuery.isFetching || statsQuery.isFetching ? 'animate-spin' : ''}
+          />
         </button>
       </div>
 
@@ -299,6 +298,19 @@ export default function AdminUsers() {
         </div>
       )}
 
+      {statsQuery.isError && (
+        <div role="alert" className="mb-4 rounded-xl bg-apple-card p-3 text-sm text-apple-mute">
+          {t('admin.users.statsLoadError')}{' '}
+          <button
+            onClick={() => void statsQuery.refetch()}
+            className="underline"
+            disabled={statsQuery.isFetching}
+          >
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="mb-4 flex flex-col gap-3">
         {/* Search fields row */}
@@ -310,8 +322,8 @@ export default function AdminUsers() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setOffset(0);
                 }}
+                aria-label={t('admin.users.search')}
                 placeholder={t('admin.users.search')}
                 className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
@@ -327,8 +339,8 @@ export default function AdminUsers() {
                 value={emailSearch}
                 onChange={(e) => {
                   setEmailSearch(e.target.value);
-                  setOffset(0);
                 }}
+                aria-label={t('admin.users.searchEmail')}
                 placeholder={t('admin.users.searchEmail')}
                 className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
               />
@@ -341,6 +353,7 @@ export default function AdminUsers() {
         {/* Filters row */}
         <div className="flex flex-col gap-3 sm:flex-row">
           <select
+            aria-label={t('admin.users.filters.allStatuses')}
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
@@ -354,6 +367,7 @@ export default function AdminUsers() {
             <option value="deleted">{t('admin.users.status.deleted')}</option>
           </select>
           <select
+            aria-label={t('admin.users.sortLabel')}
             value={sortBy}
             onChange={(e) => {
               setSortBy(e.target.value);
@@ -370,19 +384,30 @@ export default function AdminUsers() {
       </div>
 
       {/* Users list */}
-      <div className="mb-4 space-y-2">
+      <div className="mb-4 space-y-2" aria-busy={loading || busy}>
+        {usersQuery.isError && !isDebouncing && (
+          <div role="alert" className="rounded-xl bg-apple-card p-4 text-sm text-apple-mute">
+            {t('admin.users.loadError')}{' '}
+            <button
+              onClick={() => void usersQuery.refetch()}
+              className="underline"
+              disabled={usersQuery.isFetching}
+            >
+              {t('common.retry')}
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
           </div>
-        ) : users.length === 0 ? (
+        ) : users.length === 0 && !usersQuery.isError && !busy ? (
           <div className="py-12 text-center text-apple-mute">{t('admin.users.noData')}</div>
         ) : (
           users.map((user) => (
             <UserRow
               key={user.id}
               user={user}
-              onClick={() => navigate(`/admin/users/${user.id}`)}
               formatAmount={(amount) => formatWithCurrency(amount)}
             />
           ))
@@ -390,7 +415,7 @@ export default function AdminUsers() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 1 && !loading && !usersQuery.isPlaceholderData && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-apple-mute">
             {t('admin.users.pagination.showing', {
@@ -402,7 +427,8 @@ export default function AdminUsers() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setOffset(Math.max(0, offset - limit))}
-              disabled={offset === 0}
+              aria-label={t('admin.users.pagination.previous')}
+              disabled={offset === 0 || busy}
               className="rounded-lg bg-apple-card p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
             >
               <ChevronLeftIcon />
@@ -412,7 +438,8 @@ export default function AdminUsers() {
             </span>
             <button
               onClick={() => setOffset(offset + limit)}
-              disabled={offset + limit >= total}
+              aria-label={t('admin.users.pagination.next')}
+              disabled={offset + limit >= total || busy}
               className="rounded-lg bg-apple-card p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
             >
               <ChevronRightIcon />

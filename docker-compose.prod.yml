@@ -16,6 +16,8 @@ services:
     #     VITE_APP_LOGO: ${VITE_APP_LOGO:-V}
     container_name: cabinet_frontend
     restart: unless-stopped
+    environment:
+      CABINET_BACKEND_ORIGIN: ${CABINET_BACKEND_ORIGIN:-}
     # Порты НЕ пробрасываем — доступ только через Docker-сеть через Caddy
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:80/']

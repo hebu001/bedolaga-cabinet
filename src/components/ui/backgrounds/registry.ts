@@ -62,17 +62,6 @@ export const backgroundRegistry: BackgroundDefinition[] = [
       { key: 'firstColor', label: 'admin.backgrounds.color1', type: 'color', default: '#00d2ff' },
       { key: 'secondColor', label: 'admin.backgrounds.color2', type: 'color', default: '#7928ca' },
       { key: 'thirdColor', label: 'admin.backgrounds.color3', type: 'color', default: '#ff0080' },
-      {
-        key: 'speed',
-        label: 'admin.backgrounds.speed',
-        type: 'select',
-        default: 'normal',
-        options: [
-          { label: 'admin.backgrounds.slow', value: 'slow' },
-          { label: 'admin.backgrounds.normal', value: 'normal' },
-          { label: 'admin.backgrounds.fast', value: 'fast' },
-        ],
-      },
     ],
   },
   {

@@ -2,30 +2,49 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, 'codex/**']
   pull_request:
     branches: [main, dev]
+
+permissions:
+  contents: read
 
 jobs:
   lint:
     uses: ./.github/workflows/lint.yml
 
-  build:
-    needs: lint
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Auth, WebSocket, media, payments, connection, Aurora, startup, trial and admin regressions
+        run: npm test
+      - name: Install Chromium for dependency smoke
+        run: npx playwright install --with-deps chromium
+      - name: Telegram SDK, sanitizer and editor smoke
+        run: npm run test:dependencies
+      - name: Install nginx for actual proxy runtime tests
+        run: sudo apt-get update && sudo apt-get install -y nginx
+      - name: API, body/query, WebSocket, HTTPS and cache contracts
+        run: npm run test:nginx
+        env:
+          NGINX_BINARY: /usr/sbin/nginx
 
-      - name: Install dependencies
-        run: npm ci
-
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
       - name: Build
         run: npm run build
         env:
@@ -33,10 +52,18 @@ jobs:
           VITE_TELEGRAM_BOT_USERNAME: test_bot
           VITE_APP_NAME: Cabinet
           VITE_APP_LOGO: V
-
-      - name: Upload build artifacts
+      - name: Enforce measured initial JS and public locale budgets
+        run: npm run check:bundle
+      - name: Upload build and measured bundle artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
+          include-hidden-files: true
           retention-days: 7
+      - name: Build and smoke the standalone static image
+        run: |
+          docker build -t cabinet-smoke .
+          docker run -d --rm --name cabinet-smoke -p 127.0.0.1:18080:80 cabinet-smoke
+          trap 'docker stop cabinet-smoke' EXIT
+          node scripts/docker-smoke.mjs

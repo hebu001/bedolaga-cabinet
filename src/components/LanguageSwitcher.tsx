@@ -1,10 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
 import { infoApi, type LanguageInfo } from '@/api/info';
+import { changeAppLanguage, SUPPORTED_LANGUAGES } from '@/i18n';
 
 export default function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isChanging, setIsChanging] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [availableLanguages, setAvailableLanguages] = useState<LanguageInfo[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -12,7 +15,9 @@ export default function LanguageSwitcher() {
     const fetchLanguages = async () => {
       try {
         const data = await infoApi.getLanguages();
-        setAvailableLanguages(data.languages);
+        setAvailableLanguages(
+          data.languages.filter((lang) => SUPPORTED_LANGUAGES.includes(lang.code)),
+        );
       } catch {
         // Silently fall back to empty list — component handles it gracefully
       }
@@ -33,11 +38,17 @@ export default function LanguageSwitcher() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const changeLanguage = (code: string) => {
-    // i18n.ts subscribes to languageChanged and syncs <html lang> + dir
-    // centrally — no need to set documentElement.dir here.
-    i18n.changeLanguage(code);
-    setIsOpen(false);
+  const changeLanguage = async (code: string) => {
+    setIsChanging(true);
+    setHasError(false);
+    try {
+      await changeAppLanguage(code);
+      setIsOpen(false);
+    } catch {
+      setHasError(true);
+    } finally {
+      setIsChanging(false);
+    }
   };
 
   if (availableLanguages.length <= 1) {
@@ -53,7 +64,9 @@ export default function LanguageSwitcher() {
             ? 'border-dark-600 bg-dark-700'
             : 'border-dark-700/50 bg-dark-800/50 hover:border-dark-600 hover:bg-dark-700'
         }`}
-        aria-label="Change language"
+        aria-label={t('common.changeLanguage')}
+        aria-expanded={isOpen}
+        aria-controls="language-options"
       >
         <span>{currentLang.flag}</span>
         <span className="font-medium text-dark-200">{currentLang.code.toUpperCase()}</span>
@@ -68,11 +81,17 @@ export default function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-40 animate-fade-in rounded-xl border border-dark-700/50 bg-dark-800 py-1 shadow-lg">
+        <div
+          id="language-options"
+          aria-busy={isChanging}
+          className="absolute right-0 z-50 mt-2 w-40 animate-fade-in rounded-xl border border-dark-700/50 bg-dark-800 py-1 shadow-lg"
+        >
           {availableLanguages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => changeLanguage(lang.code)}
+              disabled={isChanging}
+              aria-pressed={lang.code === i18n.language}
               className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                 lang.code === i18n.language
                   ? 'bg-accent-500/10 text-accent-400'
@@ -83,6 +102,11 @@ export default function LanguageSwitcher() {
               <span>{lang.name}</span>
             </button>
           ))}
+          {hasError && (
+            <p role="alert" className="px-4 py-2 text-xs text-error-400">
+              {t('common.languageLoadError')}
+            </p>
+          )}
         </div>
       )}
     </div>

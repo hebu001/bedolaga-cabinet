@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useNavigate, useParams } from 'react-router';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { useCurrency } from '../hooks/useCurrency';
 import { useHaptic } from '../platform';
@@ -11,6 +11,7 @@ import { WebBackButton } from '../components/WebBackButton';
 export default function RenewSubscription() {
   const { subscriptionId } = useParams<{ subscriptionId: string }>();
   const subId = subscriptionId ? Number(subscriptionId) : undefined;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -18,7 +19,10 @@ export default function RenewSubscription() {
   const { formatAmount, currencySymbol } = useCurrency();
   const { impact } = useHaptic();
 
-  const [selectedPeriod, setSelectedPeriod] = useState<number | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<number | null>(() => {
+    const period = Number(searchParams.get('period'));
+    return Number.isSafeInteger(period) && period > 0 ? period : null;
+  });
   const [error, setError] = useState<string | null>(null);
 
   // Load subscription detail for tariff name
@@ -31,7 +35,13 @@ export default function RenewSubscription() {
   const subscription = subscriptionResponse?.subscription ?? null;
 
   // Load renewal options
-  const { data: options, isLoading } = useQuery({
+  const {
+    data: options,
+    isLoading,
+    isFetching: optionsFetching,
+    isError: optionsError,
+    refetch: refetchOptions,
+  } = useQuery({
     queryKey: ['renewal-options', subId],
     queryFn: () => subscriptionApi.getRenewalOptions(subId),
     enabled: !!subId,
@@ -40,16 +50,26 @@ export default function RenewSubscription() {
   });
 
   // Load balance
-  const { data: purchaseOptions } = useQuery({
+  const {
+    data: purchaseOptions,
+    isFetching: balanceFetching,
+    isError: balanceError,
+    refetch: refetchPurchaseOptions,
+  } = useQuery({
     queryKey: ['purchase-options', subId],
     queryFn: () => subscriptionApi.getPurchaseOptions(subId),
     staleTime: 0,
+    enabled: !!subId && Number.isSafeInteger(subId) && subId > 0,
   });
-  const balanceKopeks = purchaseOptions?.balance_kopeks ?? 0;
+  const balanceKopeks = purchaseOptions?.balance_kopeks;
 
   // Pre-select the first period once options arrive.
   useEffect(() => {
-    if (selectedPeriod === null && options && options.length > 0) {
+    if (
+      options &&
+      options.length > 0 &&
+      !options.some((option) => option.period_days === selectedPeriod)
+    ) {
       setSelectedPeriod(options[0].period_days);
     }
   }, [options, selectedPeriod]);
@@ -83,10 +103,23 @@ export default function RenewSubscription() {
   const handleRenew = (periodDays: number) => {
     impact('medium');
     setError(null);
+    if (optionsFetching || balanceFetching || optionsError || balanceError || balanceKopeks == null)
+      return;
+    const option = options?.find((item) => item.period_days === periodDays);
+    if (!option) return;
+    const missing = Math.max(0, option.price_kopeks - balanceKopeks);
+    if (missing > 0) {
+      const params = new URLSearchParams({
+        amountKopeks: String(missing),
+        returnTo: `/subscriptions/${subId}/renew?period=${periodDays}`,
+      });
+      navigate(`/balance?${params}`);
+      return;
+    }
     renewMutation.mutate(periodDays);
   };
 
-  if (!subId) {
+  if (!subId || !Number.isSafeInteger(subId) || subId <= 0) {
     return <Navigate to="/subscriptions" replace />;
   }
 
@@ -101,7 +134,11 @@ export default function RenewSubscription() {
   const insufficientMatch = error?.match(/^insufficient:(\d+)$/);
   const missingAmount = insufficientMatch ? Number(insufficientMatch[1]) : null;
   const selectedOption = options?.find((o) => o.period_days === selectedPeriod) ?? null;
-  const cantAfford = selectedOption ? balanceKopeks < selectedOption.price_kopeks : false;
+  const missingKopeks =
+    selectedOption && balanceKopeks != null
+      ? Math.max(0, selectedOption.price_kopeks - balanceKopeks)
+      : 0;
+  const cantAfford = missingKopeks > 0;
 
   return (
     <div className="space-y-5 pb-4">
@@ -122,12 +159,38 @@ export default function RenewSubscription() {
       <div className="flex items-center justify-between rounded-2xl bg-apple-card px-4 py-3.5">
         <span className="text-[13px] text-apple-mute">{t('common.balance', 'Баланс')}</span>
         <span className="text-[15px] font-semibold text-apple-ink">
-          {formatAmount(balanceKopeks / 100)} {currencySymbol}
+          {balanceKopeks == null ? '—' : `${formatAmount(balanceKopeks / 100)} ${currencySymbol}`}
         </span>
       </div>
 
+      {balanceError && (
+        <div role="alert" className="rounded-2xl bg-apple-card p-3 text-[13px] text-apple-mute">
+          {t(
+            'balance.loadError',
+            'Не удалось обновить баланс. Показаны последние полученные данные, если они доступны.',
+          )}
+          <button
+            type="button"
+            onClick={() => void refetchPurchaseOptions()}
+            className="ml-2 underline"
+          >
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+
       {/* Period options */}
-      {!options || options.length === 0 ? (
+      {optionsError ? (
+        <div
+          role="alert"
+          className="rounded-2xl bg-apple-card p-6 text-center text-[13px] text-apple-mute"
+        >
+          {t('subscription.renewalLoadError', 'Не удалось обновить варианты продления.')}
+          <button type="button" onClick={() => void refetchOptions()} className="ml-2 underline">
+            {t('common.retry')}
+          </button>
+        </div>
+      ) : !options || options.length === 0 ? (
         <div className="rounded-2xl bg-apple-card p-6 text-center text-[13px] text-apple-mute">
           {t('subscription.noRenewalOptions', 'Нет доступных вариантов продления')}
         </div>
@@ -149,13 +212,14 @@ export default function RenewSubscription() {
                   onClick={() => {
                     impact('light');
                     setSelectedPeriod(option.period_days);
+                    setSearchParams({ period: String(option.period_days) }, { replace: true });
                     setError(null);
                   }}
                   className="relative overflow-hidden rounded-2xl bg-apple-elevated py-3.5 pl-[18px] pr-4 text-left transition-transform active:scale-[0.97]"
                   style={isSelected ? { boxShadow: 'inset 0 0 0 1.5px #F97315' } : undefined}
                 >
                   {option.discount_percent > 0 && (
-                    <div className="absolute -right-2 -top-2 rounded-full bg-[#F97315] px-2 py-0.5 text-xs font-medium text-white">
+                    <div className="absolute -right-2 -top-2 rounded-full bg-[#F97315] px-2 py-0.5 text-xs font-medium text-black">
                       -{option.discount_percent}%
                     </div>
                   )}
@@ -188,11 +252,20 @@ export default function RenewSubscription() {
       )}
 
       {/* Insufficient balance prompt */}
-      {missingAmount && <InsufficientBalancePrompt missingAmountKopeks={missingAmount} compact />}
+      {missingAmount && (
+        <InsufficientBalancePrompt
+          missingAmountKopeks={missingAmount}
+          returnTo={`/subscriptions/${subId}/renew?period=${selectedPeriod}`}
+          compact
+        />
+      )}
 
       {/* Error */}
       {error && !missingAmount && (
-        <div className="rounded-2xl bg-apple-red/10 p-3 text-center text-[13px] text-apple-red">
+        <div
+          role="alert"
+          className="rounded-2xl bg-apple-red/10 p-3 text-center text-[13px] text-apple-red"
+        >
           {error}
         </div>
       )}
@@ -201,13 +274,25 @@ export default function RenewSubscription() {
       {options && options.length > 0 && (
         <button
           onClick={() => selectedPeriod && handleRenew(selectedPeriod)}
-          disabled={!selectedPeriod || renewMutation.isPending}
-          className="w-full rounded-full bg-[#F97315] py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          disabled={
+            !selectedPeriod ||
+            renewMutation.isPending ||
+            optionsFetching ||
+            balanceFetching ||
+            optionsError ||
+            balanceError ||
+            balanceKopeks == null
+          }
+          className="w-full rounded-full bg-[#F97315] py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {renewMutation.isPending
             ? t('common.processing', 'Обработка...')
             : cantAfford
-              ? t('subscription.insufficientBalance', 'Недостаточно средств')
+              ? t('balance.topUpPayable', {
+                  defaultValue: 'Пополнить на {{amount}} {{currency}}',
+                  amount: formatAmount(missingKopeks / 100),
+                  currency: currencySymbol,
+                })
               : t('subscription.extend', 'Продлить подписку')}
         </button>
       )}

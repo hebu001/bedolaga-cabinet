@@ -546,7 +546,13 @@ function FailedState() {
   );
 }
 
-function PollTimedOutState({ onRetry }: { onRetry: () => void }) {
+function PollTimedOutState({
+  onRetry,
+  unknown = false,
+}: {
+  onRetry: () => void;
+  unknown?: boolean;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -572,13 +578,20 @@ function PollTimedOutState({ onRetry }: { onRetry: () => void }) {
       </div>
       <div>
         <h1 className="text-xl font-bold text-dark-50">
-          {t('landing.pollTimedOut', 'Taking longer than expected')}
+          {unknown
+            ? t('balance.topUpResult.unverified', 'Не удалось проверить платёж')
+            : t('landing.pollTimedOut', 'Taking longer than expected')}
         </h1>
         <p className="mt-2 text-sm text-dark-400">
-          {t(
-            'landing.pollTimedOutDesc',
-            'Payment processing is taking longer than usual. You can try checking again.',
-          )}
+          {unknown
+            ? t(
+                'balance.topUpResult.unverifiedDesc',
+                'Статус оплаты пока неизвестен. Проверьте историю операций или повторите проверку позже.',
+              )
+            : t(
+                'landing.pollTimedOutDesc',
+                'Payment processing is taking longer than usual. You can try checking again.',
+              )}
         </p>
       </div>
       <button
@@ -597,7 +610,7 @@ export default function PurchaseSuccess() {
   const { token } = useParams<{ token: string }>();
   const [searchParams] = useSearchParams();
   const isActivateHint = searchParams.get('activate') === '1';
-  const pollStart = useRef(Date.now());
+  const [pollStartedAt, setPollStartedAt] = useState(Date.now);
   const [pollTimedOut, setPollTimedOut] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
   const [activationError, setActivationError] = useState(false);
@@ -625,21 +638,18 @@ export default function PurchaseSuccess() {
     queryFn: () => landingApi.getPurchaseStatus(token!),
     enabled: !!token && !pollTimedOut,
     refetchInterval: (query) => {
+      if (Date.now() - pollStartedAt >= MAX_POLL_MS) return false;
       const currentStatus = query.state.data?.status;
-      if (currentStatus === 'pending' || currentStatus === 'paid') {
-        if (Date.now() - pollStart.current > MAX_POLL_MS) {
-          setPollTimedOut(true);
-          return false;
-        }
-        return 3_000;
-      }
-      return false;
+      return ['delivered', 'pending_activation', 'failed', 'expired'].includes(currentStatus ?? '')
+        ? false
+        : 3_000;
     },
+    refetchOnWindowFocus: false,
     retry: 2,
   });
 
   const handleRetryPoll = useCallback(() => {
-    pollStart.current = Date.now();
+    setPollStartedAt(Date.now());
     setPollTimedOut(false);
     refetch();
   }, [refetch]);
@@ -661,6 +671,17 @@ export default function PurchaseSuccess() {
   }, [token, queryClient]);
 
   const isSuccess = purchaseStatus?.status === 'delivered';
+  const isTerminal =
+    !!purchaseStatus &&
+    ['delivered', 'pending_activation', 'failed', 'expired'].includes(purchaseStatus.status);
+  useEffect(() => {
+    if (!token || isTerminal || pollTimedOut) return;
+    const timer = window.setTimeout(
+      () => setPollTimedOut(true),
+      Math.max(0, pollStartedAt + MAX_POLL_MS - Date.now()),
+    );
+    return () => window.clearTimeout(timer);
+  }, [token, isTerminal, pollTimedOut, pollStartedAt]);
 
   // Fire analytics goal on successful delivery (once per purchase).
   // Idempotency keyed by token so a page refresh doesn't double-count.
@@ -709,9 +730,7 @@ export default function PurchaseSuccess() {
         aria-live="polite"
         aria-atomic="true"
       >
-        {isError ? (
-          <FailedState />
-        ) : isEmailSelfPurchase ? (
+        {isEmailSelfPurchase ? (
           <CabinetCredentialsState
             cabinetEmail={purchaseStatus.cabinet_email!}
             cabinetPassword={purchaseStatus.cabinet_password}
@@ -760,6 +779,8 @@ export default function PurchaseSuccess() {
           </div>
         ) : isFailed ? (
           <FailedState />
+        ) : isError || !token ? (
+          <PollTimedOutState unknown onRetry={handleRetryPoll} />
         ) : pollTimedOut ? (
           <PollTimedOutState onRetry={handleRetryPoll} />
         ) : (

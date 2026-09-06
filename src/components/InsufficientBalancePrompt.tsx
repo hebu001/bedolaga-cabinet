@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { safeTopUpReturnPath } from '../utils/topUpFlow';
 import { useCurrency } from '../hooks/useCurrency';
 
 interface InsufficientBalancePromptProps {
   /** Amount missing in kopeks */
   missingAmountKopeks: number;
+  returnTo?: string;
   /** Optional custom message */
   message?: string;
   /** Compact mode for inline use */
@@ -18,6 +20,7 @@ interface InsufficientBalancePromptProps {
 
 export default function InsufficientBalancePrompt({
   missingAmountKopeks,
+  returnTo,
   message,
   compact = false,
   className = '',
@@ -44,9 +47,10 @@ export default function InsufficientBalancePrompt({
       }
     }
     const params = new URLSearchParams();
-    params.set('amount', String(Math.ceil(missingRubles)));
-    params.set('returnTo', location.pathname);
-    navigate(`/balance/top-up?${params.toString()}`);
+    params.set('amountKopeks', String(missingAmountKopeks));
+    const returnPath = safeTopUpReturnPath(returnTo || `${location.pathname}${location.search}`);
+    if (returnPath) params.set('returnTo', returnPath);
+    navigate(`/balance?${params.toString()}`);
   };
 
   if (compact) {

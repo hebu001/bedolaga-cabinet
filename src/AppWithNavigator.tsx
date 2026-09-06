@@ -7,6 +7,7 @@ import {
   offBackButtonClick,
 } from '@telegram-apps/sdk-react';
 import Twemoji from 'react-twemoji';
+import { MotionConfig } from 'framer-motion';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PlatformProvider } from './platform/PlatformProvider';
@@ -73,23 +74,25 @@ export function AppWithNavigator() {
   const isTelegram = isInTelegramWebApp();
 
   return (
-    <BrowserRouter>
-      {isTelegram && <TelegramBackButton />}
-      <ErrorBoundary level="page">
-        <PlatformProvider>
-          <ThemeColorsProvider>
-            <TooltipProvider>
-              <ToastProvider>
-                <WebSocketProvider>
-                  <Twemoji options={TWEMOJI_OPTIONS}>
-                    <App />
-                  </Twemoji>
-                </WebSocketProvider>
-              </ToastProvider>
-            </TooltipProvider>
-          </ThemeColorsProvider>
-        </PlatformProvider>
-      </ErrorBoundary>
-    </BrowserRouter>
+    <MotionConfig reducedMotion="user">
+      <BrowserRouter>
+        {isTelegram && <TelegramBackButton />}
+        <ErrorBoundary level="page">
+          <PlatformProvider>
+            <ThemeColorsProvider>
+              <TooltipProvider>
+                <ToastProvider>
+                  <WebSocketProvider>
+                    <Twemoji options={TWEMOJI_OPTIONS}>
+                      <App />
+                    </Twemoji>
+                  </WebSocketProvider>
+                </ToastProvider>
+              </TooltipProvider>
+            </ThemeColorsProvider>
+          </PlatformProvider>
+        </ErrorBoundary>
+      </BrowserRouter>
+    </MotionConfig>
   );
 }

@@ -108,7 +108,7 @@ export default {
           elevated: '#2c2c2e',
           ink: '#f5f5f7',
           mute: '#98989d',
-          faint: '#5a5a5e',
+          faint: '#939397',
           hairline: 'rgba(255,255,255,0.08)',
           blue: '#F97315',
           green: '#30d158',

@@ -438,14 +438,15 @@ export const adminUsersApi = {
         | 'total_spent'
         | 'purchase_count';
     } = {},
+    signal?: AbortSignal,
   ): Promise<UsersListResponse> => {
-    const response = await apiClient.get('/cabinet/admin/users', { params });
+    const response = await apiClient.get('/cabinet/admin/users', { params, signal });
     return response.data;
   },
 
   // Get users stats
-  getStats: async (): Promise<UsersStatsResponse> => {
-    const response = await apiClient.get('/cabinet/admin/users/stats');
+  getStats: async (signal?: AbortSignal): Promise<UsersStatsResponse> => {
+    const response = await apiClient.get('/cabinet/admin/users/stats', { signal });
     return response.data;
   },
 

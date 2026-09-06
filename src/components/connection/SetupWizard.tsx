@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
+import { useModalFocus } from '../../hooks/useModalFocus';
 import ProgressRing from './ProgressRing';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 import { usePlatform } from '../../platform/hooks/usePlatform';
@@ -152,10 +153,9 @@ const pageVariants = {
 };
 
 const pageTransition = {
-  type: 'spring' as const,
-  stiffness: 500,
-  damping: 35,
-  mass: 0.6,
+  type: 'tween' as const,
+  duration: 0.18,
+  ease: 'easeOut' as const,
 };
 
 /* ─── Main Component ─── */
@@ -164,7 +164,8 @@ interface SetupWizardProps {
   onOpenDeepLink: (url: string) => void;
   isTelegramWebApp: boolean;
   onGoBack: () => void;
-  onOpenQR?: () => void;
+  displayUrl?: string | null;
+  hideLink?: boolean;
   // Pre-resolved connection URL from Connection.tsx (handles HAPP cryptolink
   // via @kastov/cryptohapp). Falls back to subscription URL in other modes.
   connectionUrl?: string | null;
@@ -176,6 +177,8 @@ export default function SetupWizard({
   isTelegramWebApp: _isTelegramWebApp,
   onGoBack,
   connectionUrl,
+  displayUrl,
+  hideLink = appConfig.hideLink ?? false,
 }: SetupWizardProps) {
   const { t } = useTranslation();
   const haptic = useHapticFeedback();
@@ -183,7 +186,10 @@ export default function SetupWizard({
   // Steps: 0 = intro (auto-detected platform), 1 = download app, 2 = add subscription, 3 = QR (other device)
   const [step, setStep] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const installDialogRef = useRef<HTMLDivElement>(null);
+  useModalFocus(showInstallModal, installDialogRef, () => setShowInstallModal(false));
 
   const detectedPlatform = useMemo(() => detectPlatform(), []);
 
@@ -231,14 +237,19 @@ export default function SetupWizard({
     return null;
   }, [selectedApp]);
 
-  const handleCopyUrl = useCallback(() => {
+  const handleCopyUrl = useCallback(async () => {
+    if (!displayUrl || hideLink) return;
     haptic.buttonPressMedium();
-    if (!appConfig.subscriptionUrl) return;
-    navigator.clipboard.writeText(appConfig.subscriptionUrl).then(() => {
+    setCopied(false);
+    setCopyError(false);
+    try {
+      await navigator.clipboard.writeText(displayUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
-  }, [appConfig.subscriptionUrl, haptic]);
+    } catch {
+      setCopyError(true);
+    }
+  }, [displayUrl, hideLink, haptic]);
 
   const handleInstallApp = useCallback(() => {
     if (!downloadUrl) return;
@@ -281,6 +292,8 @@ export default function SetupWizard({
     appConfig.subscriptionUrl ||
     null;
 
+  const qrUrl = connectionUrl || subscriptionLinkUrl || appConfig.subscriptionUrl || null;
+
   const handleAddSubscription = useCallback(() => {
     if (addSubscriptionUrl) {
       onOpenDeepLink(addSubscriptionUrl);
@@ -299,10 +312,10 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="z-10 flex w-full grow flex-col items-center"
+      className="wizard-step z-10 flex min-h-0 w-full grow flex-col items-center"
     >
       {/* Ring + icon area */}
-      <div className="flex flex-1 items-center justify-center">
+      <div className="wizard-hero flex min-h-0 flex-1 items-center justify-center">
         <div className="relative">
           <ProgressRing percent={currentProgress} size={160} />
           <div className="absolute inset-0 flex items-center justify-center text-white/80">
@@ -312,7 +325,7 @@ export default function SetupWizard({
       </div>
 
       {/* Text */}
-      <div className="flex flex-col gap-3 px-4 text-center">
+      <div className="wizard-text flex flex-col gap-3 px-4 text-center">
         <p className="text-4xl font-medium leading-10">
           {t('subscription.connection.setupOn', 'Настройка на')} {currentPlatformLabel}
         </p>
@@ -340,18 +353,22 @@ export default function SetupWizard({
         .radiate-button {
           animation: radiate-rings 2.5s infinite;
         }
+        @media (prefers-reduced-motion: reduce) {
+          .radiate-button { animation: none; }
+        }
       `}</style>
-      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
+      <div className="wizard-actions mt-auto flex w-full shrink-0 flex-col gap-2.5 pb-10 pt-6">
         <button
           onClick={() => {
             haptic.buttonPressMedium();
             setStep(1);
           }}
-          className="radiate-button h-14 w-full rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all will-change-[box-shadow] active:scale-[0.97]"
+          className="radiate-button h-14 w-full rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all active:scale-[0.97]"
         >
           {t('subscription.connection.startSetup', 'Начать настройку на этом устройстве')}
         </button>
         <button
+          disabled={!qrUrl}
           onClick={() => {
             haptic.buttonPressMedium();
             setStep(3);
@@ -373,10 +390,10 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="z-10 flex w-full grow flex-col items-center"
+      className="wizard-step z-10 flex min-h-0 w-full grow flex-col items-center"
     >
       {/* Ring + icon */}
-      <div className="flex flex-1 items-center justify-center">
+      <div className="wizard-hero flex min-h-0 flex-1 items-center justify-center">
         <div className="relative">
           <ProgressRing percent={currentProgress} size={160} />
           <div className="absolute inset-0 flex items-center justify-center text-white/80">
@@ -386,7 +403,7 @@ export default function SetupWizard({
       </div>
 
       {/* Text */}
-      <div className="flex flex-col gap-3 px-4 text-center">
+      <div className="wizard-text flex flex-col gap-3 px-4 text-center">
         <p className="text-4xl font-medium leading-10">
           {t('subscription.connection.appTitle', 'Приложение')}
         </p>
@@ -399,16 +416,20 @@ export default function SetupWizard({
       </div>
 
       {/* Buttons */}
-      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
+      <div className="wizard-actions mt-auto flex w-full shrink-0 flex-col gap-2.5 pb-10 pt-6">
         <button
+          disabled={!downloadUrl}
           onClick={() => {
             haptic.buttonPressMedium();
             setShowInstallModal(true);
           }}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97]"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all active:scale-[0.97]"
         >
           <CloudDownloadIcon size={20} />
           {t('subscription.connection.installApp', 'Установить приложение')}
+          {!downloadUrl && (
+            <span className="sr-only">{t('subscription.connection.downloadUnavailable')}</span>
+          )}
         </button>
         <button
           onClick={() => {
@@ -433,10 +454,10 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="z-10 flex w-full grow flex-col items-center"
+      className="wizard-step z-10 flex min-h-0 w-full grow flex-col items-center"
     >
       {/* Ring + icon */}
-      <div className="flex flex-1 items-center justify-center">
+      <div className="wizard-hero flex min-h-0 flex-1 items-center justify-center">
         <div className="relative">
           <ProgressRing percent={currentProgress} size={160} />
           <div className="absolute inset-0 flex items-center justify-center text-white/80">
@@ -446,7 +467,7 @@ export default function SetupWizard({
       </div>
 
       {/* Text */}
-      <div className="flex flex-col gap-3 px-4 text-center">
+      <div className="wizard-text flex flex-col gap-3 px-4 text-center">
         <p className="text-4xl font-medium leading-10">
           {t('subscription.connection.subscriptionTitle', 'Подписка')}
         </p>
@@ -459,14 +480,14 @@ export default function SetupWizard({
       </div>
 
       {/* Buttons */}
-      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
+      <div className="wizard-actions mt-auto flex w-full shrink-0 flex-col gap-2.5 pb-10 pt-6">
         <button
           onClick={() => {
             haptic.buttonPressMedium();
             handleAddSubscription();
           }}
           disabled={!addSubscriptionUrl}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           <CircleFadingPlusIcon size={20} />
           {t('subscription.connection.addSub', 'Добавить подписку')}
@@ -493,34 +514,29 @@ export default function SetupWizard({
       animate="animate"
       exit="exit"
       transition={pageTransition}
-      className="z-10 flex w-full grow flex-col items-center"
+      className="wizard-step z-10 flex min-h-0 w-full grow flex-col items-center"
     >
       {/* QR */}
-      <div className="flex w-full flex-1 items-center justify-center">
+      <div className="wizard-qr flex min-h-0 w-full flex-1 items-center justify-center">
         <div className="flex w-full flex-col items-center gap-4 text-center">
           <p className="text-base text-white/80">
             {t('subscription.connection.qrScanHint', 'Отсканируйте QR-код на другом устройстве')}
           </p>
-          <div className="mx-auto rounded-3xl bg-white p-6">
-            <QRCodeSVG
-              value={appConfig.subscriptionUrl || ''}
-              size={220}
-              level="M"
-              includeMargin={false}
-            />
+          <div className="wizard-qr-code mx-auto rounded-3xl bg-white p-6">
+            <QRCodeSVG value={qrUrl || ''} size={220} level="M" includeMargin={false} />
           </div>
         </div>
       </div>
 
       {/* Subscription URL bar + Android TV CTA + Back */}
-      <div className="mt-auto flex w-full flex-col gap-2.5 pb-10 pt-6">
-        {appConfig.subscriptionUrl && (
+      <div className="wizard-actions mt-auto flex w-full shrink-0 flex-col gap-2.5 pb-10 pt-6">
+        {!hideLink && displayUrl && (
           <button
             onClick={handleCopyUrl}
             className="relative flex h-14 w-full items-center rounded-2xl bg-white px-4 text-black transition-all active:scale-[0.97]"
           >
             <div className="flex-1 overflow-hidden text-left">
-              <div className="truncate pr-2 text-sm">{appConfig.subscriptionUrl}</div>
+              <div className="truncate pr-2 text-sm">{displayUrl}</div>
               <small className="text-xs text-gray-500">
                 {t('subscription.connection.yourLink', 'Ваша ссылка на подписку')}
               </small>
@@ -529,6 +545,23 @@ export default function SetupWizard({
               {copied ? <CheckIcon /> : <CopyIcon />}
             </div>
           </button>
+        )}
+        {copyError && !hideLink && displayUrl && (
+          <div role="alert" className="text-sm">
+            <p>{t('common.copyFailed')}</p>
+            <input
+              aria-label={t('subscription.copyLink')}
+              readOnly
+              value={displayUrl ?? ''}
+              onFocus={(event) => event.currentTarget.select()}
+              className="w-full rounded bg-white/10 px-2"
+            />
+          </div>
+        )}
+        {copied && (
+          <span role="status" className="sr-only">
+            {t('common.copied')}
+          </span>
         )}
         <button
           onClick={() => {
@@ -561,9 +594,8 @@ export default function SetupWizard({
 
   return (
     <div
-      className="flex h-full w-full flex-col items-center pb-4"
+      className="setup-wizard flex h-full min-h-0 w-full flex-col items-center pb-4"
       style={{
-        touchAction: 'none',
         overscrollBehavior: 'none',
       }}
     >
@@ -586,9 +618,12 @@ export default function SetupWizard({
 
             {/* Card */}
             <motion.div
+              ref={installDialogRef}
+              tabIndex={-1}
+              aria-labelledby="install-dialog-title"
               role="dialog"
               aria-modal="true"
-              className="relative w-full max-w-sm rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6"
+              className="relative max-h-[calc(100dvh-40px)] w-full max-w-sm overflow-y-auto rounded-[28px] border border-white/10 bg-[#0d0d0d] p-6"
               initial={{ scale: 0.94, opacity: 0, y: 12 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
@@ -618,7 +653,10 @@ export default function SetupWizard({
               </button>
 
               {/* Title */}
-              <h2 className="max-w-[78%] text-[32px] font-semibold leading-[1.1] text-white">
+              <h2
+                id="install-dialog-title"
+                className="max-w-[78%] text-[32px] font-semibold leading-[1.1] text-white"
+              >
                 {t('subscription.connection.installModalTitle', 'Важная информация')}
               </h2>
 
@@ -634,7 +672,7 @@ export default function SetupWizard({
               {/* Confirm — orange */}
               <button
                 onClick={handleConfirmInstall}
-                className="mt-7 flex h-14 w-full items-center justify-center rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all hover:brightness-95 active:scale-[0.97]"
+                className="mt-7 flex h-14 w-full items-center justify-center rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all hover:brightness-95 active:scale-[0.97]"
               >
                 {t('subscription.connection.installModalConfirm', 'Хорошо, перейти к установке')}
               </button>

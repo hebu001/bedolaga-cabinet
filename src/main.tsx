@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { SessionQueryProvider } from './providers/SessionQueryProvider';
+import { I18nBootstrap } from './providers/I18nBootstrap';
 import {
   init,
   restoreInitData,
@@ -24,7 +25,6 @@ import { AppWithNavigator } from './AppWithNavigator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { initLogoPreload } from './api/branding';
 import { getCachedFullscreenEnabled, isTelegramMobile } from './hooks/useTelegramSDK';
-import './i18n';
 import './styles/globals.css';
 
 // Polyfill Object.hasOwn for older iOS/Android WebViews (Safari < 15.4, old Chrome).
@@ -106,9 +106,11 @@ if ('requestIdleCallback' in window) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary level="app">
-      <SessionQueryProvider>
-        <AppWithNavigator />
-      </SessionQueryProvider>
+      <I18nBootstrap>
+        <SessionQueryProvider>
+          <AppWithNavigator />
+        </SessionQueryProvider>
+      </I18nBootstrap>
     </ErrorBoundary>
   </React.StrictMode>,
 );

@@ -13,7 +13,8 @@ import type { PaginatedResponse, Transaction } from '../types';
 
 import { ChevronDownIcon, ChevronRightIcon } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
-import { isPaidStatus, isFailedStatus } from '../utils/paymentStatus';
+import { safeTopUpReturnPath } from '../utils/topUpFlow';
+import { useModalFocus } from '../hooks/useModalFocus';
 import TopUpPanel from '@/components/balance/TopUpPanel';
 
 const WalletIcon = ({ className = 'h-8 w-8' }: { className?: string }) => (
@@ -45,7 +46,12 @@ export default function Balance() {
   const paymentHandledRef = useRef(false);
 
   // Fetch balance from API
-  const { data: balanceData, refetch: refetchBalance } = useQuery({
+  const {
+    data: balanceData,
+    refetch: refetchBalance,
+    isError: balanceError,
+    isPending: balanceLoading,
+  } = useQuery({
     queryKey: ['balance'],
     queryFn: balanceApi.getBalance,
     staleTime: API.BALANCE_STALE_TIME_MS,
@@ -61,18 +67,14 @@ export default function Balance() {
   useEffect(() => {
     if (paymentHandledRef.current) return;
 
-    const paymentStatus = searchParams.get('payment') || searchParams.get('status');
-
-    const normalised = paymentStatus?.toLowerCase() ?? '';
-    const isSuccess = isPaidStatus(normalised) || searchParams.get('success') === 'true';
-    const isFailed = isFailedStatus(normalised);
-
-    if (isSuccess) {
+    if (
+      searchParams.has('payment') ||
+      searchParams.has('status') ||
+      searchParams.has('success') ||
+      searchParams.has('payment_id')
+    ) {
       paymentHandledRef.current = true;
-      navigate('/balance/top-up/result?status=success', { replace: true });
-    } else if (isFailed) {
-      paymentHandledRef.current = true;
-      navigate('/balance/top-up/result?status=failed', { replace: true });
+      navigate(`/balance/top-up/result?${searchParams}`, { replace: true });
     }
   }, [searchParams, navigate]);
 
@@ -91,41 +93,50 @@ export default function Balance() {
   const [promoSelectCode, setPromoSelectCode] = useState<string | null>(null);
   const [transactionsPage, setTransactionsPage] = useState(1);
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
-  const [showTopUp, setShowTopUp] = useState(false);
+  const rawAmountKopeks = searchParams.has('amountKopeks')
+    ? Number(searchParams.get('amountKopeks'))
+    : Math.round(Number(searchParams.get('amount')) * 100);
+  const intendedAmount =
+    Number.isSafeInteger(rawAmountKopeks) && rawAmountKopeks > 0 ? rawAmountKopeks : undefined;
+  const returnPath = safeTopUpReturnPath(searchParams.get('returnTo'));
+  const [showTopUp, setShowTopUp] = useState(
+    () => searchParams.get('topup') === '1' || intendedAmount != null,
+  );
   const [showPromo, setShowPromo] = useState(false);
+  const [topUpPending, setTopUpPending] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalFocus(showTopUp || showPromo, dialogRef, () => {
+    if (topUpPending) return;
+    setShowTopUp(false);
+    setShowPromo(false);
+  });
 
   const handleTopUpSuccess = async () => {
     setShowTopUp(false);
     await refetchBalance();
     await refreshUser();
     queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    if (returnPath) navigate(returnPath);
   };
 
-  // Lock body scroll + Escape-to-close while a balance modal is open
-  useEffect(() => {
-    if (!showTopUp && !showPromo) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowTopUp(false);
-        setShowPromo(false);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [showTopUp, showPromo]);
-
-  const { data: transactions, isLoading } = useQuery<PaginatedResponse<Transaction>>({
+  const {
+    data: transactions,
+    isLoading,
+    isError: transactionsError,
+    isFetching: transactionsFetching,
+    refetch: refetchTransactions,
+  } = useQuery<PaginatedResponse<Transaction>>({
     queryKey: ['transactions', transactionsPage],
     queryFn: () => balanceApi.getTransactions({ per_page: 20, page: transactionsPage }),
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: paymentMethods } = useQuery({
+  const {
+    data: paymentMethods,
+    isPending: methodsLoading,
+    isError: methodsError,
+    refetch: refetchMethods,
+  } = useQuery({
     queryKey: ['payment-methods'],
     queryFn: balanceApi.getPaymentMethods,
   });
@@ -248,14 +259,33 @@ export default function Balance() {
       <motion.div variants={staggerItem}>
         <div className={`${cardCls} p-6 text-center`}>
           <div className="text-[15px] text-apple-mute">{t('balance.available', 'Доступно')}</div>
-          <div className="mt-1.5 text-[46px] font-bold leading-none tracking-tight text-apple-ink">
-            {currencySymbol} {formatAmount(balanceData?.balance_rubles || 0)}
+          <div
+            aria-busy={balanceLoading}
+            aria-label={balanceLoading ? t('common.loading') : undefined}
+            className="mt-1.5 text-[46px] font-bold leading-none tracking-tight text-apple-ink"
+          >
+            {balanceData ? `${currencySymbol} ${formatAmount(balanceData.balance_rubles)}` : '—'}
           </div>
+          {balanceError && (
+            <div role="alert" className="mt-3 text-[13px] text-apple-mute">
+              {t(
+                'balance.loadError',
+                'Не удалось обновить баланс. Показаны последние полученные данные, если они доступны.',
+              )}
+              <button
+                type="button"
+                onClick={() => void refetchBalance()}
+                className="ml-2 underline"
+              >
+                {t('common.retry')}
+              </button>
+            </div>
+          )}
           <div className="mt-6 flex gap-2.5">
             <button
               type="button"
               onClick={() => setShowTopUp(true)}
-              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
+              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90"
             >
               {t('balance.topUp', 'Пополнить')}
             </button>
@@ -295,6 +325,18 @@ export default function Balance() {
                 className="overflow-hidden"
               >
                 <div className="mt-4">
+                  {transactionsError && (
+                    <div role="alert" className="mb-3 text-[13px] text-apple-mute">
+                      {t('balance.historyLoadError', 'Не удалось обновить историю операций.')}
+                      <button
+                        type="button"
+                        onClick={() => void refetchTransactions()}
+                        className="ml-2 underline"
+                      >
+                        {t('common.retry')}
+                      </button>
+                    </div>
+                  )}
                   {isLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
@@ -363,7 +405,7 @@ export default function Balance() {
                         );
                       })}
                     </motion.div>
-                  ) : (
+                  ) : transactionsError ? null : (
                     <div className="py-12 text-center">
                       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated">
                         <WalletIcon className="h-8 w-8 text-apple-faint" />
@@ -377,7 +419,7 @@ export default function Balance() {
                       <button
                         type="button"
                         onClick={() => setTransactionsPage((prev) => Math.max(1, prev - 1))}
-                        disabled={transactions.page <= 1}
+                        disabled={transactionsFetching || transactions.page <= 1}
                         className="min-w-[120px] flex-1 rounded-full bg-apple-elevated px-4 py-2.5 text-[15px] font-medium text-apple-ink transition-opacity hover:opacity-80 disabled:opacity-40 sm:flex-none"
                       >
                         {t('common.back')}
@@ -395,7 +437,7 @@ export default function Balance() {
                             transactions.pages ? Math.min(transactions.pages, prev + 1) : prev + 1,
                           )
                         }
-                        disabled={transactions.page >= transactions.pages}
+                        disabled={transactionsFetching || transactions.page >= transactions.pages}
                         className="min-w-[120px] flex-1 rounded-full bg-apple-elevated px-4 py-2.5 text-[15px] font-medium text-apple-ink transition-opacity hover:opacity-80 disabled:opacity-40 sm:flex-none"
                       >
                         {t('common.next')}
@@ -432,15 +474,21 @@ export default function Balance() {
           <div
             className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.5)' }}
-            onClick={() => setShowTopUp(false)}
+            onClick={() => !topUpPending && setShowTopUp(false)}
           >
             <div
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={showTopUp ? t('balance.topUpBalance') : t('balance.promocode.title')}
+              tabIndex={-1}
               className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
-                onClick={() => setShowTopUp(false)}
+                onClick={() => !topUpPending && setShowTopUp(false)}
+                disabled={topUpPending}
                 aria-label={t('common.close', 'Закрыть')}
                 className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
               >
@@ -460,7 +508,30 @@ export default function Balance() {
                 {t('balance.topUpBalance', 'Пополнение баланса')}
               </div>
               <div className="flex-1 overflow-y-auto">
-                <TopUpPanel methods={paymentMethods ?? []} onSuccess={handleTopUpSuccess} />
+                {methodsLoading ? (
+                  <div role="status" className="p-7 text-apple-mute">
+                    {t('common.loading')}
+                  </div>
+                ) : methodsError ? (
+                  <div role="alert" className="p-7 text-apple-mute">
+                    {t('balance.methodsLoadError', 'Не удалось загрузить способы оплаты.')}
+                    <button
+                      type="button"
+                      onClick={() => void refetchMethods()}
+                      className="ml-2 underline"
+                    >
+                      {t('common.retry')}
+                    </button>
+                  </div>
+                ) : (
+                  <TopUpPanel
+                    methods={paymentMethods ?? []}
+                    onPendingChange={setTopUpPending}
+                    onSuccess={handleTopUpSuccess}
+                    fixedAmountKopeks={intendedAmount}
+                    returnPath={returnPath}
+                  />
+                )}
               </div>
             </div>
           </div>,
@@ -476,6 +547,11 @@ export default function Balance() {
             onClick={() => setShowPromo(false)}
           >
             <div
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={showTopUp ? t('balance.topUpBalance') : t('balance.promocode.title')}
+              tabIndex={-1}
               className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black"
               onClick={(e) => e.stopPropagation()}
             >
@@ -504,6 +580,9 @@ export default function Balance() {
                 <div className="flex gap-2.5">
                   <input
                     type="text"
+                    aria-label={t('balance.promocode.title')}
+                    aria-invalid={!!promocodeError}
+                    aria-describedby={promocodeError ? 'promocode-error' : undefined}
                     value={promocode}
                     onChange={(e) => setPromocode(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handlePromocodeActivate()}
@@ -516,7 +595,7 @@ export default function Balance() {
                     type="button"
                     onClick={() => handlePromocodeActivate()}
                     disabled={!promocode.trim() || promocodeLoading}
-                    className="shrink-0 rounded-full bg-apple-blue px-5 py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                    className="shrink-0 rounded-full bg-apple-blue px-5 py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
                     {promocodeLoading ? '…' : t('balance.promocode.activate')}
                   </button>
@@ -524,6 +603,8 @@ export default function Balance() {
                 <AnimatePresence mode="wait">
                   {promocodeError && (
                     <motion.div
+                      id="promocode-error"
+                      role="alert"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}

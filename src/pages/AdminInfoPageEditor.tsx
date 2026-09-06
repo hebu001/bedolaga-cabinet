@@ -975,7 +975,7 @@ export default function AdminInfoPageEditor() {
     const initialContent = pageData.content[activeLocale] ?? pageData.content['ru'] ?? '';
     editor.commands.setContent(initialContent);
     editorPopulated.current = true;
-  }, [pageData, editor]); // activeLocale intentionally omitted
+  }, [pageData, editor, activeLocale]);
 
   // Auto-generate slug from Russian title
   useEffect(() => {

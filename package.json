@@ -17,7 +17,17 @@
     "prepare": "husky",
     "test:ws": "node --experimental-strip-types --test test/cabinet-websocket.test.mjs",
     "test:auth": "node --test test/auth-session.test.cjs",
-    "test:media": "node --experimental-strip-types --test test/ticket-media.test.mjs"
+    "test:media": "node --experimental-strip-types --test test/ticket-media.test.mjs",
+    "test": "npm run test:auth && npm run test:ws && npm run test:media && npm run test:payments && npm run test:connection && npm run test:aurora && npm run test:startup && npm run test:trial && npm run test:admin",
+    "test:payments": "node --experimental-strip-types --test test/payment-flow.test.mjs",
+    "test:connection": "node --experimental-strip-types --test test/connection-link.test.mjs",
+    "test:aurora": "node --test test/aurora-background.test.cjs",
+    "test:startup": "node --test test/startup-i18n.test.cjs",
+    "test:admin": "node --test test/admin-regressions.test.cjs",
+    "test:dependencies": "node scripts/dependency-smoke.mjs",
+    "test:nginx": "node --test test/nginx-runtime.test.mjs",
+    "check:bundle": "node scripts/check-bundle-budget.mjs",
+    "test:trial": "node --test test/trial-balance.test.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -38,23 +48,23 @@
     "@tanstack/react-query": "^5.8.0",
     "@tanstack/react-table": "^8.21.3",
     "@telegram-apps/sdk-react": "^3.3.9",
-    "@tiptap/extension-color": "^3.20.4",
-    "@tiptap/extension-highlight": "^3.20.4",
-    "@tiptap/extension-image": "^3.20.4",
-    "@tiptap/extension-link": "^3.20.4",
-    "@tiptap/extension-placeholder": "^3.20.4",
-    "@tiptap/extension-text-align": "^3.20.4",
-    "@tiptap/extension-text-style": "^3.20.4",
-    "@tiptap/extension-underline": "^3.20.4",
-    "@tiptap/pm": "^3.20.4",
-    "@tiptap/react": "^3.20.4",
-    "@tiptap/starter-kit": "^3.20.4",
+    "@tiptap/extension-color": "3.31.3",
+    "@tiptap/extension-highlight": "3.31.3",
+    "@tiptap/extension-image": "3.31.3",
+    "@tiptap/extension-link": "3.31.3",
+    "@tiptap/extension-placeholder": "3.31.3",
+    "@tiptap/extension-text-align": "3.31.3",
+    "@tiptap/extension-text-style": "3.31.3",
+    "@tiptap/extension-underline": "3.31.3",
+    "@tiptap/pm": "3.31.3",
+    "@tiptap/react": "3.31.3",
+    "@tiptap/starter-kit": "3.31.3",
     "autoprefixer": "^10.4.24",
-    "axios": "^1.6.0",
+    "axios": "1.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "dompurify": "^3.3.3",
+    "dompurify": "3.4.14",
     "framer-motion": "^12.29.2",
     "graphology": "^0.26.0",
     "graphology-layout-forceatlas2": "^0.10.1",
@@ -66,7 +76,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-i18next": "^16.5.4",
-    "react-router": "^7.13.0",
+    "react-router": "7.18.3",
     "react-twemoji": "^0.7.2",
     "recharts": "^3.7.0",
     "sigma": "^3.0.2",
@@ -89,13 +99,14 @@
     "globals": "^17.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "postcss": "^8.4.31",
+    "postcss": "8.5.28",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.54.0",
-    "vite": "^7.3.1"
+    "vite": "7.3.6",
+    "playwright": "1.62.1"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -105,5 +116,14 @@
     "*.{css,json}": [
       "prettier --write"
     ]
+  },
+  "engines": {
+    "node": ">=24 <27"
+  },
+  "overrides": {
+    "@telegram-apps/sdk": {
+      "valibot": "1.4.2"
+    },
+    "browserslist": "4.28.9"
   }
 }

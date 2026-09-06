@@ -1,15 +1,18 @@
-import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 
 import { balanceApi } from '../../api/balance';
+import { useAuthStore } from '../../store/auth';
 import { useCurrency } from '../../hooks/useCurrency';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../../utils/rateLimit';
 import { useCloseOnSuccessNotification } from '../../store/successNotification';
 import { useHaptic, usePlatform } from '@/platform';
 import type { PaymentMethod, PaymentMethodOption } from '../../types';
 import { saveTopUpPendingInfo } from '../../utils/topUpStorage';
+import { getTopUpQuote, TopUpPreparationError } from '../../utils/topUpFlow';
+import { useModalFocus } from '../../hooks/useModalFocus';
 
 /**
  * Top-up modal body — amount input on top, a collapsed payment-method row
@@ -43,30 +46,36 @@ interface Selectable {
 interface TopUpPanelProps {
   methods: PaymentMethod[];
   onSuccess: () => void;
+  onPendingChange?: (pending: boolean) => void;
   /**
-   * If provided, hides the amount input and uses this exact amount.
+   * If provided, hides the amount input and shows the payable amount, including the selected method minimum.
    * Used by SubscriptionPurchase modal where the missing amount is known
    * in advance — the user only needs to pick a payment method.
    */
   fixedAmountKopeks?: number;
+  returnPath?: string;
   /**
-   * Optional hook executed right before `createTopUp` is called. Errors
-   * are swallowed silently — used for pre-flight calls (e.g. cart save
-   * via expected 402) that should not block payment creation.
+   * Optional preparation before invoice creation. Return false when the purchase
+   * already completed; throw on unexpected errors to avoid an unnecessary invoice.
    */
-  onBeforeTopUp?: () => Promise<void>;
+  onBeforeTopUp?: () => Promise<void | boolean>;
 }
 
 export default function TopUpPanel({
   methods,
   onSuccess,
+  onPendingChange,
   fixedAmountKopeks,
+  returnPath,
   onBeforeTopUp,
 }: TopUpPanelProps) {
   const { t } = useTranslation();
+  const userId = useAuthStore((state) => state.user?.id);
   const { formatAmount, currencySymbol, convertToRub } = useCurrency();
   const { openInvoice, openTelegramLink, openLink } = usePlatform();
   const haptic = useHaptic();
+  const amountId = useId();
+  const errorId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useCloseOnSuccessNotification(onSuccess);
@@ -107,6 +116,8 @@ export default function TopUpPanel({
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  useModalFocus(showPicker, pickerRef, () => setShowPicker(false));
 
   // Default to the first available selectable once the list is known
   useEffect(() => {
@@ -120,8 +131,15 @@ export default function TopUpPanel({
   const selectedOption = current?.option?.id ?? null;
 
   const starsPaymentMutation = useMutation({
-    mutationFn: (amountKopeks: number) => balanceApi.createStarsInvoice(amountKopeks),
+    mutationFn: async (amountKopeks: number) => {
+      if (onBeforeTopUp && (await onBeforeTopUp()) === false) return null;
+      return balanceApi.createStarsInvoice(amountKopeks);
+    },
     onSuccess: async (data) => {
+      if (!data) {
+        onSuccess();
+        return;
+      }
       if (!data.invoice_url) {
         setError(t('balance.errors.noPaymentLink'));
         return;
@@ -142,48 +160,56 @@ export default function TopUpPanel({
     },
     onError: (err: unknown) => {
       haptic.notification('error');
-      const axiosError = err as { response?: { data?: { detail?: string } } };
-      setError(axiosError?.response?.data?.detail || t('balance.errors.invoiceFailed'));
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data
+        ?.detail;
+      setError(
+        err instanceof TopUpPreparationError
+          ? err.message
+          : typeof detail === 'string'
+            ? detail
+            : t('balance.errors.invoiceFailed'),
+      );
     },
   });
 
   const topUpMutation = useMutation<
     {
       payment_id: string;
+      local_payment_id?: number;
       payment_url?: string;
       invoice_url?: string;
       amount_kopeks: number;
       amount_rubles: number;
       status: string;
       expires_at: string | null;
-    },
+    } | null,
     unknown,
     number
   >({
     mutationFn: async (amountKopeks: number) => {
-      // Optional pre-flight (e.g. backend cart save via expected 402).
-      // Failures are intentional and must not block payment creation.
-      if (onBeforeTopUp) {
-        try {
-          await onBeforeTopUp();
-        } catch {
-          /* expected for cart pre-flight that returns 402 */
-        }
-      }
+      if (onBeforeTopUp && (await onBeforeTopUp()) === false) return null;
       return balanceApi.createTopUp(amountKopeks, method!.id, selectedOption || undefined);
     },
     onSuccess: (data) => {
+      if (!data) {
+        onSuccess();
+        return;
+      }
       const redirectUrl = data.payment_url || data.invoice_url;
       if (redirectUrl) {
         // Save pending info BEFORE a possible redirect — code after
         // window.location.href won't run.
-        if (data.payment_id && method) {
+        if (data.payment_id && method && userId) {
           saveTopUpPendingInfo({
+            user_id: userId,
             amount_kopeks: data.amount_kopeks,
             method_id: method.id,
             method_name: methodLabel(method),
             payment_id: data.payment_id,
+            local_payment_id: data.local_payment_id,
+            payment_url: redirectUrl,
             created_at: Date.now(),
+            return_to: returnPath,
           });
         }
 
@@ -201,13 +227,20 @@ export default function TopUpPanel({
         }
 
         setPaymentUrl(redirectUrl);
+      } else {
+        setError(t('balance.errors.noPaymentLink'));
       }
     },
     onError: (err: unknown) => {
-      const detail =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || '';
+      const rawDetail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data
+        ?.detail;
+      const detail = typeof rawDetail === 'string' ? rawDetail : '';
       setError(
-        detail.includes('not yet implemented') ? t('balance.useBot') : detail || t('common.error'),
+        err instanceof TopUpPreparationError
+          ? err.message
+          : detail.includes('not yet implemented')
+            ? t('balance.useBot')
+            : detail || t('common.error'),
       );
     },
   });
@@ -216,12 +249,17 @@ export default function TopUpPanel({
   const maxRubles = (method?.max_amount_kopeks ?? 0) / 100;
   const isStarsMethod = (method?.id ?? '').toLowerCase().includes('stars');
 
+  const fixedQuote =
+    fixedAmountKopeks != null
+      ? getTopUpQuote(fixedAmountKopeks, method?.min_amount_kopeks, method?.max_amount_kopeks)
+      : null;
+
   const handleSubmit = useCallback(() => {
     setError(null);
     setPaymentUrl(null);
     inputRef.current?.blur();
 
-    if (!method) return;
+    if (!method?.is_available || topUpMutation.isPending || starsPaymentMutation.isPending) return;
     if (!checkRateLimit(RATE_LIMIT_KEYS.PAYMENT, 3, 30000)) {
       setError(
         t('balance.errors.rateLimit', { seconds: getRateLimitResetTime(RATE_LIMIT_KEYS.PAYMENT) }),
@@ -230,23 +268,38 @@ export default function TopUpPanel({
     }
     let amountKopeks: number;
     if (fixedAmountKopeks != null) {
-      // Caller already knows the exact amount — skip input parsing and clamp
-      // to the chosen method's min/max so we never trigger backend validation errors.
-      const minK = method.min_amount_kopeks ?? 0;
-      const maxK = method.max_amount_kopeks ?? Number.MAX_SAFE_INTEGER;
-      amountKopeks = Math.max(minK, Math.min(maxK, fixedAmountKopeks));
+      if (!fixedQuote?.valid) {
+        setError(
+          t('balance.errors.methodMaximum', {
+            max: formatAmount(maxRubles),
+            currency: currencySymbol,
+            defaultValue:
+              'Максимум этого способа — {{max}} {{currency}}. Выберите другой способ оплаты.',
+          }),
+        );
+        return;
+      }
+      amountKopeks = fixedQuote.payable;
     } else {
       const amountCurrency = parseFloat(amount);
-      if (isNaN(amountCurrency) || amountCurrency <= 0) {
+      if (!Number.isFinite(amountCurrency) || amountCurrency <= 0) {
         setError(t('balance.errors.enterAmount'));
         return;
       }
       const amountRubles = convertToRub(amountCurrency);
-      if (amountRubles < minRubles || amountRubles > maxRubles) {
+      const roundedKopeks = Math.round(amountRubles * 100);
+      if (!Number.isSafeInteger(roundedKopeks) || roundedKopeks <= 0) {
+        setError(t('balance.errors.enterAmount'));
+        return;
+      }
+      if (
+        roundedKopeks < (method.min_amount_kopeks ?? 0) ||
+        (maxRubles > 0 && roundedKopeks > method.max_amount_kopeks)
+      ) {
         setError(t('balance.errors.amountRange', { min: minRubles, max: maxRubles }));
         return;
       }
-      amountKopeks = Math.round(amountRubles * 100);
+      amountKopeks = roundedKopeks;
     }
     if (isStarsMethod) {
       starsPaymentMutation.mutate(amountKopeks);
@@ -256,7 +309,10 @@ export default function TopUpPanel({
   }, [
     amount,
     convertToRub,
+    currencySymbol,
+    formatAmount,
     fixedAmountKopeks,
+    fixedQuote,
     isStarsMethod,
     maxRubles,
     method,
@@ -267,6 +323,10 @@ export default function TopUpPanel({
   ]);
 
   const isPending = topUpMutation.isPending || starsPaymentMutation.isPending;
+  useEffect(() => {
+    onPendingChange?.(isPending);
+    return () => onPendingChange?.(false);
+  }, [isPending, onPendingChange]);
 
   const handleOpenPayment = () => {
     if (!paymentUrl) return;
@@ -281,7 +341,12 @@ export default function TopUpPanel({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* clipboard write failed silently */
+      setError(
+        t(
+          'balance.errors.copyFailed',
+          'Не удалось скопировать ссылку. Откройте страницу оплаты кнопкой ниже.',
+        ),
+      );
     }
   };
 
@@ -305,21 +370,25 @@ export default function TopUpPanel({
           </div>
           <div className="flex h-14 w-full items-center justify-between rounded-2xl bg-apple-elevated px-4">
             <span className="text-[22px] font-semibold tabular-nums text-apple-ink">
-              {formatAmount(fixedAmountKopeks / 100)}
+              {formatAmount((fixedQuote?.payable ?? fixedAmountKopeks) / 100)}
             </span>
             <span className="text-[17px] font-medium text-apple-mute">{currencySymbol}</span>
           </div>
         </div>
       ) : (
         <div>
-          <div className="mb-2 text-[13px] text-apple-mute">
+          <label htmlFor={amountId} className="mb-2 block text-[13px] text-apple-mute">
             {t('balance.enterAmount')} ·{' '}
             <span className="tabular-nums">
               {formatAmount(minRubles, 0)} – {formatAmount(maxRubles, 0)} {currencySymbol}
             </span>
-          </div>
+          </label>
           <div className="relative">
             <input
+              id={amountId}
+              aria-invalid={!!error}
+              aria-describedby={error ? errorId : undefined}
+              disabled={isPending}
               ref={inputRef}
               type="number"
               inputMode="decimal"
@@ -347,10 +416,36 @@ export default function TopUpPanel({
         </div>
       )}
 
+      {fixedQuote && fixedQuote.extra > 0 && (
+        <p className="text-[13px] text-apple-mute" role="status">
+          {t('balance.minimumTopUpNotice', {
+            minimum: formatAmount(fixedQuote.payable / 100),
+            required: formatAmount((fixedAmountKopeks ?? 0) / 100),
+            extra: formatAmount(fixedQuote.extra / 100),
+            currency: currencySymbol,
+            defaultValue:
+              'Минимум этого способа — {{minimum}} {{currency}}. Нужно {{required}} {{currency}}; {{extra}} {{currency}} останется на балансе после покупки.',
+          })}
+        </p>
+      )}
+      {fixedQuote?.exceedsMaximum && (
+        <p className="text-[13px] text-apple-red" role="alert">
+          {t('balance.errors.methodMaximum', {
+            max: formatAmount(maxRubles),
+            currency: currencySymbol,
+            defaultValue:
+              'Максимум этого способа — {{max}} {{currency}}. Выберите другой способ оплаты.',
+          })}
+        </p>
+      )}
+
       {/* Payment method — collapsed row */}
       <button
         type="button"
         onClick={() => selectables.length > 1 && setShowPicker(true)}
+        disabled={isPending}
+        aria-haspopup="dialog"
+        aria-expanded={showPicker}
         className="flex w-full items-center gap-3 rounded-2xl bg-apple-card p-3.5 text-left"
         style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)' }}
       >
@@ -402,9 +497,12 @@ export default function TopUpPanel({
         onClick={paymentUrl ? handleOpenPayment : handleSubmit}
         disabled={
           !paymentUrl &&
-          (isPending || (fixedAmountKopeks == null && (!amount || parseFloat(amount) <= 0)))
+          (isPending ||
+            !method.is_available ||
+            (fixedQuote != null && !fixedQuote.valid) ||
+            (fixedAmountKopeks == null && (!amount || parseFloat(amount) <= 0)))
         }
-        className={`flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 ${
+        className={`flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-50 ${
           paymentUrl ? 'bg-[#30d158]' : 'bg-[#F97315]'
         }`}
       >
@@ -412,6 +510,12 @@ export default function TopUpPanel({
           <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : paymentUrl ? (
           t('balance.openPaymentPage', 'Открыть страницу оплаты')
+        ) : fixedQuote ? (
+          t('balance.topUpPayable', {
+            amount: formatAmount(fixedQuote.payable / 100),
+            currency: currencySymbol,
+            defaultValue: 'Пополнить на {{amount}} {{currency}}',
+          })
         ) : (
           t('balance.topUp', 'Пополнить')
         )}
@@ -419,7 +523,11 @@ export default function TopUpPanel({
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-[13px] text-apple-red">
+        <div
+          id={errorId}
+          role="alert"
+          className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-[13px] text-apple-red"
+        >
           {error}
         </div>
       )}
@@ -433,6 +541,11 @@ export default function TopUpPanel({
             onClick={() => setShowPicker(false)}
           >
             <div
+              ref={pickerRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('balance.changePaymentMethod', 'Изменить способ оплаты')}
+              tabIndex={-1}
               className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
               onClick={(e) => e.stopPropagation()}
             >
@@ -465,6 +578,8 @@ export default function TopUpPanel({
                     disabled={!s.method.is_available}
                     onClick={() => {
                       setSelectedKey(s.key);
+                      setPaymentUrl(null);
+                      setCopied(false);
                       setError(null);
                       setShowPicker(false);
                     }}

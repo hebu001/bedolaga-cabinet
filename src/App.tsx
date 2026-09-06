@@ -1,6 +1,7 @@
 import { Fragment, lazy, Suspense, type ComponentType } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router';
 import { useAuthStore } from './store/auth';
+import { AdminTranslationsGate } from './providers/I18nBootstrap';
 
 /**
  * Wrapper around React.lazy that auto-reloads the page when a chunk fails to load
@@ -34,17 +35,26 @@ import { PermissionRoute } from '@/components/auth/PermissionRoute';
 import { saveReturnUrl } from './utils/token';
 import { useAnalyticsCounters } from './hooks/useAnalyticsCounters';
 import { useSiteVerification } from './hooks/useSiteVerification';
-// Auth pages - load immediately (small)
-import Login from './pages/Login';
-import TelegramCallback from './pages/TelegramCallback';
-import TelegramRedirect from './pages/TelegramRedirect';
-import DeepLinkRedirect from './pages/DeepLinkRedirect';
-import VerifyEmail from './pages/VerifyEmail';
-import ResetPassword from './pages/ResetPassword';
-import OAuthCallback from './pages/OAuthCallback';
+// Load only the route being opened; callback instances keep their existing keys.
+const Login = lazyWithRetry(() => import('./pages/Login'));
+const TelegramCallback = lazyWithRetry(() => import('./pages/TelegramCallback'));
+const TelegramRedirect = lazyWithRetry(() => import('./pages/TelegramRedirect'));
+const DeepLinkRedirect = lazyWithRetry(() => import('./pages/DeepLinkRedirect'));
+const VerifyEmail = lazyWithRetry(() => import('./pages/VerifyEmail'));
+const ResetPassword = lazyWithRetry(() => import('./pages/ResetPassword'));
+const OAuthCallback = lazyWithRetry(() => import('./pages/OAuthCallback'));
+const Dashboard = lazyWithRetry(() => import('./pages/Dashboard'));
 
-// Dashboard - load eagerly (default route, LCP-critical)
-import Dashboard from './pages/Dashboard';
+function lazyAdmin(factory: () => Promise<{ default: ComponentType<unknown> }>) {
+  const Page = lazyWithRetry(factory);
+  return function AdminPage() {
+    return (
+      <AdminTranslationsGate>
+        <Page />
+      </AdminTranslationsGate>
+    );
+  };
+}
 
 // User pages - lazy load
 const Subscriptions = lazyWithRetry(() => import('./pages/Subscriptions'));
@@ -93,85 +103,81 @@ const AppleBalance = lazyWithRetry(() => import('./pages/preview/AppleBalance'))
 const AppleSubscription = lazyWithRetry(() => import('./pages/preview/AppleSubscription'));
 
 // Admin pages - lazy load (only for admins)
-const AdminPanel = lazyWithRetry(() => import('./pages/AdminPanel'));
-const AdminTickets = lazyWithRetry(() => import('./pages/AdminTickets'));
-const AdminTicketSettings = lazyWithRetry(() => import('./pages/AdminTicketSettings'));
-const AdminSettings = lazyWithRetry(() => import('./pages/AdminSettings'));
-const AdminApps = lazyWithRetry(() => import('./pages/AdminApps'));
-const AdminWheel = lazyWithRetry(() => import('./pages/AdminWheel'));
-const AdminTariffs = lazyWithRetry(() => import('./pages/AdminTariffs'));
-const AdminTariffCreate = lazyWithRetry(() => import('./pages/AdminTariffCreate'));
-const AdminServers = lazyWithRetry(() => import('./pages/AdminServers'));
-const AdminServerEdit = lazyWithRetry(() => import('./pages/AdminServerEdit'));
-const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
-const AdminBanSystem = lazyWithRetry(() => import('./pages/AdminBanSystem'));
-const AdminBroadcasts = lazyWithRetry(() => import('./pages/AdminBroadcasts'));
-const AdminBroadcastCreate = lazyWithRetry(() => import('./pages/AdminBroadcastCreate'));
-const AdminPromocodes = lazyWithRetry(() => import('./pages/AdminPromocodes'));
-const AdminPromocodeCreate = lazyWithRetry(() => import('./pages/AdminPromocodeCreate'));
-const AdminPromocodeStats = lazyWithRetry(() => import('./pages/AdminPromocodeStats'));
-const AdminPromoGroups = lazyWithRetry(() => import('./pages/AdminPromoGroups'));
-const AdminPromoGroupCreate = lazyWithRetry(() => import('./pages/AdminPromoGroupCreate'));
-const AdminCampaigns = lazyWithRetry(() => import('./pages/AdminCampaigns'));
-const AdminCampaignCreate = lazyWithRetry(() => import('./pages/AdminCampaignCreate'));
-const AdminCampaignStats = lazyWithRetry(() => import('./pages/AdminCampaignStats'));
-const AdminCampaignEdit = lazyWithRetry(() => import('./pages/AdminCampaignEdit'));
-const AdminPartners = lazyWithRetry(() => import('./pages/AdminPartners'));
-const AdminPartnerSettings = lazyWithRetry(() => import('./pages/AdminPartnerSettings'));
-const AdminPartnerDetail = lazyWithRetry(() => import('./pages/AdminPartnerDetail'));
-const AdminApplicationReview = lazyWithRetry(() => import('./pages/AdminApplicationReview'));
-const AdminPartnerCommission = lazyWithRetry(() => import('./pages/AdminPartnerCommission'));
-const AdminPartnerRevoke = lazyWithRetry(() => import('./pages/AdminPartnerRevoke'));
-const AdminPartnerCampaignAssign = lazyWithRetry(
-  () => import('./pages/AdminPartnerCampaignAssign'),
-);
-const AdminWithdrawals = lazyWithRetry(() => import('./pages/AdminWithdrawals'));
-const AdminWithdrawalDetail = lazyWithRetry(() => import('./pages/AdminWithdrawalDetail'));
-const AdminWithdrawalReject = lazyWithRetry(() => import('./pages/AdminWithdrawalReject'));
+const AdminPanel = lazyAdmin(() => import('./pages/AdminPanel'));
+const AdminTickets = lazyAdmin(() => import('./pages/AdminTickets'));
+const AdminTicketSettings = lazyAdmin(() => import('./pages/AdminTicketSettings'));
+const AdminSettings = lazyAdmin(() => import('./pages/AdminSettings'));
+const AdminApps = lazyAdmin(() => import('./pages/AdminApps'));
+const AdminWheel = lazyAdmin(() => import('./pages/AdminWheel'));
+const AdminTariffs = lazyAdmin(() => import('./pages/AdminTariffs'));
+const AdminTariffCreate = lazyAdmin(() => import('./pages/AdminTariffCreate'));
+const AdminServers = lazyAdmin(() => import('./pages/AdminServers'));
+const AdminServerEdit = lazyAdmin(() => import('./pages/AdminServerEdit'));
+const AdminDashboard = lazyAdmin(() => import('./pages/AdminDashboard'));
+const AdminBanSystem = lazyAdmin(() => import('./pages/AdminBanSystem'));
+const AdminBroadcasts = lazyAdmin(() => import('./pages/AdminBroadcasts'));
+const AdminBroadcastCreate = lazyAdmin(() => import('./pages/AdminBroadcastCreate'));
+const AdminPromocodes = lazyAdmin(() => import('./pages/AdminPromocodes'));
+const AdminPromocodeCreate = lazyAdmin(() => import('./pages/AdminPromocodeCreate'));
+const AdminPromocodeStats = lazyAdmin(() => import('./pages/AdminPromocodeStats'));
+const AdminPromoGroups = lazyAdmin(() => import('./pages/AdminPromoGroups'));
+const AdminPromoGroupCreate = lazyAdmin(() => import('./pages/AdminPromoGroupCreate'));
+const AdminCampaigns = lazyAdmin(() => import('./pages/AdminCampaigns'));
+const AdminCampaignCreate = lazyAdmin(() => import('./pages/AdminCampaignCreate'));
+const AdminCampaignStats = lazyAdmin(() => import('./pages/AdminCampaignStats'));
+const AdminCampaignEdit = lazyAdmin(() => import('./pages/AdminCampaignEdit'));
+const AdminPartners = lazyAdmin(() => import('./pages/AdminPartners'));
+const AdminPartnerSettings = lazyAdmin(() => import('./pages/AdminPartnerSettings'));
+const AdminPartnerDetail = lazyAdmin(() => import('./pages/AdminPartnerDetail'));
+const AdminApplicationReview = lazyAdmin(() => import('./pages/AdminApplicationReview'));
+const AdminPartnerCommission = lazyAdmin(() => import('./pages/AdminPartnerCommission'));
+const AdminPartnerRevoke = lazyAdmin(() => import('./pages/AdminPartnerRevoke'));
+const AdminPartnerCampaignAssign = lazyAdmin(() => import('./pages/AdminPartnerCampaignAssign'));
+const AdminWithdrawals = lazyAdmin(() => import('./pages/AdminWithdrawals'));
+const AdminWithdrawalDetail = lazyAdmin(() => import('./pages/AdminWithdrawalDetail'));
+const AdminWithdrawalReject = lazyAdmin(() => import('./pages/AdminWithdrawalReject'));
 const ReferralPartnerApply = lazyWithRetry(() => import('./pages/ReferralPartnerApply'));
 const ReferralWithdrawalRequest = lazyWithRetry(() => import('./pages/ReferralWithdrawalRequest'));
-const AdminUsers = lazyWithRetry(() => import('./pages/AdminUsers'));
-const AdminPayments = lazyWithRetry(() => import('./pages/AdminPayments'));
-const AdminPaymentMethods = lazyWithRetry(() => import('./pages/AdminPaymentMethods'));
-const AdminPaymentMethodEdit = lazyWithRetry(() => import('./pages/AdminPaymentMethodEdit'));
-const AdminPromoOffers = lazyWithRetry(() => import('./pages/AdminPromoOffers'));
-const AdminPromoOfferTemplateEdit = lazyWithRetry(
-  () => import('./pages/AdminPromoOfferTemplateEdit'),
-);
-const AdminPromoOfferSend = lazyWithRetry(() => import('./pages/AdminPromoOfferSend'));
-const AdminRemnawave = lazyWithRetry(() => import('./pages/AdminRemnawave'));
-const AdminRemnawaveSquadDetail = lazyWithRetry(() => import('./pages/AdminRemnawaveSquadDetail'));
-const AdminEmailTemplates = lazyWithRetry(() => import('./pages/AdminEmailTemplates'));
-const AdminTrafficUsage = lazyWithRetry(() => import('./pages/AdminTrafficUsage'));
-const AdminBulkActions = lazyWithRetry(() => import('./pages/AdminBulkActions'));
-const AdminSalesStats = lazyWithRetry(() => import('./pages/AdminSalesStats'));
-const AdminUpdates = lazyWithRetry(() => import('./pages/AdminUpdates'));
-const AdminUserDetail = lazyWithRetry(() => import('./pages/AdminUserDetail'));
-const AdminBroadcastDetail = lazyWithRetry(() => import('./pages/AdminBroadcastDetail'));
-const AdminPinnedMessages = lazyWithRetry(() => import('./pages/AdminPinnedMessages'));
-const AdminPinnedMessageCreate = lazyWithRetry(() => import('./pages/AdminPinnedMessageCreate'));
-const AdminChannelSubscriptions = lazyWithRetry(() => import('./pages/AdminChannelSubscriptions'));
-const AdminEmailTemplatePreview = lazyWithRetry(() => import('./pages/AdminEmailTemplatePreview'));
-const AdminRoles = lazyWithRetry(() => import('./pages/AdminRoles'));
-const AdminRoleEdit = lazyWithRetry(() => import('./pages/AdminRoleEdit'));
-const AdminRoleAssign = lazyWithRetry(() => import('./pages/AdminRoleAssign'));
-const AdminPolicies = lazyWithRetry(() => import('./pages/AdminPolicies'));
-const AdminPolicyEdit = lazyWithRetry(() => import('./pages/AdminPolicyEdit'));
-const AdminAuditLog = lazyWithRetry(() => import('./pages/AdminAuditLog'));
-const AdminLandings = lazyWithRetry(() => import('./pages/AdminLandings'));
-const AdminLandingEditor = lazyWithRetry(() => import('./pages/AdminLandingEditor'));
-const AdminLandingStats = lazyWithRetry(() => import('./pages/AdminLandingStats'));
-const AdminReferralNetwork = lazyWithRetry(() => import('./pages/ReferralNetwork'));
+const AdminUsers = lazyAdmin(() => import('./pages/AdminUsers'));
+const AdminPayments = lazyAdmin(() => import('./pages/AdminPayments'));
+const AdminPaymentMethods = lazyAdmin(() => import('./pages/AdminPaymentMethods'));
+const AdminPaymentMethodEdit = lazyAdmin(() => import('./pages/AdminPaymentMethodEdit'));
+const AdminPromoOffers = lazyAdmin(() => import('./pages/AdminPromoOffers'));
+const AdminPromoOfferTemplateEdit = lazyAdmin(() => import('./pages/AdminPromoOfferTemplateEdit'));
+const AdminPromoOfferSend = lazyAdmin(() => import('./pages/AdminPromoOfferSend'));
+const AdminRemnawave = lazyAdmin(() => import('./pages/AdminRemnawave'));
+const AdminRemnawaveSquadDetail = lazyAdmin(() => import('./pages/AdminRemnawaveSquadDetail'));
+const AdminEmailTemplates = lazyAdmin(() => import('./pages/AdminEmailTemplates'));
+const AdminTrafficUsage = lazyAdmin(() => import('./pages/AdminTrafficUsage'));
+const AdminBulkActions = lazyAdmin(() => import('./pages/AdminBulkActions'));
+const AdminSalesStats = lazyAdmin(() => import('./pages/AdminSalesStats'));
+const AdminUpdates = lazyAdmin(() => import('./pages/AdminUpdates'));
+const AdminUserDetail = lazyAdmin(() => import('./pages/AdminUserDetail'));
+const AdminBroadcastDetail = lazyAdmin(() => import('./pages/AdminBroadcastDetail'));
+const AdminPinnedMessages = lazyAdmin(() => import('./pages/AdminPinnedMessages'));
+const AdminPinnedMessageCreate = lazyAdmin(() => import('./pages/AdminPinnedMessageCreate'));
+const AdminChannelSubscriptions = lazyAdmin(() => import('./pages/AdminChannelSubscriptions'));
+const AdminEmailTemplatePreview = lazyAdmin(() => import('./pages/AdminEmailTemplatePreview'));
+const AdminRoles = lazyAdmin(() => import('./pages/AdminRoles'));
+const AdminRoleEdit = lazyAdmin(() => import('./pages/AdminRoleEdit'));
+const AdminRoleAssign = lazyAdmin(() => import('./pages/AdminRoleAssign'));
+const AdminPolicies = lazyAdmin(() => import('./pages/AdminPolicies'));
+const AdminPolicyEdit = lazyAdmin(() => import('./pages/AdminPolicyEdit'));
+const AdminAuditLog = lazyAdmin(() => import('./pages/AdminAuditLog'));
+const AdminLandings = lazyAdmin(() => import('./pages/AdminLandings'));
+const AdminLandingEditor = lazyAdmin(() => import('./pages/AdminLandingEditor'));
+const AdminLandingStats = lazyAdmin(() => import('./pages/AdminLandingStats'));
+const AdminReferralNetwork = lazyAdmin(() => import('./pages/ReferralNetwork'));
 
 // News pages
 const NewsArticlePage = lazyWithRetry(() => import('./pages/NewsArticle'));
-const AdminNews = lazyWithRetry(() => import('./pages/AdminNews'));
-const AdminNewsCreate = lazyWithRetry(() => import('./pages/AdminNewsCreate'));
+const AdminNews = lazyAdmin(() => import('./pages/AdminNews'));
+const AdminNewsCreate = lazyAdmin(() => import('./pages/AdminNewsCreate'));
 
 // Info pages
 const InfoPageView = lazyWithRetry(() => import('./pages/InfoPageView'));
-const AdminInfoPages = lazyWithRetry(() => import('./pages/AdminInfoPages'));
-const AdminInfoPageEditor = lazyWithRetry(() => import('./pages/AdminInfoPageEditor'));
+const AdminInfoPages = lazyAdmin(() => import('./pages/AdminInfoPages'));
+const AdminInfoPageEditor = lazyAdmin(() => import('./pages/AdminInfoPageEditor'));
 
 function ProtectedRoute({
   children,
@@ -257,6 +263,13 @@ function LegacySubscriptionRedirect() {
   return <Navigate to={`/subscriptions/${subscriptionId}`} replace />;
 }
 
+function LegacyTopUpRedirect() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  params.set('topup', '1');
+  return <Navigate to={{ pathname: '/balance', search: `?${params}` }} replace />;
+}
+
 function AppSessionEffects() {
   useAnalyticsCounters();
   // Pulls site-verification tokens (Antilopay apay-tag etc.) from the bot
@@ -273,15 +286,78 @@ function App() {
       <BlockingOverlay />
       <Routes>
         {/* Public routes */}
-        <Route path="/login" element={<Login key={sessionGeneration} />} />
-        <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
-        <Route path="/auth/telegram" element={<TelegramRedirect key={sessionGeneration} />} />
-        <Route path="/tg" element={<TelegramRedirect key={sessionGeneration} />} />
-        <Route path="/connect" element={<DeepLinkRedirect />} />
-        <Route path="/add" element={<DeepLinkRedirect />} />
-        <Route path="/auth/oauth/callback" element={<OAuthCallback />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/login"
+          element={
+            <LazyPage>
+              <Login key={sessionGeneration} />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/auth/telegram/callback"
+          element={
+            <LazyPage>
+              <TelegramCallback />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/auth/telegram"
+          element={
+            <LazyPage>
+              <TelegramRedirect key={sessionGeneration} />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/tg"
+          element={
+            <LazyPage>
+              <TelegramRedirect key={sessionGeneration} />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/connect"
+          element={
+            <LazyPage>
+              <DeepLinkRedirect />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/add"
+          element={
+            <LazyPage>
+              <DeepLinkRedirect />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/auth/oauth/callback"
+          element={
+            <LazyPage>
+              <OAuthCallback />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/verify-email"
+          element={
+            <LazyPage>
+              <VerifyEmail />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <LazyPage>
+              <ResetPassword />
+            </LazyPage>
+          }
+        />
         <Route
           path="/merge/:mergeToken"
           element={
@@ -541,7 +617,7 @@ function App() {
           }
         />
         {/* Top-up flow folded into /balance — legacy routes redirect */}
-        <Route path="/balance/top-up" element={<Navigate to="/balance" replace />} />
+        <Route path="/balance/top-up" element={<LegacyTopUpRedirect />} />
         <Route
           path="/balance/top-up/result"
           element={
@@ -554,7 +630,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/balance/top-up/:methodId" element={<Navigate to="/balance" replace />} />
+        <Route path="/balance/top-up/:methodId" element={<LegacyTopUpRedirect />} />
         <Route
           path="/referral"
           element={

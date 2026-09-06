@@ -20,6 +20,8 @@ import type {
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import TopUpPanel from '../components/balance/TopUpPanel';
 import { useCurrency } from '../hooks/useCurrency';
+import { TopUpPreparationError } from '../utils/topUpFlow';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { CheckIcon } from '../components/icons';
@@ -82,15 +84,6 @@ export default function SubscriptionPurchase() {
     staleTime: 30000,
   });
 
-  // Payment methods — used by the inline top-up sheet when balance is short.
-  // Free top-up flow lives on /balance; this query is loaded lazily so it
-  // does not slow down the initial render.
-  const { data: paymentMethods } = useQuery({
-    queryKey: ['payment-methods'],
-    queryFn: balanceApi.getPaymentMethods,
-    staleTime: 60_000,
-  });
-
   // Inline top-up sheet context — populated when the user clicks "Оплатить"
   // and balance is insufficient. The TopUpPanel inside the sheet uses
   // `fixedAmountKopeks` (the missing amount) and `onBeforeTopUp` (a pre-flight
@@ -104,6 +97,21 @@ export default function SubscriptionPurchase() {
     missingKopeks: number;
     trafficGb?: number;
   } | null>(null);
+
+  // Payment methods — used by the inline top-up sheet when balance is short.
+  // Free top-up flow lives on /balance; this query is loaded lazily so it
+  // does not slow down the initial render.
+  const {
+    data: paymentMethods,
+    isPending: methodsLoading,
+    isError: methodsError,
+    refetch: refetchMethods,
+  } = useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: balanceApi.getPaymentMethods,
+    enabled: !!topUpSheet,
+    staleTime: 60_000,
+  });
 
   // Sales mode detection
   const isTariffsMode = purchaseOptions?.sales_mode === 'tariffs';
@@ -285,15 +293,23 @@ export default function SubscriptionPurchase() {
   );
 
   // Preview query (classic)
-  const { data: preview, isLoading: previewLoading } = useQuery({
-    queryKey: ['purchase-preview', currentSelection],
+  const {
+    data: preview,
+    isFetching: previewLoading,
+    isError: previewError,
+  } = useQuery({
+    queryKey: ['purchase-preview', subscriptionId, currentSelection],
     queryFn: () => subscriptionApi.previewPurchase(currentSelection, subscriptionId),
     enabled: !!selectedPeriod && showPurchaseForm && currentStep === 'confirm',
   });
 
   // Classic purchase mutation
   const purchaseMutation = useMutation({
-    mutationFn: () => subscriptionApi.submitPurchase(currentSelection, subscriptionId),
+    mutationFn: () => {
+      if (previewLoading || previewError || !preview?.can_purchase)
+        throw new Error(t('common.error'));
+      return subscriptionApi.submitPurchase(currentSelection, subscriptionId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
@@ -304,15 +320,23 @@ export default function SubscriptionPurchase() {
   });
 
   // Switch preview query
-  const { data: switchPreview, isLoading: switchPreviewLoading } = useQuery({
-    queryKey: ['tariff-switch-preview', switchTariffId],
+  const {
+    data: switchPreview,
+    isFetching: switchPreviewLoading,
+    isError: switchPreviewError,
+  } = useQuery({
+    queryKey: ['tariff-switch-preview', subscriptionId, switchTariffId],
     queryFn: () => subscriptionApi.previewTariffSwitch(switchTariffId!, subscriptionId),
     enabled: !!switchTariffId,
   });
 
   // Tariff switch mutation
   const switchTariffMutation = useMutation({
-    mutationFn: (tariffId: number) => subscriptionApi.switchTariff(tariffId, subscriptionId),
+    mutationFn: (tariffId: number) => {
+      if (switchPreviewLoading || switchPreviewError || !switchPreview?.can_switch)
+        throw new Error(t('common.error'));
+      return subscriptionApi.switchTariff(tariffId, subscriptionId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
       queryClient.invalidateQueries({ queryKey: ['purchase-options', subscriptionId] });
@@ -414,20 +438,13 @@ export default function SubscriptionPurchase() {
     }
   }, [switchTariffId]);
 
-  // Lock body scroll + Escape-to-close while the tariff-list modal is open
-  useEffect(() => {
-    if (!showTariffListModal) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowTariffListModal(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [showTariffListModal]);
+  const [topUpPending, setTopUpPending] = useState(false);
+  const tariffListRef = useRef<HTMLDivElement>(null);
+  const topUpRef = useRef<HTMLDivElement>(null);
+  useModalFocus(showTariffListModal, tariffListRef, () => setShowTariffListModal(false));
+  useModalFocus(!!topUpSheet, topUpRef, () => {
+    if (!topUpPending) setTopUpSheet(null);
+  });
 
   // ?renew=1 — jump straight into the current tariff's purchase modal.
   // If no current tariff, fall through to the tariff list.
@@ -843,6 +860,11 @@ export default function SubscriptionPurchase() {
                 </button>
               </div>
 
+              {switchPreviewError && (
+                <p role="alert" className="text-sm text-apple-red">
+                  {t('common.error')}
+                </p>
+              )}
               {switchPreviewLoading ? (
                 <div className="flex items-center justify-center py-4">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
@@ -934,7 +956,12 @@ export default function SubscriptionPurchase() {
 
                       <button
                         onClick={() => switchTariffMutation.mutate(switchTariffId)}
-                        disabled={switchTariffMutation.isPending || !switchPreview.can_switch}
+                        disabled={
+                          switchTariffMutation.isPending ||
+                          switchPreviewLoading ||
+                          switchPreviewError ||
+                          !switchPreview.can_switch
+                        }
                         className="flex w-full items-center justify-center rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                       >
                         {switchTariffMutation.isPending ? (
@@ -975,7 +1002,7 @@ export default function SubscriptionPurchase() {
               <div className="apple-card-grad flex items-center justify-between gap-3 rounded-2xl bg-apple-card p-4">
                 <div className="min-w-0">
                   <div className="text-[15px] font-semibold text-apple-ink">
-                    Тариф {selectedTariff.name}
+                    {t('subscription.baseTariff')} {selectedTariff.name}
                   </div>
                   <div className="mt-0.5 truncate text-[13px] text-apple-mute">
                     {selectedTariff.description?.split('\n')[0] ||
@@ -1050,7 +1077,7 @@ export default function SubscriptionPurchase() {
                               <div className="flex w-full justify-between">
                                 <div className="flex flex-col items-start">
                                   <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                    Ваш баланс
+                                    {t('balance.currentBalance')}
                                   </span>
                                   <span
                                     className="font-semibold"
@@ -1064,7 +1091,7 @@ export default function SubscriptionPurchase() {
                                 {!hasEnoughBalance && missingAmount > 0 && (
                                   <div className="flex flex-col items-start">
                                     <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                      Не хватает
+                                      {t('balance.missing')}
                                     </span>
                                     <span className="font-semibold" style={{ color: '#ff453a' }}>
                                       {formatPrice(missingAmount)}
@@ -1088,7 +1115,7 @@ export default function SubscriptionPurchase() {
                               }
                             }}
                             disabled={tariffPurchaseMutation.isPending}
-                            className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                            className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-50"
                           >
                             {tariffPurchaseMutation.isPending ? (
                               <span className="flex items-center justify-center gap-2">
@@ -1098,7 +1125,7 @@ export default function SubscriptionPurchase() {
                             ) : (
                               <>
                                 {t('subscription.paySubscription', 'Оплатить')}
-                                <span className="text-white/90">
+                                <span className="text-black/90">
                                   {hasEnoughBalance
                                     ? formatPrice(dailyPrice)
                                     : formatPrice(missingAmount)}
@@ -1631,7 +1658,7 @@ export default function SubscriptionPurchase() {
                                         <div className="flex w-full justify-between">
                                           <div className="flex flex-col items-start">
                                             <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                              Ваш баланс
+                                              {t('balance.currentBalance')}
                                             </span>
                                             <span
                                               className="font-semibold"
@@ -1647,7 +1674,7 @@ export default function SubscriptionPurchase() {
                                           {!hasEnoughBalance && missingAmount > 0 && (
                                             <div className="flex flex-col items-start">
                                               <span className="text-[10px] uppercase tracking-wider text-apple-faint">
-                                                Не хватает
+                                                {t('balance.missing')}
                                               </span>
                                               <span
                                                 className="font-semibold"
@@ -1681,7 +1708,7 @@ export default function SubscriptionPurchase() {
                                         }
                                       }}
                                       disabled={tariffPurchaseMutation.isPending}
-                                      className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                                      className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-50"
                                     >
                                       {tariffPurchaseMutation.isPending ? (
                                         <span className="flex items-center justify-center gap-2">
@@ -1691,7 +1718,7 @@ export default function SubscriptionPurchase() {
                                       ) : (
                                         <>
                                           {t('subscription.paySubscription', 'Оплатить')}
-                                          <span className="text-white/90">
+                                          <span className="text-black/90">
                                             {hasEnoughBalance
                                               ? formatPrice(totalPrice)
                                               : formatPrice(missingAmount)}
@@ -1753,6 +1780,11 @@ export default function SubscriptionPurchase() {
                 onClick={() => setShowTariffListModal(false)}
               >
                 <div
+                  ref={tariffListRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={t('subscription.purchaseTitle')}
+                  tabIndex={-1}
                   className="apple-card-grad apple-sheet-panel relative m-2.5 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1789,15 +1821,18 @@ export default function SubscriptionPurchase() {
               pre-flight that triggers backend cart persistence so the webhook
               auto-completes the purchase after the top-up payment. */}
           {topUpSheet &&
-            paymentMethods &&
-            paymentMethods.length > 0 &&
             createPortal(
               <div
                 className="apple-sheet-backdrop fixed inset-0 z-[1000] flex items-end justify-center"
                 style={{ background: 'rgba(0,0,0,0.6)' }}
-                onClick={() => setTopUpSheet(null)}
+                onClick={() => !topUpPending && setTopUpSheet(null)}
               >
                 <div
+                  ref={topUpRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={t('balance.topUpBalance')}
+                  tabIndex={-1}
                   className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1807,7 +1842,8 @@ export default function SubscriptionPurchase() {
                     </h3>
                     <button
                       type="button"
-                      onClick={() => setTopUpSheet(null)}
+                      onClick={() => !topUpPending && setTopUpSheet(null)}
+                      disabled={topUpPending}
                       aria-label={t('common.close', 'Закрыть')}
                       className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
                     >
@@ -1825,23 +1861,60 @@ export default function SubscriptionPurchase() {
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto">
-                    <TopUpPanel
-                      methods={paymentMethods}
-                      fixedAmountKopeks={topUpSheet.missingKopeks}
-                      onBeforeTopUp={async () => {
-                        // Pre-flight purchaseTariff — backend returns 402 and
-                        // persists the cart in Redis. The webhook then runs
-                        // auto_purchase_saved_cart_after_topup once the top-up
-                        // payment is credited. The 402 is expected; TopUpPanel
-                        // swallows the error and proceeds to createTopUp.
-                        await subscriptionApi.purchaseTariff(
-                          topUpSheet.tariffId,
-                          topUpSheet.periodDays,
-                          topUpSheet.trafficGb,
-                        );
-                      }}
-                      onSuccess={() => setTopUpSheet(null)}
-                    />
+                    {methodsLoading ? (
+                      <div role="status" className="p-7 text-apple-mute">
+                        {t('common.loading')}
+                      </div>
+                    ) : methodsError ? (
+                      <div role="alert" className="p-7 text-apple-mute">
+                        {t('balance.methodsLoadError', 'Не удалось загрузить способы оплаты.')}
+                        <button
+                          type="button"
+                          onClick={() => void refetchMethods()}
+                          className="ml-2 underline"
+                        >
+                          {t('common.retry')}
+                        </button>
+                      </div>
+                    ) : (
+                      <TopUpPanel
+                        methods={paymentMethods ?? []}
+                        onPendingChange={setTopUpPending}
+                        fixedAmountKopeks={topUpSheet.missingKopeks}
+                        onBeforeTopUp={async () => {
+                          try {
+                            await subscriptionApi.purchaseTariff(
+                              topUpSheet.tariffId,
+                              topUpSheet.periodDays,
+                              topUpSheet.trafficGb,
+                            );
+                          } catch (error) {
+                            // Only 402 confirms that the server saved this cart.
+                            if (error instanceof AxiosError && error.response?.status === 402) {
+                              const missingKopeks = error.response.data?.detail?.missing_amount;
+                              if (!Number.isSafeInteger(missingKopeks) || missingKopeks <= 0) {
+                                throw new TopUpPreparationError(t('common.loadError'));
+                              }
+                              if (missingKopeks !== topUpSheet.missingKopeks) {
+                                setTopUpSheet({ ...topUpSheet, missingKopeks });
+                                // A fresh server quote must be visible before the
+                                // user confirms another provider invoice amount.
+                                throw new TopUpPreparationError(t('balance.amountChanged'));
+                              }
+                              return;
+                            }
+                            throw error;
+                          }
+                          // Balance may have changed since the quote. A successful
+                          // purchase has already completed; do not bill again.
+                          queryClient.invalidateQueries({ queryKey: ['balance'] });
+                          queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+                          navigate('/subscriptions', { replace: true });
+                          return false;
+                        }}
+                        onSuccess={() => setTopUpSheet(null)}
+                      />
+                    )}
                   </div>
                 </div>
               </div>,
@@ -2125,6 +2198,11 @@ export default function SubscriptionPurchase() {
               {/* Step: Confirm */}
               {currentStep === 'confirm' && (
                 <div>
+                  {previewError && (
+                    <p role="alert" className="text-sm text-error-400">
+                      {t('common.error')}
+                    </p>
+                  )}
                   {previewLoading ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
@@ -2202,7 +2280,7 @@ export default function SubscriptionPurchase() {
                           <div className="flex w-full justify-between">
                             <div className="flex flex-col items-start">
                               <span className="text-[10px] uppercase tracking-wider text-dark-500">
-                                Ваш баланс
+                                {t('balance.currentBalance')}
                               </span>
                               <span
                                 className={
@@ -2219,7 +2297,7 @@ export default function SubscriptionPurchase() {
                             {!preview.can_purchase && preview.missing_amount_kopeks > 0 && (
                               <div className="flex flex-col items-start">
                                 <span className="text-[10px] uppercase tracking-wider text-dark-500">
-                                  Не хватает
+                                  {t('balance.missing')}
                                 </span>
                                 <span className="font-semibold text-error-400">
                                   {formatPrice(preview.missing_amount_kopeks)}
@@ -2284,7 +2362,10 @@ export default function SubscriptionPurchase() {
                   <button
                     onClick={() => purchaseMutation.mutate()}
                     disabled={
-                      purchaseMutation.isPending || previewLoading || !preview?.can_purchase
+                      purchaseMutation.isPending ||
+                      previewLoading ||
+                      previewError ||
+                      !preview?.can_purchase
                     }
                     className="btn-primary flex-1"
                   >

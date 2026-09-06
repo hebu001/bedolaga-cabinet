@@ -2,82 +2,128 @@ import i18n, { type ResourceLanguage } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-const localeLoaders: Record<string, () => Promise<{ default: ResourceLanguage }>> = {
-  ru: () => import('./locales/ru.json'),
-  en: () => import('./locales/en.json'),
-  zh: () => import('./locales/zh.json'),
-  fa: () => import('./locales/fa.json'),
+import ruUrl from './locales/ru.json?url&no-inline';
+import enUrl from './locales/en.json?url&no-inline';
+import zhUrl from './locales/zh.json?url&no-inline';
+import faUrl from './locales/fa.json?url&no-inline';
+import ruAdminUrl from './locales/admin/ru.json?url&no-inline';
+import enAdminUrl from './locales/admin/en.json?url&no-inline';
+import zhAdminUrl from './locales/admin/zh.json?url&no-inline';
+import faAdminUrl from './locales/admin/fa.json?url&no-inline';
+
+// Import only the hashed asset URLs. Fetch is retryable after an HTTP/network
+// failure; the browser module cache would retain a failed dynamic import.
+const localeUrls: Record<string, string> = { ru: ruUrl, en: enUrl, zh: zhUrl, fa: faUrl };
+const adminUrls: Record<string, string> = {
+  ru: ruAdminUrl,
+  en: enAdminUrl,
+  zh: zhAdminUrl,
+  fa: faAdminUrl,
 };
 
-const SUPPORTED_LANGS = Object.keys(localeLoaders);
+export const SUPPORTED_LANGUAGES = Object.keys(localeUrls);
 const FALLBACK_LNG = 'ru';
+const loaded = new Set<string>();
+const pending = new Map<string, Promise<void>>();
+const failedDownloads = new Set<string>();
+let adminRequested = false;
+let languageIntent = 0;
 
-const loadedLanguages = new Set<string>();
-
-async function loadLanguage(lng: string): Promise<void> {
-  if (loadedLanguages.has(lng)) return;
-
-  const loader = localeLoaders[lng];
-  if (!loader) return;
-
-  const mod = await loader();
-  i18n.addResourceBundle(lng, 'translation', mod.default, true, true);
-  loadedLanguages.add(lng);
+function normalizeLanguage(lng: string): string {
+  const code = lng.toLowerCase().split('-')[0];
+  return SUPPORTED_LANGUAGES.includes(code) ? code : FALLBACK_LNG;
 }
 
-i18n
+function loadLanguage(lng: string, admin = false): Promise<void> {
+  const key = `${admin ? 'admin' : 'user'}:${lng}`;
+  if (loaded.has(key)) return Promise.resolve();
+  const existing = pending.get(key);
+  if (existing) return existing;
+
+  const request = fetch(
+    (admin ? adminUrls : localeUrls)[lng],
+    failedDownloads.has(key) ? { cache: 'reload' } : undefined,
+  )
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Translation request failed (${response.status})`);
+      const resources: unknown = await response.json();
+      if (!resources || typeof resources !== 'object' || Array.isArray(resources)) {
+        throw new Error('Invalid translation resource');
+      }
+      // Preserve existing key paths; admin screens need no namespace migration.
+      i18n.addResourceBundle(lng, 'translation', resources as ResourceLanguage, true, true);
+      loaded.add(key);
+      failedDownloads.delete(key);
+    })
+    .catch((error) => {
+      failedDownloads.add(key);
+      throw error;
+    })
+    .finally(() => pending.delete(key));
+  pending.set(key, request);
+  return request;
+}
+
+const initialized = i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: FALLBACK_LNG,
-    supportedLngs: SUPPORTED_LANGS,
-    partialBundledLanguages: true,
-
+    supportedLngs: SUPPORTED_LANGUAGES,
+    load: 'languageOnly',
+    resources: {},
+    initImmediate: false,
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
       lookupLocalStorage: 'cabinet_language',
     },
-
-    interpolation: {
-      escapeValue: false,
-    },
-
-    react: {
-      useSuspense: false,
-    },
-
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false, bindI18nStore: 'added' },
     showSupportNotice: false,
   });
 
-// Load detected language + fallback on startup
-const detectedLng = i18n.language?.split('-')[0] || FALLBACK_LNG;
-const langsToLoad = [FALLBACK_LNG, ...(detectedLng !== FALLBACK_LNG ? [detectedLng] : [])];
-Promise.all(langsToLoad.map(loadLanguage));
-
-// Keep <html lang> + dir in sync with i18n so screen readers pronounce
-// content correctly, browsers don't offer to translate it, and RTL
-// languages (fa) flip layout direction. index.html ships with lang="ru"
-// for the first paint; runtime updates take over from there.
-const RTL_LANGS = new Set(['fa', 'ar', 'he', 'ur']);
-function syncHtmlLang(lng: string): void {
-  const code = lng.split('-')[0];
-  if (typeof document === 'undefined') return;
-  if (document.documentElement.lang !== code) {
-    document.documentElement.lang = code;
-  }
-  const dir = RTL_LANGS.has(code) ? 'rtl' : 'ltr';
-  if (document.documentElement.dir !== dir) {
-    document.documentElement.dir = dir;
-  }
+async function loadLanguages(lng: string, admin = false): Promise<void> {
+  await Promise.all([...new Set([FALLBACK_LNG, lng])].map((code) => loadLanguage(code, admin)));
 }
-syncHtmlLang(detectedLng);
 
-// Lazy-load on language change
-i18n.on('languageChanged', (lng: string) => {
-  const code = lng.split('-')[0];
-  loadLanguage(code);
-  syncHtmlLang(code);
-});
+/** Called before mounting application consumers. Failed asset requests can be retried. */
+export async function prepareI18n(): Promise<void> {
+  await initialized;
+  const code = normalizeLanguage(i18n.language || FALLBACK_LNG);
+  await loadLanguages(code);
+  // Refresh resolvedLanguage and notify subscribers after resources are ready.
+  await i18n.changeLanguage(code);
+}
+
+/** A loaded admin locale can mount immediately when navigating between admin pages. */
+export function areAdminTranslationsLoaded(): boolean {
+  const code = normalizeLanguage(i18n.language || FALLBACK_LNG);
+  return [FALLBACK_LNG, code].every((language) => loaded.has(`admin:${language}`));
+}
+
+/** Admin routes await their translations before mounting. */
+export async function loadAdminTranslations(): Promise<void> {
+  adminRequested = true;
+  await initialized;
+  await loadLanguages(normalizeLanguage(i18n.language || FALLBACK_LNG), true);
+}
+
+/** Keep the old language visible if the requested download fails. */
+export async function changeAppLanguage(lng: string): Promise<void> {
+  const intent = ++languageIntent;
+  const code = normalizeLanguage(lng);
+  await loadLanguages(code);
+  if (adminRequested) await loadLanguages(code, true);
+  if (intent === languageIntent) await i18n.changeLanguage(code);
+}
+
+function syncHtmlLang(lng: string): void {
+  if (typeof document === 'undefined') return;
+  const code = normalizeLanguage(lng);
+  document.documentElement.lang = code;
+  document.documentElement.dir = code === 'fa' ? 'rtl' : 'ltr';
+}
+i18n.on('languageChanged', syncHtmlLang);
 
 export default i18n;

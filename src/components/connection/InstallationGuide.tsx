@@ -6,7 +6,8 @@ interface Props {
   onOpenDeepLink: (url: string) => void;
   isTelegramWebApp: boolean;
   onGoBack: () => void;
-  onOpenQR?: () => void;
+  displayUrl?: string | null;
+  hideLink?: boolean;
   connectionUrl?: string | null;
 }
 
@@ -15,7 +16,8 @@ export default function InstallationGuide({
   onOpenDeepLink,
   isTelegramWebApp,
   onGoBack,
-  onOpenQR,
+  displayUrl,
+  hideLink,
   connectionUrl,
 }: Props) {
   return (
@@ -24,7 +26,8 @@ export default function InstallationGuide({
       onOpenDeepLink={onOpenDeepLink}
       isTelegramWebApp={isTelegramWebApp}
       onGoBack={onGoBack}
-      onOpenQR={onOpenQR}
+      displayUrl={displayUrl}
+      hideLink={hideLink}
       connectionUrl={connectionUrl}
     />
   );

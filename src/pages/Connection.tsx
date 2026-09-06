@@ -7,7 +7,11 @@ import { subscriptionApi } from '../api/subscription';
 import { useTelegramSDK } from '../hooks/useTelegramSDK';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { resolveTemplate, hasTemplates } from '../utils/templateEngine';
-import { isHappCryptolinkMode, resolveConnectionUrlForUi } from '../utils/connectionLink';
+import {
+  isHappCryptolinkMode,
+  resolveConnectionUrlForUi,
+  resolvePlainSubscriptionUrl,
+} from '../utils/connectionLink';
 import { useAuthStore } from '../store/auth';
 import type { AppConfig, RemnawavePlatformData } from '../types';
 import InstallationGuide from '../components/connection/InstallationGuide';
@@ -26,13 +30,21 @@ export default function Connection() {
     data: appConfig,
     isLoading,
     error,
+    refetch: refetchConfig,
   } = useQuery<AppConfig>({
     queryKey: ['appConfig', subId],
+    retry: 1,
     queryFn: () => subscriptionApi.getAppConfig(subId),
   });
-  const { data: connectionLink, isLoading: isConnectionLinkLoading } = useQuery({
+  const {
+    data: connectionLink,
+    isLoading: isConnectionLinkLoading,
+    isError: connectionLinkError,
+    refetch: refetchConnectionLink,
+  } = useQuery({
     queryKey: ['connectionLink', subId],
     queryFn: () => subscriptionApi.getConnectionLink(subId),
+    enabled: !!appConfig?.hasSubscription,
     retry: false,
     staleTime: 0,
   });
@@ -66,24 +78,12 @@ export default function Connection() {
     navigate(-1);
   }, [navigate, haptic]);
 
-  const handleOpenQR = useCallback(() => {
-    if (!qrConnectionUrl) return;
-    navigate('/connection/qr', {
-      replace: !isTelegramWebApp,
-      state: {
-        url: qrConnectionUrl,
-        hideLink: connectionLink?.hide_link ?? appConfig?.hideLink ?? false,
-        subscriptionId: subId,
-      },
-    });
-  }, [
-    navigate,
-    qrConnectionUrl,
-    connectionLink?.hide_link,
-    appConfig?.hideLink,
-    isTelegramWebApp,
-    subId,
-  ]);
+  const displayedConnectionUrl = resolvePlainSubscriptionUrl({
+    subscriptionUrl: connectionLink?.subscription_url,
+    fallbackUrl: appConfig?.subscriptionUrl,
+    displayLink: connectionLink?.display_link,
+  });
+  const hideLink = !!(connectionLink?.hide_link || appConfig?.hideLink);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -152,7 +152,30 @@ export default function Connection() {
     );
   }
 
-  if (error || !appConfig || !hasApps) {
+  if ((error && !appConfig) || (connectionLinkError && !connectionLink)) {
+    return (
+      <div
+        role="alert"
+        className="flex flex-1 flex-col items-center justify-center p-8 text-center"
+      >
+        <p>{t(appConfig ? 'common.staleData' : 'common.loadError')}</p>
+        <button
+          onClick={() => {
+            void refetchConfig();
+            void refetchConnectionLink();
+          }}
+          className="mt-4 underline"
+        >
+          {t('common.retry')}
+        </button>
+        <button onClick={handleGoBack} className="mt-4 underline">
+          {t('common.back')}
+        </button>
+      </div>
+    );
+  }
+
+  if (!appConfig || !hasApps) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-dark-800">
@@ -209,8 +232,8 @@ export default function Connection() {
   if (!appConfig.hasSubscription) {
     return (
       <div
-        className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5"
-        style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+        className="fixed-screen flex flex-col overflow-hidden px-5"
+        style={{ overscrollBehavior: 'none' }}
       >
         {/* Hero area — large status text */}
         <div className="relative flex flex-1 items-center justify-center">
@@ -241,13 +264,32 @@ export default function Connection() {
   }
 
   return (
-    <InstallationGuide
-      appConfig={appConfig}
-      onOpenDeepLink={openDeepLink}
-      isTelegramWebApp={isTelegramWebApp}
-      onGoBack={handleGoBack}
-      onOpenQR={handleOpenQR}
-      connectionUrl={qrConnectionUrl}
-    />
+    <div className="flex h-full min-h-0 flex-col">
+      {(error || connectionLinkError) && (
+        <div role="alert" className="shrink-0 py-2 text-center text-sm">
+          {t('common.staleData')}{' '}
+          <button
+            onClick={() => {
+              void refetchConfig();
+              void refetchConnectionLink();
+            }}
+            className="underline"
+          >
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+      <div className="min-h-0 flex-1">
+        <InstallationGuide
+          appConfig={appConfig}
+          onOpenDeepLink={openDeepLink}
+          isTelegramWebApp={isTelegramWebApp}
+          onGoBack={handleGoBack}
+          displayUrl={displayedConnectionUrl}
+          hideLink={hideLink}
+          connectionUrl={qrConnectionUrl}
+        />
+      </div>
+    </div>
   );
 }

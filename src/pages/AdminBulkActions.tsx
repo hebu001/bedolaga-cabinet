@@ -24,6 +24,7 @@ import {
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { useCurrency } from '../hooks/useCurrency';
 import { cn } from '@/lib/utils';
+import { visibleSelectionState, toggleVisibleSubscriptions } from '../utils/adminSelection';
 
 // ============ Types ============
 
@@ -1260,6 +1261,7 @@ interface FloatingActionBarProps {
   selectedSubscriptionCount: number;
   isMultiTariff: boolean;
   totalVisibleSubscriptionCount: number;
+  allVisibleSubscriptionsSelected: boolean;
   onAction: (type: BulkActionType) => void;
   onToggleAllSubscriptions: () => void;
 }
@@ -1269,6 +1271,7 @@ function FloatingActionBar({
   selectedSubscriptionCount,
   isMultiTariff,
   totalVisibleSubscriptionCount,
+  allVisibleSubscriptionsSelected,
   onAction,
   onToggleAllSubscriptions,
 }: FloatingActionBarProps) {
@@ -1444,8 +1447,7 @@ function FloatingActionBar({
               onClick={onToggleAllSubscriptions}
               className="shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink"
             >
-              {selectedSubscriptionCount === totalVisibleSubscriptionCount &&
-              selectedSubscriptionCount > 0
+              {allVisibleSubscriptionsSelected
                 ? t('admin.bulkActions.deselectAllSubs')
                 : t('admin.bulkActions.selectAllSubs')}
             </button>
@@ -1560,6 +1562,8 @@ export default function AdminBulkActions() {
   const [campaigns, setCampaigns] = useState<CampaignListItem[]>([]);
   const [partners, setPartners] = useState<AdminPartnerItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const usersRequestRef = useRef<AbortController | null>(null);
 
   // Filters
   const [searchInput, setSearchInput] = useState('');
@@ -1594,15 +1598,22 @@ export default function AdminBulkActions() {
 
   // ---- Multi-tariff detection ----
   const isMultiTariff = useMemo(
-    () => users.some((u) => (u.subscriptions?.length ?? 0) > 1),
-    [users],
+    // Keep selected subscription IDs as the action target after changing pages/filters.
+    () =>
+      users.some((u) => (u.subscriptions?.length ?? 0) > 1) ||
+      Object.values(subscriptionSelection).some(Boolean),
+    [users, subscriptionSelection],
   );
 
   // ---- Data loading ----
 
   const loadUsers = useCallback(async () => {
+    usersRequestRef.current?.abort();
+    const controller = new AbortController();
+    usersRequestRef.current = controller;
     try {
       setLoading(true);
+      setLoadError(false);
       const params: Record<string, unknown> = {
         offset,
         limit,
@@ -1616,7 +1627,9 @@ export default function AdminBulkActions() {
 
       const data = await adminUsersApi.getUsers(
         params as Parameters<typeof adminUsersApi.getUsers>[0],
+        controller.signal,
       );
+      if (controller.signal.aborted) return;
       setUsers(data.users);
       setTotal(data.total);
       // Auto-expand all users who have subscriptions
@@ -1628,9 +1641,9 @@ export default function AdminBulkActions() {
       }
       setExpandedRows(autoExpand);
     } catch {
-      // keep stale data
+      if (!controller.signal.aborted) setLoadError(true);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [
     offset,
@@ -1644,7 +1657,8 @@ export default function AdminBulkActions() {
   ]);
 
   useEffect(() => {
-    loadUsers();
+    void loadUsers();
+    return () => usersRequestRef.current?.abort();
   }, [loadUsers]);
 
   // Load tariffs, promo groups, campaigns, and partners once (independent — one failure won't block others)
@@ -1889,6 +1903,49 @@ export default function AdminBulkActions() {
     setModal({ open: false, action: null, loading: false, result: null, progress: null });
   };
 
+  // When multiple tariffs are selected, filter users client-side
+  // (server only supports single tariff_id filter)
+  const filteredUsers = useMemo(() => {
+    let result = users;
+
+    // Trial-only filter: show users with trial subscription
+    if (trialOnly) {
+      result = result.filter(
+        (u) => u.subscription_is_trial || (u.subscriptions ?? []).some((s) => s.status === 'trial'),
+      );
+    }
+
+    return result;
+  }, [users, trialOnly]);
+
+  const allVisibleSubscriptionIds = useMemo(() => {
+    const ids: number[] = [];
+    for (const user of filteredUsers) {
+      const subs = user.subscriptions ?? [];
+      const filtered = getFilteredSubs(subs);
+      for (const sub of filtered) {
+        ids.push(sub.id);
+      }
+    }
+    return ids;
+  }, [filteredUsers, getFilteredSubs]);
+
+  const { all: allVisibleSubscriptionsSelected, some: someVisibleSubscriptionsSelected } =
+    visibleSelectionState(subscriptionSelection, allVisibleSubscriptionIds);
+
+  const toggleAllSubscriptions = useCallback(() => {
+    setSubscriptionSelection((previous) =>
+      toggleVisibleSubscriptions(previous, allVisibleSubscriptionIds),
+    );
+    setExpandedRows((previous) => {
+      const next = { ...previous };
+      for (const user of filteredUsers) {
+        if (getFilteredSubs(user.subscriptions ?? []).length > 0) next[user.id] = true;
+      }
+      return next;
+    });
+  }, [allVisibleSubscriptionIds, filteredUsers, getFilteredSubs]);
+
   // ---- TanStack Table ----
 
   const columns = useMemo<ColumnDef<UserListItem>[]>(
@@ -1897,11 +1954,6 @@ export default function AdminBulkActions() {
         id: 'select',
         size: 56,
         header: ({ table }) => {
-          const allSubsSelected =
-            allVisibleSubscriptionIds.length > 0 &&
-            allVisibleSubscriptionIds.every((id) => subscriptionSelection[id]);
-          const someSubsSelected =
-            !allSubsSelected && allVisibleSubscriptionIds.some((id) => subscriptionSelection[id]);
           return (
             <div className="flex items-center justify-center gap-1.5">
               {/* Select all users */}
@@ -1929,17 +1981,23 @@ export default function AdminBulkActions() {
                   onClick={toggleAllSubscriptions}
                   className={cn(
                     'flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all duration-150',
-                    allSubsSelected
+                    allVisibleSubscriptionsSelected
                       ? 'border-apple-green bg-apple-green shadow-[0_0_8px_rgba(34,197,94,0.4)]'
-                      : someSubsSelected
+                      : someVisibleSubscriptionsSelected
                         ? 'border-apple-green bg-apple-green/30'
                         : 'border-apple-hairline bg-apple-elevated hover:border-apple-green/50',
                   )}
+                  role="checkbox"
+                  aria-checked={
+                    someVisibleSubscriptionsSelected ? 'mixed' : allVisibleSubscriptionsSelected
+                  }
                   aria-label={t('admin.bulkActions.selectAllSubs')}
                   title={t('admin.bulkActions.selectAllSubs')}
                 >
-                  {allSubsSelected && <CheckIcon />}
-                  {someSubsSelected && <div className="h-0.5 w-2 rounded-full bg-white" />}
+                  {allVisibleSubscriptionsSelected && <CheckIcon />}
+                  {someVisibleSubscriptionsSelected && (
+                    <div className="h-0.5 w-2 rounded-full bg-white" />
+                  )}
                 </button>
               )}
             </div>
@@ -2116,71 +2174,19 @@ export default function AdminBulkActions() {
         },
       },
     ],
-    [t, formatWithCurrency, expandedRows, toggleExpandRow, getFilteredSubs],
+    [
+      t,
+      formatWithCurrency,
+      expandedRows,
+      toggleExpandRow,
+      getFilteredSubs,
+      isMultiTariff,
+      allVisibleSubscriptionIds,
+      allVisibleSubscriptionsSelected,
+      someVisibleSubscriptionsSelected,
+      toggleAllSubscriptions,
+    ],
   );
-
-  // When multiple tariffs are selected, filter users client-side
-  // (server only supports single tariff_id filter)
-  const filteredUsers = useMemo(() => {
-    let result = users;
-
-    // Trial-only filter: show users with trial subscription
-    if (trialOnly) {
-      result = result.filter(
-        (u) => u.subscription_is_trial || (u.subscriptions ?? []).some((s) => s.status === 'trial'),
-      );
-    }
-
-    return result;
-  }, [users, trialOnly]);
-
-  const allVisibleSubscriptionIds = useMemo(() => {
-    const ids: number[] = [];
-    for (const user of filteredUsers) {
-      const subs = user.subscriptions ?? [];
-      const filtered = getFilteredSubs(subs);
-      for (const sub of filtered) {
-        ids.push(sub.id);
-      }
-    }
-    return ids;
-  }, [filteredUsers, getFilteredSubs]);
-
-  const toggleAllSubscriptions = useCallback(() => {
-    const allSelected =
-      allVisibleSubscriptionIds.length > 0 &&
-      allVisibleSubscriptionIds.every((id) => subscriptionSelection[id]);
-
-    if (allSelected) {
-      // Deselect all
-      const next: Record<number, boolean> = {};
-      for (const key of Object.keys(subscriptionSelection)) {
-        const id = Number(key);
-        if (!allVisibleSubscriptionIds.includes(id)) {
-          next[id] = subscriptionSelection[id];
-        }
-      }
-      setSubscriptionSelection(next);
-    } else {
-      // Select all visible
-      const next = { ...subscriptionSelection };
-      for (const id of allVisibleSubscriptionIds) {
-        next[id] = true;
-      }
-      setSubscriptionSelection(next);
-    }
-
-    // Auto-expand rows that have filtered subs
-    const expanded: Record<number, boolean> = { ...expandedRows };
-    for (const user of users) {
-      const subs = user.subscriptions ?? [];
-      const filtered = getFilteredSubs(subs);
-      if (filtered.length > 1) {
-        expanded[user.id] = true;
-      }
-    }
-    setExpandedRows(expanded);
-  }, [allVisibleSubscriptionIds, subscriptionSelection, expandedRows, users, getFilteredSubs]);
 
   const table = useReactTable({
     data: filteredUsers,
@@ -2262,6 +2268,15 @@ export default function AdminBulkActions() {
           <RefreshIcon className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
+
+      {loadError && (
+        <div role="alert" className="mb-4 rounded-xl bg-apple-card p-4 text-sm text-apple-mute">
+          {t('admin.users.loadError')}{' '}
+          <button onClick={() => void loadUsers()} className="underline" disabled={loading}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-4 flex flex-col gap-3">
@@ -2348,7 +2363,7 @@ export default function AdminBulkActions() {
         <div className="flex justify-center py-16">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
-      ) : users.length === 0 ? (
+      ) : users.length === 0 && !loadError ? (
         <div className="flex flex-col items-center justify-center py-16">
           <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-apple-elevated text-apple-faint">
             <SearchIcon />
@@ -2498,6 +2513,7 @@ export default function AdminBulkActions() {
           selectedSubscriptionCount={selectedSubscriptionIds.length}
           isMultiTariff={isMultiTariff}
           totalVisibleSubscriptionCount={allVisibleSubscriptionIds.length}
+          allVisibleSubscriptionsSelected={allVisibleSubscriptionsSelected}
           onAction={handleOpenAction}
           onToggleAllSubscriptions={toggleAllSubscriptions}
         />,

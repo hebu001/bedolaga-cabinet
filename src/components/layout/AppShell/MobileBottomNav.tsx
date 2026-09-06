@@ -101,11 +101,12 @@ export function MobileBottomNav({ isKeyboardOpen, wheelEnabled }: MobileBottomNa
         {coreItems.map((item) => (
           <Link
             key={item.path}
+            aria-current={isActive(item.path) ? 'page' : undefined}
             to={item.path}
             onClick={handleNavClick}
             className={cn(
               'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full transition-all duration-200',
-              isActive(item.path) ? 'text-white' : 'text-[#98989d] hover:text-white',
+              isActive(item.path) ? 'text-black' : 'text-[#98989d] hover:text-white',
             )}
             style={{ height: '56px' }}
           >
@@ -118,7 +119,7 @@ export function MobileBottomNav({ isKeyboardOpen, wheelEnabled }: MobileBottomNa
               />
             )}
             <item.icon className="relative z-10 h-[18px] w-[18px]" />
-            <span className="relative z-10 max-w-full truncate px-1 text-[9px] font-medium leading-none">
+            <span className="relative z-10 max-w-full truncate px-1 text-[10px] font-medium leading-none">
               {item.label}
             </span>
           </Link>

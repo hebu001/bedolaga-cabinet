@@ -1,5 +1,5 @@
 # Stage 1: Build the React application
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -33,6 +33,8 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/cabinet-api-unavailable.conf /etc/nginx/cabinet-api.conf
+COPY --chmod=755 docker/40-cabinet-api.sh /docker-entrypoint.d/40-cabinet-api.sh
 
 # Expose port
 EXPOSE 80

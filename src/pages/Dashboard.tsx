@@ -6,11 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useAuthStore } from '../store/auth';
 import { subscriptionApi } from '../api/subscription';
-import { referralApi } from '../api/referral';
 import { balanceApi } from '../api/balance';
 import TrialOfferCard from '../components/dashboard/TrialOfferCard';
 import { giftApi } from '../api/gift';
-import { promoApi } from '../api/promo';
 import PendingGiftCard from '../components/dashboard/PendingGiftCard';
 import { API } from '../config/constants';
 import { formatTraffic } from '../utils/formatTraffic';
@@ -90,32 +88,37 @@ const LaptopIcon = () => (
 );
 
 export default function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const haptic = useHapticFeedback();
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const queryClient = useQueryClient();
   const [trialError, setTrialError] = useState<string | null>(null);
   const [showDevicePanel, setShowDevicePanel] = useState(false);
 
-  // Refresh user data on mount
-  useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
-
   // Fetch balance from API
-  const { data: balanceData } = useQuery({
+  const {
+    data: balanceData,
+    isFetching: balanceLoading,
+    isError: balanceError,
+    refetch: refetchBalance,
+  } = useQuery({
     queryKey: ['balance'],
     queryFn: balanceApi.getBalance,
     staleTime: API.BALANCE_STALE_TIME_MS,
-    refetchOnMount: 'always',
+    refetchOnMount: true,
   });
 
-  const { data: subscriptionResponse, isLoading: subLoading } = useQuery({
+  const {
+    data: subscriptionResponse,
+    isLoading: subLoading,
+    isError: subError,
+    refetch: refetchSubscription,
+  } = useQuery({
     queryKey: ['subscription'],
     queryFn: () => subscriptionApi.getSubscription(),
     retry: false,
     staleTime: API.BALANCE_STALE_TIME_MS,
-    refetchOnMount: 'always',
+    refetchOnMount: true,
   });
 
   const subscription = subscriptionResponse?.subscription ?? null;
@@ -123,7 +126,7 @@ export default function Dashboard() {
   const { data: trialInfo, isLoading: trialLoading } = useQuery({
     queryKey: ['trial-info'],
     queryFn: () => subscriptionApi.getTrialInfo(),
-    enabled: !subscription && !subLoading,
+    enabled: !subscription && !subLoading && !subError,
   });
 
   const { data: devicesData } = useQuery({
@@ -140,12 +143,6 @@ export default function Dashboard() {
     },
   });
 
-  // Warm the referral-info cache for other pages.
-  useQuery({
-    queryKey: ['referral-info'],
-    queryFn: referralApi.getReferralInfo,
-  });
-
   // Fetch purchase options for min price display
   const { data: purchaseOptions } = useQuery({
     queryKey: ['purchase-options'],
@@ -158,13 +155,6 @@ export default function Dashboard() {
     queryKey: ['pending-gifts'],
     queryFn: giftApi.getPendingGifts,
     staleTime: 30_000,
-    retry: false,
-  });
-
-  const { data: _promoGroupData } = useQuery({
-    queryKey: ['promo-group-discounts'],
-    queryFn: promoApi.getGroupDiscounts,
-    staleTime: 60_000,
     retry: false,
   });
 
@@ -250,7 +240,8 @@ export default function Dashboard() {
     refreshTrafficMutation.mutate();
   }, [subscription, refreshTrafficMutation]);
 
-  const hasNoSubscription = subscriptionResponse?.has_subscription === false && !subLoading;
+  const hasNoSubscription =
+    subscriptionResponse?.has_subscription === false && !subLoading && !subError;
 
   // ── Derived display data ──
   const usedGb = trafficData?.traffic_used_gb ?? subscription?.traffic_used_gb ?? 0;
@@ -258,19 +249,25 @@ export default function Dashboard() {
   // Subscription status derivation
   const subscriptionStatus = useMemo(() => {
     if (!subscription) return { label: '', color: 'rgba(255,255,255,0.4)' };
-    if (subscription.is_expired) return { label: 'Истекла', color: '#ef4444' };
-    if (subscription.is_limited) return { label: 'Лимит', color: 'var(--figma-green)' };
-    if (subscription.status === 'disabled') return { label: 'Отключена', color: '#ef4444' };
-    if (subscription.is_active) return { label: 'Активна', color: 'var(--figma-green)' };
+    if (subscription.is_expired)
+      return { label: t('dashboard.subscriptionStatus.expired'), color: '#ef4444' };
+    if (subscription.is_limited)
+      return { label: t('dashboard.subscriptionStatus.limited'), color: 'var(--figma-green)' };
+    if (subscription.status === 'disabled')
+      return { label: t('dashboard.subscriptionStatus.disabled'), color: '#ef4444' };
+    if (subscription.is_active)
+      return { label: t('dashboard.subscriptionStatus.active'), color: 'var(--figma-green)' };
     return { label: subscription.status, color: 'rgba(255,255,255,0.4)' };
-  }, [subscription]);
+  }, [subscription, t]);
 
   const formattedDate = subscription
-    ? new Date(subscription.end_date).toLocaleDateString('ru-RU', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
+    ? new Date(subscription.end_date)
+        .toLocaleDateString(i18n.language, {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+        .replace(/(\d{4}) (г\.)/u, '$1\u00a0$2')
     : '';
 
   const deviceCount = devicesData?.total ?? 0;
@@ -292,8 +289,8 @@ export default function Dashboard() {
     }
     if (minKopeks === Infinity) return '';
     const rubles = Math.round(minKopeks / 100);
-    return `от ${rubles}\u00A0₽`;
-  }, [purchaseOptions]);
+    return t('dashboard.fromPrice', { price: `${rubles}\u00A0₽` });
+  }, [purchaseOptions, t]);
 
   // ── Expired / Disabled / Limited ──
   if (
@@ -301,25 +298,25 @@ export default function Dashboard() {
     subscription &&
     (subscription.is_expired || subscription.status === 'disabled' || subscription.is_limited)
   ) {
-    const expiredDate = new Date(subscription.end_date).toLocaleDateString('ru-RU', {
+    const expiredDate = new Date(subscription.end_date).toLocaleDateString(i18n.language, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     });
 
     const statusLabel = subscription.is_expired
-      ? 'ПОДПИСКА ИСТЕКЛА'
+      ? t('dashboard.subscriptionExpired.title')
       : subscription.is_limited
-        ? 'ЛИМИТ ИСЧЕРПАН'
-        : 'ПОДПИСКА ОТКЛЮЧЕНА';
+        ? t('dashboard.subscriptionStatus.limited')
+        : t('dashboard.subscriptionStatus.disabled');
 
     return (
       <div
-        className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5"
-        style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+        className="fixed-screen dashboard-screen flex flex-col overflow-hidden px-5"
+        style={{ overscrollBehavior: 'none' }}
       >
         {/* Hero area — large status text replaces logo */}
-        <div className="relative flex flex-1 items-center justify-center">
+        <div className="dashboard-hero relative flex min-h-0 flex-1 items-center justify-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -327,7 +324,7 @@ export default function Dashboard() {
             className="relative z-10 px-4 text-center"
           >
             <h1
-              className="text-4xl font-black leading-tight text-white sm:text-5xl"
+              className="text-4xl font-black uppercase leading-tight text-white sm:text-5xl"
               style={{ letterSpacing: '0.12em', fontStretch: 'expanded' }}
             >
               {statusLabel}
@@ -342,7 +339,15 @@ export default function Dashboard() {
         </div>
 
         {/* Bottom CTA buttons */}
-        <div className="mt-auto space-y-2 pb-2">
+        <div className="dashboard-bottom mt-auto flex min-h-0 flex-col gap-2 pb-2">
+          {subError && (
+            <div role="alert" className="rounded-2xl bg-black/40 p-3 text-sm text-white">
+              <p>{t('common.staleData')}</p>
+              <button onClick={() => void refetchSubscription()} className="mt-2 underline">
+                {t('common.retry')}
+              </button>
+            </div>
+          )}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -351,13 +356,13 @@ export default function Dashboard() {
             <Link
               to="/subscription/purchase?renew=1"
               onClick={() => haptic.buttonPressMedium()}
-              className="flex h-14 w-full transform-gpu items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
+              className="fixed-screen-action flex h-14 w-full transform-gpu items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
               style={{ background: 'var(--figma-green)' }}
             >
               <GlobeIcon />
               <span>{t('dashboard.expired.renew')}</span>
               {minPriceLabel && (
-                <span className="ml-auto shrink-0 text-right text-white/70">{minPriceLabel}</span>
+                <span className="ml-auto shrink-0 text-right text-black/70">{minPriceLabel}</span>
               )}
             </Link>
           </motion.div>
@@ -369,7 +374,7 @@ export default function Dashboard() {
             <Link
               to="/connection"
               onClick={() => haptic.buttonPressMedium()}
-              className="flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
+              className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
             >
               <UnplugIcon />
               <span>{t('dashboard.connectDevice')}</span>
@@ -385,37 +390,48 @@ export default function Dashboard() {
 
   return (
     <div
-      className="fixed inset-0 bottom-[80px] flex flex-col overflow-hidden px-5"
-      style={{ touchAction: 'none', overscrollBehavior: 'none' }}
+      className="fixed-screen dashboard-screen flex flex-col overflow-hidden px-5"
+      style={{ overscrollBehavior: 'none' }}
       data-onboarding="welcome"
     >
       {/* Pending Gift Activations */}
-      {pendingGifts && pendingGifts.length > 0 && <PendingGiftCard gifts={pendingGifts} />}
+      {pendingGifts && pendingGifts.length > 0 && (
+        <PendingGiftCard gifts={pendingGifts} className="dashboard-gifts space-y-3" />
+      )}
 
       {/* ─── Hero Area: Logo ─── */}
-      <div className="relative flex flex-1 items-center justify-center">
+      <div className="dashboard-hero relative flex min-h-0 flex-1 items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="dashboard-logo-wrap"
         >
-          <div style={{ transform: 'translateX(-5%)' }}>
-            <ShieldLogo className="w-[288px] opacity-90 sm:w-[384px]" />
+          <div className="dashboard-logo-wrap" style={{ transform: 'translateX(-5%)' }}>
+            <ShieldLogo className="dashboard-logo w-[288px] opacity-90 sm:w-[384px]" />
           </div>
         </motion.div>
       </div>
 
       {/* ─── Bottom Section ─── */}
-      <div className="mt-auto space-y-2 pb-2">
+      <div className="dashboard-bottom mt-auto flex min-h-0 flex-col gap-2 pb-2">
+        {subError && (
+          <div role="alert" className="rounded-2xl bg-black/40 p-3 text-sm text-white">
+            <p>{t(subscription ? 'common.staleData' : 'common.loadError')}</p>
+            <button onClick={() => void refetchSubscription()} className="mt-2 underline">
+              {t('common.retry')}
+            </button>
+          </div>
+        )}
         {/* Subscription Info Row */}
         {subscription && !subLoading && (
           <motion.div
-            className="flex items-center justify-between py-2"
+            className="dashboard-status flex shrink-0 items-center justify-between gap-2 py-2"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <div className="flex flex-col text-lg leading-5">
+            <div className="flex min-w-0 flex-col text-lg leading-5">
               <span
                 className="text-xl font-black"
                 style={{
@@ -444,9 +460,11 @@ export default function Dashboard() {
                 setShowDevicePanel(!showDevicePanel);
               }}
               className="flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              aria-expanded={showDevicePanel}
+              aria-controls="dashboard-devices"
               data-onboarding="connect-devices"
             >
-              {`${t('dashboard.devicesLabel', 'Устройства')} ${deviceCount}/${subscription?.device_limit ?? 0}`}
+              {`${t('dashboard.devices')} ${deviceCount}/${subscription?.device_limit ?? 0}`}
             </button>
           </motion.div>
         )}
@@ -459,7 +477,8 @@ export default function Dashboard() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ type: 'tween', duration: 0.15, ease: 'easeInOut' }}
-              className="overflow-hidden"
+              id="dashboard-devices"
+              className="dashboard-device-panel min-h-0 overflow-y-auto overscroll-contain"
             >
               <div className="space-y-1.5 rounded-2xl bg-black/40 p-2 backdrop-blur-2xl">
                 {devicesData.devices.length > 0 ? (
@@ -478,7 +497,7 @@ export default function Dashboard() {
                     return (
                       <div
                         key={device.hwid}
-                        className="flex items-center justify-between gap-2 rounded-xl bg-white/5 p-2.5"
+                        className="dashboard-device-row flex items-center justify-between gap-2 rounded-xl bg-white/5 p-2.5"
                       >
                         <div className="flex min-w-0 items-center gap-2.5">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-white/5">
@@ -513,7 +532,9 @@ export default function Dashboard() {
                               {displayName}
                             </div>
                             {subtitle && subtitle !== displayName && (
-                              <div className="truncate text-[11px] text-white/40">{subtitle}</div>
+                              <div className="dashboard-device-subtitle truncate text-[11px] text-white/40">
+                                {subtitle}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -573,39 +594,47 @@ export default function Dashboard() {
 
         {/* Trial Activation */}
         {hasNoSubscription && !trialLoading && trialInfo?.is_available && (
-          <TrialOfferCard
-            trialInfo={trialInfo}
-            balanceKopeks={balanceData?.balance_kopeks || 0}
-            balanceRubles={balanceData?.balance_rubles || 0}
-            activateTrialMutation={activateTrialMutation}
-            trialError={trialError}
-          />
+          <div className="dashboard-trial">
+            <TrialOfferCard
+              trialInfo={trialInfo}
+              balanceKopeks={balanceData?.balance_kopeks}
+              balanceRubles={balanceData?.balance_rubles}
+              balanceLoading={balanceLoading}
+              balanceError={balanceError}
+              onRetryBalance={() => {
+                void refetchBalance();
+              }}
+              activateTrialMutation={activateTrialMutation}
+              trialError={trialError}
+            />
+          </div>
         )}
 
         {/* CTA: Renew Subscription */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <Link
-            to={hasNoSubscription ? '/subscription/purchase' : '/subscription/purchase?renew=1'}
-            onClick={() => haptic.buttonPressMedium()}
-            className="flex h-14 w-full transform-gpu items-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
-            style={{ background: 'var(--figma-green)' }}
+        {!subLoading && (!subError || !!subscription) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
           >
-            <GlobeIcon />
-            <span>
-              {hasNoSubscription
-                ? t('dashboard.expired.buy', 'Купить подписку')
-                : t('dashboard.expired.renew')}
-            </span>
-            {minPriceLabel && (
-              <span className="ml-auto shrink-0 text-right text-white/70">{minPriceLabel}</span>
-            )}
-          </Link>
-        </motion.div>
-
+            <Link
+              to={hasNoSubscription ? '/subscription/purchase' : '/subscription/purchase?renew=1'}
+              onClick={() => haptic.buttonPressMedium()}
+              className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
+              style={{ background: 'var(--figma-green)' }}
+            >
+              <GlobeIcon />
+              <span>
+                {hasNoSubscription
+                  ? t('dashboard.expired.buy', 'Купить подписку')
+                  : t('dashboard.expired.renew')}
+              </span>
+              {minPriceLabel && (
+                <span className="ml-auto shrink-0 text-right text-black/70">{minPriceLabel}</span>
+              )}
+            </Link>
+          </motion.div>
+        )}
         {/* CTA: Setup & Configuration */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -615,7 +644,7 @@ export default function Dashboard() {
           <Link
             to="/connection"
             onClick={() => haptic.buttonPressMedium()}
-            className="flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
+            className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
           >
             <UnplugIcon />
             <span>{t('dashboard.connectDevice')}</span>

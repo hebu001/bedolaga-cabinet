@@ -6,7 +6,7 @@ React + Vite + TypeScript | Авторизация через Telegram | Мул�
 
 ## Требования
 
-- Docker и Docker Compose
+- Docker и Docker Compose (или Node.js 24 LTS для локальной сборки)
 - Запущенный backend бота с включенным Cabinet API
 - Обратный прокси (Caddy / Nginx / Traefik)
 
@@ -246,6 +246,19 @@ https://cabinet.example.com {
 | Переменная | Описание | По умолчанию |
 |---|---|---|
 | `CABINET_PORT` | Порт контейнера на хосте | `3020` |
+| `CABINET_BACKEND_ORIGIN` | Backend origin для встроенного nginx, например `http://remnawave_bot:8080` или `https://api.example.com`; без пути/логина/query | пусто |
+
+Для самостоятельного контейнера с `VITE_API_URL=/api` задайте `CABINET_BACKEND_ORIGIN=http://remnawave_bot:8080` и подключите контейнер к сети backend. Встроенный nginx удаляет префикс `/api`, сохраняет query/body, проксирует WebSocket и проверяет сертификат HTTPS upstream с SNI. Это runtime-настройка: пересборка frontend не требуется.
+
+Без этой переменной контейнер продолжает раздавать статику; `/api` отвечает JSON `503`, а не `index.html`. Существующая схема извлечения `dist` через `docker cp` и внешний Caddy/Nginx, который сам обрабатывает `/api`, сохраняется. Если копируете `nginx.conf` вручную, также установите `docker/cabinet-api-unavailable.conf` как `/etc/nginx/cabinet-api.conf` либо сгенерируйте этот include через `docker/40-cabinet-api.sh` с нужным origin.
+
+Access log встроенного nginx не содержит URL/query; ошибки API записываются только с уровнем `crit`, чтобы upstream error log не раскрывал одноразовые query tickets. Не добавляйте `$request`/`$request_uri` в формат лога без удаления чувствительных параметров. Только хешированные `/assets/*` получают immutable cache; HTML и файлы без хеша перепроверяются.
+
+### Проверки перед выпуском
+
+Node.js 24 LTS используется в CI, release и Docker builder. `npm test` запускает auth/WS/media/payments/connection/Aurora/startup/trial/admin регрессии. `npm run test:dependencies` проверяет реальные Telegram SDK parsers, DOMPurify и Tiptap в Chromium (сначала `npx playwright install chromium`). `npm run test:nginx` требует nginx в PATH либо `NGINX_BINARY=/path/to/nginx` и запускает локальные HTTP/HTTPS/WS fixtures.
+
+После `npm run build` команда `npm run check:bundle` измеряет все статические imports входного Vite chunk и отдельные публичные JSON-словари по `dist/.vite/manifest.json`, проверяет budgets из `scripts/bundle-budgets.json` и сохраняет `dist/bundle-metrics.json`. URL JSON-словарей входят в JS как короткие строки; сами пользовательские и административные словари загружаются по требованию через retryable fetch. Динамические admin imports не включаются в стартовый JS. Измеряются raw/gzip байты, а не пользовательские Web Vitals.
 
 ### Backend бота (.env бота)
 

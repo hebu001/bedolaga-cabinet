@@ -7,8 +7,11 @@ import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 
 interface TrialOfferCardProps {
   trialInfo: TrialInfo;
-  balanceKopeks: number;
-  balanceRubles: number;
+  balanceKopeks?: number;
+  balanceRubles?: number;
+  balanceLoading?: boolean;
+  balanceError?: boolean;
+  onRetryBalance?: () => void;
   activateTrialMutation: UseMutationResult<unknown, unknown, void, unknown>;
   trialError: string | null;
 }
@@ -17,6 +20,9 @@ export default function TrialOfferCard({
   trialInfo,
   balanceKopeks,
   balanceRubles,
+  balanceLoading = false,
+  balanceError = false,
+  onRetryBalance,
   activateTrialMutation,
   trialError,
 }: TrialOfferCardProps) {
@@ -24,7 +30,13 @@ export default function TrialOfferCard({
   const { formatAmount, currencySymbol } = useCurrency();
   const haptic = useHapticFeedback();
   const isFree = !trialInfo.requires_payment;
-  const canAfford = balanceKopeks >= trialInfo.price_kopeks;
+  const balanceKnown =
+    typeof balanceKopeks === 'number' &&
+    Number.isFinite(balanceKopeks) &&
+    typeof balanceRubles === 'number' &&
+    Number.isFinite(balanceRubles);
+  const balanceReady = balanceKnown && !balanceLoading && !balanceError;
+  const canAfford = balanceReady && balanceKopeks >= trialInfo.price_kopeks;
 
   return (
     <div
@@ -47,7 +59,7 @@ export default function TrialOfferCard({
       </p>
 
       {/* Price tag for paid trial */}
-      {!isFree && trialInfo.price_rubles > 0 && (
+      {!isFree && trialInfo.price_kopeks > 0 && (
         <div
           className="mb-6 inline-flex items-baseline gap-1 rounded-full px-6 py-2"
           style={{
@@ -59,7 +71,7 @@ export default function TrialOfferCard({
             className="text-[32px] font-extrabold leading-none tracking-tight"
             style={{ color: 'var(--figma-green)' }}
           >
-            {trialInfo.price_rubles.toFixed(0)}
+            {formatAmount(trialInfo.price_kopeks / 100)}
           </span>
           <span
             className="text-base font-semibold opacity-70"
@@ -93,9 +105,9 @@ export default function TrialOfferCard({
       </div>
 
       {/* Balance info for paid trial */}
-      {!isFree && trialInfo.price_rubles > 0 && (
+      {!isFree && trialInfo.price_kopeks > 0 && (
         <div
-          className="mb-4 space-y-2 rounded-2xl p-4 text-left"
+          className={`trial-balance mb-4 space-y-2 rounded-2xl p-4 text-left ${balanceError && onRetryBalance ? 'trial-balance-retryable' : ''}`}
           style={{
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -104,12 +116,35 @@ export default function TrialOfferCard({
           <div className="flex items-center justify-between">
             <span className="text-sm text-white/40">{t('balance.currentBalance')}</span>
             <span
-              className={`font-display text-sm font-semibold ${canAfford ? 'text-green-400' : 'text-orange-400'}`}
+              className={`font-display text-sm font-semibold ${!balanceReady ? 'text-white/70' : canAfford ? 'text-green-400' : 'text-orange-400'}`}
             >
-              {formatAmount(balanceRubles)} {currencySymbol}
+              {balanceKnown ? `${formatAmount(balanceRubles)} ${currencySymbol}` : '—'}
             </span>
           </div>
-          {!canAfford && (
+          {!balanceReady && (
+            <div
+              className="trial-balance-status flex items-center justify-between gap-2 text-xs text-white/70"
+              role={balanceError ? 'alert' : 'status'}
+            >
+              <span>
+                {balanceError
+                  ? t(balanceKnown ? 'common.staleData' : 'common.loadError')
+                  : t('common.loading')}
+              </span>
+              {balanceError && onRetryBalance && (
+                <button
+                  type="button"
+                  onClick={onRetryBalance}
+                  disabled={balanceLoading}
+                  className="trial-balance-retry shrink-0 rounded underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  style={{ color: 'inherit' }}
+                >
+                  {t('common.retry')}
+                </button>
+              )}
+            </div>
+          )}
+          {balanceReady && !canAfford && (
             <div className="text-xs text-orange-400">
               {t('subscription.trial.insufficientBalance')}
             </div>
@@ -126,16 +161,16 @@ export default function TrialOfferCard({
 
       {/* CTA Button */}
       {!isFree && trialInfo.price_kopeks > 0 ? (
-        canAfford ? (
+        !balanceReady || canAfford ? (
           <button
             onClick={() => {
               haptic.buttonPressMedium();
-              if (!activateTrialMutation.isPending) {
+              if (balanceReady && !activateTrialMutation.isPending) {
                 activateTrialMutation.mutate();
               }
             }}
-            disabled={activateTrialMutation.isPending}
-            className="h-14 w-full rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+            disabled={!balanceReady || activateTrialMutation.isPending}
+            className="h-14 w-full rounded-full text-base font-medium text-black transition-all active:scale-[0.97] disabled:opacity-50"
             style={{ background: 'var(--figma-green)' }}
           >
             {activateTrialMutation.isPending
@@ -145,7 +180,7 @@ export default function TrialOfferCard({
         ) : (
           <Link
             to="/balance"
-            className="flex h-14 w-full items-center justify-center rounded-full text-base font-medium text-white transition-all active:scale-[0.97]"
+            className="flex h-14 w-full items-center justify-center rounded-full text-base font-medium text-black transition-all active:scale-[0.97]"
             style={{ background: 'var(--figma-green)' }}
           >
             {t('subscription.trial.topUpToActivate')}
@@ -170,7 +205,7 @@ export default function TrialOfferCard({
               }
             }}
             disabled={activateTrialMutation.isPending}
-            className="relative h-14 w-full rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+            className="relative h-14 w-full rounded-full text-base font-medium text-black transition-all active:scale-[0.97] disabled:opacity-50"
             style={{
               background: 'var(--figma-green)',
               animation: 'trialButtonPulse 2s ease-in-out infinite',

@@ -302,7 +302,7 @@ export function AppShell({ children }: AppShellProps) {
     isBalance || isSubscription || isProfile || isSupport || isAdminPage || isGift;
 
   return (
-    <div className={cn('min-h-screen', isAppleDarkPage && 'bg-black')}>
+    <div className={cn('app-shell min-h-[100dvh]', isAppleDarkPage && 'bg-black')}>
       {/* Animated background renders via portal on document.body at z-index: -1 */}
       {!isAppleDarkPage && <BackgroundRenderer />}
 
@@ -344,6 +344,8 @@ export function AppShell({ children }: AppShellProps) {
             {desktopNavItems.map((item) => (
               <Link
                 key={item.path}
+                aria-current={isActive(item.path) ? 'page' : undefined}
+                aria-label={item.label}
                 to={item.path}
                 onClick={handleNavClick}
                 className={cn(
@@ -354,7 +356,7 @@ export function AppShell({ children }: AppShellProps) {
                 )}
               >
                 <item.icon className="h-[18px] w-[18px] shrink-0" />
-                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-40 group-focus-visible:opacity-100">
                   {item.label}
                 </span>
               </Link>
@@ -371,7 +373,7 @@ export function AppShell({ children }: AppShellProps) {
                 )}
               >
                 <UsersIcon className="h-[18px] w-[18px] shrink-0" />
-                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-40 group-focus-visible:opacity-100">
                   {t('nav.referral')}
                 </span>
               </Link>
@@ -388,7 +390,7 @@ export function AppShell({ children }: AppShellProps) {
                 )}
               >
                 <GiftIcon className="h-[18px] w-[18px] shrink-0" />
-                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-40 group-focus-visible:opacity-100">
                   {t('nav.gift')}
                 </span>
               </Link>
@@ -407,7 +409,7 @@ export function AppShell({ children }: AppShellProps) {
                   )}
                 >
                   <ShieldIcon className="h-[18px] w-[18px] shrink-0" />
-                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100">
+                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-xs font-medium opacity-0 transition-all duration-200 group-hover:ml-2 group-hover:max-w-40 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-40 group-focus-visible:opacity-100">
                     {t('admin.nav.title')}
                   </span>
                 </Link>
@@ -465,8 +467,8 @@ export function AppShell({ children }: AppShellProps) {
         />
       )}
 
-      {/* Desktop spacer — hidden when header is hidden */}
-      {!isHeaderHidden && <div className="hidden h-14 lg:block" />}
+      {/* Desktop header is visible on every route. */}
+      <div className="hidden h-14 lg:block" />
 
       {/* Mobile spacer — hidden when header is hidden */}
       {!isHeaderHidden && <div className="lg:hidden" style={{ height: headerHeight }} />}
@@ -476,7 +478,7 @@ export function AppShell({ children }: AppShellProps) {
         className={cn(
           'mx-auto max-w-6xl lg:px-6',
           isFullscreenContent
-            ? 'h-[calc(100vh-80px)] overflow-hidden px-5 py-0 pb-0'
+            ? 'fixed-screen-main overflow-hidden px-5 py-0 pb-0'
             : 'px-4 py-6 pb-28 lg:pb-8',
         )}
       >

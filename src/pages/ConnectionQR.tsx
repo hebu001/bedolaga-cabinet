@@ -8,6 +8,7 @@ import { AdminBackButton } from '@/components/admin';
 interface ConnectionQRState {
   url: string;
   hideLink: boolean;
+  displayUrl?: string | null;
   subscriptionId?: number;
 }
 
@@ -57,19 +58,19 @@ export default function ConnectionQR() {
             {t('subscription.connection.qrScanHint')}
           </p>
 
-          <div className="rounded-3xl bg-white p-6">
+          <div className="w-full rounded-3xl bg-white p-6">
             <QRCodeSVG
               value={validState.url}
               size={280}
               level="M"
               includeMargin={false}
-              className="h-[280px] w-[280px] sm:h-[360px] sm:w-[360px]"
+              className="h-auto w-full max-w-[280px]"
             />
           </div>
 
-          {!validState.hideLink && (
+          {!validState.hideLink && validState.displayUrl && (
             <p className="mt-6 max-w-full truncate text-center font-mono text-xs text-dark-500">
-              {validState.url}
+              {validState.displayUrl}
             </p>
           )}
         </div>
