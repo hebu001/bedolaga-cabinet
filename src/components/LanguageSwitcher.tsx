@@ -3,7 +3,11 @@ import { useState, useRef, useEffect } from 'react';
 import { infoApi, type LanguageInfo } from '@/api/info';
 import { changeAppLanguage, SUPPORTED_LANGUAGES } from '@/i18n';
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({
+  placement = 'header',
+}: {
+  placement?: 'header' | 'sidebar';
+}) {
   const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
@@ -84,7 +88,7 @@ export default function LanguageSwitcher() {
         <div
           id="language-options"
           aria-busy={isChanging}
-          className="absolute right-0 z-50 mt-2 w-40 animate-fade-in rounded-xl border border-dark-700/50 bg-dark-800 py-1 shadow-lg"
+          className={`absolute z-50 w-40 animate-fade-in rounded-xl border border-dark-700/50 bg-dark-800 py-1 shadow-lg ${placement === 'sidebar' ? 'bottom-full left-0 mb-3' : 'right-0 mt-2'}`}
         >
           {availableLanguages.map((lang) => (
             <button

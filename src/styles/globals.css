@@ -1867,7 +1867,7 @@ input[type='checkbox']:hover:not(:checked) {
   }
 }
 
-/* Fixed screens share the actual mobile navigation and desktop header geometry. */
+/* Fixed screens share the mobile dock and desktop content frame geometry. */
 .app-shell {
   --fixed-screen-top: env(safe-area-inset-top, 0px);
   --fixed-screen-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
@@ -1908,8 +1908,63 @@ input[type='checkbox']:hover:not(:checked) {
 }
 @media (min-width: 1024px) {
   .app-shell {
-    --fixed-screen-top: 56px;
-    --fixed-screen-bottom: 0px;
+    display: flow-root;
+    /* The outer canvas stays gray; the rounded content has its own black base. */
+    background-color: transparent;
+    --desktop-sidebar-width: 240px;
+    --fixed-screen-top: 10px;
+    --fixed-screen-bottom: 10px;
+  }
+  body:has(.app-shell) {
+    background-color: theme('colors.apple.card');
+  }
+  /* Keep the noise inside the black frame, leaving the outer gray identical to the dock. */
+  body:has(.app-shell)::before {
+    inset: 10px 10px 10px 240px;
+    border-radius: 24px;
+  }
+  .desktop-sidebar {
+    width: var(--desktop-sidebar-width);
+    padding: 24px;
+  }
+  .desktop-sidebar-actions {
+    padding-top: 16px;
+  }
+  .app-content {
+    margin: 10px 10px 10px var(--desktop-sidebar-width);
+    min-height: calc(100dvh - 20px);
+    border-radius: 24px;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
+  }
+  /* Behind the background portal (-2), so stars remain visible inside the frame. */
+  .app-content::before {
+    content: '';
+    position: fixed;
+    inset: 10px 10px 10px var(--desktop-sidebar-width);
+    z-index: -3;
+    border-radius: 24px;
+    background-color: theme('colors.apple.bg');
+    pointer-events: none;
+  }
+  body:has(.app-shell) .app-background {
+    inset: 10px 10px 10px 240px;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  .app-shell .fixed-screen {
+    left: var(--desktop-sidebar-width);
+    right: 10px;
+    max-width: none;
+    border-radius: 24px;
+  }
+  .dashboard-screen .dashboard-bottom {
+    width: 100%;
+    max-width: 560px;
+    align-self: center;
+    padding-bottom: clamp(20px, 5dvh, 64px);
+  }
+  .desktop-sidebar-link {
+    overflow-wrap: anywhere;
   }
 }
 @media (max-height: 600px) {
@@ -2117,5 +2172,32 @@ input[type='checkbox']:hover:not(:checked) {
 @media (max-height: 600px) {
   .dashboard-hero {
     padding-block: 4px;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 600px) {
+  .desktop-sidebar {
+    padding-block: 12px;
+  }
+  .desktop-sidebar-nav {
+    padding-block: 12px;
+    gap: 4px;
+  }
+  .desktop-sidebar-link {
+    min-height: 40px;
+    padding-block: 8px;
+  }
+  .desktop-sidebar-actions {
+    padding-top: 8px;
+  }
+  .dashboard-screen .dashboard-bottom {
+    padding-bottom: 8px;
+  }
+}
+@media (min-width: 1024px) and (max-height: 420px) {
+  .desktop-sidebar-nav {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }

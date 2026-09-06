@@ -27,9 +27,13 @@ const CheckIcon = () => (
 
 interface TicketNotificationBellProps {
   isAdmin?: boolean;
+  placement?: 'header' | 'sidebar';
 }
 
-export default function TicketNotificationBell({ isAdmin = false }: TicketNotificationBellProps) {
+export default function TicketNotificationBell({
+  isAdmin = false,
+  placement = 'header',
+}: TicketNotificationBellProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -254,8 +258,8 @@ export default function TicketNotificationBell({ isAdmin = false }: TicketNotifi
       {/* Dropdown */}
       {isOpen && (
         <div
-          className="fixed left-4 right-4 z-50 mt-0 w-auto animate-scale-in overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-900/95 shadow-2xl shadow-black/30 backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96"
-          style={isMobileFullscreen ? { top: dropdownTop } : undefined}
+          className={`z-50 animate-scale-in overflow-hidden rounded-2xl border border-dark-700/50 bg-dark-900/95 shadow-2xl shadow-black/30 backdrop-blur-xl ${placement === 'sidebar' ? 'absolute bottom-full left-0 mb-3 max-h-[calc(100dvh-100px)] w-96 overflow-y-auto' : 'fixed left-4 right-4 mt-0 w-auto sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96'}`}
+          style={placement === 'header' && isMobileFullscreen ? { top: dropdownTop } : undefined}
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-dark-700/50 bg-dark-800/30 px-4 py-3">

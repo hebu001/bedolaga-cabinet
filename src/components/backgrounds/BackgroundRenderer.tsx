@@ -58,7 +58,7 @@ function RenderBackground({ config }: { config: AnimationConfig }) {
   return createPortal(
     <div
       key={bgType}
-      className="pointer-events-none fixed inset-0"
+      className="app-background pointer-events-none fixed inset-0"
       style={{
         zIndex: -2,
         opacity: config.opacity,

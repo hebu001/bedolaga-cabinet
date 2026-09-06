@@ -1,48 +1,9 @@
 import { Link, useLocation } from 'react-router';
-import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 import { usePlatform } from '@/platform';
-import { useAuthStore } from '@/store/auth';
-
-// Icons
-import { HomeIcon, WalletIcon, UsersIcon, ChatIcon, WheelIcon } from './icons';
-
-// Globe icon matching Dashboard's renew button
-const GlobeNavIcon = ({ className = '' }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.4"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-    <path d="M2 12h20" />
-  </svg>
-);
-
-// Admin panel logo — a shield with a verified check
-const AdminNavIcon = ({ className = '' }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6L12 2.5Z" />
-    <path d="m8.7 12 2.2 2.2L15.3 9.8" />
-  </svg>
-);
+import { useDockItems } from './useDockItems';
 
 interface MobileBottomNavProps {
   isKeyboardOpen: boolean;
@@ -50,30 +11,12 @@ interface MobileBottomNavProps {
 }
 
 export function MobileBottomNav({ isKeyboardOpen, wheelEnabled }: MobileBottomNavProps) {
-  const { t } = useTranslation();
   const location = useLocation();
   const { haptic } = usePlatform();
-  // Source of truth for the admin slot — false for every regular user,
-  // only set true after the backend confirms admin rights.
-  const isAdmin = useAuthStore((state) => state.isAdmin);
+  const coreItems = useDockItems(wheelEnabled);
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
-
-  // Last slot: admins get the admin panel; otherwise wheel (if enabled) or support.
-  const lastItem = isAdmin
-    ? { path: '/admin', label: t('nav.admin', 'Админка'), icon: AdminNavIcon }
-    : wheelEnabled
-      ? { path: '/wheel', label: t('nav.wheel'), icon: WheelIcon }
-      : { path: '/support', label: t('nav.support'), icon: ChatIcon };
-
-  const coreItems = [
-    { path: '/', label: t('nav.dashboard'), icon: HomeIcon },
-    { path: '/subscriptions', label: t('nav.subscription'), icon: GlobeNavIcon },
-    { path: '/balance', label: t('nav.balance'), icon: WalletIcon },
-    { path: '/profile', label: t('nav.profile', 'Профиль'), icon: UsersIcon },
-    lastItem,
-  ];
 
   const handleNavClick = () => {
     haptic.impact('light');
