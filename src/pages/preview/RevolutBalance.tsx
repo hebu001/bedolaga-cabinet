@@ -54,8 +54,7 @@ export default function RevolutBalance() {
               width: 200,
               height: 200,
               borderRadius: '50%',
-              background:
-                'radial-gradient(circle, rgba(79,85,241,0.55) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(79,85,241,0.55) 0%, transparent 70%)',
               filter: 'blur(20px)',
             }}
           />
@@ -130,8 +129,7 @@ export default function RevolutBalance() {
                   width: 30,
                   height: 30,
                   borderRadius: 10,
-                  background:
-                    'linear-gradient(135deg, #4f55f1 0%, #7c3aed 100%)',
+                  background: 'linear-gradient(135deg, #4f55f1 0%, #7c3aed 100%)',
                   display: 'grid',
                   placeItems: 'center',
                   fontSize: 14,
@@ -184,9 +182,7 @@ export default function RevolutBalance() {
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>{m.name}</div>
-                <div style={{ color: c.inkMute, fontSize: 12, marginTop: 2 }}>
-                  {m.sub}
-                </div>
+                <div style={{ color: c.inkMute, fontSize: 12, marginTop: 2 }}>{m.sub}</div>
               </div>
               <span style={{ color: c.faint, fontSize: 18 }}>›</span>
             </div>
@@ -223,9 +219,7 @@ export default function RevolutBalance() {
                 alignItems: 'center',
                 gap: 12,
                 borderBottom:
-                  i === transactions.length - 1
-                    ? 'none'
-                    : '1px solid rgba(255,255,255,0.04)',
+                  i === transactions.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.04)',
               }}
             >
               <div
@@ -246,9 +240,7 @@ export default function RevolutBalance() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 500 }}>{tx.desc}</div>
-                <div style={{ fontSize: 11, color: c.faint, marginTop: 2 }}>
-                  {tx.date}
-                </div>
+                <div style={{ fontSize: 11, color: c.faint, marginTop: 2 }}>{tx.date}</div>
               </div>
               <div
                 style={{

@@ -14,8 +14,7 @@ const c = {
   down: '#f6465d',
 };
 
-const font =
-  '"Binance Plex", "IBM Plex Sans", system-ui, -apple-system, Arial, sans-serif';
+const font = '"Binance Plex", "IBM Plex Sans", system-ui, -apple-system, Arial, sans-serif';
 
 const methods = [
   { name: 'Bank Card', sub: 'Visa / MC / MIR', tag: 'Instant' },
@@ -54,9 +53,7 @@ export default function BinanceBalance() {
             padding: 18,
           }}
         >
-          <div style={{ fontSize: 12, color: c.muted }}>
-            Estimated Balance
-          </div>
+          <div style={{ fontSize: 12, color: c.muted }}>Estimated Balance</div>
           <div
             style={{
               marginTop: 8,
@@ -175,8 +172,7 @@ export default function BinanceBalance() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderBottom:
-                  i === methods.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === methods.length - 1 ? 'none' : `1px solid ${c.hairline}`,
               }}
             >
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -196,9 +192,7 @@ export default function BinanceBalance() {
                 </span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 500 }}>{m.name}</div>
-                  <div style={{ fontSize: 11, color: c.muted, marginTop: 2 }}>
-                    {m.sub}
-                  </div>
+                  <div style={{ fontSize: 11, color: c.muted, marginTop: 2 }}>{m.sub}</div>
                 </div>
               </div>
               <span
@@ -232,8 +226,7 @@ export default function BinanceBalance() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderBottom:
-                  i === txs.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === txs.length - 1 ? 'none' : `1px solid ${c.hairline}`,
               }}
             >
               <div>

@@ -77,8 +77,7 @@ export default function PreviewIndex() {
         minHeight: '100vh',
         background: '#08080a',
         color: '#e5e7eb',
-        fontFamily:
-          'system-ui, -apple-system, "Segoe UI", Inter, sans-serif',
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", Inter, sans-serif',
         padding: '32px 16px 64px',
       }}
     >
@@ -116,9 +115,9 @@ export default function PreviewIndex() {
               margin: 0,
             }}
           >
-            16 экранов · 8 дизайн-систем × 2 страницы. Оптимизированы под
-            мобильное разрешение (~390px). Внизу — sticky-таб для переключения
-            между Balance и Subscription внутри выбранной системы.
+            16 экранов · 8 дизайн-систем × 2 страницы. Оптимизированы под мобильное разрешение
+            (~390px). Внизу — sticky-таб для переключения между Balance и Subscription внутри
+            выбранной системы.
           </p>
         </header>
 
@@ -193,15 +192,11 @@ export default function PreviewIndex() {
                     textAlign: 'center',
                     textDecoration: 'none',
                     padding: '12px 10px',
-                    background:
-                      isLight(v.fg)
-                        ? 'rgba(13,37,61,0.08)'
-                        : 'rgba(255,255,255,0.10)',
+                    background: isLight(v.fg) ? 'rgba(13,37,61,0.08)' : 'rgba(255,255,255,0.10)',
                     color: v.fg,
-                    border:
-                      isLight(v.fg)
-                        ? '1px solid rgba(13,37,61,0.12)'
-                        : '1px solid rgba(255,255,255,0.14)',
+                    border: isLight(v.fg)
+                      ? '1px solid rgba(13,37,61,0.12)'
+                      : '1px solid rgba(255,255,255,0.14)',
                     borderRadius: 10,
                     fontSize: 13,
                     fontWeight: 600,
@@ -216,15 +211,11 @@ export default function PreviewIndex() {
                     textAlign: 'center',
                     textDecoration: 'none',
                     padding: '12px 10px',
-                    background:
-                      isLight(v.fg)
-                        ? 'rgba(13,37,61,0.08)'
-                        : 'rgba(255,255,255,0.10)',
+                    background: isLight(v.fg) ? 'rgba(13,37,61,0.08)' : 'rgba(255,255,255,0.10)',
                     color: v.fg,
-                    border:
-                      isLight(v.fg)
-                        ? '1px solid rgba(13,37,61,0.12)'
-                        : '1px solid rgba(255,255,255,0.14)',
+                    border: isLight(v.fg)
+                      ? '1px solid rgba(13,37,61,0.12)'
+                      : '1px solid rgba(255,255,255,0.14)',
                     borderRadius: 10,
                     fontSize: 13,
                     fontWeight: 600,
@@ -248,8 +239,7 @@ export default function PreviewIndex() {
             textAlign: 'center',
           }}
         >
-          Source:{' '}
-          <code style={{ color: '#a1a1aa' }}>docs/design-options/*.md</code>
+          Source: <code style={{ color: '#a1a1aa' }}>docs/design-options/*.md</code>
         </footer>
       </div>
     </div>

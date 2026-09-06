@@ -177,9 +177,7 @@ export default function LamborghiniSubscription() {
                 >
                   {s.country}
                 </div>
-                <div style={{ fontSize: 11, color: c.ash, marginTop: 4 }}>
-                  {s.city}
-                </div>
+                <div style={{ fontSize: 11, color: c.ash, marginTop: 4 }}>{s.city}</div>
               </div>
               <span
                 style={{

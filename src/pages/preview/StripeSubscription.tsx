@@ -13,8 +13,7 @@ const mesh =
   'radial-gradient(circle at 100% 0%, #ffd4f1 0%, transparent 45%), ' +
   'radial-gradient(circle at 50% 100%, #b6e3ff 0%, transparent 50%), #f6f9fc';
 
-const font =
-  '"Sohne", "SF Pro Display", system-ui, -apple-system, Inter, sans-serif';
+const font = '"Sohne", "SF Pro Display", system-ui, -apple-system, Inter, sans-serif';
 
 const servers = [
   { country: 'Нидерланды', city: 'Амстердам', ping: '24 ms', flag: '🇳🇱' },
@@ -60,8 +59,7 @@ export default function StripeSubscription() {
           style={{
             marginTop: 18,
             position: 'relative',
-            background:
-              'linear-gradient(135deg, #2e2b8c 0%, #533afd 50%, #f96bee 100%)',
+            background: 'linear-gradient(135deg, #2e2b8c 0%, #533afd 50%, #f96bee 100%)',
             color: '#fff',
             borderRadius: 18,
             padding: 22,
@@ -187,16 +185,13 @@ export default function StripeSubscription() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                borderBottom:
-                  i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
               }}
             >
               <span style={{ fontSize: 22 }}>{s.flag}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14 }}>{s.country}</div>
-                <div style={{ fontSize: 12, color: c.inkMute, marginTop: 2 }}>
-                  {s.city}
-                </div>
+                <div style={{ fontSize: 12, color: c.inkMute, marginTop: 2 }}>{s.city}</div>
               </div>
               <span
                 style={{
@@ -220,9 +215,7 @@ export default function StripeSubscription() {
             padding: 18,
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
-            Конфигурация
-          </div>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>Конфигурация</div>
           <Row label="Протокол" value="VLESS · Reality" />
           <Row label="Подключений" value="1 из 5" />
           <Row label="Авто-продление" value="Включено" valueColor={c.primary} />
@@ -279,15 +272,7 @@ function Meter({ label, value, pct }: { label: string; value: string; pct: numbe
   );
 }
 
-function Row({
-  label,
-  value,
-  valueColor,
-}: {
-  label: string;
-  value: string;
-  valueColor?: string;
-}) {
+function Row({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
     <div
       style={{

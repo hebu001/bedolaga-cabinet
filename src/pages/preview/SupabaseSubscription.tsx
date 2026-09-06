@@ -13,8 +13,7 @@ const c = {
   hairline: '#2f2f2f',
 };
 
-const mono =
-  '"Berkeley Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace';
+const mono = '"Berkeley Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace';
 
 const servers = [
   { country: 'netherlands', code: 'NL.AMS', ping: 24 },
@@ -28,8 +27,7 @@ export default function SupabaseSubscription() {
       <div
         style={{
           padding: '4px 14px 0',
-          fontFamily:
-            '"Custom Inter", "Inter", system-ui, -apple-system, sans-serif',
+          fontFamily: '"Custom Inter", "Inter", system-ui, -apple-system, sans-serif',
         }}
       >
         <div style={{ padding: '6px 4px 4px' }}>
@@ -144,8 +142,7 @@ export default function SupabaseSubscription() {
                 gridTemplateColumns: '1fr 80px 60px',
                 gap: 8,
                 padding: '8px 0',
-                borderBottom:
-                  i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
                 color: c.ink,
               }}
             >
@@ -154,8 +151,7 @@ export default function SupabaseSubscription() {
               <span
                 style={{
                   textAlign: 'right',
-                  color:
-                    s.ping < 50 ? c.primary : s.ping < 100 ? '#fbbf24' : '#f87171',
+                  color: s.ping < 50 ? c.primary : s.ping < 100 ? '#fbbf24' : '#f87171',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
@@ -234,17 +230,7 @@ function Panel({
   );
 }
 
-function KV({
-  k,
-  v,
-  suffix,
-  vColor,
-}: {
-  k: string;
-  v: string;
-  suffix?: string;
-  vColor?: string;
-}) {
+function KV({ k, v, suffix, vColor }: { k: string; v: string; suffix?: string; vColor?: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span style={{ color: c.inkFaint }}>{k}</span>
@@ -281,11 +267,8 @@ function Bar({
         }}
       >
         <span style={{ color: c.inkFaint }}>{label}</span>
-        <span
-          style={{ color: c.inkMute, fontVariantNumeric: 'tabular-nums' }}
-        >
-          {used} / {total} {unit} ·{' '}
-          <span style={{ color: c.primary }}>{pct.toFixed(0)}%</span>
+        <span style={{ color: c.inkMute, fontVariantNumeric: 'tabular-nums' }}>
+          {used} / {total} {unit} · <span style={{ color: c.primary }}>{pct.toFixed(0)}%</span>
         </span>
       </div>
       <div

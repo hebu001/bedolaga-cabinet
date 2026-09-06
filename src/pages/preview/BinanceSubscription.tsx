@@ -12,8 +12,7 @@ const c = {
   down: '#f6465d',
 };
 
-const font =
-  '"Binance Plex", "IBM Plex Sans", system-ui, -apple-system, Arial, sans-serif';
+const font = '"Binance Plex", "IBM Plex Sans", system-ui, -apple-system, Arial, sans-serif';
 
 const servers = [
   { country: 'Netherlands', code: 'NL-AMS', ping: 24 },
@@ -46,8 +45,7 @@ export default function BinanceSubscription() {
         >
           <div
             style={{
-              background:
-                'linear-gradient(135deg, #fcd535 0%, #f0b90b 100%)',
+              background: 'linear-gradient(135deg, #fcd535 0%, #f0b90b 100%)',
               padding: '16px 18px',
               color: '#181a20',
             }}
@@ -59,9 +57,7 @@ export default function BinanceSubscription() {
                 alignItems: 'center',
               }}
             >
-              <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.7 }}>
-                CURRENT PLAN
-              </span>
+              <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.7 }}>CURRENT PLAN</span>
               <span
                 style={{
                   fontSize: 10,
@@ -75,9 +71,7 @@ export default function BinanceSubscription() {
                 ● ACTIVE
               </span>
             </div>
-            <div style={{ marginTop: 8, fontSize: 26, fontWeight: 700 }}>
-              Premium
-            </div>
+            <div style={{ marginTop: 8, fontSize: 26, fontWeight: 700 }}>Premium</div>
             <div
               style={{
                 fontSize: 12,
@@ -167,8 +161,7 @@ export default function BinanceSubscription() {
                 gap: 8,
                 alignItems: 'center',
                 fontSize: 13,
-                borderBottom:
-                  i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
               }}
             >
               <span>{s.country}</span>

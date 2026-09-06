@@ -380,7 +380,10 @@ export default function SubscriptionCardActive({
       {/* ─── Traffic Refresh ─── */}
       <div className="mb-5 flex items-center justify-between px-0.5">
         <button
-          onClick={() => { haptic.buttonPressMedium(); refreshTrafficMutation.mutate(); }}
+          onClick={() => {
+            haptic.buttonPressMedium();
+            refreshTrafficMutation.mutate();
+          }}
           disabled={refreshTrafficMutation.isPending || trafficRefreshCooldown > 0}
           className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium text-dark-50/35 transition-colors hover:bg-dark-50/[0.05] hover:text-dark-50/50 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label={t('common.refresh')}

@@ -27,8 +27,7 @@ export default function LinearBalance() {
       <div
         style={{
           padding: '4px 16px 0',
-          fontFamily:
-            '"Inter Display", "Inter", system-ui, -apple-system, sans-serif',
+          fontFamily: '"Inter Display", "Inter", system-ui, -apple-system, sans-serif',
           fontFeatureSettings: '"cv11"',
         }}
       >
@@ -106,12 +105,8 @@ export default function LinearBalance() {
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-0.02em' }}>
-              ₽2,450
-            </span>
-            <span style={{ fontSize: 18, color: c.inkSubtle, fontWeight: 500 }}>
-              .00
-            </span>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: '-0.02em' }}>₽2,450</span>
+            <span style={{ fontSize: 18, color: c.inkSubtle, fontWeight: 500 }}>.00</span>
           </div>
           <div
             style={{
@@ -177,8 +172,7 @@ export default function LinearBalance() {
               key={m.name}
               style={{
                 padding: '12px 14px',
-                borderBottom:
-                  i === arr.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === arr.length - 1 ? 'none' : `1px solid ${c.hairline}`,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -187,9 +181,7 @@ export default function LinearBalance() {
             >
               <div style={{ minWidth: 0 }}>
                 <div>{m.name}</div>
-                <div style={{ color: c.inkSubtle, fontSize: 11, marginTop: 2 }}>
-                  {m.sub}
-                </div>
+                <div style={{ color: c.inkSubtle, fontSize: 11, marginTop: 2 }}>{m.sub}</div>
               </div>
               <span
                 style={{
@@ -227,8 +219,7 @@ export default function LinearBalance() {
               key={i}
               style={{
                 padding: '12px 14px',
-                borderBottom:
-                  i === txs.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === txs.length - 1 ? 'none' : `1px solid ${c.hairline}`,
                 display: 'grid',
                 gridTemplateColumns: '64px 1fr auto',
                 gap: 8,

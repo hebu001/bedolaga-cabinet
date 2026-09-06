@@ -38,8 +38,7 @@ export default function RevolutSubscription() {
             borderRadius: 22,
             padding: 24,
             overflow: 'hidden',
-            background:
-              'linear-gradient(135deg, #16181a 0%, #1c1c2e 60%, #2a2eaf 100%)',
+            background: 'linear-gradient(135deg, #16181a 0%, #1c1c2e 60%, #2a2eaf 100%)',
             border: '1px solid rgba(79,85,241,0.32)',
           }}
         >
@@ -51,8 +50,7 @@ export default function RevolutSubscription() {
               width: 220,
               height: 220,
               borderRadius: '50%',
-              background:
-                'radial-gradient(circle, rgba(79,85,241,0.55) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(79,85,241,0.55) 0%, transparent 70%)',
               filter: 'blur(28px)',
             }}
           />
@@ -126,8 +124,7 @@ export default function RevolutSubscription() {
           <button
             style={{
               flex: 1,
-              background:
-                'linear-gradient(135deg, #4f55f1 0%, #7c3aed 100%)',
+              background: 'linear-gradient(135deg, #4f55f1 0%, #7c3aed 100%)',
               color: '#fff',
               border: 'none',
               borderRadius: 14,
@@ -188,17 +185,13 @@ export default function RevolutSubscription() {
                 alignItems: 'center',
                 gap: 12,
                 borderBottom:
-                  i === servers.length - 1
-                    ? 'none'
-                    : '1px solid rgba(255,255,255,0.04)',
+                  i === servers.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.04)',
               }}
             >
               <span style={{ fontSize: 22 }}>{s.flag}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500 }}>{s.country}</div>
-                <div style={{ fontSize: 11, color: c.faint, marginTop: 2 }}>
-                  {s.city}
-                </div>
+                <div style={{ fontSize: 11, color: c.faint, marginTop: 2 }}>{s.city}</div>
               </div>
               <span
                 style={{
@@ -223,9 +216,7 @@ export default function RevolutSubscription() {
             padding: 18,
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-            Конфигурация
-          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Конфигурация</div>
           <KV label="Протокол" value="VLESS · Reality" />
           <KV label="Подключений" value="1 / 5" />
           <KV label="Авто-продление" value="Включено" valueColor="#86efac" />
@@ -295,15 +286,7 @@ function Bar({
   );
 }
 
-function KV({
-  label,
-  value,
-  valueColor,
-}: {
-  label: string;
-  value: string;
-  valueColor?: string;
-}) {
+function KV({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
     <div
       style={{

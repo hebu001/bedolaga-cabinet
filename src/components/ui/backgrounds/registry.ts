@@ -230,7 +230,12 @@ export const backgroundRegistry: BackgroundDefinition[] = [
     descriptionKey: 'admin.backgrounds.beamsCollisionDesc',
     category: 'canvas',
     settings: [
-      { key: 'shaderColor', label: 'admin.backgrounds.particleColor', type: 'color', default: '#4169E1' },
+      {
+        key: 'shaderColor',
+        label: 'admin.backgrounds.particleColor',
+        type: 'color',
+        default: '#4169E1',
+      },
       {
         key: 'speed',
         label: 'admin.backgrounds.speed',

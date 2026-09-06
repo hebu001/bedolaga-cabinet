@@ -143,8 +143,7 @@ export default function LinearSubscription() {
               key={u.name}
               style={{
                 padding: '12px 14px',
-                borderBottom:
-                  i === usage.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === usage.length - 1 ? 'none' : `1px solid ${c.hairline}`,
                 fontSize: 13,
                 fontVariantNumeric: 'tabular-nums',
               }}
@@ -159,9 +158,7 @@ export default function LinearSubscription() {
                 <span>{u.name}</span>
                 <span style={{ color: c.inkSubtle }}>
                   {u.used} / {u.total} {u.unit}{' '}
-                  <span style={{ marginLeft: 8, color: c.inkTertiary }}>
-                    {u.pct.toFixed(0)}%
-                  </span>
+                  <span style={{ marginLeft: 8, color: c.inkTertiary }}>{u.pct.toFixed(0)}%</span>
                 </span>
               </div>
               <div
@@ -198,8 +195,7 @@ export default function LinearSubscription() {
               key={s.country}
               style={{
                 padding: '12px 14px',
-                borderBottom:
-                  i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === servers.length - 1 ? 'none' : `1px solid ${c.hairline}`,
                 display: 'grid',
                 gridTemplateColumns: '1fr auto',
                 gap: 8,
@@ -225,8 +221,7 @@ export default function LinearSubscription() {
                   fontSize: 11,
                   fontFamily: '"JetBrains Mono", ui-monospace, monospace',
                   fontVariantNumeric: 'tabular-nums',
-                  color:
-                    s.ping < 50 ? '#86efac' : s.ping < 100 ? '#facc15' : '#f87171',
+                  color: s.ping < 50 ? '#86efac' : s.ping < 100 ? '#facc15' : '#f87171',
                 }}
               >
                 {s.ping}ms
@@ -305,21 +300,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function KV({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
+function KV({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span style={{ color: c.inkSubtle }}>{label}</span>
-      <span style={{ color: highlight ? c.primary : c.ink, fontWeight: 500 }}>
-        {value}
-      </span>
+      <span style={{ color: highlight ? c.primary : c.ink, fontWeight: 500 }}>{value}</span>
     </div>
   );
 }

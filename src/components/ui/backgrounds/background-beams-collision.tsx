@@ -98,8 +98,16 @@ void main(){
 
 function hexToRgb(hex: string): [number, number, number] {
   const c = hex.replace('#', '');
-  const num = parseInt(c.length === 3 ? c.split('').map(h => h + h).join('') : c, 16);
-  return [(num >> 16 & 255) / 255, (num >> 8 & 255) / 255, (num & 255) / 255];
+  const num = parseInt(
+    c.length === 3
+      ? c
+          .split('')
+          .map((h) => h + h)
+          .join('')
+      : c,
+    16,
+  );
+  return [((num >> 16) & 255) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
 }
 
 // ── Component ───────────────────────────────────────────────────────────────────

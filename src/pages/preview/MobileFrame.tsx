@@ -43,9 +43,7 @@ export function MobileFrame({ label, bg, fg, navTint, children }: Props) {
         >
           ← All previews
         </Link>
-        <span style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-          {label}
-        </span>
+        <span style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}>{label}</span>
       </div>
       <div
         style={{
@@ -56,8 +54,7 @@ export function MobileFrame({ label, bg, fg, navTint, children }: Props) {
           color: fg,
           borderRadius: 32,
           overflow: 'hidden',
-          boxShadow:
-            '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.45)',
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.45)',
           position: 'relative',
         }}
       >
@@ -148,8 +145,7 @@ export function MobileTabBar({
           padding: '10px 8px',
           borderRadius: 10,
           color: active === 'balance' ? accent : fgMute,
-          background:
-            active === 'balance' ? `${accent}18` : 'transparent',
+          background: active === 'balance' ? `${accent}18` : 'transparent',
           fontWeight: active === 'balance' ? 600 : 500,
           fontSize: 13,
           textDecoration: 'none',
@@ -166,8 +162,7 @@ export function MobileTabBar({
           padding: '10px 8px',
           borderRadius: 10,
           color: active === 'subscription' ? accent : fgMute,
-          background:
-            active === 'subscription' ? `${accent}18` : 'transparent',
+          background: active === 'subscription' ? `${accent}18` : 'transparent',
           fontWeight: active === 'subscription' ? 600 : 500,
           fontSize: 13,
           textDecoration: 'none',
@@ -179,4 +174,3 @@ export function MobileTabBar({
     </div>
   );
 }
-

@@ -12,8 +12,7 @@ const c = {
   hairline: '#2f2f2f',
 };
 
-const mono =
-  '"Berkeley Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace';
+const mono = '"Berkeley Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace';
 
 const txs = [
   { ts: '12 May · 14:08', kind: 'topup', method: 'card', delta: '+1000.00' },
@@ -28,8 +27,7 @@ export default function SupabaseBalance() {
       <div
         style={{
           padding: '4px 14px 0',
-          fontFamily:
-            '"Custom Inter", "Inter", system-ui, -apple-system, sans-serif',
+          fontFamily: '"Custom Inter", "Inter", system-ui, -apple-system, sans-serif',
         }}
       >
         <div style={{ padding: '6px 4px 4px' }}>
@@ -76,10 +74,7 @@ export default function SupabaseBalance() {
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            2,450.00{' '}
-            <span style={{ color: c.primary, fontSize: 18, fontWeight: 500 }}>
-              ₽
-            </span>
+            2,450.00 <span style={{ color: c.primary, fontSize: 18, fontWeight: 500 }}>₽</span>
           </div>
           <div
             style={{
@@ -160,8 +155,7 @@ export default function SupabaseBalance() {
                 gridTemplateColumns: '80px 1fr 70px',
                 gap: 8,
                 padding: '8px 0',
-                borderBottom:
-                  i === arr.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                borderBottom: i === arr.length - 1 ? 'none' : `1px solid ${c.hairline}`,
                 color: c.ink,
               }}
             >
@@ -180,8 +174,7 @@ export default function SupabaseBalance() {
                 key={i}
                 style={{
                   padding: '10px 0',
-                  borderBottom:
-                    i === txs.length - 1 ? 'none' : `1px solid ${c.hairline}`,
+                  borderBottom: i === txs.length - 1 ? 'none' : `1px solid ${c.hairline}`,
                   display: 'grid',
                   gridTemplateColumns: '1fr auto',
                   gap: 8,
@@ -192,8 +185,7 @@ export default function SupabaseBalance() {
                 <div>
                   <div style={{ color: c.inkFaint, fontSize: 10 }}>{tx.ts}</div>
                   <div style={{ color: c.ink, marginTop: 2 }}>
-                    {tx.kind}{' '}
-                    <span style={{ color: c.inkMute }}>· {tx.method}</span>
+                    {tx.kind} <span style={{ color: c.inkMute }}>· {tx.method}</span>
                   </div>
                 </div>
                 <span

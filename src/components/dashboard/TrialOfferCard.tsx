@@ -37,7 +37,7 @@ export default function TrialOfferCard({
     >
       {/* Title */}
       <h2
-        className="mb-2 text-2xl font-black text-white uppercase"
+        className="mb-2 text-2xl font-black uppercase text-white"
         style={{ letterSpacing: '0.08em', fontStretch: 'expanded' }}
       >
         {isFree ? t('dashboard.trialOffer.freeTitle') : t('dashboard.trialOffer.paidTitle')}
@@ -61,7 +61,10 @@ export default function TrialOfferCard({
           >
             {trialInfo.price_rubles.toFixed(0)}
           </span>
-          <span className="text-base font-semibold opacity-70" style={{ color: 'var(--figma-green)' }}>
+          <span
+            className="text-base font-semibold opacity-70"
+            style={{ color: 'var(--figma-green)' }}
+          >
             {currencySymbol}
           </span>
         </div>
@@ -93,7 +96,10 @@ export default function TrialOfferCard({
       {!isFree && trialInfo.price_rubles > 0 && (
         <div
           className="mb-4 space-y-2 rounded-2xl p-4 text-left"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
         >
           <div className="flex items-center justify-between">
             <span className="text-sm text-white/40">{t('balance.currentBalance')}</span>
@@ -122,9 +128,14 @@ export default function TrialOfferCard({
       {!isFree && trialInfo.price_kopeks > 0 ? (
         canAfford ? (
           <button
-            onClick={() => { haptic.buttonPressMedium(); !activateTrialMutation.isPending && activateTrialMutation.mutate(); }}
+            onClick={() => {
+              haptic.buttonPressMedium();
+              if (!activateTrialMutation.isPending) {
+                activateTrialMutation.mutate();
+              }
+            }}
             disabled={activateTrialMutation.isPending}
-            className="w-full h-14 rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+            className="h-14 w-full rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
             style={{ background: 'var(--figma-green)' }}
           >
             {activateTrialMutation.isPending
@@ -144,7 +155,7 @@ export default function TrialOfferCard({
         <div className="relative">
           {/* Pulsing glow ring */}
           <div
-            className="absolute inset-0 rounded-full pointer-events-none"
+            className="pointer-events-none absolute inset-0 rounded-full"
             style={{
               animation: 'trialButtonPulse 2s ease-in-out infinite',
               background: 'var(--figma-green)',
@@ -152,15 +163,22 @@ export default function TrialOfferCard({
             }}
           />
           <button
-            onClick={() => { haptic.buttonPressMedium(); !activateTrialMutation.isPending && activateTrialMutation.mutate(); }}
+            onClick={() => {
+              haptic.buttonPressMedium();
+              if (!activateTrialMutation.isPending) {
+                activateTrialMutation.mutate();
+              }
+            }}
             disabled={activateTrialMutation.isPending}
-            className="relative w-full h-14 rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
+            className="relative h-14 w-full rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
             style={{
               background: 'var(--figma-green)',
               animation: 'trialButtonPulse 2s ease-in-out infinite',
             }}
           >
-            {activateTrialMutation.isPending ? t('common.loading') : t('subscription.trial.activate')}
+            {activateTrialMutation.isPending
+              ? t('common.loading')
+              : t('subscription.trial.activate')}
           </button>
         </div>
       )}

@@ -66,8 +66,16 @@ interface Props {
 
 function hexToRgb(hex: string): [number, number, number] {
   const c = hex.replace('#', '');
-  const num = parseInt(c.length === 3 ? c.split('').map(h => h + h).join('') : c, 16);
-  return [(num >> 16 & 255) / 255, (num >> 8 & 255) / 255, (num & 255) / 255];
+  const num = parseInt(
+    c.length === 3
+      ? c
+          .split('')
+          .map((h) => h + h)
+          .join('')
+      : c,
+    16,
+  );
+  return [((num >> 16) & 255) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
 }
 
 const SPEED_MAP: Record<string, number> = { slow: 0.5, normal: 1.0, fast: 2.0 };
@@ -185,10 +193,7 @@ export default function AuroraBackground({ settings }: Props) {
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 h-full w-full"
-      />
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
     </div>
   );
 }

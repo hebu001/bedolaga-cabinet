@@ -14,8 +14,7 @@ const c = {
   surfaceElevated: '#1f1f1f',
 };
 
-const font =
-  '"Bugatti", "Times New Roman", Georgia, "Helvetica Neue", serif';
+const font = '"Bugatti", "Times New Roman", Georgia, "Helvetica Neue", serif';
 const sans = '"Helvetica Neue", Arial, sans-serif';
 
 const methods = [
@@ -155,14 +154,11 @@ export default function BugattiBalance() {
               justifyContent: 'space-between',
               alignItems: 'center',
               borderTop: `1px solid ${c.hairline}`,
-              borderBottom:
-                i === methods.length - 1 ? `1px solid ${c.hairline}` : 'none',
+              borderBottom: i === methods.length - 1 ? `1px solid ${c.hairline}` : 'none',
             }}
           >
             <div>
-              <div style={{ fontSize: 16, fontWeight: 300, fontFamily: font }}>
-                {m.name}
-              </div>
+              <div style={{ fontSize: 16, fontWeight: 300, fontFamily: font }}>{m.name}</div>
               <div
                 style={{
                   fontSize: 10,
@@ -190,14 +186,11 @@ export default function BugattiBalance() {
               justifyContent: 'space-between',
               alignItems: 'center',
               borderTop: `1px solid ${c.hairline}`,
-              borderBottom:
-                i === txs.length - 1 ? `1px solid ${c.hairline}` : 'none',
+              borderBottom: i === txs.length - 1 ? `1px solid ${c.hairline}` : 'none',
             }}
           >
             <div>
-              <div style={{ fontSize: 14, fontWeight: 300, fontFamily: font }}>
-                {t.desc}
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 300, fontFamily: font }}>{t.desc}</div>
               <div
                 style={{
                   fontSize: 9,

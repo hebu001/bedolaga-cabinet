@@ -13,8 +13,7 @@ const c = {
   hairline: '#2a2a2a',
 };
 
-const font =
-  '"Helvetica Neue", Arial, system-ui, -apple-system, sans-serif';
+const font = '"Helvetica Neue", Arial, system-ui, -apple-system, sans-serif';
 
 const methods = [
   { name: 'БАНКОВСКАЯ КАРТА', sub: 'Visa · MC · МИР' },
@@ -162,9 +161,7 @@ export default function LamborghiniBalance() {
                 >
                   {m.name}
                 </div>
-                <div style={{ fontSize: 11, color: c.ash, marginTop: 4 }}>
-                  {m.sub}
-                </div>
+                <div style={{ fontSize: 11, color: c.ash, marginTop: 4 }}>{m.sub}</div>
               </div>
               <span style={{ color: c.gold, fontSize: 16 }}>→</span>
             </div>

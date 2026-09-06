@@ -146,14 +146,11 @@ export default function BugattiSubscription() {
               justifyContent: 'space-between',
               alignItems: 'center',
               borderTop: `1px solid ${c.hairline}`,
-              borderBottom:
-                i === servers.length - 1 ? `1px solid ${c.hairline}` : 'none',
+              borderBottom: i === servers.length - 1 ? `1px solid ${c.hairline}` : 'none',
             }}
           >
             <div>
-              <div style={{ fontSize: 16, fontWeight: 300, fontFamily: font }}>
-                {s.country}
-              </div>
+              <div style={{ fontSize: 16, fontWeight: 300, fontFamily: font }}>{s.country}</div>
               <div
                 style={{
                   fontSize: 10,
@@ -216,9 +213,7 @@ function Meter({ label, value, pct }: { label: string; value: string; pct: numbe
         }}
       >
         <span style={{ color: '#666666' }}>{label}</span>
-        <span style={{ fontVariantNumeric: 'tabular-nums', color: '#e6e6e6' }}>
-          {value}
-        </span>
+        <span style={{ fontVariantNumeric: 'tabular-nums', color: '#e6e6e6' }}>{value}</span>
       </div>
       <div style={{ height: 1, background: '#262626' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: '#ffffff' }} />
@@ -227,15 +222,7 @@ function Meter({ label, value, pct }: { label: string; value: string; pct: numbe
   );
 }
 
-function Row({
-  label,
-  value,
-  last,
-}: {
-  label: string;
-  value: string;
-  last?: boolean;
-}) {
+function Row({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
     <div
       style={{

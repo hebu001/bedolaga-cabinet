@@ -14,8 +14,7 @@ const mesh =
   'radial-gradient(circle at 100% 0%, #ffd4f1 0%, transparent 45%), ' +
   'radial-gradient(circle at 50% 100%, #b6e3ff 0%, transparent 50%), #f6f9fc';
 
-const font =
-  '"Sohne", "SF Pro Display", system-ui, -apple-system, Inter, sans-serif';
+const font = '"Sohne", "SF Pro Display", system-ui, -apple-system, Inter, sans-serif';
 
 const methods = [
   { name: 'Банковская карта', sub: 'Visa, MC, МИР', accent: c.primary },
@@ -173,9 +172,7 @@ export default function StripeBalance() {
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 500, fontSize: 14 }}>{m.name}</div>
-                <div style={{ fontSize: 12, color: c.inkMute, marginTop: 2 }}>
-                  {m.sub}
-                </div>
+                <div style={{ fontSize: 12, color: c.inkMute, marginTop: 2 }}>{m.sub}</div>
               </div>
               <div style={{ color: c.inkMute, fontSize: 18 }}>›</div>
             </div>
@@ -221,17 +218,12 @@ export default function StripeBalance() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderBottom:
-                  i === transactions.length - 1
-                    ? 'none'
-                    : `1px solid ${c.hairline}`,
+                borderBottom: i === transactions.length - 1 ? 'none' : `1px solid ${c.hairline}`,
               }}
             >
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 14 }}>{t.desc}</div>
-                <div style={{ fontSize: 11, color: c.inkMute, marginTop: 2 }}>
-                  {t.date}
-                </div>
+                <div style={{ fontSize: 11, color: c.inkMute, marginTop: 2 }}>{t.date}</div>
               </div>
               <div
                 style={{

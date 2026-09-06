@@ -127,8 +127,7 @@ export default function AppleBalance() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 14,
-                borderBottom:
-                  i === methods.length - 1 ? 'none' : `1px solid ${c.divider}`,
+                borderBottom: i === methods.length - 1 ? 'none' : `1px solid ${c.divider}`,
               }}
             >
               <span
@@ -147,9 +146,7 @@ export default function AppleBalance() {
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 500 }}>{m.name}</div>
-                <div style={{ fontSize: 13, color: c.inkMute, marginTop: 1 }}>
-                  {m.sub}
-                </div>
+                <div style={{ fontSize: 13, color: c.inkMute, marginTop: 1 }}>{m.sub}</div>
               </div>
               <span style={{ color: '#5a5a5e', fontSize: 18 }}>›</span>
             </div>
@@ -172,15 +169,12 @@ export default function AppleBalance() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderBottom:
-                  i === txs.length - 1 ? 'none' : `1px solid ${c.divider}`,
+                borderBottom: i === txs.length - 1 ? 'none' : `1px solid ${c.divider}`,
               }}
             >
               <div>
                 <div style={{ fontSize: 15 }}>{t.desc}</div>
-                <div style={{ fontSize: 13, color: c.inkMute, marginTop: 1 }}>
-                  {t.date}
-                </div>
+                <div style={{ fontSize: 13, color: c.inkMute, marginTop: 1 }}>{t.date}</div>
               </div>
               <div
                 style={{
