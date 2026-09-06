@@ -234,3 +234,88 @@ test('renewal times out after 15 seconds and ignores a late completion without r
   await flush();
   assert.deepEqual(await gate.run(async () => ({ id: 'next' }), true), { id: 'next' });
 });
+
+// Execute the actual page's loader and mutation handlers, extracting declarations
+// through the TS AST. Only React setters/refs and HTTP transport are substituted.
+function adminTicketActions() {
+  const source = fs.readFileSync(path.join(root, 'src/pages/AdminUserDetail.tsx'), 'utf8');
+  const ast = ts.createSourceFile('AdminUserDetail.tsx', source, ts.ScriptTarget.Latest, true);
+  const names = ['loadTicketDetail', 'handleTicketReply', 'handleTicketStatusChange'];
+  const declarations = new Map();
+  function visit(node) {
+    if (ts.isVariableStatement(node)) {
+      const name = node.declarationList.declarations[0]?.name.getText(ast);
+      if (names.includes(name)) declarations.set(name, node.getText(ast));
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(ast);
+  assert.equal(declarations.size, names.length);
+  const state = { selected: null, loading: false, requests: [], mutations: [] };
+  const selectedTicketIdRef = { current: 42 };
+  const context = {
+    console,
+    selectedTicketId: 42,
+    selectedTicketIdRef,
+    ticketLoadSequence: { current: 0 },
+    ticketLoad: { current: null },
+    replyText: 'New reply',
+    useCallback: (fn) => fn,
+    setSelectedTicket: (value) => (state.selected = value),
+    setTicketDetailLoading: (value) => (state.loading = value),
+    setReplySending() {},
+    setReplyText() {},
+    setActionLoading() {},
+    loadTickets: async () => {},
+    adminApi: {
+      getTicket: (id) => {
+        const response = deferred();
+        state.requests.push({ id, ...response });
+        return response.promise;
+      },
+      replyToTicket: async () => state.mutations.push('reply'),
+      updateTicketStatus: async () => state.mutations.push('status'),
+    },
+  };
+  const code = ts.transpileModule(
+    `${names.map((name) => declarations.get(name)).join('\n')}\nglobalThis.actions = {${names.join(',')}};`,
+    { compilerOptions: { target: ts.ScriptTarget.ES2022 } },
+  ).outputText;
+  vm.runInNewContext(code, context);
+  return { ...context.actions, state, selectedTicketIdRef };
+}
+
+for (const mutation of ['reply', 'status'])
+  test(`admin ${mutation} fetches fresh detail after POST while older media renewal is pending`, async () => {
+    const actions = adminTicketActions();
+    const oldLoad = actions.loadTicketDetail(42, true);
+    const changed =
+      mutation === 'reply'
+        ? actions.handleTicketReply()
+        : actions.handleTicketStatusChange('closed');
+    await flush();
+    assert.deepEqual(actions.state.mutations, [mutation]);
+    assert.equal(actions.state.requests.length, 2, 'POST completion must start a newer GET');
+    const fresh = { id: 42, messages: ['New reply'], status: 'closed' };
+    actions.state.requests[1].resolve(fresh);
+    await changed;
+    assert.equal(actions.state.selected, fresh);
+    actions.state.requests[0].resolve({ id: 42, messages: [], status: 'open' });
+    await oldLoad;
+    assert.equal(actions.state.selected, fresh, 'late pre-mutation GET must not overwrite detail');
+  });
+
+test('admin media renewals share the active GET and a late selected-ticket response stays isolated', async () => {
+  const actions = adminTicketActions();
+  const first = actions.loadTicketDetail(42, true);
+  const shared = actions.loadTicketDetail(42, true);
+  assert.equal(actions.state.requests.length, 1);
+  actions.selectedTicketIdRef.current = 43;
+  const next = actions.loadTicketDetail(43);
+  const fresh = { id: 43, messages: [] };
+  actions.state.requests[1].resolve(fresh);
+  await next;
+  actions.state.requests[0].resolve({ id: 42, messages: [] });
+  await Promise.all([first, shared]);
+  assert.equal(actions.state.selected, fresh);
+});

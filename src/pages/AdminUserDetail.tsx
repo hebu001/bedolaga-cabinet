@@ -426,7 +426,9 @@ export default function AdminUserDetail() {
 
   const loadTicketDetail = useCallback(async (ticketId: number, background = false) => {
     if (selectedTicketIdRef.current !== ticketId) return undefined;
-    if (ticketLoad.current?.id === ticketId) return ticketLoad.current.promise;
+    // A foreground load after reply/status POST needs a new snapshot. Only media
+    // renewal can share a request that may have started before that mutation.
+    if (background && ticketLoad.current?.id === ticketId) return ticketLoad.current.promise;
     const sequence = ++ticketLoadSequence.current;
     if (!background) setTicketDetailLoading(true);
     const promise = (async () => {
