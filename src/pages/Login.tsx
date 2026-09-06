@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, type CSSProperties } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import './Login.css';
 import { useNavigate, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -11,8 +13,6 @@ import {
   brandingApi,
   getCachedBranding,
   setCachedBranding,
-  preloadLogo,
-  isLogoPreloaded,
   type BrandingInfo,
   type EmailAuthEnabled,
 } from '../api/branding';
@@ -63,14 +63,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTelegramWebApp, setIsTelegramWebApp] = useState(false);
-  const [logoLoaded, setLogoLoaded] = useState(() => isLogoPreloaded());
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const [forgotPasswordError, setForgotPasswordError] = useState('');
-  const [showEmailForm, setShowEmailForm] = useState(true);
+  const [showTelegram, setShowTelegram] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Telegram safe area insets
   const { safeAreaInset, contentSafeAreaInset } = useTelegramSDK();
@@ -101,7 +102,6 @@ export default function Login() {
     queryFn: async () => {
       const data = await brandingApi.getBranding();
       setCachedBranding(data);
-      await preloadLogo(data);
       return data;
     },
     staleTime: 60000,
@@ -153,8 +153,6 @@ export default function Login() {
   };
 
   const appName = branding ? branding.name : import.meta.env.VITE_APP_NAME || 'VPN';
-  const appLogo = branding?.logo_letter || import.meta.env.VITE_APP_LOGO || 'V';
-  const logoUrl = branding ? brandingApi.getLogoUrl(branding) : null;
 
   // Set document title
   useEffect(() => {
@@ -259,11 +257,11 @@ export default function Login() {
 
     try {
       if (authMode === 'login') {
-        await loginWithEmail(email, password);
+        await loginWithEmail(email.trim(), password);
         navigate(getReturnUrl(), { replace: true });
       } else {
         const result = await registerWithEmail(
-          email,
+          email.trim(),
           password,
           firstName || undefined,
           referralCode || undefined,
@@ -323,506 +321,463 @@ export default function Login() {
     setForgotPasswordError('');
   };
 
-  return (
-    <div
-      className="flex min-h-[100dvh] items-center justify-center px-4 sm:px-6 lg:px-8"
-      style={{
-        paddingTop:
-          safeTop > 0 ? `${safeTop + 16}px` : 'calc(1rem + env(safe-area-inset-top, 0px))',
-        paddingBottom:
-          safeBottom > 0 ? `${safeBottom + 16}px` : 'calc(1rem + env(safe-area-inset-bottom, 0px))',
-      }}
-    >
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent-500/10 via-transparent to-transparent" />
+  const busy = isLoading || oauthLoading !== null;
+  const spinner = <span className="login-v3-spinner" aria-hidden="true" />;
 
-      {/* Language switcher */}
-      <div
-        className="fixed right-3 z-50"
-        style={{
-          top: safeTop > 0 ? `${safeTop + 12}px` : 'calc(12px + env(safe-area-inset-top, 0px))',
-        }}
-      >
+  return (
+    <main
+      className="login-v3"
+      style={
+        {
+          '--login-safe-top': `${safeTop}px`,
+          '--login-safe-bottom': `${safeBottom}px`,
+        } as CSSProperties
+      }
+    >
+      <div className="login-v3-language">
         <LanguageSwitcher />
       </div>
-
-      <div className="relative w-full max-w-md space-y-5">
-        {/* Logo & branding */}
-        <div className="text-center">
-          <div className="relative mx-auto mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-dark-700/50 bg-dark-800/80 shadow-md">
-            {/* Letter fallback */}
-            <span
-              className={`absolute text-lg font-bold text-accent-400 transition-opacity duration-200 ${branding?.has_custom_logo && logoLoaded ? 'opacity-0' : 'opacity-100'}`}
-            >
-              {appLogo}
-            </span>
-            {/* Logo image */}
-            {branding?.has_custom_logo && logoUrl && (
-              <img
-                src={logoUrl}
-                alt={appName || 'Logo'}
-                className={`absolute h-full w-full object-contain transition-opacity duration-200 ${logoLoaded ? 'opacity-100' : 'opacity-0'}`}
-                onLoad={() => setLogoLoaded(true)}
-              />
+      <section className="login-v3-content" aria-labelledby="login-title">
+        <img className="login-v3-logo" src="/logo-main.png" alt={appName} />
+        <header className="login-v3-heading">
+          <h1 id="login-title">
+            {t('auth.openFormTitle', 'Your account.')}
+            <br />
+            {t('auth.openFormTitleSecond', 'Everything at hand.')}
+          </h1>
+          <p>
+            {t(
+              'auth.openFormDescription',
+              'Your subscription, devices and balance — all in your account.',
             )}
-          </div>
-          {appName && <h1 className="text-2xl font-bold text-dark-50">{appName}</h1>}
+          </p>
+        </header>
 
-          {/* Referral Banner */}
-          {referralCode && isEmailAuthEnabled && (
-            <div className="mt-3 rounded-xl border border-accent-500/30 bg-accent-500/10 p-2.5">
-              <div className="flex items-center justify-center gap-2 text-accent-400">
-                <svg
-                  className="h-4 w-4 flex-shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-                  />
-                </svg>
-                <span className="text-xs font-medium">{t('auth.referralInvite')}</span>
-              </div>
-            </div>
-          )}
-        </div>
+        {referralCode && isEmailAuthEnabled && (
+          <p className="login-v3-referral">{t('auth.referralInvite')}</p>
+        )}
+        {error && (
+          <p className="login-v3-error" role="alert">
+            {error}
+          </p>
+        )}
 
-        {/* Check Email Screen */}
         {registeredEmail ? (
-          <div className="card text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-success-500/20">
-              <svg
-                className="h-7 w-7 text-success-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                />
-              </svg>
+          <div className="login-v3-confirmation">
+            <div className="login-v3-dialog-icon">
+              <LoginIcon name="mail" />
             </div>
-            <h2 className="mb-2 text-lg font-bold text-dark-50">
-              {t('auth.checkEmail', 'Check your email')}
-            </h2>
-            <p className="mb-3 text-sm text-dark-400">
-              {t('auth.verificationSent', 'We sent a verification link to:')}
-            </p>
-            <p className="mb-4 text-sm font-medium text-accent-400">{registeredEmail}</p>
-            <p className="mb-5 text-xs text-dark-500">
+            <h2>{t('auth.checkEmail', 'Check your email')}</h2>
+            <p>{t('auth.verificationSent', 'We sent a verification link to:')}</p>
+            <p className="login-v3-email-address">{registeredEmail}</p>
+            <p>
               {t(
                 'auth.clickLinkToVerify',
                 'Click the link in the email to verify your account and log in.',
               )}
             </p>
             <button
+              type="button"
+              className="login-v3-button login-v3-primary"
               onClick={() => {
                 setRegisteredEmail(null);
                 setAuthMode('login');
               }}
-              className="btn-secondary w-full"
             >
               {t('auth.backToLogin', 'Back to login')}
             </button>
           </div>
         ) : (
-          /* Main auth card */
-          <div className="card">
-            {error && (
-              <div
-                role="alert"
-                className="mb-4 rounded-xl border border-error-500/30 bg-error-500/10 px-4 py-2.5 text-sm text-error-400"
-              >
-                {error}
-              </div>
-            )}
-
-            {/* Telegram auth section */}
-            <div className="space-y-3">
-              {isLoading && isTelegramWebApp ? (
-                <div className="py-6 text-center">
-                  <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-                  <p className="text-sm text-dark-400">{t('auth.authenticating')}</p>
-                </div>
-              ) : isTelegramWebApp && error ? (
-                <div className="space-y-3 text-center">
-                  <button
-                    onClick={handleRetryTelegramAuth}
-                    className="btn-primary mx-auto flex items-center gap-2 px-5 py-2.5"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-                      />
-                    </svg>
-                    {t('auth.tryAgain')}
-                  </button>
-                  <p className="text-xs text-dark-500">
-                    {t(
-                      'auth.telegramReopenHint',
-                      'If the problem persists, close and reopen the app',
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <TelegramLoginButton referralCode={referralCode || undefined} />
-              )}
-            </div>
-
-            {/* OAuth providers - compact icon row */}
-            {oauthProviders.length > 0 && (
-              <>
-                <div className="my-4 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-dark-700" />
-                  <span className="text-xs text-dark-500">{t('auth.or', 'or')}</span>
-                  <div className="h-px flex-1 bg-dark-700" />
-                </div>
-                <div className="flex items-stretch gap-2">
-                  {oauthProviders.map((provider) => (
-                    <button
-                      key={provider.name}
-                      type="button"
-                      onClick={() => handleOAuthLogin(provider.name)}
-                      disabled={oauthLoading !== null}
-                      className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl border border-dark-700 bg-dark-800/80 py-2.5 transition-all hover:border-dark-600 hover:bg-dark-700 disabled:opacity-50"
-                      title={provider.display_name}
-                    >
-                      {oauthLoading === provider.name ? (
-                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-dark-400 border-t-white" />
-                      ) : (
-                        <OAuthProviderIcon provider={provider.name} className="h-5 w-5" />
-                      )}
-                      <span className="text-[10px] leading-none text-dark-500">
-                        {provider.display_name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Email auth section - collapsible */}
+          <>
             {isEmailAuthEnabled && (
               <>
-                <div className="my-4 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-dark-700" />
+                <div
+                  className="login-v3-segment"
+                  role="group"
+                  aria-label={t('auth.loginWithEmail')}
+                >
                   <button
                     type="button"
-                    onClick={() => setShowEmailForm(!showEmailForm)}
-                    aria-expanded={showEmailForm}
-                    aria-controls="email-auth-form"
-                    className="flex items-center gap-1.5 rounded-full border border-dark-700 bg-dark-800/60 px-3.5 py-1.5 text-xs font-medium text-dark-300 transition-all hover:border-dark-600 hover:bg-dark-700 hover:text-dark-200"
+                    aria-pressed={authMode === 'login'}
+                    disabled={busy}
+                    onClick={() => {
+                      setAuthMode('login');
+                      setError('');
+                    }}
                   >
-                    <svg
-                      className="h-3.5 w-3.5 text-dark-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                      />
-                    </svg>
-                    <span>{t('auth.loginWithEmail')}</span>
-                    <svg
-                      className={`h-3 w-3 text-dark-400 transition-transform duration-300 ${showEmailForm ? 'rotate-180' : ''}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
+                    {t('auth.login')}
                   </button>
-                  <div className="h-px flex-1 bg-dark-700" />
+                  <button
+                    type="button"
+                    aria-pressed={authMode === 'register'}
+                    disabled={busy}
+                    onClick={() => {
+                      setAuthMode('register');
+                      setError('');
+                    }}
+                  >
+                    {t('auth.register')}
+                  </button>
                 </div>
-
-                {/* Collapsible email form */}
-                <div
-                  id="email-auth-form"
-                  inert={!showEmailForm}
-                  aria-hidden={!showEmailForm}
-                  className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-                    showEmailForm ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                  }`}
-                  style={{
-                    transform: 'translateZ(0)',
-                    // Older Safari/WebViews do not implement inert.
-                    visibility: showEmailForm ? 'visible' : 'hidden',
-                  }}
-                >
-                  <div className="overflow-hidden">
-                    <div className="space-y-4 pb-1 pt-1">
-                      {showForgotPassword ? (
-                        /* Forgot password screen - replaces login/register */
-                        forgotPasswordSent ? (
-                          <div className="space-y-4 text-center">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-success-500/20">
-                              <svg
-                                className="h-6 w-6 text-success-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={1.5}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                                />
-                              </svg>
-                            </div>
-                            <p className="text-sm font-medium text-dark-100">
-                              {t('auth.checkEmail', 'Check your email')}
-                            </p>
-                            <p className="text-xs text-dark-400">
-                              {t(
+                <form id="email-auth-form" className="login-v3-form" onSubmit={handleEmailSubmit}>
+                  <div className="login-v3-fields">
+                    {authMode === 'register' && (
+                      <div className="login-v3-field">
+                        <label htmlFor="firstName">{t('auth.firstName', 'First Name')}</label>
+                        <input
+                          id="firstName"
+                          name="firstName"
+                          autoComplete="given-name"
+                          placeholder={t('auth.firstNamePlaceholder', 'Your name (optional)')}
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          disabled={busy}
+                        />
+                      </div>
+                    )}
+                    <div className="login-v3-field">
+                      <label htmlFor="email">{t('auth.email')}</label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        required
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={busy}
+                      />
+                    </div>
+                    <div className="login-v3-field">
+                      <label htmlFor="password">{t('auth.password')}</label>
+                      <div className="login-v3-password">
+                        <input
+                          id="password"
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                          required
+                          minLength={authMode === 'register' ? 8 : undefined}
+                          placeholder={t(
+                            authMode === 'login' ? 'auth.enterPassword' : 'auth.createPassword',
+                            authMode === 'login' ? 'Enter your password' : 'Create a password',
+                          )}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          disabled={busy}
+                        />
+                        <button
+                          className="login-v3-eye"
+                          type="button"
+                          aria-label={t(
+                            showPassword ? 'auth.hidePassword' : 'auth.showPassword',
+                            showPassword ? 'Hide password' : 'Show password',
+                          )}
+                          aria-pressed={showPassword}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <LoginIcon name={showPassword ? 'eye-off' : 'eye'} />
+                        </button>
+                      </div>
+                    </div>
+                    {authMode === 'register' && (
+                      <div className="login-v3-field">
+                        <label htmlFor="confirmPassword">
+                          {t('auth.confirmPassword', 'Confirm Password')}
+                        </label>
+                        <div className="login-v3-password">
+                          <input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            required
+                            minLength={8}
+                            placeholder={t('auth.confirmPassword', 'Confirm Password')}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            disabled={busy}
+                          />
+                          <button
+                            className="login-v3-eye"
+                            type="button"
+                            aria-label={t(
+                              showConfirmPassword ? 'auth.hidePassword' : 'auth.showPassword',
+                              showConfirmPassword ? 'Hide password' : 'Show password',
+                            )}
+                            aria-pressed={showConfirmPassword}
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            <LoginIcon name={showConfirmPassword ? 'eye-off' : 'eye'} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="login-v3-button login-v3-primary"
+                  >
+                    {isLoading ? (
+                      <>
+                        {spinner}
+                        {t('common.loading')}
+                      </>
+                    ) : authMode === 'login' ? (
+                      t('auth.enterAccount', 'Sign in')
+                    ) : (
+                      t('auth.createAccount', 'Create account')
+                    )}
+                  </button>
+                </form>
+                {authMode === 'register' ? (
+                  <p className="login-v3-note">
+                    {t(
+                      'auth.verificationEmailNotice',
+                      'After registration, a verification email will be sent to your address',
+                    )}
+                  </p>
+                ) : (
+                  <Dialog.Root
+                    open={showForgotPassword}
+                    onOpenChange={(open) => {
+                      if (open) {
+                        setForgotPasswordEmail(email);
+                        setShowForgotPassword(true);
+                      } else closeForgotPasswordModal();
+                    }}
+                  >
+                    <Dialog.Trigger asChild>
+                      <button type="button" className="login-v3-link" disabled={busy}>
+                        {t('auth.forgotPassword', 'Forgot password?')}
+                      </button>
+                    </Dialog.Trigger>
+                    <Dialog.Portal>
+                      <Dialog.Overlay className="login-v3-overlay" />
+                      <Dialog.Content className="login-v3-dialog">
+                        <Dialog.Close
+                          className="login-v3-close"
+                          aria-label={t('common.close', 'Close')}
+                        >
+                          <LoginIcon name="close" />
+                        </Dialog.Close>
+                        <div className="login-v3-dialog-icon">
+                          <LoginIcon name={forgotPasswordSent ? 'mail' : 'lock'} />
+                        </div>
+                        <Dialog.Title>
+                          {t(
+                            forgotPasswordSent ? 'auth.checkEmail' : 'auth.forgotPassword',
+                            forgotPasswordSent ? 'Check your email' : 'Forgot password?',
+                          )}
+                        </Dialog.Title>
+                        <Dialog.Description>
+                          {forgotPasswordSent
+                            ? t(
                                 'auth.passwordResetSent',
                                 'If an account exists with this email, we sent password reset instructions.',
-                              )}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={closeForgotPasswordModal}
-                              className="text-sm text-accent-400 transition-colors hover:text-accent-300"
-                            >
-                              {t('common.back', 'Back')}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            <p className="text-center text-sm text-dark-400">
-                              {t(
+                              )
+                            : t(
                                 'auth.forgotPasswordHint',
                                 'Enter your email and we will send you instructions to reset your password.',
                               )}
-                            </p>
-                            <form onSubmit={handleForgotPassword} className="space-y-3">
-                              <div>
-                                <label htmlFor="forgotEmail" className="label">
-                                  Email
-                                </label>
+                        </Dialog.Description>
+                        {forgotPasswordSent ? (
+                          <Dialog.Close className="login-v3-button login-v3-primary">
+                            {t('common.back', 'Back')}
+                          </Dialog.Close>
+                        ) : (
+                          <form onSubmit={handleForgotPassword}>
+                            <div className="login-v3-fields">
+                              <div className="login-v3-field">
+                                <label htmlFor="forgotEmail">{t('auth.email')}</label>
                                 <input
                                   id="forgotEmail"
+                                  name="email"
                                   type="email"
+                                  autoComplete="email"
+                                  required
+                                  autoCapitalize="none"
+                                  placeholder="you@example.com"
                                   value={forgotPasswordEmail}
                                   onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                                  placeholder="you@example.com"
-                                  className="input"
-                                  autoFocus
+                                  disabled={forgotPasswordLoading}
                                 />
                               </div>
-                              {forgotPasswordError && (
-                                <p className="text-sm text-error-400">{forgotPasswordError}</p>
-                              )}
-                              <button
-                                type="submit"
-                                disabled={forgotPasswordLoading}
-                                className="btn-primary w-full py-2.5"
-                              >
-                                {forgotPasswordLoading ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                    {t('common.loading')}
-                                  </span>
-                                ) : (
-                                  t('auth.sendResetLink', 'Send reset link')
-                                )}
-                              </button>
-                            </form>
-                            <div className="text-center">
-                              <button
-                                type="button"
-                                onClick={closeForgotPasswordModal}
-                                className="text-sm text-dark-400 transition-colors hover:text-dark-200"
-                              >
-                                {t('common.back', 'Back')}
-                              </button>
                             </div>
-                          </div>
-                        )
-                      ) : (
-                        /* Normal login / register */
-                        <>
-                          <div className="flex rounded-lg bg-dark-800 p-1">
-                            <button
-                              type="button"
-                              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                                authMode === 'login'
-                                  ? 'bg-accent-500 text-white'
-                                  : 'text-dark-400 hover:text-dark-200'
-                              }`}
-                              onClick={() => setAuthMode('login')}
-                            >
-                              {t('auth.login')}
-                            </button>
-                            <button
-                              type="button"
-                              className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                                authMode === 'register'
-                                  ? 'bg-accent-500 text-white'
-                                  : 'text-dark-400 hover:text-dark-200'
-                              }`}
-                              onClick={() => setAuthMode('register')}
-                            >
-                              {t('auth.register', 'Register')}
-                            </button>
-                          </div>
-
-                          <form className="space-y-3" onSubmit={handleEmailSubmit}>
-                            {authMode === 'register' && (
-                              <div>
-                                <label htmlFor="firstName" className="label">
-                                  {t('auth.firstName', 'First Name')}
-                                </label>
-                                <input
-                                  id="firstName"
-                                  name="firstName"
-                                  type="text"
-                                  autoComplete="given-name"
-                                  className="input"
-                                  placeholder={t(
-                                    'auth.firstNamePlaceholder',
-                                    'Your name (optional)',
-                                  )}
-                                  value={firstName}
-                                  onChange={(e) => setFirstName(e.target.value)}
-                                />
-                              </div>
+                            {forgotPasswordError && (
+                              <p className="login-v3-error" role="alert">
+                                {forgotPasswordError}
+                              </p>
                             )}
-
-                            <div>
-                              <label htmlFor="email" className="label">
-                                {t('auth.email')}
-                              </label>
-                              <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="input"
-                                placeholder="you@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                              />
-                            </div>
-
-                            <div>
-                              <label htmlFor="password" className="label">
-                                {t('auth.password')}
-                              </label>
-                              <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete={
-                                  authMode === 'login' ? 'current-password' : 'new-password'
-                                }
-                                required
-                                className="input"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                              />
-                              {authMode === 'register' &&
-                                password.length > 0 &&
-                                password.length < 8 && (
-                                  <p className="mt-1.5 text-xs text-error-400">
-                                    {t(
-                                      'auth.passwordTooShort',
-                                      'Password must be at least 8 characters',
-                                    )}
-                                  </p>
-                                )}
-                            </div>
-
-                            {authMode === 'register' && (
-                              <div>
-                                <label htmlFor="confirmPassword" className="label">
-                                  {t('auth.confirmPassword', 'Confirm Password')}
-                                </label>
-                                <input
-                                  id="confirmPassword"
-                                  name="confirmPassword"
-                                  type="password"
-                                  autoComplete="new-password"
-                                  required
-                                  className="input"
-                                  placeholder="••••••••"
-                                  value={confirmPassword}
-                                  onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
-                              </div>
-                            )}
-
                             <button
                               type="submit"
-                              disabled={isLoading}
-                              className="btn-primary w-full py-2.5"
+                              disabled={forgotPasswordLoading}
+                              className="login-v3-button login-v3-primary"
                             >
-                              {isLoading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                              {forgotPasswordLoading ? (
+                                <>
+                                  {spinner}
                                   {t('common.loading')}
-                                </span>
-                              ) : authMode === 'login' ? (
-                                t('auth.login')
+                                </>
                               ) : (
-                                t('auth.register', 'Register')
+                                t('auth.sendResetLink', 'Send reset link')
                               )}
                             </button>
                           </form>
-
-                          {authMode === 'register' && (
-                            <p className="text-center text-xs text-dark-500">
-                              {t(
-                                'auth.verificationEmailNotice',
-                                'After registration, a verification email will be sent to your address',
-                              )}
-                            </p>
-                          )}
-
-                          {authMode === 'login' && (
-                            <div className="text-center">
-                              <button
-                                type="button"
-                                onClick={() => setShowForgotPassword(true)}
-                                className="text-sm text-accent-400 transition-colors hover:text-accent-300"
-                              >
-                                {t('auth.forgotPassword', 'Forgot password?')}
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                        )}
+                      </Dialog.Content>
+                    </Dialog.Portal>
+                  </Dialog.Root>
+                )}
+                <div className="login-v3-divider">{t('auth.or', 'or')}</div>
               </>
             )}
-          </div>
+
+            {isLoading && isTelegramWebApp ? (
+              <p className="login-v3-status" role="status">
+                {spinner}
+                {t('auth.authenticating')}
+              </p>
+            ) : isTelegramWebApp && error ? (
+              <div className="login-v3-retry">
+                <button
+                  type="button"
+                  className="login-v3-button login-v3-telegram"
+                  onClick={handleRetryTelegramAuth}
+                >
+                  {t('auth.tryAgain')}
+                </button>
+                <p className="login-v3-note">
+                  {t(
+                    'auth.telegramReopenHint',
+                    'If the problem persists, close and reopen the app',
+                  )}
+                </p>
+              </div>
+            ) : (
+              <Dialog.Root open={showTelegram} onOpenChange={setShowTelegram}>
+                <Dialog.Trigger asChild>
+                  <button
+                    type="button"
+                    className="login-v3-button login-v3-telegram"
+                    disabled={busy}
+                  >
+                    <LoginIcon name="telegram" />
+                    {t('auth.loginWithTelegram')}
+                  </button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay className="login-v3-overlay" />
+                  <Dialog.Content className="login-v3-dialog login-v3-telegram-dialog">
+                    <Dialog.Close
+                      className="login-v3-close"
+                      aria-label={t('common.close', 'Close')}
+                    >
+                      <LoginIcon name="close" />
+                    </Dialog.Close>
+                    <div className="login-v3-dialog-icon login-v3-telegram">
+                      <LoginIcon name="telegram" />
+                    </div>
+                    <Dialog.Title>{t('auth.loginWithTelegram')}</Dialog.Title>
+                    <Dialog.Description>
+                      {t(
+                        'auth.telegramContinue',
+                        'Confirm sign-in in Telegram to open your account.',
+                      )}
+                    </Dialog.Description>
+                    <TelegramLoginButton referralCode={referralCode || undefined} />
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+            )}
+            {oauthProviders.length > 0 && (
+              <div
+                className="login-v3-social"
+                role="group"
+                aria-label={t('auth.otherSignInMethods', 'Other sign-in methods')}
+              >
+                {oauthProviders.map((provider) => (
+                  <button
+                    key={provider.name}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => handleOAuthLogin(provider.name)}
+                    aria-label={t('auth.signInWithProvider', {
+                      provider: provider.display_name,
+                      defaultValue: 'Sign in with {{provider}}',
+                    })}
+                    className="login-v3-social-button"
+                  >
+                    {oauthLoading === provider.name ? (
+                      spinner
+                    ) : (
+                      <OAuthProviderIcon
+                        provider={provider.name}
+                        className="login-v3-provider-icon"
+                      />
+                    )}
+                    <span>{provider.display_name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
-      </div>
-    </div>
+        <footer className="login-v3-footer">
+          <LoginIcon name="lock" />
+          {t('auth.accountFooter', { name: 'Evo', defaultValue: '{{name}} account' })}
+        </footer>
+      </section>
+    </main>
+  );
+}
+
+type LoginIconName = 'telegram' | 'mail' | 'lock' | 'eye' | 'eye-off' | 'close';
+function LoginIcon({ name }: { name: LoginIconName }) {
+  const paths: Record<LoginIconName, React.ReactNode> = {
+    telegram: <path d="m21 3-4 18-6-5-4 3 1-6 10-7-12 6-4-2 19-7Z" />,
+    mail: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="3" />
+        <path d="m3 7 9 6 9-6" />
+      </>
+    ),
+    lock: (
+      <>
+        <rect x="5" y="10" width="14" height="11" rx="3" />
+        <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" />
+      </>
+    ),
+    eye: (
+      <>
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" />
+      </>
+    ),
+    'eye-off': (
+      <>
+        <path d="m3 3 18 18M10.6 5.1 12 5c7 0 10 7 10 7a18 18 0 0 1-3 4M6 6a21 21 0 0 0-4 6s3 7 10 7c1.6 0 3-.4 4.2-1" />
+      </>
+    ),
+    close: <path d="m6 6 12 12M18 6 6 18" />,
+  };
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {paths[name]}
+    </svg>
   );
 }

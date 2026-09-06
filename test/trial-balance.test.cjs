@@ -134,34 +134,3 @@ test('free trial stays available when the balance endpoint fails', () => {
   button.props.onClick();
   assert.equal(state.mutations, 1);
 });
-
-test('collapsed login uses CSS visibility as well as inert for older WebViews', () => {
-  const source = fs.readFileSync(path.join(root, 'src/pages/Login.tsx'), 'utf8');
-  const ast = ts.createSourceFile('Login.tsx', source, ts.ScriptTarget.Latest, true);
-  let style;
-  function visit(node) {
-    if (
-      ts.isJsxOpeningElement(node) &&
-      node.attributes.properties.some(
-        (attribute) =>
-          ts.isJsxAttribute(attribute) &&
-          attribute.name.getText(ast) === 'id' &&
-          attribute.initializer?.text === 'email-auth-form',
-      )
-    ) {
-      style = node.attributes.properties
-        .find(
-          (attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText(ast) === 'style',
-        )
-        .initializer.expression.getText(ast);
-    }
-    ts.forEachChild(node, visit);
-  }
-  visit(ast);
-  assert.ok(style);
-  for (const open of [false, true]) {
-    const context = { showEmailForm: open };
-    vm.runInNewContext(`globalThis.style = (${style});`, context);
-    assert.equal(context.style.visibility, open ? 'visible' : 'hidden');
-  }
-});
