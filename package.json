@@ -14,7 +14,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "type-check": "tsc --noEmit",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:ws": "node --experimental-strip-types --test test/cabinet-websocket.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
