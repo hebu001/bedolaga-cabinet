@@ -219,7 +219,7 @@ export default function RenewSubscription() {
                   style={isSelected ? { boxShadow: 'inset 0 0 0 1.5px #F97315' } : undefined}
                 >
                   {option.discount_percent > 0 && (
-                    <div className="absolute -right-2 -top-2 rounded-full bg-[#F97315] px-2 py-0.5 text-xs font-medium text-black">
+                    <div className="absolute -right-2 -top-2 rounded-full bg-[#F97315] px-2 py-0.5 text-xs font-medium text-white">
                       -{option.discount_percent}%
                     </div>
                   )}
@@ -283,7 +283,7 @@ export default function RenewSubscription() {
             balanceError ||
             balanceKopeks == null
           }
-          className="w-full rounded-full bg-[#F97315] py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-full bg-[#F97315] py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {renewMutation.isPending
             ? t('common.processing', 'Обработка...')

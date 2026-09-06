@@ -285,7 +285,7 @@ export default function Balance() {
             <button
               type="button"
               onClick={() => setShowTopUp(true)}
-              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90"
+              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
             >
               {t('balance.topUp', 'Пополнить')}
             </button>
@@ -595,7 +595,7 @@ export default function Balance() {
                     type="button"
                     onClick={() => handlePromocodeActivate()}
                     disabled={!promocode.trim() || promocodeLoading}
-                    className="shrink-0 rounded-full bg-apple-blue px-5 py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+                    className="shrink-0 rounded-full bg-apple-blue px-5 py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                   >
                     {promocodeLoading ? '…' : t('balance.promocode.activate')}
                   </button>

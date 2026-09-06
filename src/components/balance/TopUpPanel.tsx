@@ -502,7 +502,7 @@ export default function TopUpPanel({
             (fixedQuote != null && !fixedQuote.valid) ||
             (fixedAmountKopeks == null && (!amount || parseFloat(amount) <= 0)))
         }
-        className={`flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-50 ${
+        className={`flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 ${
           paymentUrl ? 'bg-[#30d158]' : 'bg-[#F97315]'
         }`}
       >

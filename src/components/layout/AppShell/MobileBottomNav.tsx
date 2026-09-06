@@ -106,7 +106,7 @@ export function MobileBottomNav({ isKeyboardOpen, wheelEnabled }: MobileBottomNa
             onClick={handleNavClick}
             className={cn(
               'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full transition-all duration-200',
-              isActive(item.path) ? 'text-black' : 'text-[#98989d] hover:text-white',
+              isActive(item.path) ? 'text-white' : 'text-[#98989d] hover:text-white',
             )}
             style={{ height: '56px' }}
           >

@@ -356,13 +356,13 @@ export default function Dashboard() {
             <Link
               to="/subscription/purchase?renew=1"
               onClick={() => haptic.buttonPressMedium()}
-              className="fixed-screen-action flex h-14 w-full transform-gpu items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
+              className="fixed-screen-action flex h-14 w-full transform-gpu items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
               style={{ background: 'var(--figma-green)' }}
             >
               <GlobeIcon />
               <span>{t('dashboard.expired.renew')}</span>
               {minPriceLabel && (
-                <span className="ml-auto shrink-0 text-right text-black/70">{minPriceLabel}</span>
+                <span className="ml-auto shrink-0 text-right text-white/70">{minPriceLabel}</span>
               )}
             </Link>
           </motion.div>
@@ -620,7 +620,7 @@ export default function Dashboard() {
             <Link
               to={hasNoSubscription ? '/subscription/purchase' : '/subscription/purchase?renew=1'}
               onClick={() => haptic.buttonPressMedium()}
-              className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
+              className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
               style={{ background: 'var(--figma-green)' }}
             >
               <GlobeIcon />
@@ -630,7 +630,7 @@ export default function Dashboard() {
                   : t('dashboard.expired.renew')}
               </span>
               {minPriceLabel && (
-                <span className="ml-auto shrink-0 text-right text-black/70">{minPriceLabel}</span>
+                <span className="ml-auto shrink-0 text-right text-white/70">{minPriceLabel}</span>
               )}
             </Link>
           </motion.div>

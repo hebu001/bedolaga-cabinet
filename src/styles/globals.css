@@ -2006,7 +2006,7 @@ input[type='checkbox']:hover:not(:checked) {
 /* Long content can move inside a list or dialog; the surrounding page stays fixed. */
 .dashboard-device-panel {
   scrollbar-width: thin;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-y;
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -2062,7 +2062,6 @@ input[type='checkbox']:hover:not(:checked) {
     height: auto;
     padding: 6px;
     font-size: 12px;
-    color: #111;
   }
   .dashboard-gifts {
     min-height: 0;

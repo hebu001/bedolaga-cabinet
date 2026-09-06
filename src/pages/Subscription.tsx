@@ -884,7 +884,7 @@ export default function Subscription() {
         </p>
         <button
           onClick={() => navigate('/subscriptions')}
-          className="rounded-xl bg-apple-blue px-6 py-2.5 text-sm font-medium text-black"
+          className="rounded-xl bg-apple-blue px-6 py-2.5 text-sm font-medium text-white"
         >
           {t('subscription.backToList', 'Мои подписки')}
         </button>
@@ -986,7 +986,7 @@ export default function Subscription() {
                     haptic.buttonPressMedium();
                     navigate(renewLink);
                   }}
-                  className="flex flex-1 items-center justify-center rounded-full bg-apple-blue py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
+                  className="flex flex-1 items-center justify-center rounded-full bg-apple-blue py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
                 >
                   {subscription.is_active
                     ? t('subscription.extend')
@@ -1334,7 +1334,7 @@ export default function Subscription() {
                                             : delta < 0
                                               ? '#ff453a'
                                               : 'rgba(255,255,255,0.08)',
-                                        color: delta === 0 ? '#98989d' : '#111',
+                                        color: delta === 0 ? '#98989d' : '#fff',
                                         opacity: pending ? 0.6 : 1,
                                       }}
                                     >
@@ -1502,7 +1502,7 @@ export default function Subscription() {
                                       className="mt-5 flex h-14 w-full items-center justify-center rounded-full text-[16px] font-medium transition-opacity disabled:cursor-not-allowed"
                                       style={{
                                         background: '#F97315',
-                                        color: '#111',
+                                        color: '#fff',
                                         opacity: pending ? 0.6 : 1,
                                       }}
                                     >

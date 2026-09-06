@@ -170,7 +170,7 @@ export default function TrialOfferCard({
               }
             }}
             disabled={!balanceReady || activateTrialMutation.isPending}
-            className="h-14 w-full rounded-full text-base font-medium text-black transition-all active:scale-[0.97] disabled:opacity-50"
+            className="h-14 w-full rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
             style={{ background: 'var(--figma-green)' }}
           >
             {activateTrialMutation.isPending
@@ -180,7 +180,7 @@ export default function TrialOfferCard({
         ) : (
           <Link
             to="/balance"
-            className="flex h-14 w-full items-center justify-center rounded-full text-base font-medium text-black transition-all active:scale-[0.97]"
+            className="flex h-14 w-full items-center justify-center rounded-full text-base font-medium text-white transition-all active:scale-[0.97]"
             style={{ background: 'var(--figma-green)' }}
           >
             {t('subscription.trial.topUpToActivate')}
@@ -205,7 +205,7 @@ export default function TrialOfferCard({
               }
             }}
             disabled={activateTrialMutation.isPending}
-            className="relative h-14 w-full rounded-full text-base font-medium text-black transition-all active:scale-[0.97] disabled:opacity-50"
+            className="relative h-14 w-full rounded-full text-base font-medium text-white transition-all active:scale-[0.97] disabled:opacity-50"
             style={{
               background: 'var(--figma-green)',
               animation: 'trialButtonPulse 2s ease-in-out infinite',

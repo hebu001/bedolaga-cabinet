@@ -1115,7 +1115,7 @@ export default function SubscriptionPurchase() {
                               }
                             }}
                             disabled={tariffPurchaseMutation.isPending}
-                            className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+                            className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                           >
                             {tariffPurchaseMutation.isPending ? (
                               <span className="flex items-center justify-center gap-2">
@@ -1125,7 +1125,7 @@ export default function SubscriptionPurchase() {
                             ) : (
                               <>
                                 {t('subscription.paySubscription', 'Оплатить')}
-                                <span className="text-black/90">
+                                <span className="text-white/90">
                                   {hasEnoughBalance
                                     ? formatPrice(dailyPrice)
                                     : formatPrice(missingAmount)}
@@ -1708,7 +1708,7 @@ export default function SubscriptionPurchase() {
                                         }
                                       }}
                                       disabled={tariffPurchaseMutation.isPending}
-                                      className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+                                      className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-[#F97315] text-base font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                                     >
                                       {tariffPurchaseMutation.isPending ? (
                                         <span className="flex items-center justify-center gap-2">
@@ -1718,7 +1718,7 @@ export default function SubscriptionPurchase() {
                                       ) : (
                                         <>
                                           {t('subscription.paySubscription', 'Оплатить')}
-                                          <span className="text-black/90">
+                                          <span className="text-white/90">
                                             {hasEnoughBalance
                                               ? formatPrice(totalPrice)
                                               : formatPrice(missingAmount)}

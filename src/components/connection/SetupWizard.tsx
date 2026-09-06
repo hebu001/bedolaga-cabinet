@@ -363,7 +363,7 @@ export default function SetupWizard({
             haptic.buttonPressMedium();
             setStep(1);
           }}
-          className="radiate-button h-14 w-full rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all active:scale-[0.97]"
+          className="radiate-button h-14 w-full rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97]"
         >
           {t('subscription.connection.startSetup', 'Начать настройку на этом устройстве')}
         </button>
@@ -423,7 +423,7 @@ export default function SetupWizard({
             haptic.buttonPressMedium();
             setShowInstallModal(true);
           }}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all active:scale-[0.97]"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97]"
         >
           <CloudDownloadIcon size={20} />
           {t('subscription.connection.installApp', 'Установить приложение')}
@@ -487,7 +487,7 @@ export default function SetupWizard({
             handleAddSubscription();
           }}
           disabled={!addSubscriptionUrl}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           <CircleFadingPlusIcon size={20} />
           {t('subscription.connection.addSub', 'Добавить подписку')}
@@ -672,7 +672,7 @@ export default function SetupWizard({
               {/* Confirm — orange */}
               <button
                 onClick={handleConfirmInstall}
-                className="mt-7 flex h-14 w-full items-center justify-center rounded-full bg-[var(--figma-green)] text-base font-medium text-black transition-all hover:brightness-95 active:scale-[0.97]"
+                className="mt-7 flex h-14 w-full items-center justify-center rounded-full bg-[var(--figma-green)] text-base font-medium text-white transition-all hover:brightness-95 active:scale-[0.97]"
               >
                 {t('subscription.connection.installModalConfirm', 'Хорошо, перейти к установке')}
               </button>

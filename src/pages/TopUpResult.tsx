@@ -94,7 +94,7 @@ function SuccessState({
       <button
         type="button"
         onClick={handleGoToBalance}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-black transition-colors hover:opacity-90"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
       >
         {returnPath
           ? t('balance.topUpResult.continuePurchase', 'Продолжить покупку')
@@ -193,7 +193,7 @@ function TimeoutState({
           <button
             type="button"
             onClick={onRetry}
-            className="w-full rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-black transition-colors hover:opacity-90"
+            className="w-full rounded-xl bg-apple-blue px-6 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
           >
             {t('common.retry')}
           </button>
