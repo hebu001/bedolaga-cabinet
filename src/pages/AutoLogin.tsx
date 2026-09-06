@@ -8,7 +8,7 @@ export default function AutoLogin() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setTokens, setUser, checkAdminStatus } = useAuthStore();
+  const { completeLogin } = useAuthStore();
   const [error, setError] = useState(false);
   const attemptedRef = useRef(false);
 
@@ -35,15 +35,13 @@ export default function AutoLogin() {
     authApi
       .autoLogin(token)
       .then(async (response) => {
-        setTokens(response.access_token, response.refresh_token);
-        setUser(response.user);
-        await checkAdminStatus();
+        await completeLogin(response);
         navigate('/', { replace: true });
       })
       .catch(() => {
         setError(true);
       });
-  }, [token, navigate, setTokens, setUser, checkAdminStatus]);
+  }, [token, navigate, completeLogin]);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">

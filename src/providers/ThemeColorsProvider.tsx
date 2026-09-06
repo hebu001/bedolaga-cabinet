@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { SessionQueryScope } from './SessionQueryProvider';
 import { useQuery } from '@tanstack/react-query';
 import { themeColorsApi } from '../api/themeColors';
 import { DEFAULT_THEME_COLORS } from '../types/theme';
@@ -10,7 +11,20 @@ interface ThemeColorsProviderProps {
   children: React.ReactNode;
 }
 
+// TanStack observers keep their initial QueryClient. Remount only the effects
+// leaf when it changes; authentication pages below must retain one-time intent.
 export function ThemeColorsProvider({ children }: ThemeColorsProviderProps) {
+  return (
+    <>
+      <SessionQueryScope>
+        <ThemeColorsEffects />
+      </SessionQueryScope>
+      {children}
+    </>
+  );
+}
+
+function ThemeColorsEffects() {
   const { data: colors } = useQuery({
     queryKey: ['theme-colors'],
     queryFn: themeColorsApi.getColors,
@@ -44,5 +58,5 @@ export function ThemeColorsProvider({ children }: ThemeColorsProviderProps) {
     syncTelegramColors();
   }, [syncTelegramColors]);
 
-  return <>{children}</>;
+  return null;
 }

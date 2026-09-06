@@ -22,6 +22,7 @@ export function PermissionRoute({
   requireAll = false,
 }: PermissionRouteProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const sessionGeneration = useAuthStore((state) => state.sessionGeneration);
   const isLoading = useAuthStore((state) => state.isLoading);
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const location = useLocation();
@@ -66,5 +67,5 @@ export function PermissionRoute({
     }
   }
 
-  return <Layout>{children}</Layout>;
+  return <Layout key={sessionGeneration}>{children}</Layout>;
 }

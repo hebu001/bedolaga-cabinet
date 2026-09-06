@@ -6,7 +6,6 @@ import { useAuthStore } from '../store/auth';
 import { useShallow } from 'zustand/shallow';
 import { localizeServerMessage } from '../utils/serverMessages';
 import { consumeCampaignSlug, getPendingCampaignSlug } from '../utils/campaign';
-import { tokenStorage } from '../utils/token';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function VerifyEmail() {
@@ -15,11 +14,9 @@ export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState('');
-  const { setTokens, setUser, checkAdminStatus } = useAuthStore(
+  const { completeLogin } = useAuthStore(
     useShallow((state) => ({
-      setTokens: state.setTokens,
-      setUser: state.setUser,
-      checkAdminStatus: state.checkAdminStatus,
+      completeLogin: state.completeLogin,
     })),
   );
   const hasVerified = useRef(false);
@@ -43,14 +40,7 @@ export default function VerifyEmail() {
         const campaignSlug = getPendingCampaignSlug();
         const response = await authApi.verifyEmail(token, campaignSlug);
         consumeCampaignSlug();
-        // Save tokens and log user in
-        tokenStorage.setTokens(response.access_token, response.refresh_token);
-        setTokens(response.access_token, response.refresh_token);
-        setUser(response.user);
-        if (response.campaign_bonus) {
-          useAuthStore.setState({ pendingCampaignBonus: response.campaign_bonus });
-        }
-        checkAdminStatus();
+        await completeLogin(response);
         setStatus('success');
         // Redirect to dashboard after short delay
         redirectTimer = setTimeout(() => navigate('/', { replace: true }), 1500);
@@ -66,7 +56,7 @@ export default function VerifyEmail() {
     verify();
 
     return () => clearTimeout(redirectTimer);
-  }, [searchParams, t, navigate, setTokens, setUser, checkAdminStatus]);
+  }, [searchParams, t, navigate, completeLogin]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8 sm:py-12">

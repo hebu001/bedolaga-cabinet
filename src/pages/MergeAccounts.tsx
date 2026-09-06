@@ -404,16 +404,7 @@ export default function MergeAccounts() {
         return;
       }
 
-      const { setTokens, setUser, checkAdminStatus } = useAuthStore.getState();
-      setTokens(response.access_token, response.refresh_token);
-      if (response.user) {
-        setUser(response.user);
-      }
-      try {
-        await checkAdminStatus();
-      } catch {
-        // Non-critical — admin status will be checked on next navigation
-      }
+      await useAuthStore.getState().completeLogin(response);
 
       queryClient.clear();
       showToast({ type: 'success', message: t('merge.success') });

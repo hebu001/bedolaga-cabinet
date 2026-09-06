@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SessionQueryProvider } from './providers/SessionQueryProvider';
 import {
   init,
   restoreInitData,
@@ -103,21 +103,12 @@ if ('requestIdleCallback' in window) {
   setTimeout(initLogoPreload, 100);
 }
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary level="app">
-      <QueryClientProvider client={queryClient}>
+      <SessionQueryProvider>
         <AppWithNavigator />
-      </QueryClientProvider>
+      </SessionQueryProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 );

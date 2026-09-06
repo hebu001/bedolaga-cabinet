@@ -1,5 +1,11 @@
 import apiClient from './client';
-import { tokenStorage } from '../utils/token';
+import {
+  getSessionGeneration,
+  getSessionSignal,
+  assertCurrentSession,
+  isCurrentSession,
+} from '../utils/session';
+import { tokenStorage, isTokenExpired, tokenRefreshManager } from '../utils/token';
 
 export type BulkActionType =
   | 'extend_subscription'
@@ -101,68 +107,87 @@ export const adminBulkActionsApi = {
     onEvent: (event: BulkSSEEvent) => void,
     signal?: AbortSignal,
   ): Promise<void> => {
-    const token = tokenStorage.getAccessToken();
-    const response = await fetch(`${API_BASE_URL}/cabinet/admin/bulk/execute?stream=true`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(data),
-      signal,
-    });
+    const owner = getSessionGeneration();
+    const sessionSignal = getSessionSignal();
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    if (signal?.aborted || sessionSignal.aborted) controller.abort();
+    signal?.addEventListener('abort', abort, { once: true });
+    sessionSignal.addEventListener('abort', abort, { once: true });
+    const emit = (event: BulkSSEEvent) => {
+      if (!controller.signal.aborted && isCurrentSession(owner)) onEvent(event);
+    };
+    try {
+      let token = tokenStorage.getAccessToken();
+      if (!token || isTokenExpired(token)) token = await tokenRefreshManager.refreshAccessToken();
+      assertCurrentSession(owner);
+      if (!token || isTokenExpired(token)) throw new Error('Authentication unavailable');
+      const response = await fetch(`${API_BASE_URL}/cabinet/admin/bulk/execute?stream=true`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-    const contentType = response.headers.get('content-type') || '';
+      const contentType = response.headers.get('content-type') || '';
 
-    if (contentType.includes('text/event-stream') && response.body) {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+      if (contentType.includes('text/event-stream') && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        while (true) {
+          const { done, value } = await reader.read();
+          assertCurrentSession(owner);
+          if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('data: ')) {
-            try {
-              const event = JSON.parse(trimmed.slice(6)) as BulkSSEEvent;
-              onEvent(event);
-            } catch {
-              // skip malformed SSE lines
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('data: ')) {
+              try {
+                const event = JSON.parse(trimmed.slice(6)) as BulkSSEEvent;
+                emit(event);
+              } catch {
+                // skip malformed SSE lines
+              }
             }
           }
         }
-      }
 
-      // process remaining buffer
-      if (buffer.trim().startsWith('data: ')) {
-        try {
-          const event = JSON.parse(buffer.trim().slice(6)) as BulkSSEEvent;
-          onEvent(event);
-        } catch {
-          // skip
+        // process remaining buffer
+        if (buffer.trim().startsWith('data: ')) {
+          try {
+            const event = JSON.parse(buffer.trim().slice(6)) as BulkSSEEvent;
+            emit(event);
+          } catch {
+            // skip
+          }
         }
+      } else {
+        // Fallback: non-streaming JSON response
+        const raw = await response.json();
+        emit({
+          type: 'complete',
+          total: raw.total,
+          success_count: raw.success_count,
+          error_count: raw.error_count,
+          skipped_count: raw.skipped_count || 0,
+        });
       }
-    } else {
-      // Fallback: non-streaming JSON response
-      const raw = await response.json();
-      onEvent({
-        type: 'complete',
-        total: raw.total,
-        success_count: raw.success_count,
-        error_count: raw.error_count,
-        skipped_count: raw.skipped_count || 0,
-      });
+    } finally {
+      signal?.removeEventListener('abort', abort);
+      sessionSignal.removeEventListener('abort', abort);
     }
   },
 };

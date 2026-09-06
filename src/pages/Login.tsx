@@ -174,7 +174,7 @@ export default function Login() {
   // with stale tokens triggering interceptor refresh/redirect loops
   useEffect(() => {
     // Don't attempt Telegram auth until store initialization is done
-    if (isAuthInitializing) return;
+    if (isAuthInitializing || isAuthenticated) return;
 
     const tryTelegramAuth = async () => {
       const initData = getTelegramInitData();
@@ -214,7 +214,7 @@ export default function Login() {
     };
 
     tryTelegramAuth();
-  }, [isAuthInitializing, loginWithTelegram, navigate, t, getReturnUrl]);
+  }, [isAuthInitializing, isAuthenticated, loginWithTelegram, navigate, t, getReturnUrl]);
 
   const handleRetryTelegramAuth = () => {
     // Clear ALL cached auth state to prevent stale token/initData loops

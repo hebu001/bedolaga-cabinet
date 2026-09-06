@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType } from 'react';
+import { Fragment, lazy, Suspense, type ComponentType } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router';
 import { useAuthStore } from './store/auth';
 
@@ -181,6 +181,7 @@ function ProtectedRoute({
   withLayout?: boolean;
 }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const sessionGeneration = useAuthStore((state) => state.sessionGeneration);
   const isLoading = useAuthStore((state) => state.isLoading);
   const location = useLocation();
 
@@ -193,11 +194,16 @@ function ProtectedRoute({
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  return withLayout ? <Layout>{children}</Layout> : <>{children}</>;
+  return withLayout ? (
+    <Layout key={sessionGeneration}>{children}</Layout>
+  ) : (
+    <Fragment key={sessionGeneration}>{children}</Fragment>
+  );
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const sessionGeneration = useAuthStore((state) => state.sessionGeneration);
   const isLoading = useAuthStore((state) => state.isLoading);
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const location = useLocation();
@@ -215,7 +221,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/" replace />;
   }
 
-  return <Layout>{children}</Layout>;
+  return <Layout key={sessionGeneration}>{children}</Layout>;
 }
 
 // Suspense wrapper for lazy components
@@ -251,21 +257,26 @@ function LegacySubscriptionRedirect() {
   return <Navigate to={`/subscriptions/${subscriptionId}`} replace />;
 }
 
-function App() {
+function AppSessionEffects() {
   useAnalyticsCounters();
   // Pulls site-verification tokens (Antilopay apay-tag etc.) from the bot
   // backend and injects matching <meta> tags into document.head.
   useSiteVerification();
+  return null;
+}
 
+function App() {
+  const sessionGeneration = useAuthStore((state) => state.sessionGeneration);
   return (
     <>
+      <AppSessionEffects key={sessionGeneration} />
       <BlockingOverlay />
       <Routes>
         {/* Public routes */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login key={sessionGeneration} />} />
         <Route path="/auth/telegram/callback" element={<TelegramCallback />} />
-        <Route path="/auth/telegram" element={<TelegramRedirect />} />
-        <Route path="/tg" element={<TelegramRedirect />} />
+        <Route path="/auth/telegram" element={<TelegramRedirect key={sessionGeneration} />} />
+        <Route path="/tg" element={<TelegramRedirect key={sessionGeneration} />} />
         <Route path="/connect" element={<DeepLinkRedirect />} />
         <Route path="/add" element={<DeepLinkRedirect />} />
         <Route path="/auth/oauth/callback" element={<OAuthCallback />} />
@@ -275,7 +286,7 @@ function App() {
           path="/merge/:mergeToken"
           element={
             <LazyPage>
-              <MergeAccounts />
+              <MergeAccounts key={sessionGeneration} />
             </LazyPage>
           }
         />
@@ -284,7 +295,7 @@ function App() {
           element={
             <ErrorBoundary level="app">
               <LazyPage>
-                <PurchaseSuccess />
+                <PurchaseSuccess key={sessionGeneration} />
               </LazyPage>
             </ErrorBoundary>
           }
@@ -294,7 +305,7 @@ function App() {
           element={
             <ErrorBoundary level="app">
               <LazyPage>
-                <QuickPurchase />
+                <QuickPurchase key={sessionGeneration} />
               </LazyPage>
             </ErrorBoundary>
           }

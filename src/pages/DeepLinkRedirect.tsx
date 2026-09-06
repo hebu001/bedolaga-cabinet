@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { SessionQueryScope } from '../providers/SessionQueryProvider';
 import { brandingApi } from '../api/branding';
 
 type Status = 'countdown' | 'fallback' | 'error';
@@ -41,16 +42,7 @@ const isValidDeepLink = (url: string): boolean => {
   return appSchemes.some((app) => lowerUrl.startsWith(app.scheme));
 };
 
-export default function DeepLinkRedirect() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState<Status>('countdown');
-  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
-  const [copied, setCopied] = useState(false);
-  const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+function RedirectBranding() {
   // Get branding
   const { data: branding } = useQuery({
     queryKey: ['branding'],
@@ -61,6 +53,32 @@ export default function DeepLinkRedirect() {
   const projectName = branding ? branding.name : import.meta.env.VITE_APP_NAME || 'VPN';
   const logoLetter = branding?.logo_letter || import.meta.env.VITE_APP_LOGO || 'V';
   const logoUrl = branding ? brandingApi.getLogoUrl(branding) : null;
+
+  return (
+    <>
+      {/* Logo with pulse animation */}
+      <div className="mx-auto mb-6 flex h-20 w-20 animate-pulse items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 shadow-lg shadow-accent-500/30">
+        {branding?.has_custom_logo && logoUrl ? (
+          <img src={logoUrl} alt={projectName || 'Logo'} className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-3xl font-bold text-white">{logoLetter}</span>
+        )}
+      </div>
+
+      <h1 className="mb-1 text-2xl font-bold text-dark-50">{projectName || 'VPN'}</h1>
+    </>
+  );
+}
+
+export default function DeepLinkRedirect() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState<Status>('countdown');
+  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+  const [copied, setCopied] = useState(false);
+  const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Parse raw query string to preserve '+' chars in base64 crypto links.
   // URLSearchParams decodes '+' as space, breaking ss://, vless:// etc.
@@ -168,16 +186,9 @@ export default function DeepLinkRedirect() {
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent-500/10 via-transparent to-transparent" />
 
       <div className="relative w-full max-w-sm text-center">
-        {/* Logo with pulse animation */}
-        <div className="mx-auto mb-6 flex h-20 w-20 animate-pulse items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 shadow-lg shadow-accent-500/30">
-          {branding?.has_custom_logo && logoUrl ? (
-            <img src={logoUrl} alt={projectName || 'Logo'} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-3xl font-bold text-white">{logoLetter}</span>
-          )}
-        </div>
-
-        <h1 className="mb-1 text-2xl font-bold text-dark-50">{projectName || 'VPN'}</h1>
+        <SessionQueryScope>
+          <RedirectBranding />
+        </SessionQueryScope>
 
         {status !== 'error' && (
           <p className="mb-6 text-dark-400">

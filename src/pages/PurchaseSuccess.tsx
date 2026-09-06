@@ -94,7 +94,7 @@ function CabinetCredentialsState({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { setTokens, setUser, checkAdminStatus } = useAuthStore();
+  const { completeLogin } = useAuthStore();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState(false);
 
@@ -107,15 +107,13 @@ function CabinetCredentialsState({
     setLoginError(false);
     try {
       const response = await authApi.autoLogin(autoLoginToken);
-      setTokens(response.access_token, response.refresh_token);
-      setUser(response.user);
-      await checkAdminStatus();
+      await completeLogin(response);
       navigate('/');
     } catch {
       setLoginError(true);
       setIsLoggingIn(false);
     }
-  }, [autoLoginToken, navigate, setTokens, setUser, checkAdminStatus]);
+  }, [autoLoginToken, navigate, completeLogin]);
 
   return (
     <motion.div
@@ -354,7 +352,7 @@ function PendingActivationState({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { setTokens, setUser, checkAdminStatus } = useAuthStore();
+  const { completeLogin } = useAuthStore();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleGoToCabinet = useCallback(async () => {
@@ -365,15 +363,13 @@ function PendingActivationState({
     setIsLoggingIn(true);
     try {
       const response = await authApi.autoLogin(autoLoginToken);
-      setTokens(response.access_token, response.refresh_token);
-      setUser(response.user);
-      await checkAdminStatus();
+      await completeLogin(response);
       navigate('/');
     } catch {
       setIsLoggingIn(false);
       navigate('/login');
     }
-  }, [autoLoginToken, navigate, setTokens, setUser, checkAdminStatus]);
+  }, [autoLoginToken, navigate, completeLogin]);
 
   return (
     <motion.div

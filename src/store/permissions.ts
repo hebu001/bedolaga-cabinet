@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import apiClient from '../api/client';
+import { getSessionGeneration, isCurrentSession } from '../utils/session';
 
 interface PermissionsResponse {
   permissions: string[];
@@ -50,8 +51,10 @@ export const usePermissionStore = create<PermissionState>((set, get) => ({
   isLoaded: false,
 
   fetchPermissions: async () => {
+    const owner = getSessionGeneration();
     try {
       const response = await apiClient.get<PermissionsResponse>('/cabinet/auth/me/permissions');
+      if (!isCurrentSession(owner)) return;
       set({
         permissions: response.data.permissions,
         roles: response.data.roles,
@@ -59,6 +62,7 @@ export const usePermissionStore = create<PermissionState>((set, get) => ({
         isLoaded: true,
       });
     } catch {
+      if (!isCurrentSession(owner)) return;
       set({
         permissions: [],
         roles: [],

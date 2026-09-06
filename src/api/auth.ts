@@ -1,4 +1,11 @@
 import apiClient from './client';
+import {
+  getSessionGeneration,
+  assertCurrentSession,
+  ownSessionResult,
+  SessionChangedError,
+} from '../utils/session';
+import { tokenRefreshManager } from '../utils/token';
 import { getYandexCid } from '../utils/yandexCid';
 import type {
   AuthResponse,
@@ -9,11 +16,10 @@ import type {
   OAuthProvider,
   RegisterResponse,
   ServerCompleteResponse,
-  TokenResponse,
   User,
 } from '../types';
 
-export const authApi = {
+const endpoints = {
   loginTelegram: async (
     initData: string,
     campaignSlug?: string | null,
@@ -137,21 +143,8 @@ export const authApi = {
     return response.data;
   },
 
-  refreshToken: async (refreshToken: string): Promise<TokenResponse> => {
-    const response = await apiClient.post<TokenResponse>(
-      '/cabinet/auth/refresh',
-      {
-        refresh_token: refreshToken,
-      },
-      { headers: { 'X-Refresh-Token-Rotation': '1' } },
-    );
-    return response.data;
-  },
-
   logout: async (refreshToken: string): Promise<void> => {
-    await apiClient.post('/cabinet/auth/logout', {
-      refresh_token: refreshToken,
-    });
+    await tokenRefreshManager.revokeRefreshToken(refreshToken);
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
@@ -353,4 +346,38 @@ export const authApi = {
     );
     return response.data;
   },
+};
+
+// Latest-started login wins. Both the invocation and the eventual consumer are
+// fenced so a delayed login/verification callback cannot replace a new session.
+let loginAttempt = 0;
+function authenticate<Args extends unknown[], Result extends { refresh_token?: string | null }>(
+  request: (...args: Args) => Promise<Result>,
+): (...args: Args) => Promise<Result> {
+  return async (...args) => {
+    const owner = getSessionGeneration();
+    const attempt = ++loginAttempt;
+    const response = await request(...args);
+    try {
+      assertCurrentSession(owner);
+      if (attempt !== loginAttempt) throw new SessionChangedError();
+      return ownSessionResult(response, owner, () => attempt === loginAttempt);
+    } catch (error) {
+      await tokenRefreshManager.discardResponse(response.refresh_token || undefined);
+      throw error;
+    }
+  };
+}
+
+export const authApi = {
+  ...endpoints,
+  loginTelegram: authenticate(endpoints.loginTelegram),
+  loginTelegramWidget: authenticate(endpoints.loginTelegramWidget),
+  loginTelegramOIDC: authenticate(endpoints.loginTelegramOIDC),
+  loginEmail: authenticate(endpoints.loginEmail),
+  oauthCallback: authenticate(endpoints.oauthCallback),
+  pollDeepLinkToken: authenticate(endpoints.pollDeepLinkToken),
+  verifyEmail: authenticate(endpoints.verifyEmail),
+  autoLogin: authenticate(endpoints.autoLogin),
+  executeMerge: authenticate(endpoints.executeMerge),
 };

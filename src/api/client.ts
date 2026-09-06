@@ -1,11 +1,14 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
 import { retrieveRawInitData } from '@telegram-apps/sdk-react';
+import { tokenStorage, isTokenExpired, tokenRefreshManager } from '../utils/token';
 import {
-  tokenStorage,
-  isTokenExpired,
-  tokenRefreshManager,
-  safeRedirectToLogin,
-} from '../utils/token';
+  assertCurrentSession,
+  getSessionGeneration,
+  getSessionSignal,
+  isCurrentSession,
+  ownSessionResult,
+  SessionChangedError,
+} from '../utils/session';
 import { useBlockingStore } from '../store/blocking';
 import { API } from '../config/constants';
 
@@ -51,11 +54,48 @@ const getTelegramInitData = (): string | null => {
   return tokenStorage.getTelegramInitData();
 };
 
-export const apiClient = axios.create({
+const transport = axios.create({
   baseURL: API_BASE_URL,
   timeout: API.TIMEOUT_MS,
   headers: {
     'Content-Type': 'application/json',
+  },
+});
+
+interface SessionRequestConfig extends InternalAxiosRequestConfig {
+  _sessionOwner?: number;
+  _retry?: boolean;
+  _callerSignal?: AxiosRequestConfig['signal'];
+  _disposeSessionSignal?: () => void;
+}
+
+// Capture ownership at the call site, before Axios schedules async interceptors.
+// Otherwise a request queued immediately before logout could acquire B's token.
+function ownedConfig(config: AxiosRequestConfig = {}): AxiosRequestConfig {
+  const owner = (config as SessionRequestConfig)._sessionOwner ?? getSessionGeneration();
+  const callerSignal = (config as SessionRequestConfig)._callerSignal ?? config.signal;
+  return { ...config, _sessionOwner: owner, _callerSignal: callerSignal } as AxiosRequestConfig;
+}
+const bodyMethods = new Set(['post', 'put', 'patch', 'postForm', 'putForm', 'patchForm']);
+const methods = new Set(['get', 'delete', 'head', 'options', ...bodyMethods]);
+export const apiClient = new Proxy(transport, {
+  apply(target, thisArg, args) {
+    if (typeof args[0] === 'string') args[1] = ownedConfig(args[1]);
+    else args[0] = ownedConfig(args[0]);
+    return Reflect.apply(target, thisArg, args);
+  },
+  get(target, property, receiver) {
+    const value = Reflect.get(target, property, receiver);
+    if (typeof property === 'string' && methods.has(property)) {
+      return (...args: unknown[]) => {
+        const index = bodyMethods.has(property) ? 2 : 1;
+        args[index] = ownedConfig(args[index] as AxiosRequestConfig | undefined);
+        return Reflect.apply(value, target, args);
+      };
+    }
+    if (property === 'request')
+      return (config: AxiosRequestConfig) => target.request(ownedConfig(config));
+    return value;
   },
 });
 
@@ -80,34 +120,41 @@ function isAuthEndpoint(url: string | undefined): boolean {
   return AUTH_ENDPOINTS.some((endpoint) => url.startsWith(endpoint));
 }
 
-apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  // Let axios set the correct multipart/form-data header with boundary for FormData
-  if (config.data instanceof FormData && config.headers) {
-    delete config.headers['Content-Type'];
-  }
+apiClient.interceptors.request.use(async (config: SessionRequestConfig) => {
+  const owner = config._sessionOwner ?? getSessionGeneration();
+  config._sessionOwner = owner;
+  assertCurrentSession(owner);
+  if (config._callerSignal?.aborted)
+    throw Object.assign(new axios.CanceledError('Request canceled'), { config });
+  if (config.data instanceof FormData && config.headers) delete config.headers['Content-Type'];
 
   if (!isAuthEndpoint(config.url)) {
     let token = tokenStorage.getAccessToken();
-
-    if (token && isTokenExpired(token)) {
-      const newToken = await tokenRefreshManager.refreshAccessToken();
-      if (newToken) {
-        token = newToken;
-      } else {
-        tokenStorage.clearTokens();
-        safeRedirectToLogin();
-        return config;
-      }
-    } else if (!token && tokenStorage.getRefreshToken()) {
-      const newToken = await tokenRefreshManager.refreshAccessToken();
-      if (newToken) {
-        token = newToken;
-      }
+    if ((!token || isTokenExpired(token)) && tokenStorage.getRefreshToken()) {
+      token = await tokenRefreshManager.refreshAccessToken();
+      assertCurrentSession(owner);
+      // A failed refresh must reject, never send expired/anonymous credentials.
+      if (!token || isTokenExpired(token)) throw new Error('Authentication unavailable');
     }
+    assertCurrentSession(owner);
+    if (token && isTokenExpired(token)) throw new Error('Authentication unavailable');
+    if (token && !isTokenExpired(token)) config.headers.Authorization = `Bearer ${token}`;
+    else delete config.headers.Authorization;
 
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    const sessionSignal = getSessionSignal();
+    if (config._callerSignal) {
+      const controller = new AbortController();
+      const signal = config._callerSignal;
+      const abort = () => controller.abort();
+      if (signal.aborted || sessionSignal.aborted) controller.abort();
+      signal.addEventListener?.('abort', abort, { once: true });
+      sessionSignal.addEventListener('abort', abort, { once: true });
+      config._disposeSessionSignal = () => {
+        signal.removeEventListener?.('abort', abort);
+        sessionSignal.removeEventListener('abort', abort);
+      };
+      config.signal = controller.signal;
+    } else config.signal = sessionSignal;
   }
 
   const isTelegramAuthEndpoint =
@@ -194,9 +241,26 @@ export function isAccountDeletedError(
 }
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  async (response) => {
+    const config = response.config as SessionRequestConfig;
+    config._disposeSessionSignal?.();
+    if (config._sessionOwner !== undefined && !isCurrentSession(config._sessionOwner)) {
+      // Auth requests are not aborted: returned orphan credentials must be revoked.
+      await tokenRefreshManager.discardResponse(response.data?.refresh_token);
+      throw new SessionChangedError();
+    }
+    return {
+      ...response,
+      data: ownSessionResult(response.data, config._sessionOwner ?? getSessionGeneration()),
+    };
+  },
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as SessionRequestConfig | undefined;
+    originalRequest?._disposeSessionSignal?.();
+    if (!originalRequest || originalRequest._sessionOwner === undefined)
+      return Promise.reject(error);
+    const owner = originalRequest._sessionOwner;
+    assertCurrentSession(owner);
 
     if (isMaintenanceError(error)) {
       const detail = (error.response?.data as { detail: MaintenanceError }).detail;
@@ -248,16 +312,22 @@ apiClient.interceptors.response.use(
       }
 
       originalRequest._retry = true;
-
-      const newToken = await tokenRefreshManager.refreshAccessToken();
-      if (newToken) {
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        }
+      const current = tokenStorage.getAccessToken();
+      const sent = originalRequest.headers.Authorization;
+      // A late 401 for an access token already replaced in this tab can replay
+      // within this same session without another rotation.
+      const newToken =
+        current && !isTokenExpired(current) && sent !== `Bearer ${current}`
+          ? current
+          : await tokenRefreshManager.refreshAccessToken();
+      assertCurrentSession(owner);
+      if (originalRequest._callerSignal?.aborted)
+        throw Object.assign(new axios.CanceledError('Request canceled'), {
+          config: originalRequest,
+        });
+      if (newToken && !isTokenExpired(newToken)) {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return apiClient(originalRequest);
-      } else {
-        tokenStorage.clearTokens();
-        safeRedirectToLogin();
       }
     }
 
