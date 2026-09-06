@@ -1934,7 +1934,6 @@ input[type='checkbox']:hover:not(:checked) {
     margin: 10px 10px 10px var(--desktop-sidebar-width);
     min-height: calc(100dvh - 20px);
     border-radius: 24px;
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
   }
   /* Behind the background portal (-2), so stars remain visible inside the frame. */
   .app-content::before {
@@ -1944,12 +1943,16 @@ input[type='checkbox']:hover:not(:checked) {
     z-index: -3;
     border-radius: 24px;
     background-color: theme('colors.apple.bg');
+    /* Keep the outline on the fixed frame, not on the scrolling content. */
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
     pointer-events: none;
   }
   body:has(.app-shell) .app-background {
     inset: 10px 10px 10px 240px;
     border-radius: 24px;
     overflow: hidden;
+    /* Clip after filtering: overflow alone still lets the blur darken the outer canvas. */
+    clip-path: inset(0 round 24px);
   }
   .app-shell .fixed-screen {
     left: var(--desktop-sidebar-width);
