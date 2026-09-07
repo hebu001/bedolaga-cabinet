@@ -26,6 +26,7 @@ import { useCloseOnSuccessNotification } from '../store/successNotification';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { CheckIcon } from '../components/icons';
 import Twemoji from 'react-twemoji';
+import './SubscriptionPurchase.css';
 import {
   getErrorMessage,
   getInsufficientBalanceError,
@@ -586,7 +587,7 @@ export default function SubscriptionPurchase() {
         )}
 
       {/* Tariff Grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="tariff-picker-grid">
         {[...tariffs]
           .filter((tariff) => {
             if (isMultiTariff && tariff.is_purchased) return false;
@@ -630,34 +631,28 @@ export default function SubscriptionPurchase() {
             return (
               <div
                 key={tariff.id}
-                className="apple-card-grad flex flex-col rounded-2xl bg-apple-card p-5 text-left"
+                className="tariff-picker-card apple-card-grad flex min-w-0 flex-col rounded-2xl bg-apple-card p-5 text-left"
               >
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-[17px] font-semibold text-apple-ink">{tariff.name}</div>
-                    {tariff.description && (
-                      <div className="mt-1 whitespace-pre-line text-[13px] text-apple-mute">
-                        {tariff.description}
-                      </div>
-                    )}
-                  </div>
+                <div className="tariff-picker-heading">
+                  <h3 className="tariff-picker-name text-[17px] font-semibold text-apple-ink">
+                    {tariff.name}
+                  </h3>
                   {isCurrentTariff && (
-                    <div className="flex shrink-0 items-center gap-1.5 pt-1">
+                    <div className="tariff-picker-current flex items-center gap-1.5 text-apple-green">
                       <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ background: '#30d158' }}
+                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-apple-green"
                         aria-hidden="true"
                       />
-                      <span
-                        className="text-[13px] font-semibold uppercase tracking-widest"
-                        style={{ color: '#30d158' }}
-                      >
-                        {t('subscription.currentTariff')}
-                      </span>
+                      <span>{t('subscription.currentTariff')}</span>
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px]">
+                {tariff.description && (
+                  <div className="tariff-picker-description whitespace-pre-line text-[13px] text-apple-mute">
+                    {tariff.description}
+                  </div>
+                )}
+                <div className="tariff-picker-features text-[13px]">
                   <div className="flex items-center gap-1.5">
                     <svg
                       className="h-4 w-4"
@@ -717,108 +712,119 @@ export default function SubscriptionPurchase() {
                   )}
                 </div>
                 {/* Price info */}
-                <div className="mt-3 border-t border-apple-hairline pt-3 text-[13px] text-apple-mute">
-                  {(() => {
-                    const dailyPrice =
-                      tariff.daily_price_kopeks ?? tariff.price_per_day_kopeks ?? 0;
-                    const originalDailyPrice = tariff.original_daily_price_kopeks || 0;
-                    if (dailyPrice > 0 || originalDailyPrice > 0) {
-                      const promoDaily = applyPromoDiscount(
-                        dailyPrice,
-                        originalDailyPrice > dailyPrice ? originalDailyPrice : undefined,
-                      );
-                      return (
-                        <span className="flex flex-wrap items-center gap-2">
-                          <span className="text-[15px] font-semibold" style={{ color: '#F97315' }}>
-                            {formatPrice(promoDaily.price)}
+                <div className="tariff-picker-footer">
+                  <div className="border-t border-apple-hairline pt-3 text-[13px] text-apple-mute">
+                    {(() => {
+                      const dailyPrice =
+                        tariff.daily_price_kopeks ?? tariff.price_per_day_kopeks ?? 0;
+                      const originalDailyPrice = tariff.original_daily_price_kopeks || 0;
+                      if (dailyPrice > 0 || originalDailyPrice > 0) {
+                        const promoDaily = applyPromoDiscount(
+                          dailyPrice,
+                          originalDailyPrice > dailyPrice ? originalDailyPrice : undefined,
+                        );
+                        return (
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span
+                              className="tariff-picker-price-value text-[15px] font-semibold"
+                              style={{ color: '#F97315' }}
+                            >
+                              {formatPrice(promoDaily.price)}
+                            </span>
+                            {promoDaily.original && promoDaily.original > promoDaily.price && (
+                              <span className="text-xs text-apple-faint line-through">
+                                {formatPrice(promoDaily.original)}
+                              </span>
+                            )}
+                            <span>{t('subscription.tariff.perDay')}</span>
+                            {promoDaily.percent && promoDaily.percent > 0 && (
+                              <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
+                                -{promoDaily.percent}%
+                              </span>
+                            )}
                           </span>
-                          {promoDaily.original && promoDaily.original > promoDaily.price && (
-                            <span className="text-xs text-apple-faint line-through">
-                              {formatPrice(promoDaily.original)}
+                        );
+                      }
+                      if (tariff.periods.length > 0) {
+                        const firstPeriod = tariff.periods[0];
+                        const promoPeriod = applyPromoDiscount(
+                          firstPeriod?.price_kopeks || 0,
+                          firstPeriod?.original_price_kopeks,
+                        );
+                        return (
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span>{t('subscription.from')}</span>
+                            <span
+                              className="tariff-picker-price-value text-[15px] font-semibold"
+                              style={{ color: '#F97315' }}
+                            >
+                              {formatPrice(promoPeriod.price)}
                             </span>
-                          )}
-                          <span>{t('subscription.tariff.perDay')}</span>
-                          {promoDaily.percent && promoDaily.percent > 0 && (
-                            <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
-                              -{promoDaily.percent}%
-                            </span>
-                          )}
+                            {promoPeriod.original && promoPeriod.original > promoPeriod.price && (
+                              <span className="text-xs text-apple-faint line-through">
+                                {formatPrice(promoPeriod.original)}
+                              </span>
+                            )}
+                            {promoPeriod.percent && promoPeriod.percent > 0 && (
+                              <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
+                                -{promoPeriod.percent}%
+                              </span>
+                            )}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span
+                          className="tariff-picker-price-value text-[15px] font-semibold"
+                          style={{ color: '#F97315' }}
+                        >
+                          {t('subscription.tariff.flexiblePayment')}
                         </span>
                       );
-                    }
-                    if (tariff.periods.length > 0) {
-                      const firstPeriod = tariff.periods[0];
-                      const promoPeriod = applyPromoDiscount(
-                        firstPeriod?.price_kopeks || 0,
-                        firstPeriod?.original_price_kopeks,
-                      );
-                      return (
-                        <span className="flex flex-wrap items-center gap-2">
-                          <span>{t('subscription.from')}</span>
-                          <span className="text-[15px] font-semibold" style={{ color: '#F97315' }}>
-                            {formatPrice(promoPeriod.price)}
-                          </span>
-                          {promoPeriod.original && promoPeriod.original > promoPeriod.price && (
-                            <span className="text-xs text-apple-faint line-through">
-                              {formatPrice(promoPeriod.original)}
-                            </span>
-                          )}
-                          {promoPeriod.percent && promoPeriod.percent > 0 && (
-                            <span className="rounded-md bg-apple-green/15 px-1.5 py-0.5 text-xs font-medium text-apple-green">
-                              -{promoPeriod.percent}%
-                            </span>
-                          )}
-                        </span>
-                      );
-                    }
-                    return (
-                      <span className="text-[15px] font-semibold" style={{ color: '#F97315' }}>
-                        {t('subscription.tariff.flexiblePayment')}
-                      </span>
-                    );
-                  })()}
-                </div>
+                    })()}
+                  </div>
 
-                {/* Action Button */}
-                <div className="mt-4">
-                  {isCurrentTariff ? (
-                    subscription?.is_daily ? (
-                      <div className="py-2 text-center text-sm text-apple-faint">
-                        {t('subscription.currentTariff')}
-                      </div>
+                  {/* Action Button */}
+                  <div className="tariff-picker-actions mt-4">
+                    {isCurrentTariff ? (
+                      subscription?.is_daily ? (
+                        <div className="py-2 text-center text-sm text-apple-faint">
+                          {t('subscription.currentTariff')}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={openTariff}
+                          className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+                        >
+                          {t('subscription.extend')}
+                        </button>
+                      )
+                    ) : isLegacySubscription ? (
+                      <button
+                        onClick={openTariff}
+                        className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
+                      >
+                        {t('subscription.tariff.selectForRenewal')}
+                      </button>
+                    ) : canSwitch ? (
+                      <button
+                        onClick={() => {
+                          setSwitchTariffId(tariff.id);
+                          setShowTariffListModal(false);
+                        }}
+                        className="w-full rounded-full bg-white py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
+                      >
+                        {t('subscription.switchTariff.switch')}
+                      </button>
                     ) : (
                       <button
                         onClick={openTariff}
                         className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
                       >
-                        {t('subscription.extend')}
+                        {t('subscription.purchase')}
                       </button>
-                    )
-                  ) : isLegacySubscription ? (
-                    <button
-                      onClick={openTariff}
-                      className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
-                    >
-                      {t('subscription.tariff.selectForRenewal')}
-                    </button>
-                  ) : canSwitch ? (
-                    <button
-                      onClick={() => {
-                        setSwitchTariffId(tariff.id);
-                        setShowTariffListModal(false);
-                      }}
-                      className="w-full rounded-full bg-white py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90"
-                    >
-                      {t('subscription.switchTariff.switch')}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={openTariff}
-                      className="w-full rounded-full bg-[#F97315] py-3 text-[15px] font-medium text-white transition-opacity hover:opacity-90"
-                    >
-                      {t('subscription.purchase')}
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -1775,7 +1781,7 @@ export default function SubscriptionPurchase() {
           {showTariffListModal &&
             createPortal(
               <div
-                className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
+                className="tariff-picker-overlay apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
                 style={{ background: 'rgba(0,0,0,0.5)' }}
                 onClick={() => setShowTariffListModal(false)}
               >
@@ -1785,31 +1791,33 @@ export default function SubscriptionPurchase() {
                   aria-modal="true"
                   aria-label={t('subscription.purchaseTitle')}
                   tabIndex={-1}
-                  className="apple-card-grad apple-sheet-panel relative m-2.5 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
+                  className="tariff-picker-dialog apple-card-grad apple-sheet-panel relative m-2.5 w-full max-w-md rounded-[32px] bg-black"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setShowTariffListModal(false)}
-                    aria-label={t('common.close', 'Закрыть')}
-                    className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:text-white"
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
+                  <div className="tariff-picker-header">
+                    <h2 className="min-w-0 text-[22px] font-semibold leading-tight text-white">
+                      {t('subscription.purchaseTitle', 'Покупка подписки')}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setShowTariffListModal(false)}
+                      aria-label={t('common.close', 'Закрыть')}
+                      className="tariff-picker-close flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97315]"
                     >
-                      <path d="M6 6l12 12M18 6 6 18" />
-                    </svg>
-                  </button>
-                  <div className="px-7 pb-2 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
-                    {t('subscription.purchaseTitle', 'Покупка подписки')}
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      >
+                        <path d="M6 6l12 12M18 6 6 18" />
+                      </svg>
+                    </button>
                   </div>
-                  <div className="px-7 pb-7 pt-2">{tariffListBody}</div>
+                  <div className="tariff-picker-body">{tariffListBody}</div>
                 </div>
               </div>,
               document.body,
