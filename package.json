@@ -18,7 +18,7 @@
     "test:ws": "node --experimental-strip-types --test test/cabinet-websocket.test.mjs",
     "test:auth": "node --test test/auth-session.test.cjs",
     "test:media": "node --experimental-strip-types --test test/ticket-media.test.mjs",
-    "test": "npm run test:auth && npm run test:ws && npm run test:media && npm run test:payments && npm run test:connection && npm run test:aurora && npm run test:startup && npm run test:trial && npm run test:login && npm run test:admin",
+    "test": "npm run test:auth && npm run test:ws && npm run test:media && npm run test:payments && npm run test:connection && npm run test:aurora && npm run test:startup && npm run test:trial && npm run test:login && npm run test:admin && npm run test:scroll",
     "test:payments": "node --experimental-strip-types --test test/payment-flow.test.mjs",
     "test:connection": "node --experimental-strip-types --test test/connection-link.test.mjs",
     "test:aurora": "node --test test/aurora-background.test.cjs",
@@ -27,6 +27,7 @@
     "test:dependencies": "node scripts/dependency-smoke.mjs",
     "test:nginx": "node --test test/nginx-runtime.test.mjs",
     "check:bundle": "node scripts/check-bundle-budget.mjs",
+    "test:scroll": "node --test test/scroll-restoration.test.cjs",
     "test:login": "node --test test/login-view.test.cjs",
     "test:trial": "node --test test/trial-balance.test.cjs"
   },

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { adminSettingsApi, SettingDefinition } from '../api/adminSettings';
 import { themeColorsApi } from '../api/themeColors';
 import { useFavoriteSettings } from '../hooks/useFavoriteSettings';
+import { getPageScrollTarget } from '../utils/pageScroll';
 import { SETTINGS_TREE, findTreeLocation, formatSettingKey } from '../components/admin';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { AnalyticsTab } from '../components/admin/AnalyticsTab';
@@ -60,7 +61,7 @@ export default function AdminSettings() {
 
   // Scroll to top on section change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    getPageScrollTarget().scrollTo({ top: 0, behavior: 'instant' });
   }, [activeSection]);
 
   // Queries

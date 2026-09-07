@@ -1931,9 +1931,14 @@ input[type='checkbox']:hover:not(:checked) {
     padding-top: 16px;
   }
   .app-content {
+    position: relative;
     margin: 10px 10px 10px var(--desktop-sidebar-width);
-    min-height: calc(100dvh - 20px);
+    height: calc(100dvh - 20px);
     border-radius: 24px;
+    /* Scroll and clip the page inside the stationary rounded frame. */
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
   /* Behind the background portal (-2), so stars remain visible inside the frame. */
   .app-content::before {

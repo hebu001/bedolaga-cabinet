@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
+import { getPageScrollTarget } from '@/utils/pageScroll';
 
 /**
  * Saves and restores scroll position for admin pages.
@@ -16,25 +17,36 @@ export function useScrollRestoration() {
     }
   }, []);
 
-  // Save/restore scroll for admin pages
+  // Desktop pages scroll inside the frame; mobile pages still scroll the window.
   useEffect(() => {
     const currentPath = location.pathname;
 
-    if (!currentPath.startsWith('/admin')) return;
-
+    const isAdmin = currentPath.startsWith('/admin');
+    const media = window.matchMedia('(min-width: 1024px)');
+    let target = getPageScrollTarget();
     const handleScroll = () => {
-      scrollPositions.current[currentPath] = window.scrollY;
+      if (isAdmin) {
+        scrollPositions.current[currentPath] =
+          target === window ? window.scrollY : (target as HTMLElement).scrollTop;
+      }
     };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    const savedPosition = scrollPositions.current[currentPath];
-    if (savedPosition !== undefined && savedPosition > 0) {
-      window.scrollTo({ top: savedPosition, behavior: 'instant' });
+    const handleViewportChange = () => {
+      target.removeEventListener('scroll', handleScroll);
+      target = getPageScrollTarget();
+      target.addEventListener('scroll', handleScroll, { passive: true });
+    };
+    target.addEventListener('scroll', handleScroll, { passive: true });
+    media.addEventListener('change', handleViewportChange);
+    if (isAdmin || target !== window) {
+      target.scrollTo({
+        top: isAdmin ? (scrollPositions.current[currentPath] ?? 0) : 0,
+        behavior: 'instant',
+      });
     }
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      target.removeEventListener('scroll', handleScroll);
+      media.removeEventListener('change', handleViewportChange);
     };
   }, [location.pathname]);
 }
