@@ -21,6 +21,28 @@ const deferred = () => {
 };
 const jwt = (user = 'A', expires = 3600) =>
   `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: user, exp: Math.floor(Date.now() / 1000) + expires })).toString('base64url')}.signature`;
+function deviceClock(skewMs = 0) {
+  const start = Math.floor(Date.now() / 1000) * 1000;
+  let elapsed = 0;
+  let offset = skewMs;
+  return {
+    Date: class extends Date {
+      static now() {
+        return start + elapsed + offset;
+      }
+    },
+    performance: { now: () => elapsed },
+    date: () => new Date(start + elapsed).toUTCString(),
+    token: (user = 'A', ttl = 900) =>
+      `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify({ sub: user, exp: start / 1000 + elapsed / 1000 + ttl })).toString('base64url')}.signature`,
+    advance: (ms) => {
+      elapsed += ms;
+    },
+    shiftWallClock: (ms) => {
+      offset += ms;
+    },
+  };
+}
 function storage() {
   const data = new Map();
   return {
@@ -61,7 +83,7 @@ function tab(options = {}) {
       data: value?.data ?? {},
       status,
       statusText: String(status),
-      headers: {},
+      headers: value?.headers ?? { date: new Date().toUTCString() },
       config,
     };
     if (status >= 400)
@@ -136,7 +158,8 @@ function tab(options = {}) {
         URL,
         URLSearchParams,
         atob,
-        Date,
+        Date: options.Date || Date,
+        performance: options.performance || performance,
         crypto: options.crypto || webcrypto,
         AbortController,
         FormData,
@@ -403,16 +426,20 @@ test('valid and expired-token initialization load the current user/admin and ret
   for (const expired of [false, true]) {
     const local = storage(),
       session = storage();
+    const initialAccess = jwt('A', expired ? -1 : 3600);
     local.setItem('refresh_token', 'legacy-R');
-    session.setItem('access_token', jwt('A', expired ? -1 : 3600));
+    session.setItem('access_token', initialAccess);
     const r = tab({
       shared: local,
       session,
       locks: lockManager(),
-      http: (q) =>
-        q.url.endsWith('/refresh')
-          ? { data: { access_token: jwt('A'), refresh_token: 'rotated-R' } }
-          : basic(q),
+      http: (q) => {
+        if (q.url.endsWith('/refresh'))
+          return { data: { access_token: jwt('A'), refresh_token: 'rotated-R' } };
+        if (expired && q.config.headers.Authorization === `Bearer ${initialAccess}`)
+          return { status: 401 };
+        return basic(q);
+      },
     });
     await r.auth().getState().initialize();
     assert.equal(r.auth().getState().isAuthenticated, true);
@@ -531,6 +558,7 @@ for (const failure of [
       locks: lockManager(),
       http: (q) => (q.url.endsWith('/refresh') ? failure : basic(q)),
     });
+    await r.api().get('/cabinet/auth/me'); // Establish server time before proactive expiry.
     r.tokenStorage.setAccessToken(jwt('A', -1));
     const owner = r.getSessionGeneration(),
       cache = r.getSessionQueryClient();
@@ -897,4 +925,160 @@ test('sessionStorage denial does not disable working shared storage or delete th
   const b = tab({ shared });
   assert.equal(a.tokenStorage.getRefreshToken(), 'R1');
   assert.equal(b.tokenStorage.getRefreshToken(), 'R1');
+});
+
+for (const skewHours of [-24, -1, 1, 24]) {
+  for (const dateHeader of [true, false]) {
+    test(`login and subscription work with clock ${skewHours}h, server Date ${dateHeader}`, async () => {
+      const clock = deviceClock(skewHours * 3600_000);
+      const access = clock.token();
+      const r = tab({
+        ...clock,
+        http: (q) => {
+          const headers = dateHeader ? { date: clock.date() } : {};
+          if (q.url === '/cabinet/auth/telegram')
+            return {
+              headers,
+              data: { access_token: access, refresh_token: 'R0', user: { id: 'A' } },
+            };
+          if (q.url === '/cabinet/subscription') {
+            assert.equal(q.config.headers.Authorization, `Bearer ${access}`);
+            return { headers, data: { has_subscription: true } };
+          }
+          assert.ok(!q.url.endsWith('/refresh'), 'fresh login must not rotate repeatedly');
+          return { ...basic(q), headers };
+        },
+      });
+      await r.auth().getState().loginWithTelegram('test-init');
+      for (let i = 0; i < 3; i++)
+        assert.equal((await r.api().get('/cabinet/subscription')).data.has_subscription, true);
+      assert.equal(r.auth().getState().isAuthenticated, true);
+      assert.equal(r.requests.filter((q) => q.url.endsWith('/refresh')).length, 0);
+    });
+  }
+}
+
+test('changing phone time during a session does not change expiry; elapsed time still refreshes once', async () => {
+  const clock = deviceClock();
+  let live = clock.token();
+  const r = tab({
+    ...clock,
+    http: (q) => {
+      if (q.url.endsWith('/refresh')) {
+        live = clock.token();
+        return {
+          headers: { date: clock.date() },
+          data: { access_token: live, refresh_token: 'R1' },
+        };
+      }
+      assert.equal(q.config.headers.Authorization, `Bearer ${live}`);
+      return { headers: { date: clock.date() }, data: { has_subscription: true } };
+    },
+  });
+  r.tokenStorage.setTokens(live, 'R0');
+  await r.api().get('/cabinet/subscription');
+  for (const shift of [3600_000, 24 * 3600_000, -48 * 3600_000]) {
+    clock.shiftWallClock(shift);
+    assert.equal(r.isTokenExpired(live), false);
+    await r.api().get('/cabinet/subscription');
+  }
+  assert.equal(r.requests.filter((q) => q.url.endsWith('/refresh')).length, 0);
+  clock.advance(870_000); // 15-minute access token, with the existing 30-second buffer.
+  assert.equal(r.isTokenExpired(live), true);
+  await r.api().get('/cabinet/subscription');
+  assert.equal(r.requests.filter((q) => q.url.endsWith('/refresh')).length, 1);
+  assert.equal(r.isTokenExpired(live), false);
+  assert.equal(r.tokenStorage.getRefreshToken(), 'R1');
+});
+
+for (const dateHeader of [true, false]) {
+  test(`reload with unknown server time recovers an expired token once, Date ${dateHeader}`, async () => {
+    const clock = deviceClock(-3600_000);
+    const shared = storage(),
+      session = storage();
+    const expired = clock.token('A', -60),
+      fresh = clock.token();
+    shared.setItem('refresh_token', 'R0');
+    session.setItem('access_token', expired);
+    const r = tab({
+      ...clock,
+      shared,
+      session,
+      http: (q) => {
+        const headers = dateHeader ? { date: clock.date() } : {};
+        if (q.url.endsWith('/refresh'))
+          return { headers, data: { access_token: fresh, refresh_token: 'R1' } };
+        if (q.config.headers.Authorization === `Bearer ${expired}`) return { status: 401, headers };
+        assert.equal(q.config.headers.Authorization, `Bearer ${fresh}`);
+        return { ...basic(q), headers };
+      },
+    });
+    await r.auth().getState().initialize();
+    assert.equal(r.auth().getState().isAuthenticated, true);
+    assert.equal(r.tokenStorage.getRefreshToken(), 'R1');
+    assert.equal(r.requests.filter((q) => q.url.endsWith('/refresh')).length, 1);
+    assert.equal(r.requests.filter((q) => q.url.endsWith('/me')).length, 2);
+  });
+}
+
+test('unknown server time and repeated 401 cannot create an infinite refresh/replay loop', async () => {
+  const clock = deviceClock(3600_000);
+  const r = tab({
+    ...clock,
+    http: (q) =>
+      q.url.endsWith('/refresh')
+        ? { headers: {}, data: { access_token: clock.token(), refresh_token: 'R1' } }
+        : { headers: {}, status: 401 },
+  });
+  r.tokenStorage.setTokens(clock.token('A', -60), 'R0');
+  await assert.rejects(r.api().get('/cabinet/subscription'));
+  assert.equal(r.requests.filter((q) => q.url.endsWith('/refresh')).length, 1);
+  assert.equal(r.requests.filter((q) => q.url === '/cabinet/subscription').length, 2);
+});
+
+test('the standalone refresh response establishes server time before any API response', async () => {
+  const clock = deviceClock(3600_000);
+  const fresh = clock.token();
+  const r = tab({
+    ...clock,
+    http: () => ({
+      headers: { date: clock.date() },
+      data: { access_token: fresh, refresh_token: 'R1' },
+    }),
+  });
+  r.tokenStorage.setTokens(clock.token('A', -60), 'R0');
+  assert.equal(await r.tokenRefreshManager.refreshAccessToken(), fresh);
+  assert.equal(r.isTokenExpired(fresh), false);
+  clock.shiftWallClock(-24 * 3600_000);
+  clock.advance(870_000);
+  assert.equal(r.isTokenExpired(fresh), true);
+});
+
+test('missing/invalid Date and an older response never rewind the server clock', async () => {
+  const clock = deviceClock(3600_000);
+  const r = tab(clock);
+  const authClock = r.load('src/utils/authClock.ts');
+  assert.equal(authClock.authNowMs(), null);
+  for (const invalid of [undefined, null, 123, '', 'invalid'])
+    authClock.observeAuthServerTime(invalid);
+  assert.equal(authClock.authNowMs(), null);
+  authClock.observeAuthServerTime(clock.date());
+  const original = authClock.authNowMs();
+  clock.advance(60_000);
+  authClock.observeAuthServerTime(new Date(original - 3600_000).toUTCString());
+  authClock.observeAuthServerTime('invalid');
+  assert.equal(authClock.authNowMs(), original + 60_000);
+});
+
+test('malformed access tokens are rejected even before server time is known', () => {
+  const r = tab(deviceClock(3600_000));
+  for (const token of [
+    null,
+    '',
+    'invalid',
+    ...[{}, { exp: '123' }, { exp: 0 }, { exp: null }].map(
+      (payload) => `header.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.signature`,
+    ),
+  ])
+    assert.equal(r.isTokenExpired(token), true);
 });

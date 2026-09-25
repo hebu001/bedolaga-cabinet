@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
 import { retrieveRawInitData } from '@telegram-apps/sdk-react';
 import { tokenStorage, isTokenExpired, tokenRefreshManager } from '../utils/token';
+import { observeAuthServerTime } from '../utils/authClock';
 import {
   assertCurrentSession,
   getSessionGeneration,
@@ -243,6 +244,7 @@ export function isAccountDeletedError(
 apiClient.interceptors.response.use(
   async (response) => {
     const config = response.config as SessionRequestConfig;
+    observeAuthServerTime(response.headers?.date);
     config._disposeSessionSignal?.();
     if (config._sessionOwner !== undefined && !isCurrentSession(config._sessionOwner)) {
       // Auth requests are not aborted: returned orphan credentials must be revoked.
@@ -255,6 +257,7 @@ apiClient.interceptors.response.use(
     };
   },
   async (error: AxiosError) => {
+    observeAuthServerTime(error.response?.headers?.date);
     const originalRequest = error.config as SessionRequestConfig | undefined;
     originalRequest?._disposeSessionSignal?.();
     if (!originalRequest || originalRequest._sessionOwner === undefined)

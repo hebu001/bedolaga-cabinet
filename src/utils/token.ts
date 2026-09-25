@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { authNowMs, observeAuthServerTime } from './authClock';
 import {
   advanceSession,
   assertCurrentSession,
@@ -167,10 +168,13 @@ export function isTokenExpired(token: string | null, bufferSeconds = 30): boolea
   if (!token) return true;
 
   const payload = decodeJWT(token);
-  if (!payload?.exp) return true;
+  if (typeof payload?.exp !== 'number' || !Number.isFinite(payload.exp) || payload.exp <= 0)
+    return true;
 
-  const now = Math.floor(Date.now() / 1000);
-  return payload.exp <= now + bufferSeconds;
+  const now = authNowMs();
+  // Before the first server response, let the backend validate the token.
+  // A 401 still triggers bounded refresh/replay; never guess from device time.
+  return now !== null && payload.exp <= now / 1000 + bufferSeconds;
 }
 
 export function isTokenValid(token: string | null): boolean {
@@ -348,6 +352,7 @@ class TokenRefreshManager {
           },
         );
         const access = response.data.access_token;
+        observeAuthServerTime(response.headers?.date);
         const refresh = response.data.refresh_token || source;
         if (!isCurrentSession(owner)) {
           await this.discardResponse(refresh);
