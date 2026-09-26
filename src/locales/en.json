@@ -1282,6 +1282,7 @@
       "subscriptionExpiryDesc": "Notify about expiring subscription",
       "daysBeforeExpiry": "Days before expiry",
       "trafficWarning": "Traffic Warning",
+      "trafficThresholds": "Once at 80%, 90%, and when the limit is reached. Alerts reset with the traffic cycle.",
       "trafficWarningDesc": "Notify when approaching traffic limit",
       "atPercent": "At usage",
       "balanceLow": "Low Balance",

@@ -1451,24 +1451,9 @@ export default function Profile() {
                 />
               </div>
               {notificationSettings.traffic_warning_enabled && (
-                <div className="flex items-center gap-3 pl-1">
-                  <span className="text-sm text-apple-mute">
-                    {t('profile.notifications.atPercent')}
-                  </span>
-                  <select
-                    value={notificationSettings.traffic_warning_percent}
-                    onChange={(e) =>
-                      handleNotificationValue('traffic_warning_percent', Number(e.target.value))
-                    }
-                    className="rounded-lg bg-apple-elevated px-2 py-1 text-sm text-apple-ink outline-none"
-                  >
-                    {[50, 70, 80, 90, 95].map((p) => (
-                      <option key={p} value={p}>
-                        {p}%
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <p className="pl-1 text-sm text-apple-mute">
+                  {t('profile.notifications.trafficThresholds')}
+                </p>
               )}
             </div>
 

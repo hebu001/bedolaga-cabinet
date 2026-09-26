@@ -1238,6 +1238,7 @@
       "subscriptionExpiryDesc": "订阅即将到期时通知",
       "daysBeforeExpiry": "到期前天数",
       "trafficWarning": "流量警告",
+      "trafficThresholds": "在达到 80%、90% 和流量上限时各通知一次。流量重置后重新开始。",
       "trafficWarningDesc": "接近流量限制时通知",
       "atPercent": "使用率",
       "balanceLow": "余额不足",

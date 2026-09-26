@@ -1238,6 +1238,7 @@
       "subscriptionExpiryDesc": "اعلان قبل از انقضای اشتراک",
       "daysBeforeExpiry": "روز قبل از انقضا",
       "trafficWarning": "هشدار ترافیک",
+      "trafficThresholds": "یک بار در ۸۰٪، ۹۰٪ و هنگام رسیدن به سقف مصرف. با بازنشانی ترافیک، چرخه اعلان‌ها از نو آغاز می‌شود.",
       "trafficWarningDesc": "اعلان نزدیک شدن به محدودیت ترافیک",
       "atPercent": "در درصد",
       "balanceLow": "موجودی کم",
