@@ -1,3 +1,9 @@
+import { integrationCapabilities } from '../config/integrationCapabilities';
+import {
+  readPanelIdentity,
+  type PanelIdentity,
+  type PanelIdentitySource,
+} from './adminPanelIdentity';
 import apiClient from './client';
 
 export interface TrafficPurchaseInfo {
@@ -21,8 +27,12 @@ export interface UserSubscriptionInfo {
   tariff_id: number | null;
   tariff_name: string | null;
   autopay_enabled: boolean;
+  sbp_recurring_status: string | null;
+  sbp_recurring_id: number | null;
   is_active: boolean;
   days_remaining: number;
+  /** Открыт временный доступ (грейс) до этого числа; null — обычная подписка. */
+  grace_until?: string | null;
   purchased_traffic_gb: number;
   traffic_purchases: TrafficPurchaseInfo[];
 }
@@ -44,6 +54,8 @@ export interface UserListItemSubscription {
   traffic_used_gb: number;
   traffic_limit_gb: number;
   device_limit: number;
+  /** Открыт временный доступ (грейс) до этого числа; null — обычная подписка. */
+  grace_until?: string | null;
 }
 
 export interface UserListItem {
@@ -58,6 +70,12 @@ export interface UserListItem {
   balance_rubles: number;
   created_at: string;
   last_activity: string | null;
+  /** Подключён к VPN прямо сейчас (по панели); null/нет поля — панель не ответила или бот старый. */
+  is_online?: boolean | null;
+  /** Отметка последнего подключения из панели: по ней строка сама гасит точку «в сети». */
+  online_at?: string | null;
+  /** Открыт временный доступ (грейс) до этого числа — подписка истекла, а VPN ещё работает. */
+  grace_until?: string | null;
   has_subscription: boolean;
   subscription_status: string | null;
   subscription_is_trial: boolean;
@@ -140,7 +158,12 @@ export interface UserDetailResponse {
   promo_offer_discount_source: string | null;
   promo_offer_discount_expires_at: string | null;
   recent_transactions: UserTransactionItem[];
-  remnawave_uuid: string | null;
+  remnawave_id?: number | null;
+  remnawave_uuid?: string | null;
+  panel_identity?: PanelIdentity | null;
+  /** Режим продаж бота; старый бот не присылает — см. `salesModeOf`. */
+  sales_mode?: 'classic' | 'tariffs';
+  multi_tariff_enabled?: boolean;
 }
 
 export interface UserPanelInfo {
@@ -161,7 +184,8 @@ export interface UserPanelInfo {
 
 export interface SubscriptionRequestRecord {
   id: number;
-  userUuid: string;
+  // Remnawave 2.8.0 renamed this panel field userUuid (uuid) -> userId (number).
+  userId: number;
   requestAt: string;
   requestIp: string | null;
   userAgent: string | null;
@@ -170,6 +194,23 @@ export interface SubscriptionRequestRecord {
 export interface SubscriptionRequestHistory {
   total: number;
   records: SubscriptionRequestRecord[];
+}
+
+export interface UserActivityItem {
+  type: string;
+  subtype: string | null;
+  source: string | null;
+  title: string | null;
+  amount_kopeks: number | null;
+  timestamp: string;
+  meta: Record<string, unknown> | null;
+}
+
+export interface UserActivityResponse {
+  items: UserActivityItem[];
+  total: number;
+  offset: number;
+  limit: number;
 }
 
 export interface UserNodeUsageItem {
@@ -251,7 +292,9 @@ export interface UserAvailableTariffsResponse {
 
 // Sync types
 export interface PanelUserInfo {
-  uuid: string | null;
+  id?: number | null;
+  uuid?: string | null;
+  panel_identity?: PanelIdentity | null;
   short_uuid: string | null;
   username: string | null;
   status: string | null;
@@ -275,7 +318,9 @@ export interface SyncToPanelResponse {
   success: boolean;
   message: string;
   action: string;
-  panel_uuid: string | null;
+  panel_user_id?: number | null;
+  panel_uuid?: string | null;
+  panel_identity?: PanelIdentity | null;
   changes: Record<string, unknown>;
   errors: string[];
 }
@@ -283,7 +328,9 @@ export interface SyncToPanelResponse {
 export interface PanelSyncStatusResponse {
   user_id: number;
   telegram_id: number;
-  remnawave_uuid: string | null;
+  remnawave_id?: number | null;
+  remnawave_uuid?: string | null;
+  panel_identity?: PanelIdentity | null;
   subscription_id: number | null;
   subscription_tariff_name: string | null;
   last_sync: string | null;
@@ -300,6 +347,9 @@ export interface PanelSyncStatusResponse {
   panel_traffic_used_gb: number;
   panel_device_limit: number;
   panel_squads: string[];
+  /** Открыт временный доступ (грейс): панель намеренно держит его настройки. */
+  grace_open?: boolean;
+  grace_until?: string | null;
   has_differences: boolean;
   differences: string[];
 }
@@ -416,28 +466,58 @@ export interface AdminUserGiftsResponse {
   received_total: number;
 }
 
+export interface UsersListParams {
+  offset?: number;
+  limit?: number;
+  search?: string;
+  email?: string;
+  status?: 'active' | 'blocked' | 'deleted';
+  subscription_status?: string;
+  tariff_id?: string;
+  promo_group_id?: number;
+  campaign_id?: number;
+  partner_id?: number;
+  /** Подписка со статусом active истекает в ближайшие N дней (сегмент «истекают»). */
+  expires_within_days?: number;
+  /** Была активность в боте или кабинете за последние N минут. */
+  active_within_minutes?: number;
+  /** Только подключённые к VPN прямо сейчас — по панели (сегмент «онлайн»). */
+  online?: boolean;
+  /** Есть запрет пополнения или покупки. */
+  has_restrictions?: boolean;
+  /** false — ни одной подписки. */
+  has_subscription?: boolean;
+  /** Живая подписка израсходовала от N % лимита (сегмент «трафик на исходе»). */
+  traffic_used_percent_min?: number;
+  /** 0 — ни одной покупки (сегмент «без покупок»). */
+  purchase_count?: number;
+  /** Только с открытым временным доступом (сегмент «в грейсе»). */
+  in_grace?: boolean;
+  sort_by?:
+    | 'created_at'
+    | 'balance'
+    | 'traffic'
+    | 'last_activity'
+    | 'total_spent'
+    | 'purchase_count'
+    | 'subscription_end_date'
+    | 'grace_until';
+  /** Не задано — привычное направление ключа (истечение и грейс с ближайших, остальное с больших). */
+  sort_order?: 'asc' | 'desc';
+}
+
+function withPanelIdentity<T extends object>(
+  data: T,
+  source: PanelIdentitySource,
+): T & { panel_identity: PanelIdentity | null } {
+  const mode = integrationCapabilities.numericPanelIdentity ? 'numeric' : 'uuid';
+  return { ...data, panel_identity: readPanelIdentity(data, mode, source) };
+}
+
 export const adminUsersApi = {
   // List users
   getUsers: async (
-    params: {
-      offset?: number;
-      limit?: number;
-      search?: string;
-      email?: string;
-      status?: 'active' | 'blocked' | 'deleted';
-      subscription_status?: string;
-      tariff_id?: string;
-      promo_group_id?: number;
-      campaign_id?: number;
-      partner_id?: number;
-      sort_by?:
-        | 'created_at'
-        | 'balance'
-        | 'traffic'
-        | 'last_activity'
-        | 'total_spent'
-        | 'purchase_count';
-    } = {},
+    params: UsersListParams = {},
     signal?: AbortSignal,
   ): Promise<UsersListResponse> => {
     const response = await apiClient.get('/cabinet/admin/users', { params, signal });
@@ -453,13 +533,13 @@ export const adminUsersApi = {
   // Get user detail
   getUser: async (userId: number): Promise<UserDetailResponse> => {
     const response = await apiClient.get(`/cabinet/admin/users/${userId}`);
-    return response.data;
+    return withPanelIdentity(response.data, 'user');
   },
 
   // Get user by telegram ID
   getUserByTelegram: async (telegramId: number): Promise<UserDetailResponse> => {
     const response = await apiClient.get(`/cabinet/admin/users/by-telegram/${telegramId}`);
-    return response.data;
+    return withPanelIdentity(response.data, 'user');
   },
 
   // Get available tariffs for user
@@ -491,6 +571,27 @@ export const adminUsersApi = {
     return response.data;
   },
 
+  // Cancel a user's SBP (Platega) recurring auto-payment
+  cancelSbpRecurring: async (userId: number, subId: number): Promise<{ status: string }> => {
+    const response = await apiClient.post(
+      `/cabinet/admin/users/${userId}/subscriptions/${subId}/cancel-sbp-recurring`,
+    );
+    return response.data;
+  },
+
+  // Delete one of the user's subscriptions (multi-tariff: trials pile up)
+  deleteSubscription: async (
+    userId: number,
+    subId: number,
+    force = false,
+  ): Promise<{ status: string }> => {
+    const response = await apiClient.delete(
+      `/cabinet/admin/users/${userId}/subscriptions/${subId}`,
+      { params: force ? { force: true } : undefined },
+    );
+    return response.data;
+  },
+
   // Update status
   updateStatus: async (
     userId: number,
@@ -515,6 +616,15 @@ export const adminUsersApi = {
   // Unblock user
   unblockUser: async (userId: number): Promise<UpdateUserStatusResponse> => {
     const response = await apiClient.post(`/cabinet/admin/users/${userId}/unblock`);
+    return response.data;
+  },
+
+  // Send direct Telegram message to user via bot (parity with bot's admin action)
+  sendMessage: async (
+    userId: number,
+    text: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post(`/cabinet/admin/users/${userId}/send-message`, { text });
     return response.data;
   },
 
@@ -636,7 +746,7 @@ export const adminUsersApi = {
   ): Promise<PanelSyncStatusResponse> => {
     const params = subscriptionId != null ? { subscription_id: subscriptionId } : undefined;
     const response = await apiClient.get(`/cabinet/admin/users/${userId}/sync/status`, { params });
-    return response.data;
+    return withPanelIdentity(response.data, 'user');
   },
 
   // Sync from panel
@@ -649,7 +759,12 @@ export const adminUsersApi = {
     const response = await apiClient.post(`/cabinet/admin/users/${userId}/sync/from-panel`, data, {
       params,
     });
-    return response.data;
+    return {
+      ...response.data,
+      panel_user: response.data.panel_user
+        ? withPanelIdentity(response.data.panel_user, 'panelUser')
+        : null,
+    };
   },
 
   // Sync to panel
@@ -662,7 +777,7 @@ export const adminUsersApi = {
     const response = await apiClient.post(`/cabinet/admin/users/${userId}/sync/to-panel`, data, {
       params,
     });
-    return response.data;
+    return withPanelIdentity(response.data, 'syncToPanel');
   },
 
   // Reset trial
@@ -699,7 +814,20 @@ export const adminUsersApi = {
     return response.data;
   },
 
-  // Get subscription request history from RemnaWave panel
+  // Unified activity timeline (bot + cabinet actions)
+  getUserActivity: async (
+    userId: number,
+    offset = 0,
+    limit = 25,
+    types?: string,
+  ): Promise<UserActivityResponse> => {
+    const params: Record<string, unknown> = { offset, limit };
+    if (types) params.types = types;
+    const response = await apiClient.get(`/cabinet/admin/users/${userId}/activity`, { params });
+    return response.data;
+  },
+
+  // Get subscription request history from Remnawave panel
   getSubscriptionRequestHistory: async (
     userId: number,
     subscriptionId?: number,

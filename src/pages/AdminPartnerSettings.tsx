@@ -1,27 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { partnerApi } from '../api/partners';
-import { AdminBackButton } from '../components/admin';
+import { AdminBackButton, backTo } from '../components/admin';
 import { toNumber } from '../utils/inputHelpers';
+import { SettingsIcon } from '@/components/icons';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { EnvLockedBadge } from '@/components/admin/EnvLockedBadge';
 
 type NumberOrEmpty = number | '';
-
-const SettingsIcon = () => (
-  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
-    />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
 
 export default function AdminPartnerSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   const {
@@ -32,6 +25,8 @@ export default function AdminPartnerSettings() {
     queryKey: ['partner-settings'],
     queryFn: partnerApi.getPartnerSettings,
   });
+  // Поля, закреплённые в .env: сервер их не применит — переключатель отключаем и помечаем.
+  const envLocked = new Set(settings?.env_locked ?? []);
 
   const [formData, setFormData] = useState<{
     referral_program_enabled: boolean;
@@ -82,7 +77,7 @@ export default function AdminPartnerSettings() {
     formData.withdrawal_cooldown_days <= 365;
   const isValid = !formData.withdrawal_enabled || (isMinAmountValid && isCooldownValid);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!isValid) return;
     updateMutation.mutate({
@@ -94,9 +89,9 @@ export default function AdminPartnerSettings() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={2} titleWidth="w-56" className="space-y-6">
+        <Skeleton variant="card" className="h-96" />
+      </PageSkeleton>
     );
   }
 
@@ -126,13 +121,29 @@ export default function AdminPartnerSettings() {
       <div className="mb-6 flex items-center gap-3">
         <AdminBackButton to="/admin/partners" />
         <div className="rounded-xl bg-[#F97315]/15 p-2 text-[#F97315]">
-          <SettingsIcon />
+          <SettingsIcon className="h-6 w-6" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-apple-ink">{t('admin.partners.settings')}</h1>
           <p className="text-sm text-apple-mute">{t('admin.partners.settingsSubtitle')}</p>
         </div>
       </div>
+
+      {/* Уровни наград живут в своей таблице, а не в настройках выше: их
+          настройка — отдельный экран с собственной моделью данных. */}
+      <button
+        type="button"
+        onClick={() => navigate('/admin/partners/referral-levels', backTo(location))}
+        className="card mb-6 flex w-full items-center justify-between text-left transition-colors hover:border-[#F97315]/40"
+      >
+        <div>
+          <div className="font-medium text-apple-ink">{t('admin.referralLevels.title')}</div>
+          <div className="text-sm text-apple-faint">{t('admin.referralLevels.subtitle')}</div>
+        </div>
+        <span aria-hidden="true" className="text-apple-faint">
+          →
+        </span>
+      </button>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Referral Program Section */}
@@ -147,6 +158,7 @@ export default function AdminPartnerSettings() {
               <input
                 type="checkbox"
                 checked={formData.referral_program_enabled}
+                disabled={envLocked.has('referral_program_enabled')}
                 onChange={(e) =>
                   setFormData({ ...formData, referral_program_enabled: e.target.checked })
                 }
@@ -155,6 +167,7 @@ export default function AdminPartnerSettings() {
               <div>
                 <div className="font-medium text-apple-ink">
                   {t('admin.partners.settingsFields.programEnabled')}
+                  {envLocked.has('referral_program_enabled') && <EnvLockedBadge />}
                 </div>
                 <div className="text-sm text-apple-faint">
                   {t('admin.partners.settingsFields.programEnabledDesc')}
@@ -169,6 +182,7 @@ export default function AdminPartnerSettings() {
               <input
                 type="checkbox"
                 checked={formData.partner_section_visible}
+                disabled={envLocked.has('partner_section_visible')}
                 onChange={(e) =>
                   setFormData({ ...formData, partner_section_visible: e.target.checked })
                 }
@@ -177,6 +191,7 @@ export default function AdminPartnerSettings() {
               <div>
                 <div className="font-medium text-apple-ink">
                   {t('admin.partners.settingsFields.partnerVisible')}
+                  {envLocked.has('partner_section_visible') && <EnvLockedBadge />}
                 </div>
                 <div className="text-sm text-apple-faint">
                   {t('admin.partners.settingsFields.partnerVisibleDesc')}
@@ -198,12 +213,14 @@ export default function AdminPartnerSettings() {
               <input
                 type="checkbox"
                 checked={formData.withdrawal_enabled}
+                disabled={envLocked.has('withdrawal_enabled')}
                 onChange={(e) => setFormData({ ...formData, withdrawal_enabled: e.target.checked })}
                 className="h-5 w-5 rounded bg-apple-elevated text-[#F97315] focus:ring-2 focus:ring-[#F97315]/50 focus:ring-offset-0"
               />
               <div>
                 <div className="font-medium text-apple-ink">
                   {t('admin.partners.settingsFields.withdrawalEnabled')}
+                  {envLocked.has('withdrawal_enabled') && <EnvLockedBadge />}
                 </div>
                 <div className="text-sm text-apple-faint">
                   {t('admin.partners.settingsFields.withdrawalEnabledDesc')}
@@ -216,6 +233,7 @@ export default function AdminPartnerSettings() {
           <div className="mb-4">
             <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.partners.settingsFields.minAmount')}
+              {envLocked.has('withdrawal_min_amount_kopeks') && <EnvLockedBadge />}
             </label>
             <input
               type="number"
@@ -230,7 +248,9 @@ export default function AdminPartnerSettings() {
                 if (!isNaN(num)) setFormData({ ...formData, withdrawal_min_amount_kopeks: num });
               }}
               className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
-              disabled={!formData.withdrawal_enabled}
+              disabled={
+                !formData.withdrawal_enabled || envLocked.has('withdrawal_min_amount_kopeks')
+              }
             />
             <p className="mt-1 text-xs text-apple-faint">
               {t('admin.partners.settingsFields.minAmountDesc')}
@@ -241,6 +261,7 @@ export default function AdminPartnerSettings() {
           <div className="mb-4">
             <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.partners.settingsFields.cooldownDays')}
+              {envLocked.has('withdrawal_cooldown_days') && <EnvLockedBadge />}
             </label>
             <input
               type="number"
@@ -254,7 +275,7 @@ export default function AdminPartnerSettings() {
                 if (!isNaN(num)) setFormData({ ...formData, withdrawal_cooldown_days: num });
               }}
               className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
-              disabled={!formData.withdrawal_enabled}
+              disabled={!formData.withdrawal_enabled || envLocked.has('withdrawal_cooldown_days')}
             />
             <p className="mt-1 text-xs text-apple-faint">
               {t('admin.partners.settingsFields.cooldownDaysDesc')}
@@ -265,6 +286,7 @@ export default function AdminPartnerSettings() {
           <div>
             <label className="mb-2 block text-[13px] font-medium text-apple-mute">
               {t('admin.partners.settingsFields.requisitesText')}
+              {envLocked.has('withdrawal_requisites_text') && <EnvLockedBadge />}
             </label>
             <textarea
               value={formData.withdrawal_requisites_text}
@@ -273,7 +295,7 @@ export default function AdminPartnerSettings() {
               }
               className="min-h-[80px] w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50 disabled:opacity-50"
               maxLength={2000}
-              disabled={!formData.withdrawal_enabled}
+              disabled={!formData.withdrawal_enabled || envLocked.has('withdrawal_requisites_text')}
               placeholder={t('admin.partners.settingsFields.requisitesTextPlaceholder')}
             />
             <p className="mt-1 text-xs text-apple-faint">

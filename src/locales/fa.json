@@ -23,8 +23,9 @@
     "copy": "کپی",
     "units": {
       "gb": "GB",
-      "perGb": "/GB",
-      "days": "روز"
+      "days": "روز",
+      "tb": "TB",
+      "mb": "MB"
     },
     "add": "افزودن",
     "refresh": "بازخوانی",
@@ -40,7 +41,30 @@
     "copied": "کپی شد",
     "no_results": "نتیجه‌ای یافت نشد",
     "balance": "موجودی",
-    "processing": "در حال پردازش…"
+    "processing": "در حال پردازش…",
+    "ok": "تأیید",
+    "rangeTo": "تا",
+    "relative": {
+      "online": "آنلاین",
+      "now": "همین حالا",
+      "never": "هرگز",
+      "minutes_one": "{{count}} دقیقه پیش",
+      "minutes_other": "{{count}} دقیقه پیش",
+      "hours_one": "{{count}} ساعت پیش",
+      "hours_other": "{{count}} ساعت پیش",
+      "days_one": "{{count}} روز پیش",
+      "days_other": "{{count}} روز پیش",
+      "weeks_one": "{{count}} هفته پیش",
+      "weeks_other": "{{count}} هفته پیش",
+      "months_one": "{{count}} ماه پیش",
+      "months_other": "{{count}} ماه پیش",
+      "yesterday": "دیروز"
+    },
+    "clear": "پاک کردن",
+    "dayTime": {
+      "today": "امروز، {{time}}",
+      "yesterday": "دیروز، {{time}}"
+    }
   },
   "nav": {
     "dashboard": "داشبورد",
@@ -133,6 +157,18 @@
     "payment": {
       "receivedTitle": "پرداخت دریافت شد",
       "receivedMessage": "پرداخت {{amount}} {{currency}} دریافت شد"
+    },
+    "sbpRecurring": {
+      "confirmedTitle": "پرداخت SBP تأیید شد",
+      "confirmedMessage": "مبلغ {{amount}} {{currency}} با موفقیت برداشت شد",
+      "failedTitle": "پرداخت SBP ناموفق بود",
+      "failedMessage": "برداشت پرداخت خودکار SBP ناموفق بود",
+      "pastDueTitle": "پرداخت SBP معوق است",
+      "pastDueMessage": "پرداخت خودکار SBP شما معوق است. لطفاً اپلیکیشن بانک را بررسی کنید.",
+      "cancelledTitle": "پرداخت خودکار SBP غیرفعال شد",
+      "cancelledMessage": "پرداخت خودکار SBP غیرفعال شده است",
+      "activatedTitle": "پرداخت خودکار SBP متصل شد",
+      "activatedMessage": "پرداخت خودکار SBP با موفقیت متصل شد"
     }
   },
   "successNotification": {
@@ -276,7 +312,23 @@
       "botNotConfigured": "ربات پیکربندی نشده است",
       "serviceUnavailable": "سرویس موقتاً در دسترس نیست"
     },
-    "oauthExpired": "نشست OAuth منقضی شده است. لطفاً دوباره امتحان کنید."
+    "oauthExpired": "نشست OAuth منقضی شده است. لطفاً دوباره امتحان کنید.",
+    "botOutdated": "نسخهٔ ربات با کابینت سازگار نیست. ربات را به v3.33.0 یا جدیدتر به‌روزرسانی کنید.",
+    "deepLinkIntro": "ورود را مستقیماً در ربات تأیید کنید — بدون نیاز به شماره تلفن:",
+    "loginWithBot": "ورود از طریق ربات",
+    "backToWidget": "بازگشت به ورود با ویجت",
+    "spamHint": "ایمیل را پیدا نکردید؟ پوشه‌های «هرزنامه» و «تبلیغات» را بررسی کنید — گاهی ارسال چند دقیقه طول می‌کشد.",
+    "resendVerification": "ارسال دوباره ایمیل",
+    "resendIn": "ارسال دوباره تا {{seconds}} ثانیه دیگر",
+    "resendSent": "ایمیل ارسال شد. صندوق ورودی را بررسی کنید.",
+    "resendError": "ارسال ایمیل ممکن نشد. بعداً دوباره تلاش کنید.",
+    "resendTooOften": "تلاش‌های بیش از حد. چند دقیقه دیگر دوباره تلاش کنید.",
+    "useAnotherEmail": "استفاده از ایمیل دیگر",
+    "legalConsentPrefix": "من این سند را مطالعه کرده‌ام:",
+    "legalConsentTitle": "یک قدم دیگر",
+    "legalConsentSubtitle": "برای ساخت حساب، تأیید کنید که اسناد را مطالعه کرده‌اید.",
+    "legalConsentContinue": "ادامه",
+    "storageUnavailable": "فضای ذخیره‌سازی مرورگر در دسترس نیست. برای ورود، ذخیره داده‌های سایت را مجاز کنید."
   },
   "emailVerification": {
     "title": "تایید ایمیل",
@@ -372,6 +424,13 @@
       "subscription": "اشتراک",
       "referrals": "معرفی‌ها",
       "earnings": "درآمد"
+    },
+    "welcomeNoName": "خوش آمدید!",
+    "manageAll": "مدیریت همه",
+    "showAll": "نمایش همه",
+    "subscriptions": "اشتراک‌ها",
+    "reminders": {
+      "dismiss": "بستن"
     }
   },
   "subscription": {
@@ -513,7 +572,8 @@
       "yourLink": "پیوند اشتراک شما",
       "linkUnavailable": "پیوند اتصال در دسترس نیست. بعداً داده‌ها را به‌روزرسانی کنید.",
       "downloadUnavailable": "پیوند نصب در دسترس نیست.",
-      "instructions": "راهنما"
+      "instructions": "راهنما",
+      "openQr": "باز کردن کد QR"
     },
     "additionalOptions": {
       "title": "گزینه‌های اضافی",
@@ -526,7 +586,7 @@
       "buyTraffic": "خرید ترافیک بیشتر",
       "currentTrafficLimit": "محدودیت فعلی: {{limit}} GB (مصرف شده {{used}} GB)",
       "buyTrafficTitle": "خرید ترافیک بیشتر",
-      "trafficWarning": "ترافیک خریداری شده به محدودیت فعلی اضافه می‌شود و به دوره بعدی منتقل نمی‌شود",
+      "trafficWarning": "ترافیک خریداری‌شده به محدودیت فعلی اضافه می‌شود و تا ۳۰ روز از زمان خرید معتبر است",
       "trafficUnavailable": "خرید ترافیک برای اشتراک شما در دسترس نیست",
       "unlimited": "نامحدود",
       "buyTrafficGb": "خرید {{gb}} GB",
@@ -539,7 +599,21 @@
       "reduceUnavailable": "کاهش دستگاه‌ها در دسترس نیست",
       "alreadyAtMinDeviceLimit": "تعداد دستگاه‌ها در حداقل مجاز طرح شما است",
       "reduce": "کاهش",
-      "reducing": "در حال کاهش…"
+      "reducing": "در حال کاهش…",
+      "connectedDevices": "دستگاه‌های متصل",
+      "currentDeviceLimit": "محدودیت فعلی دستگاه",
+      "decrementDevices": "کاهش تعداد دستگاه‌ها",
+      "disconnectDevicesFirst": "ابتدا دستگاه‌های اضافی را قطع کنید",
+      "incrementDevices": "افزایش تعداد دستگاه‌ها",
+      "minDeviceLimit": "حداقل محدودیت دستگاه",
+      "newDeviceLimit": "محدودیت جدید دستگاه",
+      "reasons": {
+        "noSubscription": "اشتراکی یافت نشد",
+        "noActiveSubscription": "اشتراک فعالی وجود ندارد",
+        "maxDevicesReached": "به حداکثر تعداد دستگاه رسیده‌اید ({{count}})",
+        "canAddLimited": "حداکثر {{count}} دستگاه می‌توانید اضافه کنید",
+        "trialNotAllowed": "کاهش تعداد دستگاه برای اشتراک آزمایشی در دسترس نیست"
+      }
     },
     "serverManagement": {
       "statusLegend": "✅ — متصل • ➕ — اضافه خواهد شد (پولی) • ➖ — قطع خواهد شد",
@@ -563,9 +637,10 @@
       "cooldown": "در {{minutes}} دقیقه {{seconds}} ثانیه دیگر"
     },
     "legacy": {
-      "selectTariffTitle": "یک تعرفه برای تمدید انتخاب کنید",
-      "selectTariffDescription": "اشتراک فعلی شما قبل از معرفی تعرفه‌ها ایجاد شده بود. برای تمدید، لطفاً یکی از تعرفه‌های موجود را انتخاب کنید.",
-      "currentSubContinues": "اشتراک فعلی شما تا پایان مدت فعال باقی خواهد ماند."
+      "selectTariffTitle": "اشتراک پیش از معرفی تعرفه‌ها خریداری شده",
+      "selectTariffDescription": "یک تعرفه انتخاب کنید: روی همین اشتراک اعمال می‌شود و لینک اتصال شما تغییر نمی‌کند.",
+      "currentSubContinues": "روزهای باقی‌مانده حفظ شده و به دوره پرداخت‌شده اضافه می‌شوند.",
+      "noTariff": "بدون تعرفه"
     },
     "switchTariff": {
       "dailyPayment": "پرداخت روزانه",
@@ -663,7 +738,9 @@
       "renewHint": "تمدید اشتراک",
       "expiredHint": "طرحی انتخاب و پرداخت کنید",
       "trialHint": "ترافیک و دستگاه‌های بیشتر",
-      "activeHint": "تمدید و تغییر طرح"
+      "activeHint": "تمدید و تغییر طرح",
+      "moveToTariff": "انتقال به تعرفه",
+      "moveToTariffHint": "اشتراک پیش از معرفی تعرفه‌ها خریداری شده"
     },
     "statusTrial": "آزمایشی",
     "statusActive": "فعال",
@@ -738,7 +815,75 @@
     "selectPaymentMethod": "انتخاب روش پرداخت",
     "missingAmount": "به {{amount}} دیگر نیاز دارید",
     "payAndActivate": "پرداخت و فعال‌سازی",
-    "directPayError": "پرداخت ناموفق بود. دوباره تلاش کنید."
+    "directPayError": "پرداخت ناموفق بود. دوباره تلاش کنید.",
+    "devicesWord_one": "دستگاه",
+    "devicesWord_other": "دستگاه",
+    "bestValue": "به‌صرفه",
+    "renameDevicePlaceholder": "نام دستگاه",
+    "deviceRenamed": "نام دستگاه به‌روزرسانی شد",
+    "sbpRecurring": {
+      "title": "پرداخت خودکار SBP",
+      "connect": "اتصال",
+      "confirmInBank": "در اپلیکیشن بانک تأیید کنید",
+      "cancel": "غیرفعال کردن",
+      "confirmCancel": "پرداخت خودکار SBP غیرفعال شود؟ اشتراک شما دیگر به‌صورت خودکار از طریق SBP تمدید نخواهد شد.",
+      "cancelled": "پرداخت خودکار SBP غیرفعال شد",
+      "enableError": "اتصال پرداخت خودکار SBP ناموفق بود",
+      "cancelError": "لغو پرداخت خودکار SBP ناموفق بود",
+      "statusPending": "در انتظار تأیید در اپلیکیشن بانک",
+      "statusActive": "فعال",
+      "statusPastDue": "پرداخت ناموفق بود — دوباره تلاش کنید",
+      "nextCharge": "برداشت بعدی {{date}}",
+      "amountPerInterval": "{{amount}} ₽ {{interval}}",
+      "interval": {
+        "day": "روزانه",
+        "week": "هفتگی",
+        "month": "ماهانه",
+        "year": "سالانه"
+      },
+      "autopayHint": "اشتراک شما به‌صورت خودکار از طریق SBP بدون نیاز به کارت ذخیره‌شده شارژ می‌شود",
+      "purchaseButton": "⚡ اشتراک با پرداخت خودکار SBP",
+      "purchaseHint": "اولین برداشت، اتصال را در اپ بانک تأیید می‌کند؛ تمدیدها به‌صورت خودکار برداشت می‌شوند."
+    },
+    "lavaRecurring": {
+      "title": "تمدید خودکار Lava",
+      "connect": "اتصال",
+      "payFirst": "پرداخت صورتحساب اول",
+      "cancel": "غیرفعال‌سازی",
+      "confirmCancel": "تمدید خودکار Lava غیرفعال شود؟ اشتراک دیگر به‌طور خودکار تمدید نمی‌شود.",
+      "cancelled": "تمدید خودکار Lava غیرفعال شد",
+      "enableError": "فعال‌سازی تمدید خودکار Lava ناموفق بود",
+      "cancelError": "غیرفعال‌سازی تمدید خودکار Lava ناموفق بود",
+      "statusPending": "در انتظار پرداخت صورتحساب اول",
+      "statusActive": "فعال",
+      "statusPastDue": "پرداخت ناموفق بود — دوباره تلاش کنید",
+      "nextCharge": "برداشت بعدی {{date}}",
+      "amountPerPeriod": "{{amount}} ₽ {{period}}",
+      "amountPerDays": "هر {{days}} روز {{amount}} ₽",
+      "period": {
+        "day": "روزانه",
+        "week": "هفتگی",
+        "month": "ماهانه",
+        "quarter": "هر سه ماه",
+        "halfYear": "هر شش ماه",
+        "year": "سالانه"
+      },
+      "autopayHint": "اشتراک به‌طور خودکار از طریق Lava تمدید می‌شود",
+      "purchaseButton": "⚡ ثبت‌نام با تمدید خودکار Lava",
+      "purchaseHint": "صورتحساب اول از طریق لینک Lava پرداخت می‌شود؛ سپس تمدیدها بر اساس دوره محصول به‌طور خودکار کسر می‌شوند."
+    },
+    "connectFooter": {
+      "connect": "اتصال دستگاه",
+      "full": "همه ظرفیت‌ها پر است",
+      "connectedDevices": "دستگاه‌های متصل",
+      "disconnect": "قطع اتصال",
+      "addSlots": "افزودن ظرفیت",
+      "limitExplained": "طرح «{{name}}» ‏{{count}} ظرفیت دارد و همه پر است. یکی را آزاد کنید یا ظرفیت اضافه کنید.",
+      "limitExplainedNoTopup": "طرح «{{name}}» ‏{{count}} ظرفیت دارد و همه پر است. یک ظرفیت را آزاد کنید.",
+      "noTopupHint": "روی اشتراک آزمایشی نمی‌توان ظرفیت خرید — یکی را آزاد کنید یا طرح پولی بگیرید."
+    },
+    "newTariff": "تعرفه جدید",
+    "servers": "سرورها"
   },
   "balance": {
     "title": "موجودی",
@@ -822,6 +967,15 @@
       },
       "aurapay": {
         "description": "پرداخت از طریق AuraPay"
+      },
+      "cispay": {
+        "description": "پرداخت با کارت یا SBP از طریق cisPay"
+      },
+      "tabpay": {
+        "description": "پرداخت با کارت یا SBP از طریق TabPay"
+      },
+      "paritypay": {
+        "description": "پرداخت با کارت یا SBP از طریق ParityPay"
       }
     },
     "transactionHistory": "تاریخچه تراکنش‌ها",
@@ -855,7 +1009,14 @@
         "used": "کد تخفیف قبلاً استفاده شده",
         "already_used_by_user": "شما قبلاً از این کد استفاده کرده‌اید",
         "user_not_found": "کاربر یافت نشد",
-        "server_error": "خطای سرور"
+        "server_error": "خطای سرور",
+        "active_discount_exists": "شما در حال حاضر یک تخفیف فعال دارید. ابتدا آن را غیرفعال کنید.",
+        "no_subscription_for_days": "این کد تخفیف به اشتراک فعال یا منقضی‌شده نیاز دارد",
+        "subscription_not_found": "اشتراک یافت نشد",
+        "not_first_purchase": "این کد تخفیف فقط برای اولین خرید در دسترس است",
+        "daily_limit": "تعداد فعال‌سازی کد تخفیف امروز بیش از حد است",
+        "trial_subscription_exists": "شما در حال حاضر اشتراک دارید، بنابراین این کد آزمایشی قابل اعمال نیست",
+        "trial_provisioning_failed": "در حال حاضر امکان فعال‌سازی نسخه آزمایشی نیست، لطفاً بعداً تلاش کنید"
       },
       "selectSubscription": "کد تخفیف برای کدام اشتراک اعمال شود؟",
       "daysLeft": "{{count}} روز"
@@ -873,7 +1034,7 @@
       "rateLimit": "لطفاً {{seconds}} ثانیه صبر کنید",
       "selectMethod": "روش را انتخاب کنید",
       "enterAmount": "مبلغ را وارد کنید",
-      "amountRange": "مبلغ: {{min}} – {{max}} ₽",
+      "amountRange": "مبلغ: {{min}} – {{max}} ₽",
       "methodMaximum": "حداکثر این روش {{max}} {{currency}} است. روش پرداخت دیگری انتخاب کنید.",
       "copyFailed": "کپی پیوند ناموفق بود. با دکمه زیر صفحه پرداخت را باز کنید."
     },
@@ -900,7 +1061,10 @@
       "pageTitle": "کارت‌های ذخیره شده",
       "backToBalance": "بازگشت",
       "empty": "کارتی ذخیره نشده است. کارت به طور خودکار در شارژ بعدی ذخیره می‌شود.",
-      "loadError": "خطا در بارگذاری کارت‌ها. لطفاً بعداً دوباره امتحان کنید."
+      "loadError": "خطا در بارگذاری کارت‌ها. لطفاً بعداً دوباره امتحان کنید.",
+      "sbpSection": "پرداخت خودکار SBP",
+      "sbpBinding": "اتصال SBP",
+      "sbpUnlink": "غیرفعال کردن پرداخت خودکار SBP"
     },
     "paymentSuccess": {
       "title": "پرداخت موفق",
@@ -935,7 +1099,12 @@
     "available": "در دسترس",
     "top_up": "شارژ موجودی",
     "paymentOption": "گزینه پرداخت",
-    "selectPaymentOption": "انتخاب گزینه پرداخت"
+    "selectPaymentOption": "انتخاب گزینه پرداخت",
+    "refund": "بازپرداخت",
+    "failedRefund": "بازپرداخت ناموفق",
+    "pollReward": "پاداش نظرسنجی",
+    "giftPayment": "پرداخت هدیه",
+    "otherOperation": "تراکنش"
   },
   "referral": {
     "title": "برنامه معرفی",
@@ -951,14 +1120,32 @@
       "totalReferrals": "کل معرفی‌ها",
       "activeReferrals": "فعال",
       "totalEarnings": "کل درآمد",
-      "commissionRate": "نرخ کمیسیون"
+      "commissionRate": "نرخ کمیسیون",
+      "earnedDays": "{{count}} روز اشتراک",
+      "chainDepth": "عمق شبکه",
+      "levelsValue": "تا {{count}} سطح",
+      "yourLevel": "سطح شما",
+      "levelNotReached": "هنوز باز نشده"
     },
     "terms": {
       "title": "شرایط برنامه",
       "commission": "کمیسیون",
       "minTopup": "حداقل شارژ",
       "newUserBonus": "جایزه کاربر جدید",
-      "inviterBonus": "جایزه معرف"
+      "inviterBonus": "جایزه معرف",
+      "noLevels": "سطوح پاداش هنوز تنظیم نشده‌اند — پرداختی انجام نمی‌شود.",
+      "tierNext": "{{count}} نفر تا سطح {{level}}",
+      "tierNone": "هنوز به سطحی نرسیده‌اید — پاداش‌ها از اولین آستانه آغاز می‌شود.",
+      "modeChain": "چند سطح هم‌زمان پاداش می‌گیرند: برای کسی که دعوت کرده‌اید، برای کسی که او دعوت کرده و همین‌طور ادامه.",
+      "modeTiers": "دقیقاً یک سطح اعمال می‌شود — سطحی که با تعداد دعوت‌هایتان باز کرده‌اید. پاداش فقط از دعوت‌شدگان مستقیم شما می‌آید.",
+      "currentBadge": "سطح شما",
+      "levelLabel": "سطح {{level}}",
+      "fromActive": "از {{count}} معرفی دارای شارژ",
+      "fromAny": "از {{count}} کاربر دعوت‌شده",
+      "startingLevel": "بلافاصله در دسترس",
+      "refereeGets": "کاربر دعوت‌شده دریافت می‌کند: {{reward}}",
+      "paysNothing": "به شما پرداختی ندارد",
+      "personalRate": "شما نرخ اختصاصی {{percent}}٪ دارید — در هر سطحی اعمال می‌شود."
     },
     "yourReferrals": "معرفی‌های شما",
     "noReferrals": "هنوز معرفی ندارید. لینک را به اشتراک بگذارید!",
@@ -978,7 +1165,12 @@
       "referral_registration": "ثبت‌نام کاربر معرفی‌شده",
       "referral_first_payment": "اولین پرداخت کاربر معرفی‌شده",
       "referral_subscription_renewal": "تمدید اشتراک کاربر معرفی‌شده",
-      "referral_bonus": "پاداش کاربر معرفی‌شده"
+      "referral_bonus": "پاداش کاربر معرفی‌شده",
+      "referral_first_topup": "اولین شارژ",
+      "referral_commission_topup": "کمیسیون شارژ",
+      "referral_registration_reward": "پاداش ثبت‌نام",
+      "referral_days_reward": "روزهای اشتراک",
+      "referral_days_bonus": "روزهای هدیه"
     },
     "disabled": "برنامه معرفی موقتاً غیرفعال است",
     "partner": {
@@ -1047,7 +1239,8 @@
         "expectedReferralsPlaceholder": "تعداد تخمینی در ماه",
         "desiredCommission": "درصد کمیسیون مورد نظر",
         "desiredCommissionPlaceholder": "از ۱ تا ۱۰۰٪"
-      }
+      },
+      "becomePartnerDescNoWithdrawal": "برای دریافت نرخ کمیسیون بالاتر، درخواست شراکت دهید."
     },
     "withdrawal": {
       "title": "برداشت",
@@ -1080,6 +1273,30 @@
         "rejected": "رد شده",
         "cancelled": "لغو شده"
       }
+    },
+    "levelBadge": "سطح {{count}}",
+    "days": "{{count}} روز",
+    "daysWithTariff": "{{count}} روز «{{tariff}}»",
+    "shareMessageBonus": "به {{botName}} بپیوند! پاداش ثبت‌نام تو با این لینک: {{bonus}}",
+    "shareMessagePlain": "با لینک من به {{botName}} بپیوند!",
+    "shareHintLevels": "لینک را با دوستان به اشتراک بگذارید — پاداش بر اساس سطوح برنامه معرفی است.",
+    "rewardSettings": {
+      "title": "تنظیمات پاداش",
+      "intro": "انتخاب کنید پاداش‌های معرفی را به چه شکلی دریافت کنید و روزهای اشتراک به کدام اشتراک اضافه شود.",
+      "kindHeader": "چه چیزی دریافت شود",
+      "kindMoney": "پول به موجودی",
+      "kindDays": "روزهای اشتراک",
+      "kindHint": "یکی را انتخاب کنید. جایی اعمال می‌شود که سطح هم پول و هم روز می‌دهد؛ اگر سطح تنها یکی را بدهد، همان را دریافت می‌کنید.",
+      "targetHeader": "روزها به کجا اضافه شود",
+      "targetAuto": "انتخاب خودکار",
+      "targetAutoHint": "روزها به اشتراک پولی با دیرترین تاریخ پایان اضافه می‌شوند.",
+      "targetHint": "اگر برای سطحی تعرفه تعیین شده باشد، روزها باز هم به اشتراک همان تعرفه می‌روند — مدیر این‌طور تنظیم کرده است.",
+      "targetNone": "هنوز اشتراکی برای انتخاب ندارید.",
+      "subscription": "اشتراک",
+      "until": "تا {{date}}",
+      "saveError": "ذخیره تنظیمات ممکن نشد",
+      "kindMoneyHint": "پاداش به صورت مبلغ به موجودی شما اضافه می‌شود",
+      "kindDaysHint": "پاداش اشتراک شما را تمدید می‌کند"
     }
   },
   "support": {
@@ -1122,7 +1339,14 @@
     "useExternalLink": "لطفاً از لینک خارجی برای دریافت پشتیبانی استفاده کنید",
     "create_ticket": "ایجاد درخواست پشتیبانی",
     "useProfile": "برای دریافت پشتیبانی به نمایه ربات بروید",
-    "goToProfile": "رفتن به نمایه"
+    "goToProfile": "رفتن به نمایه",
+    "downloadFile": "دانلود فایل",
+    "writeButton": "پیام",
+    "errors": {
+      "alreadyOpenTicket": "شما در حال حاضر یک تیکت باز دارید. گفتگو را در همان تیکت ادامه دهید؛ پس از بسته شدن آن می‌توانید تیکت جدید ایجاد کنید.",
+      "createFailed": "ایجاد تیکت ناموفق بود. لطفاً دوباره تلاش کنید.",
+      "replyFailed": "ارسال پاسخ ناموفق بود. لطفاً دوباره تلاش کنید."
+    }
   },
   "wheel": {
     "title": "چرخ شانس",
@@ -1157,7 +1381,7 @@
       "noSubscription": "برای چرخاندن گردونه نیاز به اشتراک فعال دارید. ابتدا اشتراک خود را فعال کنید.",
       "selectSubscription": "اشتراکی را برای کسر روزها انتخاب کنید."
     },
-    "payWithStars": "پرداخت {stars} Stars",
+    "payWithStars": "پرداخت Stars",
     "processingPayment": "در حال پردازش...",
     "starsPaymentSuccess": "پرداخت موفق! نتیجه به تلگرام ارسال شد.",
     "starsPaymentFailed": "پرداخت ناموفق. دوباره تلاش کنید.",
@@ -1280,39 +1504,22 @@
         "discord": "دیسکورد",
         "vk": "VK"
       },
-      "backToAccounts": "بازگشت به حساب‌ها"
-    }
-  },
-  "theme": {
-    "colors": "رنگ‌های تم",
-    "reset": "بازنشانی",
-    "quickPresets": "پیش‌تنظیمات سریع",
-    "quickPresetsDescription": "یک طرح رنگی آماده انتخاب کنید",
-    "customColors": "رنگ‌های سفارشی",
-    "customColorsDescription": "هر رنگ را جداگانه سفارشی کنید",
-    "accent": "رنگ تأکیدی",
-    "accentDescription": "رنگ اصلی برند برای دکمه‌ها، لینک‌ها و عناصر تعاملی",
-    "darkTheme": "تم تیره",
-    "lightTheme": "تم روشن",
-    "background": "پس‌زمینه",
-    "surface": "سطح",
-    "text": "متن",
-    "textSecondary": "متن ثانویه",
-    "statusColors": "رنگ‌های وضعیت",
-    "success": "موفقیت",
-    "warning": "هشدار",
-    "error": "خطا",
-    "preview": "پیش‌نمایش",
-    "previewButton": "دکمه اصلی",
-    "previewSecondary": "دکمه ثانویه",
-    "light": "تم روشن",
-    "dark": "تم تیره"
+      "backToAccounts": "بازگشت به حساب‌ها",
+      "unlinkForgetsEmail": "ایمیل {{email}} هم همراه آن فراموش می‌شود: از این سرویس آمده و رمز ورود با ایمیل تنظیم نشده است."
+    },
+    "emailMergePasswordRequired": "این ایمیل قبلاً به حساب دیگری تعلق دارد. برای ادغام حساب‌ها، رمز عبور آن حساب را وارد کنید.",
+    "emailMergeCodeSent": "کد تأیید به آن ایمیل ارسال شد.",
+    "emailMergeCodeDescription": "این ایمیل قبلاً به حساب دیگری تعلق دارد. کدی به آن ارسال کردیم — برای تأیید مالکیت و ادغام حساب‌ها آن را وارد کنید.",
+    "emailMergeCodeLabel": "کد ارسال‌شده در ایمیل",
+    "emailMergeConfirm": "تأیید و ادغام",
+    "emailMergeCodeInvalid": "کد نامعتبر یا منقضی‌شده"
   },
   "languages": {
     "ru": "Русский",
     "en": "English",
     "zh": "中文",
-    "fa": "فارسی"
+    "fa": "فارسی",
+    "ua": "اوکراینی"
   },
   "contests": {
     "title": "مسابقات",
@@ -1494,6 +1701,14 @@
       "openBot": "باز کردن ربات",
       "retry": "من /start را زدم، دوباره امتحان کن",
       "hint": "پس از اجرای /start، به اینجا بازگردید و «دوباره امتحان کنید» را بزنید."
+    },
+    "serviceUnavailable": {
+      "title": "سرویس در دسترس نیست",
+      "description": "در حال حاضر امکان اتصال به سرویس وجود ندارد. ممکن است در حال تعمیر باشد یا مشکل موقتی در اتصال وجود داشته باشد.",
+      "retry": "تلاش مجدد",
+      "checking": "در حال بررسی اتصال...",
+      "hint": "به‌محض در دسترس قرار گرفتن سرویس، این صفحه به‌طور خودکار بازخوانی می‌شود.",
+      "close": "بستن"
     }
   },
   "merge": {
@@ -1512,7 +1727,7 @@
     "chooseSubscription": "اشتراک مورد نظر را انتخاب کنید",
     "afterMerge": "پس از ادغام",
     "allAuthMethodsMerged": "تمام روش‌های ورود ادغام خواهند شد",
-    "balanceSummed": "موجودی: {{amount}} ₽ (مجموع)",
+    "balanceSummed": "موجودی: {{amount}} ₽ (مجموع)",
     "unselectedSubscriptionDeleted": "اشتراک انتخاب نشده حذف خواهد شد",
     "historyPreserved": "تاریخچه تراکنش‌ها حفظ خواهد شد",
     "confirm": "ادغام حساب‌ها",
@@ -1608,6 +1823,36 @@
       "hours": "ساعت",
       "minutes": "دقیقه",
       "seconds": "ثانیه"
+    },
+    "giftClaim": {
+      "title": "شما یک هدیه دارید!",
+      "error": "فعال‌سازی هدیه ناموفق بود.",
+      "notFoundTitle": "هدیه یافت نشد",
+      "notFoundDesc": "این لینک هدیه نامعتبر یا دیگر در دسترس نیست.",
+      "alreadyTitle": "هدیه قبلاً فعال شده است",
+      "alreadyDesc": "این هدیه قبلاً دریافت شده است.",
+      "successTitle": "هدیه فعال شد!",
+      "connectDesc": "از این لینک برای اتصال استفاده کنید:",
+      "copyLink": "کپی لینک",
+      "pendingTitle": "تقریباً آماده است…",
+      "pendingDesc": "پرداخت در حال تأیید است. این صفحه به‌طور خودکار به‌روزرسانی می‌شود.",
+      "replaceWarning": "شما در حال حاضر اشتراک دارید — فعال‌سازی این هدیه جایگزین آن خواهد شد.",
+      "activateTelegram": "فعال‌سازی در تلگرام",
+      "activateWeb": "فعال‌سازی با ایمیل",
+      "emailLabel": "ایمیل شما",
+      "claimNow": "دریافت هدیه",
+      "failedTitle": "هدیه در دسترس نیست",
+      "failedDesc": "پرداخت این هدیه انجام نشد، بنابراین قابل فعال‌سازی نیست."
+    },
+    "giftLink": {
+      "shareText": "یک هدیه برای شما دارم! اینجا فعال کنید:",
+      "viaTelegram": "تلگرام:",
+      "title": "هدیه آماده است!",
+      "subtitle": "این لینک را برای کسی که می‌خواهید هدیه را دریافت کند بفرستید — خودش آن را فعال می‌کند.",
+      "linkLabel": "لینک هدیه",
+      "telegramLabel": "لینک تلگرام",
+      "alsoSent": "آن را به {{contact}} نیز ایمیل کردیم.",
+      "copyMessage": "کپی پیام"
     }
   },
   "gift": {
@@ -1712,7 +1957,15 @@
     "shareModalActivateVia": "فعال‌سازی از طریق ربات:",
     "shareModalActivateViaCabinet": "یا از طریق وب‌سایت:",
     "copyMessage": "کپی پیام",
-    "shareToastCopied": "پیام کپی شد"
+    "shareToastCopied": "پیام کپی شد",
+    "qrHint": "برای فعال‌سازی هدیه اسکن کنید",
+    "scanButton": "📷 اسکن QR",
+    "scanInProgress": "در حال اسکن…",
+    "scanCancel": "توقف اسکن",
+    "scanDescription": "دوربین را روی کد QR هدیه بگیرید",
+    "scanNotRecognized": "در این QR کد هدیه‌ای نیست",
+    "scanError": "اسکن ناموفق بود",
+    "scanNoCamera": "دوربین در دسترس نیست — کد را دستی وارد کنید"
   },
   "news": {
     "title": "اخبار و به‌روزرسانی‌ها",
@@ -1785,6 +2038,93 @@
       }
     }
   },
+  "connection": {
+    "openHint": "باز کردن در برنامه · کد QR"
+  },
+  "subscriptions": {
+    "empty": "اشتراکی وجود ندارد",
+    "emptyDesc": "شما هنوز اشتراک فعالی ندارید.",
+    "buy": "خرید اشتراک",
+    "title": "اشتراک‌های من",
+    "buyAnother": "طرح جدید",
+    "browsePlans": "مشاهده تعرفه‌ها و خرید اشتراک"
+  },
+  "resetPassword": {
+    "title": "رمز عبور جدید",
+    "enterNewPassword": "رمز عبور جدید خود را در زیر وارد کنید.",
+    "success": "رمز عبور تغییر کرد!",
+    "redirectingToLogin": "در حال باز کردن صفحه ورود…",
+    "setPassword": "تنظیم رمز عبور",
+    "invalidToken": "پیوند نامعتبر",
+    "tokenExpiredOrInvalid": "پیوند بازنشانی رمز عبور نامعتبر یا منقضی شده است."
+  },
+  "navShort": {
+    "wheel": "گردونه"
+  },
+  "footer": {
+    "offer": "پیشنهاد عمومی",
+    "privacy": "سیاست حفظ حریم خصوصی",
+    "recurrent": "پرداخت‌های مکرر"
+  },
+  "lite": {
+    "status": {
+      "none": "هنوز اشتراکی ندارید",
+      "active": "اشتراک تا {{date}} فعال است",
+      "trial": "دوره آزمایشی تا {{date}}",
+      "expiring": "اشتراک در {{date}} تمام می‌شود",
+      "expired": "اشتراک در {{date}} تمام شد",
+      "limited": "ترافیک تمام شد",
+      "paused": "اشتراک متوقف است",
+      "legacy": "یک طرح انتخاب کنید",
+      "many": "اشتراک‌های شما"
+    },
+    "action": {
+      "connect": "اتصال دستگاه",
+      "renew": "تمدید اشتراک",
+      "buy": "انتخاب طرح",
+      "manage": "باز کردن مدیریت",
+      "tryFree": "رایگان امتحان کنید",
+      "tryPaid": "با {{price}} امتحان کنید",
+      "chooseTariff": "انتخاب طرح"
+    },
+    "traffic": {
+      "label": "ترافیک",
+      "used": "{{used}} از {{total}}",
+      "unlimited": "ترافیک نامحدود"
+    },
+    "rows": {
+      "devices": "دستگاه‌ها",
+      "devicesValue": "{{used}} از {{total}}",
+      "balance": "موجودی",
+      "manage": "مدیریت اشتراک",
+      "buyAnother": "خرید طرح دیگر",
+      "buyTraffic": "خرید ترافیک بیشتر",
+      "buyDevices": "افزودن دستگاه",
+      "reduceDevices": "کاهش تعداد دستگاه",
+      "servers": "سرورها",
+      "myDevices": "دستگاه‌های من",
+      "allSettings": "همه تنظیمات اشتراک",
+      "delete": "حذف اشتراک",
+      "plans": "دیدن طرح‌ها",
+      "support": "پشتیبانی"
+    },
+    "error": {
+      "load": "داده‌ها بارگذاری نشد",
+      "hint": "اتصال را بررسی کنید و دوباره تلاش کنید",
+      "retry": "تلاش دوباره"
+    },
+    "promo": {
+      "available": "یک پیشنهاد برای شما هست",
+      "discountActive": "تخفیف فعال است"
+    },
+    "tariff": {
+      "current": "فعلی",
+      "unlimitedDevices": "دستگاه نامحدود"
+    },
+    "subscription": {
+      "untitled": "اشتراک"
+    }
+  },
   "admin": {
     "nav": {
       "title": "مدیریت",
@@ -1826,29 +2166,26 @@
     "infoPages": {
       "notFound": "صفحه پیدا نشد",
       "faq": {
+        "questions": "سوالات و پاسخ‌ها",
+        "questionsCount": "سوال",
+        "noQuestions": "هنوز سوالی وجود ندارد. روی دکمه زیر کلیک کنید.",
+        "questionNumber": "سوال #{{n}}",
+        "question": "سوال",
+        "answer": "پاسخ",
+        "questionPlaceholder": "سوال را وارد کنید...",
+        "answerPlaceholder": "پاسخ را وارد کنید (HTML پشتیبانی می‌شود)...",
+        "htmlHint": "نشانه‌گذاری HTML پشتیبانی می‌شود",
+        "addQuestion": "افزودن سوال",
+        "removeQuestion": "حذف سوال",
+        "moveUp": "انتقال به بالا",
+        "moveDown": "انتقال به پایین",
         "searchPlaceholder": "جستجو در سوالات...",
-        "noResults": "نتیجه‌ای یافت نشد",
-        "noQuestions": "هنوز سوالی وجود ندارد. روی دکمه زیر کلیک کنید."
+        "noResults": "نتیجه‌ای یافت نشد"
       }
     }
   },
-  "connection": {
-    "openHint": "باز کردن در برنامه · کد QR"
-  },
-  "subscriptions": {
-    "empty": "اشتراکی وجود ندارد",
-    "emptyDesc": "شما هنوز اشتراک فعالی ندارید.",
-    "buy": "خرید اشتراک",
-    "title": "اشتراک‌های من",
-    "buyAnother": "طرح جدید"
-  },
-  "resetPassword": {
-    "title": "رمز عبور جدید",
-    "enterNewPassword": "رمز عبور جدید خود را در زیر وارد کنید.",
-    "success": "رمز عبور تغییر کرد!",
-    "redirectingToLogin": "در حال باز کردن صفحه ورود…",
-    "setPassword": "تنظیم رمز عبور",
-    "invalidToken": "پیوند نامعتبر",
-    "tokenExpiredOrInvalid": "پیوند بازنشانی رمز عبور نامعتبر یا منقضی شده است."
+  "theme": {
+    "light": "تم روشن",
+    "dark": "تم تیره"
   }
 }

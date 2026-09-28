@@ -46,6 +46,7 @@ function runtime({ language = 'ru', beforeLoad = async () => {} } = {}) {
       console,
       require(name) {
         if (name.includes('.json?url&no-inline')) return name.split('?')[0];
+        if (name === './hooks/useTelegramSDK') return { getTelegramLanguageCode: () => null };
         if (name === 'i18next') return instance;
         if (name === 'i18next-browser-languagedetector') return Detector;
         return require(name);
@@ -168,7 +169,9 @@ test('admin code can mount only after translated resources; language changes als
   });
   await app.prepareI18n();
   assert.equal(app.instance.exists('admin.settings.availableThemes'), false);
+  assert.equal(app.instance.exists('theme.accent'), false);
   await app.loadAdminTranslations();
+  assert.equal(app.instance.exists('theme.accent'), true);
   assert.equal(app.instance.exists('admin.settings.availableThemes'), true);
   const switching = app.changeAppLanguage('en');
   await flush();
@@ -236,7 +239,9 @@ function userTranslationCalls() {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const file = path.join(dir, entry.name);
       if (
-        /[/\\](admin|preview|broadcasts|sales-stats)[/\\]|[/\\](Admin|ReferralNetwork)/.test(file)
+        /[/\\](admin|preview|broadcasts|sales-stats)[/\\]|[/\\](Admin|admin[A-Z]|ReferralNetwork)/.test(
+          file,
+        )
       )
         continue;
       if (entry.isDirectory()) {

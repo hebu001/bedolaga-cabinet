@@ -2,22 +2,15 @@ import { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { rbacApi, PermissionSection, CreateRolePayload, UpdateRolePayload } from '@/api/rbac';
+import {
+  rbacApi,
+  type PermissionSection,
+  type CreateRolePayload,
+  type UpdateRolePayload,
+} from '@/api/rbac';
 import { AdminBackButton } from '@/components/admin';
-
-// === Icons ===
-
-const ChevronDownIcon = ({ className }: { className?: string }) => (
-  <svg
-    className={className || 'h-4 w-4'}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-  </svg>
-);
+import { CheckIcon, ChevronDownIcon, MinusIcon } from '@/components/icons';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 // === Constants ===
 
@@ -147,30 +140,17 @@ function PermissionMatrix({
                   }`}
                   aria-label={t('admin.roles.form.toggleSection', { section: section.section })}
                 >
-                  {(allSelected || partialSelected) && (
-                    <svg
-                      className="h-3 w-3 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                    >
-                      {allSelected ? (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4.5 12.75l6 6 9-13.5"
-                        />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-                      )}
-                    </svg>
-                  )}
+                  {(allSelected || partialSelected) &&
+                    (allSelected ? (
+                      <CheckIcon className="h-3 w-3 text-white" />
+                    ) : (
+                      <MinusIcon className="h-3 w-3 text-white" />
+                    ))}
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleExpand(section.section)}
-                  className="flex flex-1 items-center justify-between"
+                  className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
                 >
                   <span className="text-sm font-medium text-apple-ink">
                     {t(`admin.roles.form.permissionSections.${section.section}`, section.section)}
@@ -331,7 +311,7 @@ export default function AdminRoleEdit() {
   }, []);
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: React.SyntheticEvent) => {
       e.preventDefault();
       setFormError(null);
 
@@ -362,9 +342,9 @@ export default function AdminRoleEdit() {
   // Loading state
   if (isEdit && isLoadingRole) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={1} titleWidth="w-56" className="space-y-6">
+        <Skeleton variant="card" className="h-96" />
+      </PageSkeleton>
     );
   }
 

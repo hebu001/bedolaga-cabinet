@@ -1,0 +1,179 @@
+{
+  "initial": {
+    "raw": 893183,
+    "gzip": 284650,
+    "files": [
+      {
+        "file": "assets/index-DpnjDDMM.js",
+        "raw": 229859,
+        "gzip": 65249
+      },
+      {
+        "file": "assets/vendor-react-B-9vT6tx.js",
+        "raw": 252808,
+        "gzip": 82180
+      },
+      {
+        "file": "assets/vendor-query-CfhxqOC7.js",
+        "raw": 40461,
+        "gzip": 11920
+      },
+      {
+        "file": "assets/vendor-i18n-3IIYkeh6.js",
+        "raw": 56338,
+        "gzip": 18426
+      },
+      {
+        "file": "assets/vendor-telegram-CNPfH8iO.js",
+        "raw": 53767,
+        "gzip": 17619
+      },
+      {
+        "file": "assets/vendor-utils-BUY9imPQ.js",
+        "raw": 81260,
+        "gzip": 28811
+      },
+      {
+        "file": "assets/vendor-twemoji-CtPLeamR.js",
+        "raw": 22706,
+        "gzip": 5497
+      },
+      {
+        "file": "assets/vendor-motion-Dv7KSJfb.js",
+        "raw": 127397,
+        "gzip": 41846
+      },
+      {
+        "file": "assets/vendor-radix-react-slot-eY9aKvb4.js",
+        "raw": 2543,
+        "gzip": 1187
+      },
+      {
+        "file": "assets/vendor-radix-react-compose-refs-B82_Ryru.js",
+        "raw": 536,
+        "gzip": 360
+      },
+      {
+        "file": "assets/vendor-radix-react-tooltip-QOPLuEA6.js",
+        "raw": 6154,
+        "gzip": 2406
+      },
+      {
+        "file": "assets/vendor-radix-react-context-ECYBngSx.js",
+        "raw": 1775,
+        "gzip": 777
+      },
+      {
+        "file": "assets/vendor-radix-react-dismissable-layer-CU0A48tO.js",
+        "raw": 5566,
+        "gzip": 1999
+      },
+      {
+        "file": "assets/vendor-radix-primitive-B2KxKFY1.js",
+        "raw": 953,
+        "gzip": 509
+      },
+      {
+        "file": "assets/vendor-radix-react-primitive-DPgyRS3B.js",
+        "raw": 655,
+        "gzip": 456
+      },
+      {
+        "file": "assets/vendor-radix-react-use-callback-ref-uU7kglrb.js",
+        "raw": 278,
+        "gzip": 232
+      },
+      {
+        "file": "assets/vendor-radix-react-popper-FsMpmM6G.js",
+        "raw": 5101,
+        "gzip": 2320
+      },
+      {
+        "file": "assets/vendor-radix-react-arrow-BlZf-KKv.js",
+        "raw": 462,
+        "gzip": 345
+      },
+      {
+        "file": "assets/vendor-radix-react-use-layout-effect-BniXQQGf.js",
+        "raw": 115,
+        "gzip": 130
+      },
+      {
+        "file": "assets/vendor-radix-react-use-size-CPKcURiL.js",
+        "raw": 672,
+        "gzip": 429
+      },
+      {
+        "file": "assets/vendor-radix-react-portal-FfdRTvgD.js",
+        "raw": 491,
+        "gzip": 356
+      },
+      {
+        "file": "assets/vendor-radix-react-presence-n_-uPGE7.js",
+        "raw": 2800,
+        "gzip": 1236
+      },
+      {
+        "file": "assets/vendor-radix-react-visually-hidden-DdJAHL2I.js",
+        "raw": 486,
+        "gzip": 360
+      }
+    ]
+  },
+  "locales": {
+    "ru": {
+      "raw": 119321,
+      "gzip": 29500,
+      "files": [
+        {
+          "file": "assets/ru-m69t-_Mm.json",
+          "raw": 119321,
+          "gzip": 29500
+        }
+      ]
+    },
+    "en": {
+      "raw": 77939,
+      "gzip": 23249,
+      "files": [
+        {
+          "file": "assets/en-CThkgokX.json",
+          "raw": 77939,
+          "gzip": 23249
+        }
+      ]
+    },
+    "fa": {
+      "raw": 103770,
+      "gzip": 25979,
+      "files": [
+        {
+          "file": "assets/fa-DEGINo1P.json",
+          "raw": 103770,
+          "gzip": 25979
+        }
+      ]
+    },
+    "zh": {
+      "raw": 70236,
+      "gzip": 23718,
+      "files": [
+        {
+          "file": "assets/zh-DhsIzuk3.json",
+          "raw": 70236,
+          "gzip": 23718
+        }
+      ]
+    }
+  },
+  "budgets": {
+    "initial": {
+      "raw": 900000,
+      "gzip": 285000
+    },
+    "userLocale": {
+      "raw": 120000,
+      "gzip": 30000
+    }
+  }
+}

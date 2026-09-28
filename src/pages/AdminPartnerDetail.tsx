@@ -1,9 +1,22 @@
-import { useParams, useNavigate } from 'react-router';
+import { useLocation, useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { partnerApi } from '../api/partners';
-import { AdminBackButton } from '../components/admin';
+import { AdminBackButton, backTo } from '../components/admin';
 import { useCurrency } from '../hooks/useCurrency';
+import { StatCard } from '@/components/stats';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+import {
+  XIcon,
+  UsersIcon,
+  CheckCircleIcon,
+  UsersOnlineIcon,
+  PercentIcon,
+  BanknotesIcon,
+  CalendarIcon,
+  CalendarBlankIcon,
+  CalendarStarIcon,
+} from '@/components/icons';
 
 // Status badge config — keys must match backend PartnerStatus enum values
 const statusConfig: Record<string, { labelKey: string; color: string; bgColor: string }> = {
@@ -15,7 +28,7 @@ const statusConfig: Record<string, { labelKey: string; color: string; bgColor: s
   pending: {
     labelKey: 'admin.partnerDetail.status.pending',
     color: 'text-apple-amber',
-    bgColor: 'bg-apple-amber/15',
+    bgColor: 'bg-warning-500/20',
   },
   rejected: {
     labelKey: 'admin.partnerDetail.status.rejected',
@@ -39,6 +52,7 @@ export default function AdminPartnerDetail() {
   const { t } = useTranslation();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { formatWithCurrency } = useCurrency();
 
@@ -62,9 +76,15 @@ export default function AdminPartnerDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={1} titleWidth="w-56" className="space-y-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard loading />
+          <StatCard loading />
+          <StatCard loading />
+          <StatCard loading />
+        </div>
+        <Skeleton variant="card" count={2} className="h-40" />
+      </PageSkeleton>
     );
   }
 
@@ -113,34 +133,30 @@ export default function AdminPartnerDetail() {
       <div className="space-y-6">
         {/* Referral Stats */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold text-apple-ink">{partner.total_referrals}</div>
-            <div className="text-xs text-apple-faint">
-              {t('admin.partnerDetail.stats.totalReferrals')}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold text-apple-green">{partner.paid_referrals}</div>
-            <div className="text-xs text-apple-faint">
-              {t('admin.partnerDetail.stats.paidReferrals')}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
-              {partner.active_referrals}
-            </div>
-            <div className="text-xs text-apple-faint">
-              {t('admin.partnerDetail.stats.activeReferrals')}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
-              {partner.conversion_to_paid}%
-            </div>
-            <div className="text-xs text-apple-faint">
-              {t('admin.partnerDetail.stats.conversionRate')}
-            </div>
-          </div>
+          <StatCard
+            label={t('admin.partnerDetail.stats.totalReferrals')}
+            value={partner.total_referrals}
+            icon={<UsersIcon className="h-5 w-5" />}
+            tone="neutral"
+          />
+          <StatCard
+            label={t('admin.partnerDetail.stats.paidReferrals')}
+            value={partner.paid_referrals}
+            icon={<CheckCircleIcon className="h-5 w-5" />}
+            tone="success"
+          />
+          <StatCard
+            label={t('admin.partnerDetail.stats.activeReferrals')}
+            value={partner.active_referrals}
+            icon={<UsersOnlineIcon className="h-5 w-5" />}
+            tone="accent"
+          />
+          <StatCard
+            label={t('admin.partnerDetail.stats.conversionRate')}
+            value={`${partner.conversion_to_paid}%`}
+            icon={<PercentIcon className="h-5 w-5" />}
+            tone="accent"
+          />
         </div>
 
         {/* Earnings */}
@@ -149,38 +165,30 @@ export default function AdminPartnerDetail() {
             {t('admin.partnerDetail.earnings.title')}
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl bg-apple-elevated p-3">
-              <div className="mb-1 text-sm text-apple-mute">
-                {t('admin.partnerDetail.earnings.allTime')}
-              </div>
-              <div className="text-lg font-medium text-apple-green">
-                {formatWithCurrency(partner.earnings_all_time / 100)}
-              </div>
-            </div>
-            <div className="rounded-xl bg-apple-elevated p-3">
-              <div className="mb-1 text-sm text-apple-mute">
-                {t('admin.partnerDetail.earnings.today')}
-              </div>
-              <div className="text-lg font-medium text-apple-ink">
-                {formatWithCurrency(partner.earnings_today / 100)}
-              </div>
-            </div>
-            <div className="rounded-xl bg-apple-elevated p-3">
-              <div className="mb-1 text-sm text-apple-mute">
-                {t('admin.partnerDetail.earnings.week')}
-              </div>
-              <div className="text-lg font-medium text-apple-ink">
-                {formatWithCurrency(partner.earnings_week / 100)}
-              </div>
-            </div>
-            <div className="rounded-xl bg-apple-elevated p-3">
-              <div className="mb-1 text-sm text-apple-mute">
-                {t('admin.partnerDetail.earnings.month')}
-              </div>
-              <div className="text-lg font-medium text-apple-ink">
-                {formatWithCurrency(partner.earnings_month / 100)}
-              </div>
-            </div>
+            <StatCard
+              label={t('admin.partnerDetail.earnings.allTime')}
+              value={formatWithCurrency(partner.earnings_all_time / 100)}
+              icon={<BanknotesIcon className="h-5 w-5" />}
+              tone="success"
+            />
+            <StatCard
+              label={t('admin.partnerDetail.earnings.today')}
+              value={formatWithCurrency(partner.earnings_today / 100)}
+              icon={<CalendarIcon className="h-5 w-5" />}
+              tone="neutral"
+            />
+            <StatCard
+              label={t('admin.partnerDetail.earnings.week')}
+              value={formatWithCurrency(partner.earnings_week / 100)}
+              icon={<CalendarBlankIcon className="h-5 w-5" />}
+              tone="neutral"
+            />
+            <StatCard
+              label={t('admin.partnerDetail.earnings.month')}
+              value={formatWithCurrency(partner.earnings_month / 100)}
+              icon={<CalendarStarIcon className="h-5 w-5" />}
+              tone="neutral"
+            />
           </div>
         </div>
 
@@ -222,7 +230,9 @@ export default function AdminPartnerDetail() {
                 {t('admin.partnerDetail.campaigns.assign')}
               </button>
               <button
-                onClick={() => navigate(`/admin/campaigns/create?partnerId=${userId}`)}
+                onClick={() =>
+                  navigate(`/admin/campaigns/create?partnerId=${userId}`, backTo(location))
+                }
                 className="rounded-full bg-[#F97315] px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
               >
                 {t('admin.partnerDetail.campaigns.createNew')}
@@ -242,14 +252,16 @@ export default function AdminPartnerDetail() {
                     !campaign.is_active ? 'opacity-60' : ''
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-apple-ink">{campaign.name}</div>
-                      <div className="font-mono text-xs text-apple-faint">
+                      <div className="font-medium text-apple-ink [overflow-wrap:anywhere]">
+                        {campaign.name}
+                      </div>
+                      <div className="font-mono text-xs text-apple-faint break-all">
                         ?start={campaign.start_parameter}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                       {campaign.is_active ? (
                         <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                           {t('admin.partnerDetail.campaigns.active')}
@@ -265,19 +277,7 @@ export default function AdminPartnerDetail() {
                         className="rounded p-1 text-apple-faint transition-colors hover:bg-apple-red/10 hover:text-apple-red"
                         title={t('admin.partnerDetail.campaigns.unassign')}
                       >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
+                        <XIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -300,7 +300,7 @@ export default function AdminPartnerDetail() {
                     </div>
                     <div className="text-center">
                       <div
-                        className={`text-sm font-medium ${campaign.earnings_kopeks > 0 ? 'text-apple-green' : 'text-apple-mute'}`}
+                        className={`whitespace-nowrap text-sm font-medium ${campaign.earnings_kopeks > 0 ? 'text-apple-green' : 'text-apple-mute'}`}
                       >
                         {formatWithCurrency(campaign.earnings_kopeks / 100)}
                       </div>

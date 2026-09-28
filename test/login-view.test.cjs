@@ -69,7 +69,14 @@ function harness(options = {}) {
             (key) => [key, 'Dialog' + key],
           ),
         );
-      if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
+      if (name === 'react-i18next')
+        return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'ru' } }) };
+      if (name.endsWith('/useLegalConsentGate'))
+        return {
+          useLegalConsentGate: () => ({ acceptedKeys: [], capture: () => false, pending: false }),
+        };
+      if (name.endsWith('/integrationCapabilities'))
+        return { integrationCapabilities: { legalConsent: false } };
       if (name === 'react-router')
         return {
           useNavigate:
@@ -110,6 +117,13 @@ function harness(options = {}) {
               };
             },
           },
+        };
+      if (name === '../api/info') return { infoApi: {} };
+      if (name === '../utils/safeStorage') return { safeLocal: {}, safeSession: {} };
+      if (name === '../utils/api-error')
+        return {
+          getApiErrorMessage: (err, fallback) =>
+            typeof err?.response?.data?.detail === 'string' ? err.response.data.detail : fallback,
         };
       if (name === '../api/branding')
         return { getCachedBranding: () => null, brandingApi: {}, setCachedBranding() {} };

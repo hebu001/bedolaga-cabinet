@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { uiLocale } from '@/utils/uiLocale';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -8,10 +9,14 @@ import { infoApi } from '../api/info';
 import { useAuthStore } from '../store/auth';
 import { logger } from '../utils/logger';
 import { checkRateLimit, getRateLimitResetTime, RATE_LIMIT_KEYS } from '../utils/rateLimit';
-import type { TicketDetail } from '../types';
+import { getApiErrorMessage } from '../utils/api-error';
+import { isOpenTicketConflict } from '../utils/ticketErrors';
+import type { SupportConfig, TicketDetail } from '../types';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import { usePlatform } from '@/platform';
 import { linkifyText } from '../utils/linkify';
+import { resolveSupportContact } from '../utils/supportContact';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 const log = logger.createLogger('Support');
 
@@ -98,12 +103,28 @@ export default function Support() {
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const queryClient = useQueryClient();
   const { openTelegramLink, openLink } = usePlatform();
+
+  const openSupportContact = useCallback(
+    (config: SupportConfig) => {
+      const target = resolveSupportContact(config);
+      if (!target) return;
+      if (target.kind === 'external') {
+        openLink(target.url, { tryInstantView: false });
+      } else {
+        openTelegramLink(target.url);
+      }
+    },
+    [openLink, openTelegramLink],
+  );
   const [selectedTicket, setSelectedTicket] = useState<TicketDetail | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
-  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+  // Ошибка активной формы: и клиентский rate-limit, и отказ бэка (409 «уже есть
+  // открытый тикет», 403 «поддержка выключена/пользователь заблокирован» и т.п.).
+  // Формы create и reply взаимоисключающие, поэтому состояние одно на обе.
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Media attachment states (multi-upload, up to 10)
   const [createAttachments, setCreateAttachments] = useState<MediaAttachment[]>([]);
@@ -206,10 +227,25 @@ export default function Support() {
     onSuccess: (ticket) => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       setShowCreateForm(false);
+      setFormError(null);
       setNewTitle('');
       setNewMessage('');
       clearCreateAttachments();
       setSelectedTicket(ticket);
+    },
+    onError: (error) => {
+      // Без этого отказ бэка (чаще всего 409 «уже есть открытый тикет») уходил
+      // в никуда: форма просто оставалась на месте, и пользователь жал «Отправить»
+      // снова и снова, не понимая, почему обращение не создаётся.
+      log.error('Ticket creation failed', error);
+      if (isOpenTicketConflict(error)) {
+        setFormError(t('support.errors.alreadyOpenTicket'));
+        // Открытый тикет мог появиться в другой сессии (бот, второе устройство) —
+        // подтягиваем список, чтобы пользователю было куда перейти.
+        queryClient.invalidateQueries({ queryKey: ['tickets'] });
+        return;
+      }
+      setFormError(getApiErrorMessage(error, t('support.errors.createFailed')));
     },
   });
 
@@ -228,8 +264,15 @@ export default function Support() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ticket', selectedTicket?.id] });
+      setFormError(null);
       setReplyMessage('');
       clearReplyAttachments();
+    },
+    onError: (error) => {
+      // Ответ в тикет молчал ровно так же: 403 (блокировка в поддержке) и 400
+      // (тикет уже закрыт) выглядели как «кнопка не работает».
+      log.error('Ticket reply failed', error);
+      setFormError(getApiErrorMessage(error, t('support.errors.replyFailed')));
     },
   });
 
@@ -250,9 +293,9 @@ export default function Support() {
   // Show loading while checking configuration
   if (configLoading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <Spinner />
-      </div>
+      <SkeletonGroup className="space-y-3">
+        <Skeleton variant="card" count={3} className="h-16" />
+      </SkeletonGroup>
     );
   }
 
@@ -260,47 +303,29 @@ export default function Support() {
   if (supportConfig && !supportConfig.tickets_enabled) {
     log.debug('Tickets disabled, config:', supportConfig);
 
+    // Куда и чем открывать контакт — один резолв на весь блок. null → открывать
+    // нечего (пустой/битый конфиг), и кнопку тогда не рендерим вовсе.
+    const contact = resolveSupportContact(supportConfig);
+
     const getSupportMessage = () => {
       log.debug('Getting support message for type:', supportConfig.support_type);
 
-      if (supportConfig.support_type === 'profile') {
-        const supportUsername = supportConfig.support_username || '@support';
-        return {
-          title: isAdmin ? t('support.ticketsDisabled') : t('support.title'),
-          message: t('support.contactSupport', { username: supportUsername }),
-          buttonText: t('support.contactUs'),
-          buttonAction: () => {
-            const username = supportUsername.startsWith('@')
-              ? supportUsername.slice(1)
-              : supportUsername;
-            openTelegramLink(`https://t.me/${username}`);
-          },
-        };
-      }
+      const title = isAdmin ? t('support.ticketsDisabled') : t('support.title');
 
       if (supportConfig.support_type === 'url' && supportConfig.support_url) {
         return {
-          title: isAdmin ? t('support.ticketsDisabled') : t('support.title'),
+          title,
           message: t('support.useExternalLink'),
           buttonText: t('support.openSupport'),
-          buttonAction: () => {
-            openLink(supportConfig.support_url!, { tryInstantView: false });
-          },
         };
       }
 
-      // Fallback: contact support
+      // profile и любой fallback — контакт в телеграме
       const supportUsername = supportConfig.support_username || '@support';
       return {
-        title: isAdmin ? t('support.ticketsDisabled') : t('support.title'),
+        title,
         message: t('support.contactSupport', { username: supportUsername }),
         buttonText: t('support.contactUs'),
-        buttonAction: () => {
-          const username = supportUsername.startsWith('@')
-            ? supportUsername.slice(1)
-            : supportUsername;
-          openTelegramLink(`https://t.me/${username}`);
-        },
       };
     };
 
@@ -317,7 +342,8 @@ export default function Support() {
           <p className="mb-6 text-[15px] text-apple-mute">{supportMessage.message}</p>
           <button
             type="button"
-            onClick={supportMessage.buttonAction}
+            onClick={() => openSupportContact(supportConfig)}
+            disabled={!contact}
             className="w-full rounded-full bg-[#F97315] py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
           >
             {supportMessage.buttonText}
@@ -389,6 +415,7 @@ export default function Support() {
           onClick={() => {
             setShowCreateForm(true);
             setSelectedTicket(null);
+            setFormError(null);
             clearCreateAttachments();
           }}
           className="flex items-center justify-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
@@ -439,9 +466,9 @@ export default function Support() {
           </h2>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Spinner />
-            </div>
+            <SkeletonGroup className="space-y-3">
+              <Skeleton variant="card" count={3} className="h-16" />
+            </SkeletonGroup>
           ) : tickets?.items && tickets.items.length > 0 ? (
             <div className="space-y-2">
               {tickets.items.map((ticket) => (
@@ -451,6 +478,7 @@ export default function Support() {
                   onClick={() => {
                     setSelectedTicket(ticket as unknown as TicketDetail);
                     setShowCreateForm(false);
+                    setFormError(null);
                     clearReplyAttachments();
                   }}
                   className={`w-full rounded-xl p-4 text-left transition-colors ${
@@ -463,8 +491,8 @@ export default function Support() {
                     <div className="truncate font-medium text-apple-ink">{ticket.title}</div>
                     <StatusPill status={ticket.status} />
                   </div>
-                  <div className="text-xs text-apple-faint">
-                    {new Date(ticket.updated_at).toLocaleDateString()}
+                  <div className="text-xs text-dark-500">
+                    {new Date(ticket.updated_at).toLocaleDateString(uiLocale())}
                   </div>
                 </button>
               ))}
@@ -489,11 +517,11 @@ export default function Support() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  setRateLimitError(null);
+                  setFormError(null);
                   // Rate limit: max 3 tickets per 60 seconds
                   if (!checkRateLimit(RATE_LIMIT_KEYS.TICKET_CREATE, 3, 60000)) {
                     const resetTime = getRateLimitResetTime(RATE_LIMIT_KEYS.TICKET_CREATE);
-                    setRateLimitError(t('support.tooManyRequests', { seconds: resetTime }));
+                    setFormError(t('support.tooManyRequests', { seconds: resetTime }));
                     return;
                   }
                   createMutation.mutate();
@@ -501,10 +529,11 @@ export default function Support() {
                 className="space-y-4"
               >
                 <div>
-                  <label className="mb-1.5 block text-[13px] font-medium text-apple-mute">
+                  <label htmlFor="support-subject" className="label">
                     {t('support.subject')}
                   </label>
                   <input
+                    id="support-subject"
                     type="text"
                     className={inputCls}
                     placeholder={t('support.subjectPlaceholder')}
@@ -568,9 +597,9 @@ export default function Support() {
                   )}
                 </div>
 
-                {rateLimitError && (
-                  <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red">
-                    {rateLimitError}
+                {formError && (
+                  <div className="rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-400">
+                    {formError}
                   </div>
                 )}
 
@@ -589,6 +618,7 @@ export default function Support() {
                     type="button"
                     onClick={() => {
                       setShowCreateForm(false);
+                      setFormError(null);
                       clearCreateAttachments();
                     }}
                     className="rounded-full bg-apple-elevated px-5 py-2.5 text-[14px] font-semibold text-apple-ink transition-opacity hover:opacity-80"
@@ -609,7 +639,7 @@ export default function Support() {
                     <StatusPill status={ticketDetail?.status || selectedTicket.status} />
                     <span className="text-xs text-apple-faint">
                       {t('support.created')}{' '}
-                      {new Date(selectedTicket.created_at).toLocaleDateString()}
+                      {new Date(selectedTicket.created_at).toLocaleDateString(uiLocale())}
                     </span>
                   </div>
                 </div>
@@ -617,9 +647,9 @@ export default function Support() {
 
               {/* Messages */}
               {detailLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Spinner />
-                </div>
+                <SkeletonGroup className="space-y-3">
+                  <Skeleton variant="card" count={3} className="h-16" />
+                </SkeletonGroup>
               ) : ticketDetail?.messages ? (
                 <div className="scrollbar-hide mb-6 max-h-96 flex-1 space-y-4 overflow-y-auto">
                   {ticketDetail.messages.map((msg) => (
@@ -639,13 +669,13 @@ export default function Support() {
                         >
                           {msg.is_from_admin ? t('support.supportTeam') : t('support.you')}
                         </span>
-                        <span className="text-xs text-apple-faint">
-                          {new Date(msg.created_at).toLocaleString()}
+                        <span className="text-xs text-dark-500">
+                          {new Date(msg.created_at).toLocaleString(uiLocale())}
                         </span>
                       </div>
                       {msg.message_text && (
                         <div
-                          className="whitespace-pre-wrap text-[15px] text-apple-ink [&_a]:text-[#F97315] [&_a]:underline"
+                          className="whitespace-pre-wrap break-words text-apple-ink [&_a]:text-apple-blue [&_a]:underline"
                           dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
                         />
                       )}
@@ -670,11 +700,11 @@ export default function Support() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    setRateLimitError(null);
+                    setFormError(null);
                     // Rate limit: max 5 replies per 30 seconds
                     if (!checkRateLimit(RATE_LIMIT_KEYS.TICKET_REPLY, 5, 30000)) {
                       const resetTime = getRateLimitResetTime(RATE_LIMIT_KEYS.TICKET_REPLY);
-                      setRateLimitError(t('support.tooManyRequests', { seconds: resetTime }));
+                      setFormError(t('support.tooManyRequests', { seconds: resetTime }));
                       return;
                     }
                     replyMutation.mutate();
@@ -684,7 +714,7 @@ export default function Support() {
                   <div className="space-y-3">
                     <div className="flex gap-3">
                       <textarea
-                        className={`${inputCls} min-h-[80px] flex-1`}
+                        className={`${inputCls} min-h-[80px] min-w-0 flex-1`}
                         placeholder={t('support.replyPlaceholder')}
                         value={replyMessage}
                         onChange={(e) => setReplyMessage(e.target.value)}
@@ -744,9 +774,9 @@ export default function Support() {
                         {replyMutation.isPending ? <Spinner className="h-4 w-4" /> : <SendIcon />}
                       </button>
                     </div>
-                    {rateLimitError && (
+                    {formError && (
                       <div className="mt-2 rounded-xl border border-apple-red/30 bg-apple-red/10 p-3 text-sm text-apple-red">
-                        {rateLimitError}
+                        {formError}
                       </div>
                     )}
                   </div>

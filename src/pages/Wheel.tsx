@@ -1,3 +1,4 @@
+import { uiLocale } from '@/utils/uiLocale';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -10,50 +11,16 @@ import { Card } from '@/components/data-display/Card/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
+import { PiCaretDown } from 'react-icons/pi';
+import { StarIcon, CalendarIcon, HistoryIcon, CloseIcon } from '@/components/icons';
+import { cn } from '@/lib/utils';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 // Icons
-const StarIcon = () => (
-  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-  </svg>
-);
-
-const CalendarIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-    />
-  </svg>
-);
-
-const HistoryIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
-  <svg
-    className={`h-5 w-5 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-  </svg>
+  <PiCaretDown
+    className={cn('h-5 w-5 transition-transform duration-200', expanded && 'rotate-180')}
+  />
 );
 
 /**
@@ -389,6 +356,10 @@ export default function Wheel() {
     setIsPayingStars(true);
     // In browser: pre-open window synchronously (direct user gesture) to avoid popup blocker
     if (!capabilities.hasInvoice) {
+      // Web-only: synchronously pre-open a tab during the user gesture to dodge the
+      // popup blocker before the async invoice URL resolves. Not reached in Telegram
+      // (hasInvoice is true there, so the native invoice flow is used instead).
+      // biome-ignore lint: canonical popup-blocker workaround, see comment above
       preOpenedWindowRef.current = window.open('about:blank', '_blank') || null;
     }
     starsInvoiceMutation.mutate();
@@ -495,16 +466,17 @@ export default function Wheel() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
-      </div>
+      <PageSkeleton titleWidth="w-40" className="space-y-6 pb-8">
+        <Skeleton className="h-4 w-56" />
+        <Skeleton variant="card" className="h-80" />
+      </PageSkeleton>
     );
   }
 
   if (error || !config) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-error-500/10">
           <span className="text-4xl">😔</span>
         </div>
         <p className="text-lg text-dark-400">{t('wheel.errors.loadFailed')}</p>
@@ -564,7 +536,10 @@ export default function Wheel() {
 
       {/* Wheel Section */}
       <Card>
-        <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr,280px]">
+        {/* grid-cols-1 = minmax(0,1fr): колонка не растёт по длинному названию
+            приза (колесо уезжало вправо и обрезалось наполовину). Внутренний
+            отступ — только с sm: у карточки свой, на телефоне двойной сжимал колесо. */}
+        <div className="grid grid-cols-1 gap-6 sm:p-2 lg:grid-cols-[minmax(0,1fr),280px] lg:p-4">
           {/* Left: Wheel and Controls */}
           <div>
             {/* Wheel */}
@@ -630,16 +605,16 @@ export default function Wheel() {
                           key={sub.id}
                           onClick={() => setSelectedSubscriptionId(sub.id)}
                           disabled={isSpinning}
-                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all ${
+                          className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-all ${
                             selectedSubscriptionId === sub.id
                               ? 'bg-accent-500/15 text-accent-400'
                               : 'text-dark-400 hover:text-dark-200'
                           }`}
                         >
-                          <span className="font-medium">
+                          <span className="min-w-0 truncate font-medium">
                             {sub.tariff_name || t('subscription.defaultName', 'Подписка')}
                           </span>
-                          <span className="text-xs opacity-60">
+                          <span className="shrink-0 text-xs opacity-60">
                             {sub.days_left} {t('common.units.days', 'дней')}
                           </span>
                         </button>
@@ -663,7 +638,7 @@ export default function Wheel() {
                     </button>
                     <button
                       onClick={handleDirectStarsPay}
-                      className="rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600"
+                      className="rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-medium text-on-accent transition-colors hover:bg-accent-600"
                     >
                       {t('wheel.payStars', { count: config.spin_cost_stars ?? 0 })}
                     </button>
@@ -726,7 +701,7 @@ export default function Wheel() {
                   className={`animate-fade-in rounded-linear border p-4 ${
                     spinResult.success
                       ? 'border-accent-500/30 bg-accent-500/10'
-                      : 'border-red-500/30 bg-red-500/10'
+                      : 'border-error-500/30 bg-error-500/10'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -749,7 +724,7 @@ export default function Wheel() {
                       onClick={closeResultModal}
                       className="shrink-0 rounded-lg p-2 text-dark-400 transition-colors hover:bg-white/5 hover:text-dark-200"
                     >
-                      <CloseIcon />
+                      <CloseIcon className="h-6 w-6" />
                     </button>
                   </div>
 
@@ -805,20 +780,23 @@ export default function Wheel() {
             >
               <div className="border-t border-dark-700/30 px-4 pb-4 pt-2">
                 {history && history.items.length > 0 ? (
+                  // "hidden"/"show" don't exist in staggerContainer/staggerItem
+                  // (their keys are initial/animate/exit), so the stagger here
+                  // was silently a no-op
                   <motion.div
                     variants={staggerContainer}
-                    initial="hidden"
-                    animate="show"
+                    initial="initial"
+                    animate="animate"
                     className="space-y-2"
                   >
                     {history.items.map((item: SpinHistoryItem) => (
                       <motion.div
                         key={item.id}
                         variants={staggerItem}
-                        className="flex items-center justify-between rounded-linear border border-dark-700/30 bg-dark-800/30 p-3"
+                        className="flex items-center justify-between gap-3 rounded-linear border border-dark-700/30 bg-dark-800/30 p-3"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-linear bg-dark-700/50 text-xl">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-linear bg-dark-700/50 text-xl">
                             {item.emoji}
                           </div>
                           <div className="min-w-0">
@@ -826,11 +804,11 @@ export default function Wheel() {
                               {item.prize_display_name}
                             </div>
                             <div className="text-xs text-dark-500">
-                              {new Date(item.created_at).toLocaleDateString()}
+                              {new Date(item.created_at).toLocaleDateString(uiLocale())}
                             </div>
                           </div>
                         </div>
-                        <div className="whitespace-nowrap text-sm text-dark-400">
+                        <div className="shrink-0 whitespace-nowrap text-sm text-dark-400">
                           -
                           {item.payment_type === 'telegram_stars'
                             ? `${item.payment_amount} ⭐`

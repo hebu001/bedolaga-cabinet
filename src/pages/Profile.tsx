@@ -1,4 +1,8 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useCountdown } from '../hooks/useCountdown';
+import { getApiErrorMessage } from '../utils/api-error';
+import { uiLocale } from '../utils/uiLocale';
+import { lazy, Suspense, useState, useRef, useEffect, useMemo } from 'react';
+import { integrationCapabilities } from '../config/integrationCapabilities';
 import { useNavigate } from 'react-router';
 import { retrieveLaunchParams, initDataUser } from '@telegram-apps/sdk-react';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +37,8 @@ import {
 } from '@/components/icons';
 import ConnectedAccountsPanel from '@/components/profile/ConnectedAccountsPanel';
 import InfoPanel from '@/components/profile/InfoPanel';
+
+const UpdatedReferral = lazy(() => import('./Referral'));
 
 // Apple-dark surface helper
 const cardCls = 'apple-card-grad rounded-2xl bg-apple-card';
@@ -229,8 +235,8 @@ export default function Profile() {
   const [newEmail, setNewEmail] = useState('');
   const [changeCode, setChangeCode] = useState('');
   const [changeError, setChangeError] = useState<string | null>(null);
-  const [resendCooldown, setResendCooldown] = useState(0);
-  const [verificationResendCooldown, setVerificationResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useCountdown();
+  const [verificationResendCooldown, setVerificationResendCooldown] = useCountdown();
   const newEmailInputRef = useRef<HTMLInputElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
@@ -366,7 +372,7 @@ export default function Profile() {
     const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(
       referralLink,
     )}&text=${encodeURIComponent(shareText)}`;
-    window.open(telegramUrl, '_blank', 'noopener,noreferrer');
+    openTelegramLink(telegramUrl);
   };
 
   // Program terms memo
@@ -390,7 +396,9 @@ export default function Profile() {
           <div className="rounded-xl bg-apple-elevated p-3">
             <div className="text-[13px] text-apple-mute">{t('referral.terms.minTopup')}</div>
             <div className="mt-1 text-[17px] font-semibold text-apple-ink">
-              {formatAmount(referralTerms.minimum_topup_rubles)} {currencySymbol}
+              {formatAmount(referralTerms.minimum_topup_rubles)}
+              {'\u00A0'}
+              {currencySymbol}
             </div>
           </div>
           {showNewUserBonus && (
@@ -421,8 +429,8 @@ export default function Profile() {
       setError(null);
       setVerificationResendCooldown(UI.RESEND_COOLDOWN_SEC);
     },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      setError(err.response?.data?.detail || t('common.error'));
+    onError: (err: unknown) => {
+      setError(getApiErrorMessage(err, t('common.error')));
       setSuccess(null);
     },
   });
@@ -442,8 +450,8 @@ export default function Profile() {
         setResendCooldown(UI.RESEND_COOLDOWN_SEC);
       }
     },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      const detail = err.response?.data?.detail;
+    onError: (err: unknown) => {
+      const detail = getApiErrorMessage(err, '');
       if (detail?.includes('already registered') || detail?.includes('already in use')) {
         setChangeError(t('profile.changeEmail.emailAlreadyUsed'));
       } else if (detail?.includes('same as current')) {
@@ -465,8 +473,8 @@ export default function Profile() {
       setUser(updatedUser);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      const detail = err.response?.data?.detail;
+    onError: (err: unknown) => {
+      const detail = getApiErrorMessage(err, '');
       if (detail?.includes('invalid') || detail?.includes('wrong')) {
         setChangeError(t('profile.changeEmail.invalidCode'));
       } else if (detail?.includes('expired')) {
@@ -477,25 +485,8 @@ export default function Profile() {
     },
   });
 
-  // Resend cooldown timers
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = setInterval(() => {
-      setResendCooldown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [resendCooldown]);
-
-  useEffect(() => {
-    if (verificationResendCooldown <= 0) return;
-    const timer = setInterval(() => {
-      setVerificationResendCooldown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [verificationResendCooldown]);
-
   // Auto-focus inputs on step change (skip on Telegram — keyboard hides bottom nav)
-  const { platform: profilePlatform } = usePlatform();
+  const { platform: profilePlatform, openTelegramLink } = usePlatform();
   useEffect(() => {
     if (profilePlatform === 'telegram') return;
     const timer = setTimeout(() => {
@@ -672,7 +663,7 @@ export default function Profile() {
           <div className="flex items-center justify-between py-3">
             <span className="text-apple-mute">{t('profile.registeredAt')}</span>
             <span className="font-medium text-apple-ink">
-              {user?.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
+              {user?.created_at ? new Date(user.created_at).toLocaleDateString(uiLocale()) : '-'}
             </span>
           </div>
         </div>
@@ -932,438 +923,453 @@ export default function Profile() {
           open={openSection === 'referral'}
           onToggle={() => toggleSection('referral')}
         >
-          <div className="space-y-5">
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2 rounded-xl bg-apple-elevated p-3.5">
-                <div className="text-[13px] text-apple-mute">
-                  {t('referral.stats.totalReferrals')}
-                </div>
-                <div className="mt-1 text-[26px] font-bold text-apple-ink">
-                  {referralInfo?.total_referrals || 0}
-                </div>
-                <div className="mt-0.5 text-[13px] text-apple-faint">
-                  {referralInfo?.active_referrals || 0}{' '}
-                  {t('referral.stats.activeReferrals').toLowerCase()}
-                </div>
-              </div>
-              <div className="rounded-xl bg-apple-elevated p-3.5">
-                <div className="text-[13px] text-apple-mute">
-                  {t('referral.stats.totalEarnings')}
-                </div>
-                <div className="mt-1 text-[20px] font-bold text-apple-green">
-                  {formatPositive(referralInfo?.total_earnings_rubles || 0)}
-                </div>
-              </div>
-              <div className="rounded-xl bg-apple-elevated p-3.5">
-                <div className="text-[13px] text-apple-mute">
-                  {t('referral.stats.commissionRate')}
-                </div>
-                <div className="mt-1 text-[20px] font-bold" style={{ color: '#F97315' }}>
-                  {referralInfo?.commission_percent || 0}%
-                </div>
-              </div>
-            </div>
-
-            {/* Referral links */}
-            <div>
-              <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
-                {t('referral.yourLink')}
-              </h3>
-              <div className="space-y-3">
-                {/* Bot link */}
-                {botReferralLink && (
-                  <div>
-                    <div className="mb-1.5 flex items-center gap-2 text-[13px] font-medium text-apple-mute">
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        style={{ color: '#F97315' }}
-                      >
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
-                      </svg>
-                      {t('referral.botLink')}
+          {integrationCapabilities.referralLevels ? (
+            <Suspense fallback={<div role="status">{t('common.loading')}</div>}>
+              <UpdatedReferral />
+            </Suspense>
+          ) : (
+            <>
+              <div className="space-y-5">
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 rounded-xl bg-apple-elevated p-3.5">
+                    <div className="text-[13px] text-apple-mute">
+                      {t('referral.stats.totalReferrals')}
                     </div>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <input
-                        type="text"
-                        readOnly
-                        value={botReferralLink}
-                        className={`${inputCls} flex-1 text-sm`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => copyLink(botReferralLink, 'bot')}
-                        className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
-                        style={{ background: copiedLink === 'bot' ? '#30d158' : '#F97315' }}
-                      >
-                        {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
-                        <span>
-                          {copiedLink === 'bot' ? t('referral.copied') : t('referral.copyLink')}
-                        </span>
-                      </button>
+                    <div className="mt-1 text-[26px] font-bold text-apple-ink">
+                      {referralInfo?.total_referrals || 0}
+                    </div>
+                    <div className="mt-0.5 text-[13px] text-apple-faint">
+                      {referralInfo?.active_referrals || 0}{' '}
+                      {t('referral.stats.activeReferrals').toLowerCase()}
                     </div>
                   </div>
-                )}
-                {/* Cabinet link */}
-                <div>
-                  <div className="mb-1.5 flex items-center gap-2 text-[13px] font-medium text-apple-mute">
-                    <svg
-                      className="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      style={{ color: '#F97315' }}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                      />
-                    </svg>
-                    {t('referral.cabinetLink')}
+                  <div className="rounded-xl bg-apple-elevated p-3.5">
+                    <div className="text-[13px] text-apple-mute">
+                      {t('referral.stats.totalEarnings')}
+                    </div>
+                    <div className="mt-1 text-[20px] font-bold text-apple-green">
+                      {formatPositive(referralInfo?.total_earnings_rubles || 0)}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <input
-                      type="text"
-                      readOnly
-                      value={referralLink}
-                      className={`${inputCls} flex-1 text-sm`}
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => copyLink(referralLink, 'cabinet')}
-                        disabled={!referralLink}
-                        className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                        style={{ background: copiedLink === 'cabinet' ? '#30d158' : '#F97315' }}
-                      >
-                        {copiedLink === 'cabinet' ? <CheckIcon /> : <CopyIcon />}
-                        <span>
-                          {copiedLink === 'cabinet' ? t('referral.copied') : t('referral.copyLink')}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={shareReferralLink}
-                        disabled={!referralLink}
-                        className="flex shrink-0 items-center justify-center gap-2 rounded-full bg-apple-elevated px-4 py-3 text-[14px] font-semibold text-apple-ink transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <ShareIcon />
-                        <span>{t('referral.shareButton')}</span>
-                      </button>
+                  <div className="rounded-xl bg-apple-elevated p-3.5">
+                    <div className="text-[13px] text-apple-mute">
+                      {t('referral.stats.commissionRate')}
+                    </div>
+                    <div className="mt-1 text-[20px] font-bold" style={{ color: '#F97315' }}>
+                      {referralInfo?.commission_percent || 0}%
                     </div>
                   </div>
                 </div>
-              </div>
-              <p className="mt-3 text-sm text-apple-faint">
-                {t('referral.shareHint', { percent: referralInfo?.commission_percent || 0 })}
-              </p>
-            </div>
 
-            {/* Program terms */}
-            {programTerms}
-
-            {/* Referrals list */}
-            <div>
-              <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
-                {t('referral.yourReferrals')}
-              </h3>
-              {referralList?.items && referralList.items.length > 0 ? (
-                <div className="space-y-2">
-                  {referralList.items.map((ref) => (
-                    <div
-                      key={ref.id}
-                      className="flex items-center justify-between rounded-xl bg-apple-elevated p-3"
-                    >
-                      <div>
-                        <div className="font-medium text-apple-ink">
-                          {ref.first_name ||
-                            ref.username ||
-                            t('referral.anonymousUser', { id: ref.id })}
-                        </div>
-                        <div className="mt-0.5 text-xs text-apple-faint">
-                          {new Date(ref.created_at).toLocaleDateString(i18n.language)}
-                        </div>
-                      </div>
-                      {ref.has_paid ? (
-                        <StatusPill tone="green">{t('referral.status.paid')}</StatusPill>
-                      ) : (
-                        <StatusPill tone="neutral">{t('referral.status.pending')}</StatusPill>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl bg-apple-elevated py-10 text-center">
-                  <div className="text-apple-mute">{t('referral.noReferrals')}</div>
-                </div>
-              )}
-            </div>
-
-            {/* Earnings history */}
-            {earnings?.items && earnings.items.length > 0 && (
-              <div>
-                <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
-                  {t('referral.earningsHistory')}
-                </h3>
-                <div className="space-y-2">
-                  {earnings.items.map((earning) => (
-                    <div
-                      key={earning.id}
-                      className="flex items-center justify-between rounded-xl bg-apple-elevated p-3"
-                    >
-                      <div>
-                        <div className="text-apple-ink">
-                          {earning.referral_first_name ||
-                            earning.referral_username ||
-                            t('referral.anonymousReferral')}
-                        </div>
-                        <div className="mt-0.5 text-xs text-apple-faint">
-                          {t(`referral.reasons.${earning.reason}`, earning.reason)} •{' '}
-                          {new Date(earning.created_at).toLocaleDateString(i18n.language)}
-                        </div>
-                      </div>
-                      <div className="font-semibold text-apple-green">
-                        {formatPositive(earning.amount_rubles)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Partner application — status: none */}
-            {referralTerms?.partner_section_visible !== false && showApplySection && (
-              <div className="rounded-xl bg-apple-elevated p-4">
-                <h3 className="text-[15px] font-semibold text-apple-ink">
-                  {t('referral.partner.becomePartner')}
-                </h3>
-                <p className="mt-1 text-sm text-apple-mute">
-                  {t('referral.partner.becomePartnerDesc')}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/referral/partner/apply')}
-                  className="mt-4 rounded-full bg-[#F97315] px-6 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
-                >
-                  {t('referral.partner.applyButton')}
-                </button>
-              </div>
-            )}
-
-            {/* Partner application — status: pending */}
-            {referralTerms?.partner_section_visible !== false && showPendingSection && (
-              <div className="rounded-xl border border-apple-amber/30 bg-apple-amber/10 p-4">
-                <h3 className="text-[15px] font-semibold text-apple-ink">
-                  {t('referral.partner.underReview')}
-                </h3>
-                <p className="mt-1 text-sm text-apple-mute">
-                  {t('referral.partner.underReviewDesc')}
-                </p>
-                {partnerStatus?.latest_application?.created_at && (
-                  <p className="mt-2 text-xs text-apple-faint">
-                    {t('referral.partner.submittedAt', {
-                      date: new Date(
-                        partnerStatus.latest_application.created_at,
-                      ).toLocaleDateString(i18n.language),
-                    })}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Partner application — status: approved */}
-            {referralTerms?.partner_section_visible !== false && showApprovedSection && (
-              <div className="rounded-xl border border-apple-green/30 bg-apple-green/10 p-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-[15px] font-semibold text-apple-ink">
-                    {t('referral.partner.partnerStatus')}
-                  </h3>
-                  <StatusPill tone="green">{t('referral.partner.active')}</StatusPill>
-                </div>
-                <p className="mt-1 text-sm text-apple-mute">
-                  {t('referral.partner.commissionInfo', {
-                    percent: partnerStatus?.commission_percent ?? 0,
-                  })}
-                </p>
-              </div>
-            )}
-
-            {/* Partner application — status: rejected */}
-            {referralTerms?.partner_section_visible !== false && showRejectedSection && (
-              <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-4">
-                <h3 className="text-[15px] font-semibold text-apple-ink">
-                  {t('referral.partner.rejected')}
-                </h3>
-                {partnerStatus?.latest_application?.admin_comment && (
-                  <p className="mt-1 text-sm text-apple-mute">
-                    {partnerStatus.latest_application.admin_comment}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={() => navigate('/referral/partner/apply')}
-                  className="mt-4 rounded-full bg-[#F97315] px-6 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
-                >
-                  {t('referral.partner.reapplyButton')}
-                </button>
-              </div>
-            )}
-
-            {/* Partner campaigns */}
-            {referralTerms?.partner_section_visible !== false &&
-              isPartner &&
-              partnerStatus?.campaigns &&
-              partnerStatus.campaigns.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-[15px] font-semibold text-apple-ink">
-                    {t('referral.partner.yourCampaigns')}
-                  </h3>
-                  {partnerStatus.campaigns.map((campaign) => (
-                    <CampaignCard key={campaign.id} campaign={campaign} />
-                  ))}
-                </div>
-              )}
-
-            {/* Withdrawal section (approved partners only) */}
-            {referralTerms?.partner_section_visible !== false && isPartner && (
-              <div className="space-y-4">
-                {withdrawalBalance && (
-                  <div>
-                    <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
-                      {t('referral.withdrawal.title')}
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2 rounded-xl bg-apple-elevated p-4">
-                        <div className="text-[13px] text-apple-mute">
-                          {t('referral.withdrawal.available')}
-                        </div>
-                        <div className="mt-1 text-[24px] font-bold text-apple-green">
-                          {formatWithCurrency(withdrawalBalance.available_total / 100)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-apple-elevated p-3">
-                        <div className="text-[13px] text-apple-mute">
-                          {t('referral.withdrawal.totalEarned')}
-                        </div>
-                        <div className="mt-1 text-[17px] font-semibold text-apple-ink">
-                          {formatWithCurrency(withdrawalBalance.total_earned / 100)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-apple-elevated p-3">
-                        <div className="text-[13px] text-apple-mute">
-                          {t('referral.withdrawal.withdrawn')}
-                        </div>
-                        <div className="mt-1 text-[17px] font-semibold text-apple-ink">
-                          {formatWithCurrency(withdrawalBalance.withdrawn / 100)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-apple-elevated p-3">
-                        <div className="text-[13px] text-apple-mute">
-                          {t('referral.withdrawal.spent')}
-                        </div>
-                        <div className="mt-1 text-[17px] font-semibold text-apple-ink">
-                          {formatWithCurrency(withdrawalBalance.referral_spent / 100)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-apple-elevated p-3">
-                        <div className="text-[13px] text-apple-mute">
-                          {t('referral.withdrawal.pending')}
-                        </div>
-                        <div className="mt-1 text-[17px] font-semibold text-apple-amber">
-                          {formatWithCurrency(withdrawalBalance.pending / 100)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={() => navigate('/referral/withdrawal/request')}
-                        disabled={!withdrawalBalance.can_request}
-                        className="w-full rounded-full bg-[#F97315] px-6 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                      >
-                        {t('referral.withdrawal.requestButton')}
-                      </button>
-                      {!withdrawalBalance.can_request && withdrawalBalance.cannot_request_reason ? (
-                        <p className="mt-2 text-xs text-apple-faint">
-                          {withdrawalBalance.cannot_request_reason}
-                        </p>
-                      ) : (
-                        withdrawalBalance.min_amount_kopeks > 0 && (
-                          <p className="mt-2 text-xs text-apple-faint">
-                            {t('referral.withdrawal.minAmount', {
-                              amount: formatWithCurrency(withdrawalBalance.min_amount_kopeks / 100),
-                            })}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Withdrawal history */}
+                {/* Referral links */}
                 <div>
                   <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
-                    {t('referral.withdrawal.history')}
+                    {t('referral.yourLink')}
                   </h3>
-                  {withdrawalHistory?.items && withdrawalHistory.items.length > 0 ? (
+                  <div className="space-y-3">
+                    {/* Bot link */}
+                    {botReferralLink && (
+                      <div>
+                        <div className="mb-1.5 flex items-center gap-2 text-[13px] font-medium text-apple-mute">
+                          <svg
+                            className="h-4 w-4"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            style={{ color: '#F97315' }}
+                          >
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
+                          </svg>
+                          {t('referral.botLink')}
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <input
+                            type="text"
+                            readOnly
+                            value={botReferralLink}
+                            className={`${inputCls} flex-1 text-sm`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => copyLink(botReferralLink, 'bot')}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                            style={{ background: copiedLink === 'bot' ? '#30d158' : '#F97315' }}
+                          >
+                            {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
+                            <span>
+                              {copiedLink === 'bot' ? t('referral.copied') : t('referral.copyLink')}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {/* Cabinet link */}
+                    <div>
+                      <div className="mb-1.5 flex items-center gap-2 text-[13px] font-medium text-apple-mute">
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          style={{ color: '#F97315' }}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                          />
+                        </svg>
+                        {t('referral.cabinetLink')}
+                      </div>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <input
+                          type="text"
+                          readOnly
+                          value={referralLink}
+                          className={`${inputCls} flex-1 text-sm`}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => copyLink(referralLink, 'cabinet')}
+                            disabled={!referralLink}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                            style={{ background: copiedLink === 'cabinet' ? '#30d158' : '#F97315' }}
+                          >
+                            {copiedLink === 'cabinet' ? <CheckIcon /> : <CopyIcon />}
+                            <span>
+                              {copiedLink === 'cabinet'
+                                ? t('referral.copied')
+                                : t('referral.copyLink')}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={shareReferralLink}
+                            disabled={!referralLink}
+                            className="flex shrink-0 items-center justify-center gap-2 rounded-full bg-apple-elevated px-4 py-3 text-[14px] font-semibold text-apple-ink transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <ShareIcon />
+                            <span>{t('referral.shareButton')}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm text-apple-faint">
+                    {t('referral.shareHint', { percent: referralInfo?.commission_percent || 0 })}
+                  </p>
+                </div>
+
+                {/* Program terms */}
+                {programTerms}
+
+                {/* Referrals list */}
+                <div>
+                  <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
+                    {t('referral.yourReferrals')}
+                  </h3>
+                  {referralList?.items && referralList.items.length > 0 ? (
                     <div className="space-y-2">
-                      {withdrawalHistory.items.map((item) => (
+                      {referralList.items.map((ref) => (
                         <div
-                          key={item.id}
+                          key={ref.id}
                           className="flex items-center justify-between rounded-xl bg-apple-elevated p-3"
                         >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-apple-ink">
-                                {formatWithCurrency(item.amount_rubles)}
-                              </span>
-                              <StatusPill tone={getWithdrawalStatusTone(item.status)}>
-                                {t(`referral.withdrawal.status.${item.status}`, item.status)}
-                              </StatusPill>
+                          <div>
+                            <div className="font-medium text-apple-ink">
+                              {ref.first_name ||
+                                ref.username ||
+                                t('referral.anonymousUser', { id: ref.id })}
                             </div>
                             <div className="mt-0.5 text-xs text-apple-faint">
-                              {new Date(item.created_at).toLocaleDateString(i18n.language)}
-                              {item.payment_details && (
-                                <span className="ml-1">
-                                  &bull;{' '}
-                                  {item.payment_details.length > 40
-                                    ? `${item.payment_details.slice(0, 40)}...`
-                                    : item.payment_details}
-                                </span>
-                              )}
+                              {new Date(ref.created_at).toLocaleDateString(i18n.language)}
                             </div>
-                            {item.admin_comment && (
-                              <div className="mt-1 text-xs text-apple-mute">
-                                {item.admin_comment}
-                              </div>
-                            )}
                           </div>
-                          {item.status === 'pending' && (
-                            <button
-                              type="button"
-                              onClick={() => cancelWithdrawalMutation.mutate(item.id)}
-                              disabled={cancelWithdrawalMutation.isPending}
-                              className="ml-3 shrink-0 text-sm text-apple-red transition-opacity hover:opacity-80"
-                            >
-                              {t('common.cancel')}
-                            </button>
+                          {ref.has_paid ? (
+                            <StatusPill tone="green">{t('referral.status.paid')}</StatusPill>
+                          ) : (
+                            <StatusPill tone="neutral">{t('referral.status.pending')}</StatusPill>
                           )}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-xl bg-apple-elevated py-8 text-center">
-                      <div className="text-apple-mute">{t('referral.withdrawal.noHistory')}</div>
+                    <div className="rounded-xl bg-apple-elevated py-10 text-center">
+                      <div className="text-apple-mute">{t('referral.noReferrals')}</div>
                     </div>
                   )}
                 </div>
+
+                {/* Earnings history */}
+                {earnings?.items && earnings.items.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
+                      {t('referral.earningsHistory')}
+                    </h3>
+                    <div className="space-y-2">
+                      {earnings.items.map((earning) => (
+                        <div
+                          key={earning.id}
+                          className="flex items-center justify-between rounded-xl bg-apple-elevated p-3"
+                        >
+                          <div>
+                            <div className="text-apple-ink">
+                              {earning.referral_first_name ||
+                                earning.referral_username ||
+                                t('referral.anonymousReferral')}
+                            </div>
+                            <div className="mt-0.5 text-xs text-apple-faint">
+                              {t(`referral.reasons.${earning.reason}`, earning.reason)} •{' '}
+                              {new Date(earning.created_at).toLocaleDateString(i18n.language)}
+                            </div>
+                          </div>
+                          <div className="font-semibold text-apple-green">
+                            {formatPositive(earning.amount_rubles)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Partner application — status: none */}
+                {referralTerms?.partner_section_visible !== false && showApplySection && (
+                  <div className="rounded-xl bg-apple-elevated p-4">
+                    <h3 className="text-[15px] font-semibold text-apple-ink">
+                      {t('referral.partner.becomePartner')}
+                    </h3>
+                    <p className="mt-1 text-sm text-apple-mute">
+                      {t('referral.partner.becomePartnerDesc')}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/referral/partner/apply')}
+                      className="mt-4 rounded-full bg-[#F97315] px-6 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                    >
+                      {t('referral.partner.applyButton')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Partner application — status: pending */}
+                {referralTerms?.partner_section_visible !== false && showPendingSection && (
+                  <div className="rounded-xl border border-apple-amber/30 bg-apple-amber/10 p-4">
+                    <h3 className="text-[15px] font-semibold text-apple-ink">
+                      {t('referral.partner.underReview')}
+                    </h3>
+                    <p className="mt-1 text-sm text-apple-mute">
+                      {t('referral.partner.underReviewDesc')}
+                    </p>
+                    {partnerStatus?.latest_application?.created_at && (
+                      <p className="mt-2 text-xs text-apple-faint">
+                        {t('referral.partner.submittedAt', {
+                          date: new Date(
+                            partnerStatus.latest_application.created_at,
+                          ).toLocaleDateString(i18n.language),
+                        })}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Partner application — status: approved */}
+                {referralTerms?.partner_section_visible !== false && showApprovedSection && (
+                  <div className="rounded-xl border border-apple-green/30 bg-apple-green/10 p-4">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[15px] font-semibold text-apple-ink">
+                        {t('referral.partner.partnerStatus')}
+                      </h3>
+                      <StatusPill tone="green">{t('referral.partner.active')}</StatusPill>
+                    </div>
+                    <p className="mt-1 text-sm text-apple-mute">
+                      {t('referral.partner.commissionInfo', {
+                        percent: partnerStatus?.commission_percent ?? 0,
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                {/* Partner application — status: rejected */}
+                {referralTerms?.partner_section_visible !== false && showRejectedSection && (
+                  <div className="rounded-xl border border-apple-red/30 bg-apple-red/10 p-4">
+                    <h3 className="text-[15px] font-semibold text-apple-ink">
+                      {t('referral.partner.rejected')}
+                    </h3>
+                    {partnerStatus?.latest_application?.admin_comment && (
+                      <p className="mt-1 text-sm text-apple-mute">
+                        {partnerStatus.latest_application.admin_comment}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/referral/partner/apply')}
+                      className="mt-4 rounded-full bg-[#F97315] px-6 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                    >
+                      {t('referral.partner.reapplyButton')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Partner campaigns */}
+                {referralTerms?.partner_section_visible !== false &&
+                  isPartner &&
+                  partnerStatus?.campaigns &&
+                  partnerStatus.campaigns.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-[15px] font-semibold text-apple-ink">
+                        {t('referral.partner.yourCampaigns')}
+                      </h3>
+                      {partnerStatus.campaigns.map((campaign) => (
+                        <CampaignCard key={campaign.id} campaign={campaign} />
+                      ))}
+                    </div>
+                  )}
+
+                {/* Withdrawal section (approved partners only) */}
+                {referralTerms?.partner_section_visible !== false && isPartner && (
+                  <div className="space-y-4">
+                    {withdrawalBalance && (
+                      <div>
+                        <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
+                          {t('referral.withdrawal.title')}
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="col-span-2 rounded-xl bg-apple-elevated p-4">
+                            <div className="text-[13px] text-apple-mute">
+                              {t('referral.withdrawal.available')}
+                            </div>
+                            <div className="mt-1 text-[24px] font-bold text-apple-green">
+                              {formatWithCurrency(withdrawalBalance.available_total / 100)}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-apple-elevated p-3">
+                            <div className="text-[13px] text-apple-mute">
+                              {t('referral.withdrawal.totalEarned')}
+                            </div>
+                            <div className="mt-1 text-[17px] font-semibold text-apple-ink">
+                              {formatWithCurrency(withdrawalBalance.total_earned / 100)}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-apple-elevated p-3">
+                            <div className="text-[13px] text-apple-mute">
+                              {t('referral.withdrawal.withdrawn')}
+                            </div>
+                            <div className="mt-1 text-[17px] font-semibold text-apple-ink">
+                              {formatWithCurrency(withdrawalBalance.withdrawn / 100)}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-apple-elevated p-3">
+                            <div className="text-[13px] text-apple-mute">
+                              {t('referral.withdrawal.spent')}
+                            </div>
+                            <div className="mt-1 text-[17px] font-semibold text-apple-ink">
+                              {formatWithCurrency(withdrawalBalance.referral_spent / 100)}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-apple-elevated p-3">
+                            <div className="text-[13px] text-apple-mute">
+                              {t('referral.withdrawal.pending')}
+                            </div>
+                            <div className="mt-1 text-[17px] font-semibold text-apple-amber">
+                              {formatWithCurrency(withdrawalBalance.pending / 100)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <button
+                            type="button"
+                            onClick={() => navigate('/referral/withdrawal/request')}
+                            disabled={!withdrawalBalance.can_request}
+                            className="w-full rounded-full bg-[#F97315] px-6 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                          >
+                            {t('referral.withdrawal.requestButton')}
+                          </button>
+                          {!withdrawalBalance.can_request &&
+                          withdrawalBalance.cannot_request_reason ? (
+                            <p className="mt-2 text-xs text-apple-faint">
+                              {withdrawalBalance.cannot_request_reason}
+                            </p>
+                          ) : (
+                            withdrawalBalance.min_amount_kopeks > 0 && (
+                              <p className="mt-2 text-xs text-apple-faint">
+                                {t('referral.withdrawal.minAmount', {
+                                  amount: formatWithCurrency(
+                                    withdrawalBalance.min_amount_kopeks / 100,
+                                  ),
+                                })}
+                              </p>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Withdrawal history */}
+                    <div>
+                      <h3 className="mb-3 text-[15px] font-semibold text-apple-ink">
+                        {t('referral.withdrawal.history')}
+                      </h3>
+                      {withdrawalHistory?.items && withdrawalHistory.items.length > 0 ? (
+                        <div className="space-y-2">
+                          {withdrawalHistory.items.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-center justify-between rounded-xl bg-apple-elevated p-3"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-apple-ink">
+                                    {formatWithCurrency(item.amount_rubles)}
+                                  </span>
+                                  <StatusPill tone={getWithdrawalStatusTone(item.status)}>
+                                    {t(`referral.withdrawal.status.${item.status}`, item.status)}
+                                  </StatusPill>
+                                </div>
+                                <div className="mt-0.5 text-xs text-apple-faint">
+                                  {new Date(item.created_at).toLocaleDateString(i18n.language)}
+                                  {item.payment_details && (
+                                    <span className="ml-1">
+                                      &bull;{' '}
+                                      {item.payment_details.length > 40
+                                        ? `${item.payment_details.slice(0, 40)}...`
+                                        : item.payment_details}
+                                    </span>
+                                  )}
+                                </div>
+                                {item.admin_comment && (
+                                  <div className="mt-1 text-xs text-apple-mute">
+                                    {item.admin_comment}
+                                  </div>
+                                )}
+                              </div>
+                              {item.status === 'pending' && (
+                                <button
+                                  type="button"
+                                  onClick={() => cancelWithdrawalMutation.mutate(item.id)}
+                                  disabled={cancelWithdrawalMutation.isPending}
+                                  className="ml-3 shrink-0 text-sm text-apple-red transition-opacity hover:opacity-80"
+                                >
+                                  {t('common.cancel')}
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl bg-apple-elevated py-8 text-center">
+                          <div className="text-apple-mute">
+                            {t('referral.withdrawal.noHistory')}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </AccordionSection>
       )}
 

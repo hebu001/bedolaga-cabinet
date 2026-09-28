@@ -1,6 +1,8 @@
+import { Skeleton } from '../ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useCurrency } from '../../hooks/useCurrency';
+import { ChevronRightIcon } from '@/components/icons';
 import { useTheme } from '../../hooks/useTheme';
 import { getGlassColors } from '../../utils/glassTheme';
 
@@ -11,25 +13,6 @@ interface StatsGridProps {
   refLoading: boolean;
 }
 
-const ChevronIcon = ({ color }: { color: string }) => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    style={{ flexShrink: 0 }}
-    aria-hidden="true"
-  >
-    <path
-      d="M6 4l4 4-4 4"
-      stroke={color}
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
 export default function StatsGrid({
   balanceRubles,
   referralCount,
@@ -38,16 +21,16 @@ export default function StatsGrid({
 }: StatsGridProps) {
   const { t } = useTranslation();
   const { formatAmount, currencySymbol } = useCurrency();
+
   const { isDark } = useTheme();
   const g = getGlassColors(isDark);
-
   const accentColor = 'var(--figma-green)';
-  const accentBg = 'rgba(0,168,120,0.08)';
+  const accentBg = 'rgba(249,115,22,0.08)';
 
   const cards = [
     {
       label: t('dashboard.stats.balance'),
-      value: `${formatAmount(balanceRubles)} ${currencySymbol}`,
+      value: `${formatAmount(balanceRubles)}\u00A0${currencySymbol}`,
       valueColor: accentColor,
       to: '/balance',
       icon: (color: string) => (
@@ -76,7 +59,7 @@ export default function StatsGrid({
       label: t('dashboard.stats.referrals'),
       value: `${referralCount}`,
       valueColor: g.text,
-      subtitle: `+${formatAmount(earningsRubles)} ${currencySymbol}`,
+      subtitle: `+${formatAmount(earningsRubles)}\u00A0${currencySymbol}`,
       subtitleColor: accentColor,
       to: '/referral',
       icon: (color: string) => (
@@ -124,14 +107,16 @@ export default function StatsGrid({
               >
                 {card.icon(card.iconColor)}
               </div>
-              <span className="text-[13px] font-medium text-dark-50/45">{card.label}</span>
+              <span className="text-[13px] font-medium text-apple-mute">{card.label}</span>
             </div>
-            <ChevronIcon color={g.textFaint} />
+            <span style={{ color: g.textFaint }}>
+              <ChevronRightIcon className="h-4 w-4" />
+            </span>
           </div>
 
           {/* Value */}
           {card.loading ? (
-            <div className="skeleton h-8 w-20" />
+            <Skeleton className="h-8 w-20" />
           ) : (
             <>
               <div

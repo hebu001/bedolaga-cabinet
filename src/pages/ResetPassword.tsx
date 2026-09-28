@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/auth';
 import { localizeServerMessage } from '../utils/serverMessages';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { CheckIcon } from '@/components/icons';
 
 export default function ResetPassword() {
   const { t } = useTranslation();
@@ -25,7 +26,13 @@ export default function ResetPassword() {
     };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
+
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError('');
 
@@ -59,7 +66,7 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:py-12">
+      <div className="min-h-viewport flex items-center justify-center px-4 py-8 sm:py-12">
         <div className="fixed inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950" />
         <div className="fixed right-4 top-4 z-50">
           <LanguageSwitcher />
@@ -86,7 +93,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:py-12">
+    <div className="min-h-viewport flex items-center justify-center px-4 py-8 sm:py-12">
       <div className="fixed inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950" />
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent-500/10 via-transparent to-transparent" />
       <div className="fixed right-4 top-4 z-50">
@@ -98,15 +105,7 @@ export default function ResetPassword() {
           {status === 'success' ? (
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-success-500/20">
-                <svg
-                  className="h-8 w-8 text-success-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+                <CheckIcon className="h-8 w-8 text-success-400" />
               </div>
               <h2 className="mb-2 text-xl font-bold text-dark-50">
                 {t('resetPassword.success', 'Password changed!')}

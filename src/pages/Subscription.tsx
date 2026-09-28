@@ -1,3 +1,13 @@
+import { copyToClipboard } from '@/utils/clipboard';
+import { safeLocal } from '../utils/safeStorage';
+import {
+  needsTariff,
+  planTitle,
+  showsAutopayToggle,
+  tariffSelectionPath,
+} from '../utils/legacySubscription';
+import { integrationCapabilities } from '../config/integrationCapabilities';
+import { RecurringPanels } from '../components/subscription/manage/RecurringPanels';
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -310,7 +320,7 @@ export default function Subscription() {
   const formatPrice = (kopeks: number) =>
     kopeks === 0
       ? t('subscription.free', 'Бесплатно')
-      : `${formatAmount(kopeks / 100)} ${currencySymbol}`;
+      : `${formatAmount(kopeks / 100)}\u00A0${currencySymbol}`;
 
   // Device/traffic topup state
   const [showDeviceManage, setShowDeviceManage] = useState(false);
@@ -720,10 +730,7 @@ export default function Subscription() {
         traffic_used_percent: data.traffic_used_percent,
         is_unlimited: data.is_unlimited,
       });
-      localStorage.setItem(
-        `traffic_refresh_ts_${subscriptionId ?? 'default'}`,
-        Date.now().toString(),
-      );
+      safeLocal.setItem(`traffic_refresh_ts_${subscriptionId ?? 'default'}`, Date.now().toString());
       if (data.rate_limited && data.retry_after_seconds) {
         setTrafficRefreshCooldown(data.retry_after_seconds);
       } else {
@@ -755,7 +762,7 @@ export default function Subscription() {
 
   // Initialize revoke cooldown from localStorage on mount
   useEffect(() => {
-    const ts = localStorage.getItem(`revoke_ts_${subscriptionId ?? 'default'}`);
+    const ts = safeLocal.getItem(`revoke_ts_${subscriptionId ?? 'default'}`);
     if (ts) {
       const elapsed = Math.floor((Date.now() - parseInt(ts, 10)) / 1000);
       const remaining = Math.max(0, 900 - elapsed);
@@ -783,7 +790,7 @@ export default function Subscription() {
       // re-reads the now-empty device list instead of showing the stale cache.
       queryClient.invalidateQueries({ queryKey: ['devices', subscriptionId] });
       haptic.notification('success');
-      localStorage.setItem(`revoke_ts_${subscriptionId ?? 'default'}`, Date.now().toString());
+      safeLocal.setItem(`revoke_ts_${subscriptionId ?? 'default'}`, Date.now().toString());
       setRevokeCooldown(900);
     },
     onError: () => {
@@ -797,7 +804,7 @@ export default function Subscription() {
     if (hasAutoRefreshed.current) return;
     hasAutoRefreshed.current = true;
 
-    const lastRefresh = localStorage.getItem(`traffic_refresh_ts_${subscriptionId ?? 'default'}`);
+    const lastRefresh = safeLocal.getItem(`traffic_refresh_ts_${subscriptionId ?? 'default'}`);
     const now = Date.now();
     const cacheMs = 30 * 1000;
 
@@ -819,7 +826,7 @@ export default function Subscription() {
     setCopied(false);
     setCopyError(false);
     try {
-      await navigator.clipboard.writeText(displayedConnectionUrl);
+      await copyToClipboard(displayedConnectionUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -916,11 +923,13 @@ export default function Subscription() {
             : subscription.is_limited
               ? '#ff9f0a'
               : '#ff453a';
-          const renewLink = subscription.is_trial
-            ? '/subscription/purchase'
-            : isMultiTariff
-              ? `/subscriptions/${subscription.id}/renew`
-              : '/subscription/purchase?renew=1';
+          const renewLink = needsTariff(subscription)
+            ? tariffSelectionPath(subscription.id)
+            : subscription.is_trial
+              ? '/subscription/purchase'
+              : isMultiTariff
+                ? `/subscriptions/${subscription.id}/renew`
+                : '/subscription/purchase?renew=1';
 
           return (
             <>
@@ -964,7 +973,7 @@ export default function Subscription() {
                     </span>
                   </div>
                   <h2 className="truncate text-[28px] font-bold tracking-tight text-apple-ink">
-                    {subscription.tariff_name || t('subscription.currentPlan')}
+                    {planTitle(subscription, t)}
                   </h2>
                   {tariffPriceLabel && (
                     <div className="mt-0.5 text-[14px] text-apple-mute">{tariffPriceLabel}</div>
@@ -1093,7 +1102,8 @@ export default function Subscription() {
                         </button>
                         {subscription.traffic_limit_gb > 0 &&
                           (subscription.is_active || subscription.is_limited) &&
-                          !subscription.is_trial && (
+                          !subscription.is_trial &&
+                          !needsTariff(subscription) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -1142,6 +1152,7 @@ export default function Subscription() {
                       subscription.is_limited ||
                       subscription.is_expired) &&
                       !subscription.is_trial &&
+                      !needsTariff(subscription) &&
                       subscription.device_limit !== 0 && (
                         <button
                           type="button"
@@ -1770,172 +1781,176 @@ export default function Subscription() {
       )}
 
       {/* Daily Subscription Pause */}
-      {subscription && subscription.is_daily && !subscription.is_trial && (
-        <div
-          className={`relative overflow-hidden rounded-2xl ${isDark ? 'apple-card-grad bg-apple-card' : 'bg-white'}`}
-          style={{
-            background: isDark ? 'transparent' : g.cardBg,
-            border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
-            boxShadow: isDark ? 'none' : g.shadow,
-            padding: '24px 28px',
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold tracking-tight text-apple-ink">
-                {t('subscription.pause.title')}
-              </h2>
-              <div className="mt-1 text-[12px] text-apple-ink/35">
-                {subscription.is_limited
-                  ? t('subscription.trafficLimited')
-                  : subscription.status === 'disabled'
-                    ? t('subscription.pause.suspended')
-                    : subscription.is_daily_paused
-                      ? t('subscription.pause.paused')
-                      : t('subscription.pause.active')}
+      {subscription &&
+        subscription.is_daily &&
+        !subscription.is_trial &&
+        !needsTariff(subscription) && (
+          <div
+            className={`relative overflow-hidden rounded-2xl ${isDark ? 'apple-card-grad bg-apple-card' : 'bg-white'}`}
+            style={{
+              background: isDark ? 'transparent' : g.cardBg,
+              border: isDark ? 'none' : `1px solid ${g.cardBorder}`,
+              boxShadow: isDark ? 'none' : g.shadow,
+              padding: '24px 28px',
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold tracking-tight text-apple-ink">
+                  {t('subscription.pause.title')}
+                </h2>
+                <div className="mt-1 text-[12px] text-apple-ink/35">
+                  {subscription.is_limited
+                    ? t('subscription.trafficLimited')
+                    : subscription.status === 'disabled'
+                      ? t('subscription.pause.suspended')
+                      : subscription.is_daily_paused
+                        ? t('subscription.pause.paused')
+                        : t('subscription.pause.active')}
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  haptic.buttonPressMedium();
+                  pauseMutation.mutate();
+                }}
+                disabled={pauseMutation.isPending}
+                className="rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors duration-300"
+                style={{
+                  background:
+                    subscription.is_daily_paused || subscription.status === 'disabled'
+                      ? 'rgba(249, 115, 21, 0.12)'
+                      : 'rgba(255,184,0,0.12)',
+                  border:
+                    subscription.is_daily_paused || subscription.status === 'disabled'
+                      ? '1px solid rgba(249, 115, 21, 0.2)'
+                      : '1px solid rgba(255,184,0,0.2)',
+                  color:
+                    subscription.is_daily_paused || subscription.status === 'disabled'
+                      ? 'rgb(249, 115, 21)'
+                      : '#ff9f0a',
+                }}
+              >
+                {pauseMutation.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  </span>
+                ) : subscription.is_daily_paused || subscription.status === 'disabled' ? (
+                  t('subscription.pause.resumeBtn')
+                ) : (
+                  t('subscription.pause.pauseBtn')
+                )}
+              </button>
             </div>
-            <button
-              onClick={() => {
-                haptic.buttonPressMedium();
-                pauseMutation.mutate();
-              }}
-              disabled={pauseMutation.isPending}
-              className="rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors duration-300"
-              style={{
-                background:
-                  subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgba(249, 115, 21, 0.12)'
-                    : 'rgba(255,184,0,0.12)',
-                border:
-                  subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? '1px solid rgba(249, 115, 21, 0.2)'
-                    : '1px solid rgba(255,184,0,0.2)',
-                color:
-                  subscription.is_daily_paused || subscription.status === 'disabled'
-                    ? 'rgb(249, 115, 21)'
-                    : '#ff9f0a',
-              }}
-            >
-              {pauseMutation.isPending ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                </span>
-              ) : subscription.is_daily_paused || subscription.status === 'disabled' ? (
-                t('subscription.pause.resumeBtn')
-              ) : (
-                t('subscription.pause.pauseBtn')
-              )}
-            </button>
-          </div>
 
-          {/* Pause mutation error */}
-          {pauseMutation.isError &&
-            (() => {
-              const balanceError = getInsufficientBalanceError(pauseMutation.error);
-              if (balanceError) {
-                const missingAmount = balanceError.required - balanceError.balance;
+            {/* Pause mutation error */}
+            {pauseMutation.isError &&
+              (() => {
+                const balanceError = getInsufficientBalanceError(pauseMutation.error);
+                if (balanceError) {
+                  const missingAmount = balanceError.required - balanceError.balance;
+                  return (
+                    <div className="mt-4">
+                      <InsufficientBalancePrompt
+                        missingAmountKopeks={missingAmount}
+                        message={t('subscription.pause.insufficientBalance')}
+                        compact
+                      />
+                    </div>
+                  );
+                }
                 return (
-                  <div className="mt-4">
-                    <InsufficientBalancePrompt
-                      missingAmountKopeks={missingAmount}
-                      message={t('subscription.pause.insufficientBalance')}
-                      compact
-                    />
+                  <div
+                    className="mt-4 rounded-[10px] p-3 text-center text-sm"
+                    style={{
+                      background: 'rgba(255,59,92,0.08)',
+                      border: '1px solid rgba(255,59,92,0.15)',
+                      color: '#ff453a',
+                    }}
+                  >
+                    {getErrorMessage(pauseMutation.error)}
                   </div>
                 );
-              }
-              return (
-                <div
-                  className="mt-4 rounded-[10px] p-3 text-center text-sm"
-                  style={{
-                    background: 'rgba(255,59,92,0.08)',
-                    border: '1px solid rgba(255,59,92,0.15)',
-                    color: '#ff453a',
-                  }}
-                >
-                  {getErrorMessage(pauseMutation.error)}
-                </div>
-              );
-            })()}
+              })()}
 
-          {/* Paused info or Next charge progress bar */}
-          {subscription.is_daily_paused ? (
-            <div
-              className="mt-4 rounded-[12px] p-4"
-              style={{
-                background: 'rgba(255,184,0,0.06)',
-                border: '1px solid rgba(255,184,0,0.12)',
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <div className="text-lg" style={{ color: '#ff9f0a' }}>
-                  ⏸️
-                </div>
-                <div>
-                  <div className="text-sm font-semibold" style={{ color: '#ff9f0a' }}>
-                    {t('subscription.pause.pausedInfo')}
+            {/* Paused info or Next charge progress bar */}
+            {subscription.is_daily_paused ? (
+              <div
+                className="mt-4 rounded-[12px] p-4"
+                style={{
+                  background: 'rgba(255,184,0,0.06)',
+                  border: '1px solid rgba(255,184,0,0.12)',
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="text-lg" style={{ color: '#ff9f0a' }}>
+                    ⏸️
                   </div>
-                  <div className="mt-1 text-[12px] text-apple-ink/35">
-                    {t('subscription.pause.pausedDescription')}{' '}
-                    {new Date(subscription.end_date).toLocaleDateString()} (
-                    {t('subscription.pause.days', { count: subscription.days_left })})
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: '#ff9f0a' }}>
+                      {t('subscription.pause.pausedInfo')}
+                    </div>
+                    <div className="mt-1 text-[12px] text-apple-ink/35">
+                      {t('subscription.pause.pausedDescription')}{' '}
+                      {new Date(subscription.end_date).toLocaleDateString()} (
+                      {t('subscription.pause.days', { count: subscription.days_left })})
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            subscription.next_daily_charge_at &&
-            (() => {
-              const now = new Date();
-              const nextChargeStr = subscription.next_daily_charge_at.endsWith('Z')
-                ? subscription.next_daily_charge_at
-                : subscription.next_daily_charge_at + 'Z';
-              const nextCharge = new Date(nextChargeStr);
-              const totalMs = 24 * 60 * 60 * 1000;
-              const remainingMs = Math.max(0, nextCharge.getTime() - now.getTime());
-              const elapsedMs = totalMs - remainingMs;
-              const progress = Math.min(100, (elapsedMs / totalMs) * 100);
+            ) : (
+              subscription.next_daily_charge_at &&
+              (() => {
+                const now = new Date();
+                const nextChargeStr = subscription.next_daily_charge_at.endsWith('Z')
+                  ? subscription.next_daily_charge_at
+                  : subscription.next_daily_charge_at + 'Z';
+                const nextCharge = new Date(nextChargeStr);
+                const totalMs = 24 * 60 * 60 * 1000;
+                const remainingMs = Math.max(0, nextCharge.getTime() - now.getTime());
+                const elapsedMs = totalMs - remainingMs;
+                const progress = Math.min(100, (elapsedMs / totalMs) * 100);
 
-              const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-              const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
 
-              return (
-                <div className="mt-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-apple-ink/35">
-                      {t('subscription.pause.nextCharge')}
-                    </span>
-                    <span className="font-mono text-[12px] font-semibold text-apple-ink">
-                      {hours > 0
-                        ? `${hours}${t('subscription.pause.hours')} ${minutes}${t('subscription.pause.minutes')}`
-                        : `${minutes}${t('subscription.pause.minutes')}`}
-                    </span>
-                  </div>
-                  <div
-                    className="relative h-2 overflow-hidden rounded-full"
-                    style={{ background: g.trackBg }}
-                  >
-                    <div
-                      className="absolute inset-0 rounded-full transition-[width] duration-500"
-                      style={{
-                        width: `${progress}%`,
-                        background: 'linear-gradient(90deg, rgb(249, 115, 21), rgb(249, 115, 21))',
-                      }}
-                    />
-                  </div>
-                  {subscription.daily_price_kopeks && (
-                    <div className="mt-2 text-center text-[11px] text-apple-ink/25">
-                      {t('subscription.pause.willBeCharged')}:{' '}
-                      {formatPrice(subscription.daily_price_kopeks)}
+                return (
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-apple-ink/35">
+                        {t('subscription.pause.nextCharge')}
+                      </span>
+                      <span className="font-mono text-[12px] font-semibold text-apple-ink">
+                        {hours > 0
+                          ? `${hours}${t('subscription.pause.hours')} ${minutes}${t('subscription.pause.minutes')}`
+                          : `${minutes}${t('subscription.pause.minutes')}`}
+                      </span>
                     </div>
-                  )}
-                </div>
-              );
-            })()
-          )}
-        </div>
-      )}
+                    <div
+                      className="relative h-2 overflow-hidden rounded-full"
+                      style={{ background: g.trackBg }}
+                    >
+                      <div
+                        className="absolute inset-0 rounded-full transition-[width] duration-500"
+                        style={{
+                          width: `${progress}%`,
+                          background:
+                            'linear-gradient(90deg, rgb(249, 115, 21), rgb(249, 115, 21))',
+                        }}
+                      />
+                    </div>
+                    {subscription.daily_price_kopeks && (
+                      <div className="mt-2 text-center text-[11px] text-apple-ink/25">
+                        {t('subscription.pause.willBeCharged')}:{' '}
+                        {formatPrice(subscription.daily_price_kopeks)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
+            )}
+          </div>
+        )}
 
       {/* Purchase CTA — only when there is no subscription (active subs use the
           Продлить / Сменить тариф buttons under the hero) */}
@@ -1948,6 +1963,7 @@ export default function Subscription() {
         subscription &&
         !subscription.is_active &&
         !subscription.is_trial &&
+        !needsTariff(subscription) &&
         !subscription.is_limited && (
           <div className="space-y-3">
             {!showDeleteSheet ? (
@@ -2045,6 +2061,7 @@ export default function Subscription() {
       {subscription &&
         (subscription.is_active || subscription.is_limited) &&
         !subscription.is_trial &&
+        !needsTariff(subscription) &&
         subscription.device_limit !== 0 &&
         showServerManagement && (
           <div className="space-y-3">
@@ -2515,6 +2532,7 @@ export default function Subscription() {
       {/* ─── Управление ─── */}
       {subscription &&
         !subscription.is_trial &&
+        !needsTariff(subscription) &&
         (!subscription.is_daily || subscription.is_active || subscription.is_limited) && (
           <div>
             <div className="mb-2.5 px-1.5 text-[13px] font-semibold text-apple-mute">
@@ -2522,7 +2540,7 @@ export default function Subscription() {
             </div>
             <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
               {/* Autopay */}
-              {!subscription.is_daily && (
+              {showsAutopayToggle(subscription) && (
                 <div className="flex items-center gap-3 p-4">
                   <RowIcon icon="autopay" />
                   <div className="min-w-0 flex-1">
@@ -2641,6 +2659,9 @@ export default function Subscription() {
             )}
           </div>
         )}
+      {subscription && integrationCapabilities.recurringPayments && (
+        <RecurringPanels subscription={subscription} subscriptionId={subscriptionId} />
+      )}
     </div>
   );
 }

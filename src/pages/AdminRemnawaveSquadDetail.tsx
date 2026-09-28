@@ -1,11 +1,13 @@
 import { useParams, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminRemnawaveApi, SquadWithLocalInfo } from '../api/adminRemnawave';
+import { adminRemnawaveApi, type SquadWithLocalInfo } from '../api/adminRemnawave';
 import { AdminBackButton } from '../components/admin';
-import { ServerIcon, UsersIcon, CheckIcon, XIcon } from '../components/icons';
+import { ServerIcon, UsersIcon, CheckIcon, XIcon, BanknotesIcon } from '../components/icons';
+import { StatCard } from '@/components/stats';
 import Twemoji from 'react-twemoji';
 import { getFlagEmoji } from '../utils/subscriptionHelpers';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 // Country flag helper. Алгоритмический ISO 3166-1 alpha-2 → regional indicator,
 // чтобы не плодить хардкод-словари (исторически у каждого экрана был свой
@@ -33,9 +35,9 @@ export default function AdminRemnawaveSquadDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={2} titleWidth="w-56" className="space-y-6">
+        <Skeleton variant="card" count={2} className="h-40" />
+      </PageSkeleton>
     );
   }
 
@@ -66,28 +68,28 @@ export default function AdminRemnawaveSquadDetail() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <AdminBackButton to="/admin/remnawave" />
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <span className="text-2xl">{getCountryFlag(squad.country_code)}</span>
           <div className="rounded-lg bg-[#F97315]/20 p-2 text-[#F97315]">
             <ServerIcon />
           </div>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold text-apple-ink">
-            <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+        <div className="min-w-0 flex-1 basis-40">
+          <h1 className="text-xl font-semibold text-apple-ink [overflow-wrap:anywhere]">
+            <Twemoji tag="span" options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
               {squad.display_name || squad.name}
             </Twemoji>
           </h1>
-          <p className="text-sm text-apple-mute">{squad.name}</p>
+          <p className="text-sm text-apple-mute [overflow-wrap:anywhere]">{squad.name}</p>
         </div>
         {squad.is_synced ? (
-          <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
+          <span className="whitespace-nowrap rounded-full bg-success-500/20 px-3 py-1 text-xs text-apple-green">
             {t('admin.remnawave.squads.synced', 'Synced')}
           </span>
         ) : (
-          <span className="rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold text-apple-amber">
+          <span className="whitespace-nowrap rounded-full bg-warning-500/20 px-3 py-1 text-xs text-apple-amber">
             {t('admin.remnawave.squads.notSynced', 'Not synced')}
           </span>
         )}
@@ -126,43 +128,33 @@ export default function AdminRemnawaveSquadDetail() {
           {t('admin.remnawave.squads.statsTitle', 'Statistics')}
         </h3>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <div className="rounded-xl bg-apple-elevated p-4">
-            <div className="flex items-center gap-2 text-apple-mute">
-              <UsersIcon className="h-4 w-4" />
-              <span className="text-sm">{t('admin.remnawave.squads.members', 'Members')}</span>
-            </div>
-            <p className="mt-1 text-2xl font-bold text-apple-ink">{squad.members_count}</p>
-          </div>
-          <div className="rounded-xl bg-apple-elevated p-4">
-            <div className="flex items-center gap-2 text-apple-mute">
-              <ServerIcon className="h-4 w-4" />
-              <span className="text-sm">{t('admin.remnawave.squads.inbounds', 'Inbounds')}</span>
-            </div>
-            <p className="mt-1 text-2xl font-bold text-apple-ink">{squad.inbounds_count}</p>
-          </div>
+          <StatCard
+            label={t('admin.remnawave.squads.members', 'Members')}
+            value={squad.members_count}
+            icon={<UsersIcon className="h-5 w-5" />}
+            tone="neutral"
+          />
+          <StatCard
+            label={t('admin.remnawave.squads.inbounds', 'Inbounds')}
+            value={squad.inbounds_count}
+            icon={<ServerIcon className="h-5 w-5" />}
+            tone="neutral"
+          />
           {squad.is_synced && (
             <>
-              <div className="rounded-xl bg-apple-elevated p-4">
-                <div className="flex items-center gap-2 text-apple-mute">
-                  <UsersIcon className="h-4 w-4" />
-                  <span className="text-sm">{t('admin.remnawave.squads.users', 'Users')}</span>
-                </div>
-                <p className="mt-1 text-2xl font-bold text-apple-ink">
-                  {squad.current_users ?? 0}
-                  <span className="text-sm font-normal text-apple-mute">
-                    {' '}
-                    / {squad.max_users ?? '∞'}
-                  </span>
-                </p>
-              </div>
-              <div className="rounded-xl bg-apple-elevated p-4">
-                <div className="flex items-center gap-2 text-apple-mute">
-                  <span className="text-sm">{t('admin.remnawave.squads.price', 'Price')}</span>
-                </div>
-                <p className="mt-1 text-2xl font-bold text-apple-ink">
-                  {((squad.price_kopeks ?? 0) / 100).toFixed(0)} ₽
-                </p>
-              </div>
+              <StatCard
+                label={t('admin.remnawave.squads.users', 'Users')}
+                value={squad.current_users ?? 0}
+                icon={<UsersIcon className="h-5 w-5" />}
+                tone="neutral"
+                subValue={`/ ${squad.max_users ?? '∞'}`}
+              />
+              <StatCard
+                label={t('admin.remnawave.squads.price', 'Price')}
+                value={`${((squad.price_kopeks ?? 0) / 100).toFixed(0)}\u00A0₽`}
+                icon={<BanknotesIcon className="h-5 w-5" />}
+                tone="neutral"
+              />
             </>
           )}
         </div>

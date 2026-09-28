@@ -17,6 +17,7 @@ import type {
   RegisterResponse,
   ServerCompleteResponse,
   User,
+  UserAvatarResponse,
 } from '../types';
 
 const endpoints = {
@@ -24,12 +25,14 @@ const endpoints = {
     initData: string,
     campaignSlug?: string | null,
     referralCode?: string | null,
+    acceptedLegalDocuments?: string[],
   ): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/cabinet/auth/telegram', {
       init_data: initData,
       campaign_slug: campaignSlug || undefined,
       referral_code: referralCode || undefined,
       yandex_cid: getYandexCid() || undefined,
+      accepted_legal_documents: acceptedLegalDocuments,
     });
     return response.data;
   },
@@ -46,12 +49,14 @@ const endpoints = {
     },
     campaignSlug?: string | null,
     referralCode?: string | null,
+    acceptedLegalDocuments?: string[],
   ): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/cabinet/auth/telegram/widget', {
       ...data,
       campaign_slug: campaignSlug || undefined,
       referral_code: referralCode || undefined,
       yandex_cid: getYandexCid() || undefined,
+      accepted_legal_documents: acceptedLegalDocuments,
     });
     return response.data;
   },
@@ -60,12 +65,14 @@ const endpoints = {
     idToken: string,
     campaignSlug?: string | null,
     referralCode?: string | null,
+    acceptedLegalDocuments?: string[],
   ): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/cabinet/auth/telegram/oidc', {
       id_token: idToken,
       campaign_slug: campaignSlug || undefined,
       referral_code: referralCode || undefined,
       yandex_cid: getYandexCid() || undefined,
+      accepted_legal_documents: acceptedLegalDocuments,
     });
     return response.data;
   },
@@ -122,6 +129,7 @@ const endpoints = {
     language?: string;
     referral_code?: string;
     campaign_slug?: string;
+    accepted_legal_documents?: string[];
   }): Promise<RegisterResponse> => {
     const response = await apiClient.post<RegisterResponse>(
       '/cabinet/auth/email/register/standalone',
@@ -140,6 +148,11 @@ const endpoints = {
 
   resendVerification: async (): Promise<{ message: string }> => {
     const response = await apiClient.post('/cabinet/auth/email/resend');
+    return response.data;
+  },
+
+  resendVerificationPublic: async (email: string): Promise<{ message: string }> => {
+    const response = await apiClient.post('/cabinet/auth/email/register/resend', { email });
     return response.data;
   },
 
@@ -162,6 +175,12 @@ const endpoints = {
 
   getMe: async (): Promise<User> => {
     const response = await apiClient.get<User>('/cabinet/auth/me');
+    return response.data;
+  },
+
+  // Фото профиля Telegram, которое бот берёт у Telegram сам (initData несёт его не всегда).
+  getMyAvatar: async (): Promise<UserAvatarResponse> => {
+    const response = await apiClient.get<UserAvatarResponse>('/cabinet/auth/me/avatar');
     return response.data;
   },
 
@@ -351,19 +370,28 @@ const endpoints = {
 // Latest-started login wins. Both the invocation and the eventual consumer are
 // fenced so a delayed login/verification callback cannot replace a new session.
 let loginAttempt = 0;
-function authenticate<Args extends unknown[], Result extends { refresh_token?: string | null }>(
+function authenticate<Args extends unknown[], Result extends object>(
   request: (...args: Args) => Promise<Result>,
 ): (...args: Args) => Promise<Result> {
   return async (...args) => {
     const owner = getSessionGeneration();
     const attempt = ++loginAttempt;
-    const response = await request(...args);
+    let response: Result;
+    try {
+      response = await request(...args);
+    } catch (error) {
+      assertCurrentSession(owner);
+      if (attempt !== loginAttempt) throw new SessionChangedError();
+      throw ownSessionResult(error, owner, () => attempt === loginAttempt);
+    }
     try {
       assertCurrentSession(owner);
       if (attempt !== loginAttempt) throw new SessionChangedError();
       return ownSessionResult(response, owner, () => attempt === loginAttempt);
     } catch (error) {
-      await tokenRefreshManager.discardResponse(response.refresh_token || undefined);
+      await tokenRefreshManager.discardResponse(
+        (response as { refresh_token?: string | null }).refresh_token || undefined,
+      );
       throw error;
     }
   };
@@ -371,6 +399,7 @@ function authenticate<Args extends unknown[], Result extends { refresh_token?: s
 
 export const authApi = {
   ...endpoints,
+  registerEmailStandalone: authenticate(endpoints.registerEmailStandalone),
   loginTelegram: authenticate(endpoints.loginTelegram),
   loginTelegramWidget: authenticate(endpoints.loginTelegramWidget),
   loginTelegramOIDC: authenticate(endpoints.loginTelegramOIDC),

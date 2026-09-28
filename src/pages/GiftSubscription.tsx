@@ -1,10 +1,19 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { uiLocale } from '@/utils/uiLocale';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { giftApi } from '../api/gift';
+import {
+  canUseTelegramScanner,
+  loadHtml5Qrcode,
+  parseGiftCode,
+  scanWithTelegram,
+  type Html5QrcodeInstance,
+} from '@/utils/qrScanner';
+import { brandingApi, type TelegramWidgetConfig } from '../api/branding';
 import type {
   GiftConfig,
   GiftTariff,
@@ -17,121 +26,24 @@ import type {
 
 import { cn } from '../lib/utils';
 import { copyToClipboard } from '../utils/clipboard';
+import { buildGiftClaimArtifacts } from '../utils/giftShare';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
-import {
-  buildGiftActivationLinks,
-  buildGiftShareMessage,
-  normalizeGiftClaimCode,
-} from '../utils/giftShare';
+import { pickBestValue } from '../utils/bestValue';
+import { BestValueBadge, bestValueFrame } from '../components/subscription/BestValueBadge';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
-
-function GiftIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="8" width="18" height="4" rx="1" />
-      <rect x="5" y="12" width="14" height="8" rx="1" />
-      <line x1="12" y1="8" x2="12" y2="20" />
-      <path d="M12 8c-2-2-4-3-5-2s0 3 2 4h3" />
-      <path d="M12 8c2-2 4-3 5-2s0 3-2 4h-3" />
-    </svg>
-  );
-}
-
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={3}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 13l4 4L19 7" />
-    </svg>
-  );
-}
-
-function ShareIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
-      <polyline points="16 6 12 2 8 6" />
-      <line x1="12" y1="2" x2="12" y2="15" />
-    </svg>
-  );
-}
-
-function CheckCircleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M8 12l3 3 5-5" />
-    </svg>
-  );
-}
-
-function KeyIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="15.5" cy="8.5" r="5.5" />
-      <path d="M11.5 12.5L3 21" />
-      <path d="M3 21l3-1 1-3" />
-    </svg>
-  );
-}
-
-function InboxIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
-      <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
-    </svg>
-  );
-}
+import { openPaymentUrl } from '../utils/openPaymentUrl';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import {
+  SparklesIcon,
+  GiftIcon,
+  CheckIcon,
+  CheckCircleIcon,
+  KeyIcon,
+  InboxIcon,
+  ExportIcon,
+} from '@/components/icons';
 
 function formatPeriodLabel(
   days: number,
@@ -172,7 +84,7 @@ function isGiftActivated(gift: SentGift): boolean {
 function formatGiftDate(dateStr: string | null): string {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return date.toLocaleDateString(navigator.language || 'ru-RU', {
+  return date.toLocaleDateString(uiLocale(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -271,52 +183,59 @@ function TariffCard({
       aria-checked={isSelected}
       onClick={onSelect}
       className={cn(
-        'flex w-full items-center gap-4 rounded-2xl border p-4 text-start transition-all duration-200',
-        isSelected
-          ? 'border-apple-blue bg-apple-elevated'
-          : 'border-apple-hairline bg-apple-card hover:border-apple-hairline',
+        'block w-full rounded-2xl p-4 text-start transition-all duration-200',
+        tariff.is_highlighted
+          ? cn(bestValueFrame(isSelected), isSelected ? 'bg-accent-500/5' : 'bg-dark-900/50')
+          : isSelected
+            ? 'border border-accent-500/50 bg-accent-500/5'
+            : 'border border-dark-800/50 bg-dark-900/50 hover:border-dark-700/50',
       )}
     >
-      {/* Gift circle icon */}
-      <div
-        className={cn(
-          'flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors',
-          isSelected ? 'bg-apple-blue/15' : 'bg-apple-elevated',
-        )}
-      >
-        <GiftIcon
+      {/* Отметка оператора первой строкой, как в покупке и продлении: этот тариф
+          выбран сразу — подпись объясняет почему. */}
+      {tariff.is_highlighted && <BestValueBadge className="mb-3" />}
+      <div className="flex items-center gap-4">
+        {/* Gift circle icon */}
+        <div
           className={cn(
-            'h-6 w-6 transition-colors',
-            isSelected ? 'text-apple-blue' : 'text-apple-mute',
-          )}
-        />
-      </div>
-
-      {/* Info */}
-      <div className="min-w-0 flex-1">
-        <p className="text-base font-bold text-apple-ink">{tariff.name}</p>
-        <p
-          className={cn(
-            'text-xs font-medium uppercase tracking-wider transition-colors',
-            isSelected ? 'text-apple-blue' : 'text-apple-mute',
+            'flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors',
+            isSelected ? 'bg-accent-500/20' : 'bg-dark-800/50',
           )}
         >
-          {tariff.traffic_limit_gb > 0
-            ? `${tariff.traffic_limit_gb} ${t('gift.gbShort')}`
-            : t('gift.unlimitedTraffic')}
-          {' \u2022 '}
-          {t('gift.deviceCount', { count: tariff.device_limit })}
-        </p>
-      </div>
+          <GiftIcon
+            className={cn(
+              'h-6 w-6 transition-colors',
+              isSelected ? 'text-accent-400' : 'text-dark-400',
+            )}
+          />
+        </div>
 
-      {/* Checkmark circle */}
-      <div
-        className={cn(
-          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-          isSelected ? 'border-apple-blue bg-apple-blue' : 'border-apple-hairline',
-        )}
-      >
-        {isSelected && <CheckIcon className="h-3.5 w-3.5 text-white" />}
+        {/* Info */}
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-bold text-dark-50">{tariff.name}</p>
+          <p
+            className={cn(
+              'text-xs font-medium uppercase tracking-wider transition-colors',
+              isSelected ? 'text-accent-400' : 'text-dark-400',
+            )}
+          >
+            {tariff.traffic_limit_gb > 0
+              ? `${tariff.traffic_limit_gb} ${t('gift.gbShort')}`
+              : t('gift.unlimitedTraffic')}
+            {' \u2022 '}
+            {t('gift.deviceCount', { count: tariff.device_limit })}
+          </p>
+        </div>
+
+        {/* Checkmark circle */}
+        <div
+          className={cn(
+            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+            isSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600',
+          )}
+        >
+          {isSelected && <CheckIcon className="h-3.5 w-3.5 text-white" />}
+        </div>
       </div>
     </button>
   );
@@ -339,41 +258,45 @@ function PeriodCard({
     <button
       type="button"
       onClick={onSelect}
+      aria-pressed={isSelected}
+      // Выбор — подсветкой и голубой рамкой, как в покупке и продлении. Сплошная
+      // голубая заливка выбранного съедала золотую плашку «Выгодно».
       className={cn(
-        'flex w-full items-center justify-between rounded-2xl p-4 transition-all duration-200',
-        isSelected ? 'bg-apple-blue text-white' : 'bg-apple-elevated hover:bg-apple-elevated',
+        'block w-full rounded-2xl p-4 text-start transition-all duration-200',
+        period.is_highlighted
+          ? cn(bestValueFrame(isSelected), isSelected ? 'bg-accent-500/10' : 'bg-dark-800/50')
+          : isSelected
+            ? 'border border-accent-500 bg-accent-500/10'
+            : 'border border-transparent bg-dark-800/50 hover:bg-dark-700/50',
       )}
     >
-      {/* Left: period + discount */}
-      <div className="flex flex-col items-start gap-1">
-        <span className="text-lg font-bold">{formatPeriodLabel(period.days, t)}</span>
-        {hasDiscount && period.discount_percent != null && (
-          <span
-            className={cn(
-              'rounded-md px-2 py-0.5 text-xs font-bold',
-              isSelected ? 'bg-white/20 text-white' : 'bg-apple-blue/15 text-apple-blue',
-            )}
-          >
-            -{period.discount_percent}%
+      {/* Отметка оператора первой строкой: этот период выбран сразу — подпись
+          объясняет почему. */}
+      {period.is_highlighted && <BestValueBadge className="mb-2" />}
+      <div className="flex items-center justify-between gap-3">
+        {/* Left: period + discount */}
+        <div className="flex min-w-0 flex-col items-start gap-1">
+          <span className="text-lg font-bold text-dark-50">
+            {formatPeriodLabel(period.days, t)}
           </span>
-        )}
-      </div>
+          {hasDiscount && period.discount_percent != null && (
+            <span className="rounded-md bg-accent-500/20 px-2 py-0.5 text-xs font-bold text-accent-400">
+              -{period.discount_percent}%
+            </span>
+          )}
+        </div>
 
-      {/* Right: prices */}
-      <div className="flex flex-col items-end gap-0.5">
-        <span className={cn('text-lg font-bold', isSelected ? 'text-white' : 'text-apple-blue')}>
-          {formatPrice(period.price_kopeks)}
-        </span>
-        {hasDiscount && period.original_price_kopeks != null && (
-          <span
-            className={cn(
-              'text-xs line-through',
-              isSelected ? 'text-white/50' : 'text-apple-faint',
-            )}
-          >
-            {formatPrice(period.original_price_kopeks)}
+        {/* Right: prices */}
+        <div className="flex shrink-0 flex-col items-end gap-0.5">
+          <span className="whitespace-nowrap text-lg font-bold text-accent-400">
+            {formatPrice(period.price_kopeks)}
           </span>
-        )}
+          {hasDiscount && period.original_price_kopeks != null && (
+            <span className="whitespace-nowrap text-xs text-dark-500 line-through">
+              {formatPrice(period.original_price_kopeks)}
+            </span>
+          )}
+        </div>
       </div>
     </button>
   );
@@ -512,7 +435,7 @@ function BuyTabContent({
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { openInvoice, capabilities } = usePlatform();
+  const { openInvoice, capabilities, openLink, platform } = usePlatform();
   const haptic = useHaptic();
 
   // Selection state
@@ -523,16 +446,30 @@ function BuyTabContent({
   const [selectedSubOption, setSelectedSubOption] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Auto-select first tariff, period, method on config load
+  // Тариф и период выбираются ОДНИМ эффектом: отмеченные оператором выгодными,
+  // иначе первые по счёту. Двумя эффектами это разъезжалось — второй записывал
+  // «прошлый тариф» уже после того, как первый выбрал период, и затирал выбор,
+  // сделанный человеком между этими двумя проходами.
+  const lastTariffIdRef = useRef<number | null>(null);
   useEffect(() => {
-    if (config.tariffs.length > 0 && selectedTariffId === null) {
-      const firstTariff = config.tariffs[0];
-      setSelectedTariffId(firstTariff.id);
-      if (firstTariff.periods.length > 0 && selectedPeriodDays === null) {
-        setSelectedPeriodDays(firstTariff.periods[0].days);
-      }
+    if (config.tariffs.length === 0) return;
+    const tariff = selectedTariffId
+      ? config.tariffs.find((t) => t.id === selectedTariffId)
+      : (pickBestValue(config.tariffs) ?? config.tariffs[0]);
+    if (!tariff) return;
+    if (selectedTariffId !== tariff.id) setSelectedTariffId(tariff.id);
+    // Период пересчитываем только при смене тарифа: внутри одного тарифа выбор
+    // человека важнее отметки оператора.
+    if (lastTariffIdRef.current === tariff.id) return;
+    lastTariffIdRef.current = tariff.id;
+    if (tariff.periods.length > 0) {
+      const period = pickBestValue(tariff.periods) ?? tariff.periods[0];
+      setSelectedPeriodDays(period.days);
     }
+  }, [config.tariffs, selectedTariffId]);
 
+  // Способ оплаты по умолчанию — первый из доступных.
+  useEffect(() => {
     if (config.payment_methods.length > 0 && selectedMethod === null) {
       const firstMethod = config.payment_methods[0];
       setSelectedMethod(firstMethod.method_id);
@@ -542,19 +479,7 @@ function BuyTabContent({
         setSelectedSubOption(null);
       }
     }
-  }, [config, selectedTariffId, selectedPeriodDays, selectedMethod]);
-
-  // When tariff changes, auto-select its first period
-  useEffect(() => {
-    if (!selectedTariffId) return;
-    const tariff = config.tariffs.find((t) => t.id === selectedTariffId);
-    if (tariff && tariff.periods.length > 0) {
-      const hasCurrent = tariff.periods.some((p) => p.days === selectedPeriodDays);
-      if (!hasCurrent) {
-        setSelectedPeriodDays(tariff.periods[0].days);
-      }
-    }
-  }, [selectedTariffId, config.tariffs, selectedPeriodDays]);
+  }, [config.payment_methods, selectedMethod]);
 
   // Derived data
   const selectedTariff = useMemo(
@@ -605,7 +530,9 @@ function BuyTabContent({
           }
           return;
         }
-        window.location.href = result.payment_url;
+        // Non-Stars provider (RollyPay/YooKassa/SBP …): open externally inside Telegram so
+        // a bank-app hand-off via custom scheme doesn't dead-end in the WebView (#654272).
+        openPaymentUrl(result.payment_url, platform, openLink);
       } else {
         // Balance purchase: switch to MyGifts tab so the new code is visible
         queryClient.invalidateQueries({ queryKey: ['balance'] });
@@ -683,8 +610,37 @@ function BuyTabContent({
 
       {/* Selected tariff description */}
       {selectedTariff?.description && (
-        <div className="rounded-xl border border-apple-hairline bg-apple-card px-4 py-3">
-          <p className="text-sm text-apple-mute">{selectedTariff.description}</p>
+        <div className="rounded-xl border border-dark-800/30 bg-dark-800/20 px-4 py-3">
+          <p className="text-sm text-dark-300">{selectedTariff.description}</p>
+        </div>
+      )}
+
+      {/* Promo group banner */}
+      {config.promo_group_name && (
+        <div className="flex items-center gap-3 rounded-xl border border-success-500/30 bg-success-500/10 p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-500/20">
+            <SparklesIcon className="h-4 w-4 text-success-400" />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-success-400">
+              {t('subscription.promoGroup.yourGroup', { name: config.promo_group_name })}
+            </div>
+            <div className="text-xs text-dark-400">
+              {t('subscription.promoGroup.personalDiscountsApplied')}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active discount banner */}
+      {config.active_discount_percent != null && config.active_discount_percent > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-warning-500/30 bg-warning-500/10 p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warning-500/20">
+            <SparklesIcon className="h-4 w-4 text-warning-400" />
+          </div>
+          <div className="text-sm font-medium text-warning-400">
+            {t('promo.discountApplied')} -{config.active_discount_percent}%
+          </div>
         </div>
       )}
 
@@ -834,6 +790,82 @@ function ActivateTabContent({ initialCode }: { initialCode?: string | null }) {
     if (initialCode) setCode(initialCode);
   }, [initialCode]);
   const [activateError, setActivateError] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const scannerRef = useRef<Html5QrcodeInstance | null>(null);
+
+  const stopScan = useCallback(() => {
+    if (scannerRef.current) {
+      scannerRef.current
+        .stop()
+        .catch(() => undefined)
+        .finally(() => {
+          scannerRef.current?.clear();
+          scannerRef.current = null;
+        });
+    }
+    setScanning(false);
+  }, []);
+
+  // Веб-сканер держит камеру: гасим его при уходе с вкладки/размонтировании,
+  // иначе индикатор камеры остаётся гореть.
+  useEffect(() => stopScan, [stopScan]);
+
+  const applyScannedCode = useCallback(
+    (decoded: string) => {
+      const parsed = parseGiftCode(decoded);
+      if (!parsed) {
+        setActivateError(t('gift.scanNotRecognized'));
+        return;
+      }
+      setCode(parsed);
+      setActivateError(null);
+    },
+    [t],
+  );
+
+  const handleScan = useCallback(async () => {
+    setActivateError(null);
+
+    if (canUseTelegramScanner()) {
+      try {
+        const decoded = await scanWithTelegram(
+          t('gift.scanDescription'),
+          (v) => parseGiftCode(v) !== null,
+        );
+        if (decoded) applyScannedCode(decoded);
+      } catch {
+        setActivateError(t('gift.scanError'));
+      }
+      return;
+    }
+
+    const Html5Qrcode = await loadHtml5Qrcode();
+    if (!Html5Qrcode) {
+      setActivateError(t('gift.scanNoCamera'));
+      return;
+    }
+
+    setScanning(true);
+    const scanner = new Html5Qrcode('gift-qr-reader');
+    scannerRef.current = scanner;
+    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+    const onDecoded = (decoded: string) => {
+      if (parseGiftCode(decoded) === null) return;
+      stopScan();
+      applyScannedCode(decoded);
+    };
+    try {
+      await scanner.start({ facingMode: 'environment' }, config, onDecoded, () => undefined);
+    } catch {
+      try {
+        await scanner.start({ facingMode: 'user' }, config, onDecoded, () => undefined);
+      } catch {
+        setActivateError(t('gift.scanNoCamera'));
+        scannerRef.current = null;
+        setScanning(false);
+      }
+    }
+  }, [applyScannedCode, stopScan, t]);
 
   const activateMutation = useMutation({
     mutationFn: (giftCode: string) => giftApi.activateGiftCode(giftCode),
@@ -901,6 +933,32 @@ function ActivateTabContent({ initialCode }: { initialCode?: string | null }) {
           className="w-full rounded-2xl border border-apple-hairline bg-apple-elevated px-6 py-4 text-center font-mono text-sm text-apple-ink placeholder-apple-faint outline-none transition-colors focus:border-apple-blue focus:ring-1 focus:ring-apple-blue/30"
           aria-label={t('gift.activateTitle')}
         />
+
+        {/* Скан QR: в Telegram — нативный сканер (в WebView камера через
+            getUserMedia работает ненадёжно), в вебе — html5-qrcode. */}
+        <button
+          type="button"
+          onClick={handleScan}
+          disabled={scanning}
+          className="mt-3 w-full rounded-2xl border border-dark-700/50 px-6 py-3 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-800/50 disabled:opacity-50"
+        >
+          {scanning ? t('gift.scanInProgress') : t('gift.scanButton')}
+        </button>
+
+        {/* Контейнер веб-сканера: html5-qrcode рендерит превью камеры внутрь */}
+        <div
+          id="gift-qr-reader"
+          className={cn('mt-3 overflow-hidden rounded-2xl', !scanning && 'hidden')}
+        />
+        {scanning && (
+          <button
+            type="button"
+            onClick={stopScan}
+            className="mt-2 w-full rounded-2xl border border-dark-700/50 px-6 py-2 text-xs text-dark-400 transition-colors hover:bg-dark-800/50"
+          >
+            {t('gift.scanCancel')}
+          </button>
+        )}
       </div>
 
       {/* Error */}
@@ -953,7 +1011,8 @@ function CopiedToast({ onDismiss }: { onDismiss: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="fixed inset-x-0 bottom-6 z-50 flex justify-center"
+      // На мобильном стоит над нижней панелью: на bottom-6 тост целиком уходил за неё.
+      className="fixed inset-x-0 bottom-[var(--mobile-nav-clearance)] z-50 flex justify-center lg:bottom-6"
     >
       <div className="flex items-center gap-2 rounded-full border border-apple-hairline bg-apple-card px-5 py-2.5 shadow-2xl shadow-black/40 backdrop-blur-md">
         <CheckIcon className="h-4 w-4 text-apple-green" />
@@ -967,8 +1026,21 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
   const { t } = useTranslation();
   const [showToast, setShowToast] = useState(false);
 
-  const claimCode = normalizeGiftClaimCode(gift.token);
-  const giftCode = `GIFT-${claimCode}`;
+  // Runtime bot username (env var is only a fallback) so the "activate via bot"
+  // line never silently disappears when VITE_TELEGRAM_BOT_USERNAME is unset.
+  const { data: widgetConfig } = useQuery<TelegramWidgetConfig>({
+    queryKey: ['telegram-widget-config'],
+    queryFn: brandingApi.getTelegramWidgetConfig,
+    staleTime: 60000,
+  });
+  const botUsername =
+    widgetConfig?.bot_username || import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
+
+  const artifacts = buildGiftClaimArtifacts(gift, {
+    botUsername,
+    origin: window.location.origin,
+  });
+  const giftCode = artifacts.code;
   const isActivated = isGiftActivated(gift);
   const isAvailable = !isActivated && isGiftAvailable(gift.status);
 
@@ -979,19 +1051,18 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
       : t(getGiftStatusKey(gift.status));
 
   const buildShareMessage = useCallback(() => {
-    const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
-    const activationLinks = buildGiftActivationLinks(
-      claimCode,
-      botUsername,
-      window.location.origin,
-    );
-    return buildGiftShareMessage(
+    // Literal "GIFT_" prefix: Telegram forwards the start param to the bot
+    // verbatim (no URL-decoding), so the previously-encoded "%5F" never matched
+    // the bot's `start_parameter.startswith('GIFT_')` handler.
+    return [
       t('gift.shareText'),
-      t('gift.shareModalActivateVia'),
-      t('gift.shareModalActivateViaCabinet'),
-      activationLinks,
-    );
-  }, [claimCode, t]);
+      '',
+      artifacts.botLink ? `${t('gift.shareModalActivateVia')} ${artifacts.botLink}` : null,
+      `${t('gift.shareModalActivateViaCabinet')} ${artifacts.cabinetLink}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }, [artifacts.botLink, artifacts.cabinetLink, t]);
 
   const handleShare = useCallback(async () => {
     const message = buildShareMessage();
@@ -1047,7 +1118,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
             onClick={handleShare}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-apple-blue active:scale-[0.98]"
           >
-            <ShareIcon className="h-4 w-4" />
+            <ExportIcon className="h-4 w-4" />
             {t('gift.shareGift')}
           </button>
         </>
@@ -1164,9 +1235,9 @@ function MyGiftsTabContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-hairline border-t-apple-blue" />
-      </div>
+      <SkeletonGroup className="space-y-3">
+        <Skeleton variant="card" count={3} className="h-24" />
+      </SkeletonGroup>
     );
   }
 
@@ -1312,8 +1383,10 @@ export default function GiftSubscription() {
                 aria-selected={activeTab === tab.id}
                 aria-controls={`tabpanel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
+                // Равные вкладки, узкие поля и шрифт на телефоне: «Мои подарки»
+                // переносилась в две строки, и пилюля была выше соседних.
                 className={cn(
-                  'flex-1 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  'min-w-0 flex-1 basis-0 whitespace-nowrap rounded-xl px-1.5 py-2.5 text-[13px] font-medium transition-all duration-200 sm:px-3 sm:text-sm',
                   activeTab === tab.id
                     ? 'bg-apple-blue text-white shadow-sm'
                     : 'text-apple-mute hover:text-apple-ink',

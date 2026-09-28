@@ -1,6 +1,9 @@
 import { useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { adminBroadcastsApi } from '../../api/adminBroadcasts';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface PreviewButton {
   text: string;
@@ -105,13 +108,13 @@ function wrap(frame: Frame, key: number): ReactNode {
       return <s key={k}>{frame.children}</s>;
     case 'code':
       return (
-        <code key={k} className="rounded bg-black/30 px-1 font-mono text-[0.92em]">
+        <code key={k} className="rounded bg-dark-950/30 px-1 font-mono text-[0.92em]">
           {frame.children}
         </code>
       );
     case 'pre':
       return (
-        <pre key={k} className="my-1 rounded bg-black/30 p-2 font-mono text-[0.92em]">
+        <pre key={k} className="my-1 rounded bg-dark-950/30 p-2 font-mono text-[0.92em]">
           {frame.children}
         </pre>
       );
@@ -185,13 +188,19 @@ export function TelegramPreview({
 }: TelegramPreviewProps) {
   const { t } = useTranslation();
   const rendered = useMemo(() => tokensToReact(tokenize(text)), [text]);
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, { onEscape: onClose });
   if (!open) return null;
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-dark-950/70 p-4"
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('admin.broadcasts.preview', 'Предпросмотр Telegram')}
+        tabIndex={-1}
         className="w-full max-w-md rounded-2xl bg-[#17212b] p-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -199,14 +208,23 @@ export function TelegramPreview({
           <h3 className="text-base font-semibold text-white">
             {t('admin.broadcasts.preview', 'Предпросмотр Telegram')}
           </h3>
-          <button onClick={onClose} className="rounded p-1 text-dark-400 hover:bg-dark-700">
+          <button
+            onClick={onClose}
+            aria-label={t('common.close', 'Закрыть')}
+            className="flex h-9 w-9 items-center justify-center rounded text-dark-400 hover:bg-dark-700"
+          >
             ✕
           </button>
         </div>
         <div className="rounded-xl bg-[#0e1621] p-3">
           <div className="ml-auto max-w-[90%] rounded-2xl rounded-tr-md bg-[#2b5278] p-3 text-white shadow">
             {mediaUrl && mediaType === 'photo' && (
-              <img src={mediaUrl} alt="" className="mb-2 max-h-72 w-full rounded-lg object-cover" />
+              <img
+                src={mediaUrl}
+                alt=""
+                loading="lazy"
+                className="mb-2 max-h-72 w-full rounded-lg object-cover"
+              />
             )}
             {mediaUrl && mediaType === 'video' && (
               <video src={mediaUrl} controls className="mb-2 max-h-72 w-full rounded-lg" />
@@ -246,15 +264,36 @@ export function TelegramPreview({
 }
 
 export function EmailPreview({ open, onClose, subject, htmlContent }: EmailPreviewProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, { onEscape: onClose });
+  // Письмо рендерит бот — в той же обёртке и тем же кодом, что при отправке.
+  // Пока ответа нет или он не пришёл, показываем сырой HTML.
+  const rendered = useQuery({
+    queryKey: ['admin', 'broadcast-email-render', subject, htmlContent, i18n.language],
+    queryFn: () =>
+      adminBroadcastsApi.renderEmail({
+        subject,
+        html_content: htmlContent,
+        language: i18n.language,
+      }),
+    enabled: open && htmlContent.trim().length > 0,
+    staleTime: 60_000,
+    retry: 0,
+  });
   if (!open) return null;
   const emptyHtml = `<p style="color:#999;font-family:sans-serif">${t('admin.broadcasts.previewEmpty', '— пусто —')}</p>`;
+  const previewHtml = rendered.data?.body_html || htmlContent;
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-dark-950/70 p-4"
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={subject || t('admin.broadcasts.emailSubject', 'Email')}
+        tabIndex={-1}
         className="flex h-[80vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -269,7 +308,8 @@ export function EmailPreview({ open, onClose, subject, htmlContent }: EmailPrevi
           </div>
           <button
             onClick={onClose}
-            className="ml-3 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            aria-label={t('common.close', 'Закрыть')}
+            className="ml-3 flex h-9 w-9 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-700"
           >
             ✕
           </button>
@@ -278,7 +318,7 @@ export function EmailPreview({ open, onClose, subject, htmlContent }: EmailPrevi
           title="email preview"
           className="w-full flex-1 bg-white"
           sandbox=""
-          srcDoc={htmlContent || emptyHtml}
+          srcDoc={previewHtml || emptyHtml}
         />
       </div>
     </div>,

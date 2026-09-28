@@ -1,370 +1,104 @@
+import { integrationCapabilities } from '@/config/integrationCapabilities';
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { usePermissionStore } from '@/store/permissions';
 import { statsApi, type SystemInfo, type DashboardStats } from '@/api/admin';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { cn } from '@/lib/utils';
+import {
+  ArrowUpIcon,
+  BellIcon,
+  BroadcastIcon,
+  CabinetIcon,
+  ChartBarIcon,
+  ChevronRightIcon,
+  ClipboardIcon,
+  CreditCardIcon,
+  FileTextIcon,
+  GiftIcon,
+  HistoryIcon,
+  LifebuoyIcon,
+  LockIcon,
+  MailIcon,
+  MegaphoneIcon,
+  NewsIcon,
+  PartnerIcon,
+  PercentIcon,
+  PinIcon,
+  RemnawaveIcon,
+  SearchIcon,
+  SendIcon,
+  ServerIcon,
+  SettingsIcon,
+  ShareIcon,
+  ShieldIcon,
+  SparklesIcon,
+  StatBotIcon,
+  StatCabinetIcon,
+  StatPaidIcon,
+  StatsChartIcon,
+  StatTrialIcon,
+  StatUptimeIcon,
+  SyncIcon,
+  TagIcon,
+  TicketIcon,
+  TrafficIcon,
+  UserPlusIcon,
+  UsersIcon,
+  WalletIcon,
+  WheelIcon,
+  XIcon,
+  RadarIcon,
+} from '@/components/icons';
 
 const CABINET_VERSION = __APP_VERSION__;
 const IS_MAC = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent);
 
-// ─── Inline SVG Icons (lightweight, no external deps) ───
-
-const SvgIcon = ({
-  children,
-  className,
-  ...props
-}: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={1.7}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-    aria-hidden="true"
-    {...props}
-  >
-    {children}
-  </svg>
-);
-
-// Stats bar icons (16x16 viewBox)
-const StatUptimeIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.3"
-    strokeLinecap="round"
-    className="h-3.5 w-3.5"
-    aria-hidden="true"
-  >
-    <circle cx="8" cy="8" r="6.5" />
-    <path d="M8 4.5V8l2.5 1.5" />
-  </svg>
-);
-const StatBotIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.3"
-    strokeLinecap="round"
-    className="h-3.5 w-3.5"
-    aria-hidden="true"
-  >
-    <rect x="3" y="4" width="10" height="8" rx="2" />
-    <path d="M6 8h.01M10 8h.01" />
-    <path d="M8 2v2M4 14h8" />
-  </svg>
-);
-const StatCabinetIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.3"
-    strokeLinecap="round"
-    className="h-3.5 w-3.5"
-    aria-hidden="true"
-  >
-    <rect x="2" y="3" width="12" height="10" rx="1.5" />
-    <path d="M2 6h12" />
-    <path d="M5 3v3" />
-  </svg>
-);
-const StatTrialIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.3"
-    strokeLinecap="round"
-    className="h-3.5 w-3.5"
-    aria-hidden="true"
-  >
-    <path d="M8 2v2M8 12v2M4 8H2M14 8h-2" />
-    <circle cx="8" cy="8" r="3" />
-  </svg>
-);
-const StatPaidIcon = () => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.3"
-    strokeLinecap="round"
-    className="h-3.5 w-3.5"
-    aria-hidden="true"
-  >
-    <path d="M4 6c0-1.7 1.8-3 4-3s4 1.3 4 3-1.8 3-4 3-4 1.3-4 3 1.8 3 4 3 4-1.3 4-3" />
-    <path d="M8 1v2M8 13v2" />
-  </svg>
-);
-
 // Section nav icons (24x24 viewBox)
 const icons = {
-  'bar-chart': (
-    <SvgIcon>
-      <path d="M3 3v18h18" />
-      <path d="M7 16V8" />
-      <path d="M11 16V11" />
-      <path d="M15 16V5" />
-      <path d="M19 16v-3" />
-    </SvgIcon>
-  ),
-  'credit-card': (
-    <SvgIcon>
-      <rect x="2" y="5" width="20" height="14" rx="2" />
-      <path d="M2 10h20" />
-    </SvgIcon>
-  ),
-  activity: (
-    <SvgIcon>
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-    </SvgIcon>
-  ),
-  trending: (
-    <SvgIcon>
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      <polyline points="16 7 22 7 22 13" />
-    </SvgIcon>
-  ),
-  users: (
-    <SvgIcon>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </SvgIcon>
-  ),
-  ticket: (
-    <SvgIcon>
-      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-      <path d="M13 5v2M13 17v2M13 11v2" />
-    </SvgIcon>
-  ),
-  'shield-alert': (
-    <SvgIcon>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-      <path d="M12 8v4" />
-      <path d="M12 16h.01" />
-    </SvgIcon>
-  ),
-  tag: (
-    <SvgIcon>
-      <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
-      <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
-    </SvgIcon>
-  ),
-  gift: (
-    <SvgIcon>
-      <rect x="3" y="8" width="18" height="4" rx="1" />
-      <path d="M12 8v13" />
-      <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
-    </SvgIcon>
-  ),
-  percent: (
-    <SvgIcon>
-      <line x1="19" y1="5" x2="5" y2="19" />
-      <circle cx="6.5" cy="6.5" r="2.5" />
-      <circle cx="17.5" cy="17.5" r="2.5" />
-    </SvgIcon>
-  ),
-  sparkle: (
-    <SvgIcon>
-      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z" />
-    </SvgIcon>
-  ),
-  wallet: (
-    <SvgIcon>
-      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-      <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-    </SvgIcon>
-  ),
-  layout: (
-    <SvgIcon>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M3 9h18" />
-      <path d="M9 21V9" />
-    </SvgIcon>
-  ),
-  newspaper: (
-    <SvgIcon>
-      <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
-      <path d="M18 14h-8M15 18h-5" />
-      <path d="M10 6h8v4h-8V6Z" />
-    </SvgIcon>
-  ),
-  megaphone: (
-    <SvgIcon>
-      <path d="m3 11 18-5v12L3 13v-2z" />
-      <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
-    </SvgIcon>
-  ),
-  send: (
-    <SvgIcon>
-      <path d="m22 2-7 20-4-9-9-4Z" />
-      <path d="M22 2 11 13" />
-    </SvgIcon>
-  ),
-  pin: (
-    <SvgIcon>
-      <line x1="12" y1="17" x2="12" y2="22" />
-      <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-    </SvgIcon>
-  ),
-  'circle-dot': (
-    <SvgIcon>
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="1" fill="currentColor" />
-    </SvgIcon>
-  ),
-  handshake: (
-    <SvgIcon>
-      <path d="m11 17 2 2a1 1 0 1 0 3-3" />
-      <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88" />
-      <path d="m2 12 5.56-5.56a3 3 0 0 1 2.22-.88L12 5.5" />
-      <path d="M22 12 16.44 6.44a3 3 0 0 0-2.22-.88L12 5.5" />
-    </SvgIcon>
-  ),
-  'arrow-up': (
-    <SvgIcon>
-      <path d="m18 9-6-6-6 6" />
-      <path d="M12 3v14" />
-      <path d="M5 21h14" />
-    </SvgIcon>
-  ),
-  network: (
-    <SvgIcon>
-      <rect x="16" y="16" width="6" height="6" rx="1" />
-      <rect x="2" y="16" width="6" height="6" rx="1" />
-      <rect x="9" y="2" width="6" height="6" rx="1" />
-      <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" />
-      <path d="M12 12V8" />
-    </SvgIcon>
-  ),
-  radio: (
-    <SvgIcon>
-      <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
-      <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4" />
-      <circle cx="12" cy="12" r="2" />
-      <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4" />
-      <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19" />
-    </SvgIcon>
-  ),
-  settings: (
-    <SvgIcon>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-    </SvgIcon>
-  ),
-  app: (
-    <SvgIcon>
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="M10 4v4M2 8h20M6 4v4" />
-    </SvgIcon>
-  ),
-  server: (
-    <SvgIcon>
-      <rect x="2" y="2" width="20" height="8" rx="2" />
-      <rect x="2" y="14" width="20" height="8" rx="2" />
-      <circle cx="6" cy="6" r="1" fill="currentColor" />
-      <circle cx="6" cy="18" r="1" fill="currentColor" />
-    </SvgIcon>
-  ),
-  remnawave: (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-[13px] w-[13px]"
-      aria-hidden="true"
-    >
-      <path
-        clipRule="evenodd"
-        d="M8 1a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-1.5 0V1.75A.75.75 0 0 1 8 1Zm6 2a.75.75 0 0 1 .75.75v8.5a.75.75 0 0 1-1.5 0v-8.5A.75.75 0 0 1 14 3ZM5 4a.75.75 0 0 1 .75.75v6.5a.75.75 0 0 1-1.5 0v-6.5A.75.75 0 0 1 5 4Zm6 1a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 11 5ZM2 6a.75.75 0 0 1 .75.75v2.5a.75.75 0 0 1-1.5 0v-2.5A.75.75 0 0 1 2 6Z"
-        fill="currentColor"
-        fillRule="evenodd"
-      />
-    </svg>
-  ),
-  mail: (
-    <SvgIcon>
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-    </SvgIcon>
-  ),
-  refresh: (
-    <SvgIcon>
-      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-      <path d="M21 3v5h-5" />
-      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-      <path d="M8 16H3v5" />
-    </SvgIcon>
-  ),
-  shield: (
-    <SvgIcon>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-    </SvgIcon>
-  ),
-  'user-check': (
-    <SvgIcon>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <polyline points="16 11 18 13 22 9" />
-    </SvgIcon>
-  ),
-  lock: (
-    <SvgIcon>
-      <rect x="3" y="11" width="18" height="11" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </SvgIcon>
-  ),
-  scroll: (
-    <SvgIcon>
-      <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4" />
-      <path d="M19 17V5a2 2 0 0 0-2-2H4" />
-      <path d="M15 8h-5M15 12h-5" />
-    </SvgIcon>
-  ),
-  'list-checks': (
-    <SvgIcon>
-      <path d="M10 6h11M10 12h11M10 18h11" />
-      <path d="m3 6 1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2" />
-    </SvgIcon>
-  ),
-  search: (
-    <SvgIcon>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </SvgIcon>
-  ),
-  'file-text': (
-    <SvgIcon>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <line x1="10" y1="9" x2="8" y2="9" />
-    </SvgIcon>
-  ),
-  chevron: (
-    <SvgIcon>
-      <path d="m9 18 6-6-6-6" />
-    </SvgIcon>
-  ),
-  x: (
-    <SvgIcon>
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </SvgIcon>
-  ),
+  'bar-chart': <ChartBarIcon />,
+  'credit-card': <CreditCardIcon />,
+  activity: <TrafficIcon />,
+  trending: <StatsChartIcon />,
+  users: <UsersIcon />,
+  ticket: <TicketIcon />,
+  'shield-alert': <ShieldIcon />,
+  tag: <TagIcon />,
+  gift: <GiftIcon />,
+  percent: <PercentIcon />,
+  sparkle: <SparklesIcon />,
+  wallet: <WalletIcon />,
+  layout: <CabinetIcon />,
+  newspaper: <NewsIcon />,
+  megaphone: <MegaphoneIcon />,
+  send: <SendIcon />,
+  pin: <PinIcon />,
+  bell: <BellIcon />,
+  'circle-dot': <WheelIcon />,
+  handshake: <PartnerIcon />,
+  'arrow-up': <ArrowUpIcon />,
+  network: <ShareIcon />,
+  radio: <BroadcastIcon />,
+  settings: <SettingsIcon />,
+  app: <CabinetIcon />,
+  server: <ServerIcon />,
+  remnawave: <RemnawaveIcon />,
+  radar: <RadarIcon />,
+  mail: <MailIcon />,
+  refresh: <SyncIcon />,
+  shield: <ShieldIcon />,
+  'user-check': <UserPlusIcon />,
+  lifebuoy: <LifebuoyIcon />,
+  lock: <LockIcon />,
+  scroll: <HistoryIcon />,
+  'list-checks': <ClipboardIcon />,
+  search: <SearchIcon />,
+  'file-text': <FileTextIcon />,
+  chevron: <ChevronRightIcon />,
+  x: <XIcon />,
 } as const;
 
 type IconName = keyof typeof icons;
@@ -461,6 +195,12 @@ const sections: AdminSection[] = [
         permission: 'promocodes:read',
       },
       {
+        name: 'admin.nav.coupons',
+        icon: 'ticket',
+        to: '/admin/coupons',
+        permission: 'coupons:read',
+      },
+      {
         name: 'admin.nav.promoGroups',
         icon: 'percent',
         to: '/admin/promo-groups',
@@ -511,12 +251,29 @@ const sections: AdminSection[] = [
         to: '/admin/pinned-messages',
         permission: 'pinned_messages:read',
       },
+      {
+        name: 'admin.nav.reminders',
+        icon: 'bell',
+        to: '/admin/reminders',
+        permission: 'user_reminders:read',
+      },
       { name: 'admin.nav.wheel', icon: 'circle-dot', to: '/admin/wheel', permission: 'wheel:read' },
       {
         name: 'admin.nav.partners',
         icon: 'handshake',
         to: '/admin/partners',
         permission: 'partners:read',
+      },
+      {
+        // Раньше страница уровней открывалась только из Партнёры → Настройки, и
+        // включив многоуровневую схему, админ не находил её в меню вовсе.
+        // Пункт показывается всегда, а не при включённой схеме: саму схему
+        // переключают с этой же страницы, и условный пункт замкнул бы круг.
+        name: 'admin.nav.referralLevels',
+        icon: 'trending',
+        to: '/admin/partners/referral-levels',
+        // Совпадает с правом, которое требуют и маршрут, и все эндпоинты уровней.
+        permission: 'partners:settings',
       },
       {
         name: 'admin.nav.withdrawals',
@@ -551,6 +308,16 @@ const sections: AdminSection[] = [
         to: '/admin/settings',
         permission: 'settings:read',
       },
+      {
+        // Настройки grace-доступа существуют и на общей странице настроек — там это
+        // двенадцать несвязанных строк. Тут они собраны вместе с проверкой конфигурации
+        // и состоянием сессий, поэтому и пункт меню отдельный.
+        name: 'admin.nav.graceAccess',
+        icon: 'lifebuoy',
+        to: '/admin/grace-access',
+        // То же право, что у страницы настроек и у эндпоинтов раздела.
+        permission: 'settings:read',
+      },
       { name: 'admin.nav.apps', icon: 'app', to: '/admin/apps', permission: 'apps:read' },
       {
         name: 'admin.nav.servers',
@@ -565,6 +332,12 @@ const sections: AdminSection[] = [
         permission: 'remnawave:read',
       },
       {
+        name: 'admin.nav.reachability',
+        icon: 'radar',
+        to: '/admin/reachability',
+        permission: 'reachability:read',
+      },
+      {
         name: 'admin.nav.emailTemplates',
         icon: 'mail',
         to: '/admin/email-templates',
@@ -574,6 +347,12 @@ const sections: AdminSection[] = [
         name: 'admin.nav.infoPages',
         icon: 'file-text',
         to: '/admin/info-pages',
+        permission: 'info_pages:read',
+      },
+      {
+        name: 'admin.nav.legalPages',
+        icon: 'file-text',
+        to: '/admin/legal-pages',
         permission: 'info_pages:read',
       },
       {
@@ -603,6 +382,12 @@ const sections: AdminSection[] = [
         icon: 'scroll',
         to: '/admin/audit-log',
         permission: 'audit_log:read',
+      },
+      {
+        name: 'admin.nav.systemErrors',
+        icon: 'shield',
+        to: '/admin/system-errors',
+        permission: 'system_errors:read',
       },
     ],
   },
@@ -653,32 +438,32 @@ const StatsBar = memo(function StatsBar({ systemInfo, dashboardStats, loading }:
         icon: <StatUptimeIcon />,
         label: t('admin.panel.statsUptime'),
         value: uptime > 0 ? formatUptime(uptime) : '--',
-        colorClass: 'text-success-400 bg-success-400/10 border-success-400/20',
+        colorClass: 'text-apple-green bg-success-400/10 border-success-400/20',
       },
       {
-        icon: <StatBotIcon />,
+        icon: <StatBotIcon className="h-3.5 w-3.5" />,
         label: t('admin.panel.statsBot'),
         value: systemInfo?.bot_version ?? '--',
-        colorClass: 'text-accent-400 bg-accent-400/10 border-accent-400/20',
+        colorClass: 'text-[#F97315] bg-accent-400/10 border-accent-400/20',
       },
       {
-        icon: <StatCabinetIcon />,
+        icon: <StatCabinetIcon className="h-3.5 w-3.5" />,
         label: t('admin.panel.statsCabinet'),
         value: `v${CABINET_VERSION}`,
         colorClass: 'text-accent-300 bg-accent-300/10 border-accent-300/20',
       },
       {
-        icon: <StatTrialIcon />,
+        icon: <StatTrialIcon className="h-3.5 w-3.5" />,
         label: t('admin.panel.statsTrials'),
         numericValue: trial,
-        colorClass: 'text-warning-400 bg-warning-400/10 border-warning-400/20',
+        colorClass: 'text-apple-amber bg-warning-400/10 border-warning-400/20',
       },
       {
-        icon: <StatPaidIcon />,
+        icon: <StatPaidIcon className="h-3.5 w-3.5" />,
         label: t('admin.panel.statsPaid'),
         numericValue: paid,
         delta: purchasedToday > 0 ? `+${purchasedToday}` : undefined,
-        colorClass: 'text-success-400 bg-success-400/10 border-success-400/20',
+        colorClass: 'text-apple-green bg-success-400/10 border-success-400/20',
       },
     ];
   }, [systemInfo, dashboardStats, t]);
@@ -689,7 +474,8 @@ const StatsBar = memo(function StatsBar({ systemInfo, dashboardStats, loading }:
         <div
           key={i}
           className={cn(
-            'apple-card-grad flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-apple-card px-3 py-2 transition-all duration-200',
+            'flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-apple-hairline/50 bg-apple-card/40 px-3 py-2 transition-all duration-200',
+            'light:border-champagne-300/50 light:bg-champagne-100/60',
             loading && 'animate-pulse',
           )}
           style={{ animationDelay: `${i * 60}ms` }}
@@ -737,10 +523,24 @@ interface GlassCardProps {
 const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassCardProps) {
   const { t } = useTranslation();
   const hasPermission = usePermissionStore((state) => state.hasPermission);
+  const [hoveredItem, setHoveredItem] = useState<number | null>(null);
+  // 3D mouse-tracking tilt removed: decorative motion that didn't convey state.
+  // Hover styling alone signals interactivity.
+  void index;
 
   const visibleItems = useMemo(
     () =>
       section.items.filter((item) => {
+        const pending: Record<string, boolean> = {
+          '/admin/reachability': integrationCapabilities.reachability,
+          '/admin/coupons': integrationCapabilities.coupons,
+          '/admin/legal-pages': integrationCapabilities.legalConsent,
+          '/admin/reminders': integrationCapabilities.reminders,
+          '/admin/system-errors': integrationCapabilities.systemErrors,
+          '/admin/grace-access': integrationCapabilities.graceAccess,
+          '/admin/partners/referral-levels': integrationCapabilities.referralLevels,
+        };
+        if (pending[item.to] === false) return false;
         if (!hasPermission(item.permission)) return false;
         if (!searchTerm) return true;
         return t(item.name).toLowerCase().includes(searchTerm.toLowerCase());
@@ -769,23 +569,36 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
   if (visibleItems.length === 0) return null;
 
   return (
-    <div
-      style={{
-        animation: `adminCardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${index * 60}ms both`,
-      }}
-    >
-      {/* Section caption — sits outside the card, iOS-settings style */}
-      <h2 className="mb-1.5 px-3.5 text-[13px] font-semibold text-apple-mute">
-        {t(section.titleKey)}
-      </h2>
+    <div className="group/card relative overflow-hidden rounded-2xl border border-apple-hairline/50 bg-apple-card/30 backdrop-blur-xl transition-colors duration-200 hover:border-apple-hairline/80 light:border-champagne-300/50 light:bg-champagne-100/40 light:hover:border-champagne-400/60">
+      {/* Header */}
+      <div className="flex items-center gap-2.5 border-b border-apple-hairline/30 px-3.5 py-2.5 light:border-champagne-300/30">
+        <div
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+          style={{ background: section.gradient }}
+        >
+          <span className="text-xs font-bold text-dark-50" aria-hidden="true">
+            {visibleItems.length}
+          </span>
+        </div>
+        <h2 className="truncate text-[13px] font-semibold text-apple-ink light:text-champagne-900">
+          {t(section.titleKey)}
+        </h2>
+      </div>
 
-      {/* Card — plain list of rows */}
-      <div className="apple-card-grad overflow-hidden rounded-2xl bg-apple-card">
+      {/* Items */}
+      <div className="flex flex-col gap-px p-1.5">
         {visibleItems.map((item, i) => (
           <Link
             key={item.to}
             to={item.to}
-            className="flex items-center gap-3 pl-3.5 transition-colors hover:bg-apple-elevated"
+            className={cn(
+              'group/item flex items-center gap-2.5 rounded-xl border border-transparent px-2 py-1.5 transition-colors duration-150',
+              hoveredItem === i
+                ? 'border-apple-hairline/50 bg-apple-elevated/30 light:border-champagne-400/40 light:bg-champagne-200/50'
+                : 'hover:border-apple-hairline/50 hover:bg-apple-elevated/30 light:hover:border-champagne-400/40 light:hover:bg-champagne-200/50',
+            )}
+            onMouseEnter={() => setHoveredItem(i)}
+            onMouseLeave={() => setHoveredItem(null)}
           >
             {/* Colored icon tile */}
             <div
@@ -824,38 +637,28 @@ export default function AdminPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { safeAreaInset, contentSafeAreaInset } = useTelegramSDK();
 
-  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
   const safeTop = Math.max(safeAreaInset.top, contentSafeAreaInset.top);
   const safeBottom = Math.max(safeAreaInset.bottom, contentSafeAreaInset.bottom);
 
-  // Fetch stats
-  useEffect(() => {
-    let cancelled = false;
-    const fetchData = async () => {
-      try {
-        const [sysInfo, stats] = await Promise.all([
-          statsApi.getSystemInfo(),
-          statsApi.getDashboardStats(),
-        ]);
-        if (!cancelled) {
-          setSystemInfo(sysInfo);
-          setDashboardStats(stats);
-          setLoading(false);
-        }
-      } catch {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchData();
-    const interval = setInterval(fetchData, 60_000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
+  // System info + dashboard stats — polled every 60s via React Query
+  // (replaces the manual setInterval + useState + cancelled-flag pattern).
+  const systemInfoQuery = useQuery<SystemInfo>({
+    queryKey: ['admin-panel-system-info'] as const,
+    queryFn: () => statsApi.getSystemInfo(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const dashboardStatsQuery = useQuery<DashboardStats>({
+    queryKey: ['admin-panel-dashboard-stats'] as const,
+    queryFn: () => statsApi.getDashboardStats(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  const systemInfo = systemInfoQuery.data ?? null;
+  const dashboardStats = dashboardStatsQuery.data ?? null;
+  // "loading" only counts the very first fetch — once we have any data, render it.
+  const loading = systemInfoQuery.isLoading || dashboardStatsQuery.isLoading;
 
   // Keyboard shortcuts: Cmd+K to focus search, Escape to clear
   useEffect(() => {
@@ -905,35 +708,36 @@ export default function AdminPanel() {
               icon: <StatUptimeIcon />,
               label: t('admin.panel.statsUptime'),
               value: systemInfo?.uptime_seconds ? formatUptime(systemInfo.uptime_seconds) : '--',
-              cls: 'text-success-400',
+              cls: 'text-apple-green',
             },
             {
-              icon: <StatBotIcon />,
+              icon: <StatBotIcon className="h-3.5 w-3.5" />,
               label: t('admin.panel.statsBot'),
               value: systemInfo?.bot_version ?? '--',
-              cls: 'text-accent-400',
+              cls: 'text-[#F97315]',
             },
             {
-              icon: <StatTrialIcon />,
+              icon: <StatTrialIcon className="h-3.5 w-3.5" />,
               label: t('admin.panel.statsTrials'),
               value: dashboardStats?.subscriptions.trial?.toLocaleString() ?? '--',
-              cls: 'text-warning-400',
+              cls: 'text-apple-amber',
             },
             {
-              icon: <StatPaidIcon />,
+              icon: <StatPaidIcon className="h-3.5 w-3.5" />,
               label: t('admin.panel.statsPaid'),
               value: dashboardStats?.subscriptions.paid?.toLocaleString() ?? '--',
               delta:
                 (dashboardStats?.subscriptions.purchased_today ?? 0) > 0
                   ? `+${dashboardStats?.subscriptions.purchased_today}`
                   : undefined,
-              cls: 'text-success-400',
+              cls: 'text-apple-green',
             },
           ].map((s, i) => (
             <div
               key={i}
               className={cn(
-                'apple-card-grad flex items-center gap-2 rounded-xl bg-apple-card px-2.5 py-2',
+                'flex items-center gap-2 rounded-xl border border-apple-hairline/50 bg-apple-card/40 px-2.5 py-2',
+                'light:border-champagne-300/50 light:bg-champagne-100/60',
                 loading && 'animate-pulse',
               )}
             >
@@ -955,12 +759,13 @@ export default function AdminPanel() {
 
         {/* Hero */}
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <h1 className="bg-gradient-to-r from-white via-apple-mute to-[#F97315] bg-clip-text text-lg font-extrabold tracking-tight text-transparent sm:text-xl">
+          <h1 className="text-lg font-bold tracking-tight text-dark-50 light:text-champagne-900 sm:text-xl">
             {t('admin.panel.title')}
           </h1>
           <div className="flex items-center gap-1.5 text-xs text-apple-mute">
-            <div
-              className="h-1.5 w-1.5 rounded-full bg-apple-green shadow-[0_0_10px_rgba(48,209,88,0.6)]"
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 rounded-full bg-success-400"
               style={{ animation: 'adminPulse 2s ease-in-out infinite' }}
             />
             {t('admin.panel.statsOnline')}

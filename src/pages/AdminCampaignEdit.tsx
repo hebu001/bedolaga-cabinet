@@ -4,16 +4,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   campaignsApi,
-  CampaignUpdateRequest,
-  CampaignBonusType,
-  ServerSquadInfo,
-  TariffListItem,
-  AvailablePartner,
+  type CampaignUpdateRequest,
+  type CampaignBonusType,
+  type ServerSquadInfo,
+  type TariffListItem,
+  type AvailablePartner,
 } from '../api/campaigns';
 import { AdminBackButton } from '../components/admin';
 import { CheckIcon, CampaignIcon } from '../components/icons';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import Twemoji from 'react-twemoji';
+import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
 
 // Bonus type config
 const bonusTypeConfig: Record<
@@ -74,16 +75,14 @@ function ServerSelector({
             }`}
           >
             <div
-              className={`flex h-5 w-5 items-center justify-center rounded ${
-                selected.includes(server.squad_uuid)
-                  ? 'bg-[#F97315] text-white'
-                  : 'bg-apple-elevated'
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${
+                selected.includes(server.squad_uuid) ? 'bg-[#F97315] text-white' : 'bg-dark-600'
               }`}
             >
               {selected.includes(server.squad_uuid) && <CheckIcon />}
             </div>
-            <span className="text-sm font-medium">
-              <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+            <span className="min-w-0 text-sm font-medium [overflow-wrap:anywhere]">
+              <Twemoji tag="span" options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
                 {server.display_name}
               </Twemoji>
             </span>
@@ -108,10 +107,14 @@ function TariffSelector({
 
   return (
     <div>
-      <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+      <label
+        htmlFor="campaign-edit-tariff-select"
+        className="mb-2 block text-[13px] font-medium text-apple-mute"
+      >
         {t('admin.campaigns.form.selectTariff')}
       </label>
       <select
+        id="campaign-edit-tariff-select"
         value={value || ''}
         onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
         className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
@@ -142,10 +145,14 @@ function PartnerSelector({
 
   return (
     <div>
-      <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+      <label
+        htmlFor="campaign-edit-partner-select"
+        className="mb-2 block text-[13px] font-medium text-apple-mute"
+      >
         {t('admin.campaigns.form.partner')}
       </label>
       <select
+        id="campaign-edit-partner-select"
         value={value || ''}
         onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
         className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
@@ -292,9 +299,9 @@ export default function AdminCampaignEdit() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={2} titleWidth="w-56" className="space-y-6">
+        <Skeleton variant="card" className="h-96" />
+      </PageSkeleton>
     );
   }
 
@@ -325,15 +332,15 @@ export default function AdminCampaignEdit() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <AdminBackButton to="/admin/campaigns" />
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-[#F97315]/20 p-2 text-[#F97315]">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="shrink-0 rounded-lg bg-[#F97315]/20 p-2 text-[#F97315]">
             <CampaignIcon />
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-xl font-bold text-apple-ink">
               {t('admin.campaigns.modal.editTitle')}
             </h1>
-            <p className="text-sm text-apple-mute">{campaign.name}</p>
+            <p className="text-sm text-apple-mute [overflow-wrap:anywhere]">{campaign.name}</p>
           </div>
         </div>
       </div>
@@ -342,11 +349,15 @@ export default function AdminCampaignEdit() {
       <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5">
         {/* Name */}
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="campaign-edit-name"
+            className="mb-2 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.campaigns.form.name')}
             <span className="text-apple-red">*</span>
           </label>
           <input
+            id="campaign-edit-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -363,11 +374,15 @@ export default function AdminCampaignEdit() {
 
         {/* Start Parameter */}
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="campaign-edit-start-param"
+            className="mb-2 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.campaigns.form.startParameter')}
             <span className="text-apple-red">*</span>
           </label>
           <input
+            id="campaign-edit-start-param"
             type="text"
             value={startParameter}
             onChange={(e) => setStartParameter(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
@@ -388,6 +403,9 @@ export default function AdminCampaignEdit() {
           <button
             type="button"
             onClick={() => setIsActive(!isActive)}
+            role="switch"
+            aria-checked={isActive}
+            aria-label={t('admin.campaigns.form.active')}
             className={`relative h-6 w-11 rounded-full transition-colors ${
               isActive ? 'bg-[#F97315]' : 'bg-apple-card'
             }`}
@@ -408,15 +426,21 @@ export default function AdminCampaignEdit() {
 
       {/* Bonus Type */}
       <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5">
-        <h2 className="text-lg font-semibold text-apple-ink">
+        <h2 id="bonus-type-edit-label" className="text-lg font-semibold text-apple-ink">
           {t('admin.campaigns.form.bonusType')}
         </h2>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div
+          className="grid grid-cols-2 gap-3"
+          role="radiogroup"
+          aria-labelledby="bonus-type-edit-label"
+        >
           {(Object.keys(bonusTypeConfig) as CampaignBonusType[]).map((type) => (
             <button
               key={type}
               type="button"
+              role="radio"
+              aria-checked={bonusType === type}
               onClick={() => setBonusType(type)}
               className={`rounded-xl p-4 text-left transition-all ${
                 bonusType === type
@@ -458,10 +482,14 @@ export default function AdminCampaignEdit() {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+              <label
+                htmlFor="campaign-edit-sub-days"
+                className="mb-2 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.campaigns.form.days')}
               </label>
               <input
+                id="campaign-edit-sub-days"
                 type="number"
                 value={subscriptionDays}
                 onChange={createNumberInputHandler(setSubscriptionDays, 1)}
@@ -470,10 +498,14 @@ export default function AdminCampaignEdit() {
               />
             </div>
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+              <label
+                htmlFor="campaign-edit-sub-traffic"
+                className="mb-2 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.campaigns.form.trafficGb')}
               </label>
               <input
+                id="campaign-edit-sub-traffic"
                 type="number"
                 value={subscriptionTraffic}
                 onChange={createNumberInputHandler(setSubscriptionTraffic, 0)}
@@ -482,10 +514,14 @@ export default function AdminCampaignEdit() {
               />
             </div>
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+              <label
+                htmlFor="campaign-edit-sub-devices"
+                className="mb-2 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.campaigns.form.devices')}
               </label>
               <input
+                id="campaign-edit-sub-devices"
                 type="number"
                 value={subscriptionDevices}
                 onChange={createNumberInputHandler(setSubscriptionDevices, 1)}
@@ -508,10 +544,14 @@ export default function AdminCampaignEdit() {
           <TariffSelector tariffs={tariffs} value={tariffId} onChange={setTariffId} />
 
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="campaign-edit-tariff-days"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.campaigns.form.durationDays')}
             </label>
             <input
+              id="campaign-edit-tariff-days"
               type="number"
               value={tariffDays}
               onChange={createNumberInputHandler(setTariffDays, 1)}

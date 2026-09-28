@@ -5,7 +5,6 @@ import { I18nBootstrap } from './providers/I18nBootstrap';
 import {
   init,
   restoreInitData,
-  retrieveRawInitData,
   mountMiniApp,
   miniAppReady,
   mountViewport,
@@ -25,7 +24,14 @@ import { AppWithNavigator } from './AppWithNavigator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { initLogoPreload } from './api/branding';
 import { getCachedFullscreenEnabled, isTelegramMobile } from './hooks/useTelegramSDK';
+import { getTelegramInitData } from './utils/telegramInitData';
+import { applyTelegramLanguage } from './i18n';
+import { installEncodingSurrogateGuard } from './utils/installEncodingSurrogateGuard';
+import { checkBackendOnStartup } from './api/health';
 import './styles/globals.css';
+
+installEncodingSurrogateGuard();
+const objectHasOwnProperty = Object.prototype.hasOwnProperty;
 
 // Polyfill Object.hasOwn for older iOS/Android WebViews (Safari < 15.4, old Chrome).
 // @telegram-apps/sdk v3 depends on valibot which uses Object.hasOwn internally.
@@ -34,7 +40,7 @@ import './styles/globals.css';
 if (typeof (Object as { hasOwn?: unknown }).hasOwn !== 'function') {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (Object as any).hasOwn = (obj: object, prop: PropertyKey): boolean =>
-    Object.prototype.hasOwnProperty.call(obj, prop);
+    objectHasOwnProperty.call(obj, prop);
 }
 
 // Only initialize Telegram SDK when running inside Telegram
@@ -53,7 +59,8 @@ if (isTelegramEnv && !alreadyInitialized) {
     init();
     restoreInitData();
 
-    clearStaleSessionIfNeeded(retrieveRawInitData() || null);
+    clearStaleSessionIfNeeded(getTelegramInitData());
+    void applyTelegramLanguage().catch(() => {});
 
     // Each mount in its own try/catch so one failure doesn't block others.
     // mountMiniApp() internally mounts themeParams in SDK v3,
@@ -96,6 +103,8 @@ if (isTelegramEnv && !alreadyInitialized) {
   // Outside Telegram — still clear stale session tokens if any
   clearStaleSessionIfNeeded(null);
 }
+
+void checkBackendOnStartup();
 
 if ('requestIdleCallback' in window) {
   requestIdleCallback(() => initLogoPreload());

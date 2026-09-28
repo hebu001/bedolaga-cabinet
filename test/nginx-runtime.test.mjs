@@ -52,12 +52,20 @@ async function startNginx(directory, origin = '', caFile) {
     path.join(publicDir, 'assets/ru-AbCd1234.json'),
     JSON.stringify({ copy: 'translation'.repeat(200) }),
   );
+  // The runtime fixture uses IPv4 loopback only; production remains dual-stack.
+  // Remove its IPv6 wildcard listener so tests never bind public/privileged port 80.
   const configuration = fs
     .readFileSync(path.join(root, 'nginx.conf'), 'utf8')
     .replace('listen 80;', `listen 127.0.0.1:${port};`)
+    .replace('listen [::]:80;', '')
     .replace('/usr/share/nginx/html', publicDir)
     .replace('/etc/nginx/cabinet-api.conf', apiFile)
     .replace('/var/log/nginx/access.log', path.join(directory, 'access.log'));
+  assert.deepEqual(
+    [...configuration.matchAll(/\blisten\s+([^;]+);/g)].map((match) => match[1]),
+    [`127.0.0.1:${port}`],
+    'runtime fixture must listen only on its allocated loopback port',
+  );
   const config = path.join(directory, 'nginx.conf');
   fs.writeFileSync(
     config,

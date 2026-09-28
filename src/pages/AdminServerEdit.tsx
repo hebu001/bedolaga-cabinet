@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { serversApi, ServerUpdateRequest } from '../api/servers';
+import { serversApi, type ServerUpdateRequest } from '../api/servers';
 import { AdminBackButton } from '../components/admin';
 import { ServerIcon } from '../components/icons';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import Twemoji from 'react-twemoji';
 import { getFlagEmoji as getCountryFlag } from '../utils/subscriptionHelpers';
+import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
 
 export default function AdminServerEdit() {
   const { t } = useTranslation();
@@ -54,7 +55,7 @@ export default function AdminServerEdit() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
     const data: ServerUpdateRequest = {
       display_name: displayName,
@@ -69,9 +70,9 @@ export default function AdminServerEdit() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={2} titleWidth="w-56" className="space-y-6">
+        <Skeleton variant="card" className="h-96" />
+      </PageSkeleton>
     );
   }
 
@@ -109,7 +110,7 @@ export default function AdminServerEdit() {
         <div>
           <h1 className="text-xl font-semibold text-apple-ink">{t('admin.servers.edit')}</h1>
           <p className="text-sm text-apple-mute">
-            <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+            <Twemoji tag="span" options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
               {server.display_name}
             </Twemoji>
           </p>
@@ -135,11 +136,15 @@ export default function AdminServerEdit() {
 
           {/* Display Name */}
           <div className="mb-4">
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="srv-display-name"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.servers.displayName')}
               <span className="text-apple-red">*</span>
             </label>
             <input
+              id="srv-display-name"
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -151,10 +156,14 @@ export default function AdminServerEdit() {
 
           {/* Description */}
           <div className="mb-4">
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="srv-description"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.servers.description')}
             </label>
             <textarea
+              id="srv-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full resize-none rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
@@ -165,11 +174,15 @@ export default function AdminServerEdit() {
 
           {/* Country Code */}
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="srv-country-code"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.servers.countryCode')}
             </label>
             <div className="flex items-center gap-2">
               <input
+                id="srv-country-code"
                 type="text"
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value.toUpperCase().slice(0, 2))}
@@ -190,11 +203,15 @@ export default function AdminServerEdit() {
 
           {/* Price */}
           <div className="mb-4">
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="srv-price"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.servers.price')}
             </label>
             <div className="flex items-center gap-2">
               <input
+                id="srv-price"
                 type="number"
                 value={priceKopeks === '' ? '' : priceKopeks / 100}
                 onChange={(e) => {
@@ -216,11 +233,15 @@ export default function AdminServerEdit() {
 
           {/* Max Users */}
           <div className="mb-4">
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="srv-max-users"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.servers.maxUsers')}
             </label>
             <div className="flex items-center gap-2">
               <input
+                id="srv-max-users"
                 type="number"
                 value={maxUsers || ''}
                 onChange={(e) =>
@@ -238,10 +259,14 @@ export default function AdminServerEdit() {
 
           {/* Sort Order */}
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="srv-sort-order"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.servers.sortOrder')}
             </label>
             <input
+              id="srv-sort-order"
               type="number"
               value={sortOrder}
               onChange={createNumberInputHandler(setSortOrder)}

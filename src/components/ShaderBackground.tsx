@@ -110,6 +110,7 @@ export default function ShaderBackground() {
     const loop = (now: number) => {
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
+      // biome-ignore lint/correctness/useHookAtTopLevel: WebGLRenderingContext.useProgram is not a React hook.
       gl.useProgram(program);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.uniform2f(uResolution, canvas.width, canvas.height);

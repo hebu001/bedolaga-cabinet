@@ -1,3 +1,10 @@
+import LegalConsent from '../components/LegalConsent';
+import { useLegalConsentGate } from '../hooks/useLegalConsentGate';
+import LegalConsentGate from '../components/LegalConsentGate';
+import { infoApi } from '../api/info';
+import type { LegalConsentConfig } from '../types';
+import { safeLocal, safeSession } from '../utils/safeStorage';
+import { integrationCapabilities } from '../config/integrationCapabilities';
 import { useState, useEffect, useMemo, useCallback, type CSSProperties } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import './Login.css';
@@ -17,6 +24,7 @@ import {
   type EmailAuthEnabled,
 } from '../api/branding';
 import { getAndClearReturnUrl, tokenStorage } from '../utils/token';
+import { getApiErrorMessage } from '../utils/api-error';
 import { isInTelegramWebApp, getTelegramInitData, useTelegramSDK } from '../hooks/useTelegramSDK';
 import { closeMiniApp } from '@telegram-apps/sdk-react';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -31,7 +39,7 @@ import {
 } from '../utils/telegramAuthRecovery';
 
 export default function Login() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -72,6 +80,20 @@ export default function Login() {
   const [showTelegram, setShowTelegram] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Гейт согласия с офертой/политикой для НОВОГО пользователя. Конфиг публичный:
+  // нужен до авторизации, чтобы нарисовать чекбоксы ещё на экране входа.
+  const { data: legalConsent } = useQuery<LegalConsentConfig>({
+    queryKey: ['legal-consent-config', i18n.language],
+    enabled: integrationCapabilities.legalConsent,
+    queryFn: () => infoApi.getLegalConsentConfig(i18n.language),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  // Telegram-вход происходит сам собой, поэтому чекбоксы показываем только когда
+  // бэк ответил 428: пользователь новый и без согласия аккаунт не создастся.
+  // Гейт помнит, какой именно вход повторить после простановки галочек.
+  const consent = useLegalConsentGate(legalConsent);
 
   // Telegram safe area insets
   const { safeAreaInset, contentSafeAreaInset } = useTelegramSDK();
@@ -117,6 +139,12 @@ export default function Login() {
   });
   const isEmailAuthEnabled = emailAuthConfig?.enabled ?? true;
 
+  useQuery({
+    queryKey: ['footer-enabled'],
+    queryFn: brandingApi.getFooterEnabled,
+    staleTime: 60000,
+  });
+
   // Fetch enabled OAuth providers
   const { data: oauthData } = useQuery({
     queryKey: ['oauth-providers'],
@@ -144,7 +172,11 @@ export default function Login() {
         throw new Error('Invalid OAuth redirect URL');
       }
 
-      saveOAuthState(state, provider);
+      if (!saveOAuthState(state, provider)) {
+        // Уйти к провайдеру без сохранённого state — значит гарантированно не
+        // вернуться в логин: та же ошибка, что и раньше, но без потери страницы.
+        throw new Error('OAuth state is not persistable');
+      }
       window.location.href = authorize_url;
     } catch {
       setError(t('auth.oauthError', 'Authorization was denied or failed'));
@@ -153,11 +185,6 @@ export default function Login() {
   };
 
   const appName = branding ? branding.name : import.meta.env.VITE_APP_NAME || 'VPN';
-
-  // Set document title
-  useEffect(() => {
-    document.title = appName || 'VPN';
-  }, [appName]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -187,6 +214,15 @@ export default function Login() {
         navigate(getReturnUrl(), { replace: true });
         return;
       } catch (err) {
+        if (
+          consent.capture(err, async (accepted) => {
+            await loginWithTelegram(initData, accepted);
+            navigate(getReturnUrl(), { replace: true });
+          })
+        ) {
+          setIsLoading(false);
+          return;
+        }
         const error = err as { response?: { status?: number; data?: { detail?: string } } };
         const status = error.response?.status;
         const detail = error.response?.data?.detail;
@@ -217,10 +253,10 @@ export default function Login() {
   const handleRetryTelegramAuth = () => {
     // Clear ALL cached auth state to prevent stale token/initData loops
     tokenStorage.clearTokens();
-    sessionStorage.removeItem('tapps/launchParams');
-    sessionStorage.removeItem('telegram_init_data');
-    localStorage.removeItem('cabinet-auth');
-    localStorage.removeItem('tg_user_id');
+    safeSession.removeItem('tapps/launchParams');
+    safeSession.removeItem('telegram_init_data');
+    safeLocal.removeItem('cabinet-auth');
+    safeLocal.removeItem('tg_user_id');
 
     try {
       // Close miniapp — Telegram will provide fresh initData on reopen
@@ -231,7 +267,7 @@ export default function Login() {
     }
   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError('');
 
@@ -265,19 +301,37 @@ export default function Login() {
           password,
           firstName || undefined,
           referralCode || undefined,
+          ...(integrationCapabilities.legalConsent ? [consent.acceptedKeys] : []),
         );
         // Show "check your email" screen
         setRegisteredEmail(result.email);
       }
     } catch (err: unknown) {
-      const error = err as { response?: { status?: number; data?: { detail?: string } } };
+      const error = err as { response?: { status?: number } };
       const status = error.response?.status;
-      const detail = error.response?.data?.detail;
+      const detail = getApiErrorMessage(err, '');
 
-      if (status === 400 && detail?.includes('already registered')) {
+      // Конфиг чекбоксов мог протухнуть (админ включил гейт между загрузкой страницы
+      // и отправкой формы) — показываем недостающие галочки вместо сырой ошибки.
+      const needsConsent = consent.capture(err, async (accepted) => {
+        const retried = await registerWithEmail(
+          email,
+          password,
+          firstName || undefined,
+          referralCode || undefined,
+          accepted,
+        );
+        setRegisteredEmail(retried.email);
+      });
+      if (needsConsent) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (status === 400 && detail.includes('already registered')) {
         setError(t('auth.emailAlreadyRegistered', 'This email is already registered'));
       } else if (status === 401 || status === 403) {
-        if (detail?.includes('verify your email')) {
+        if (detail.includes('verify your email')) {
           setError(t('auth.emailNotVerified', 'Please verify your email first'));
         } else {
           setError(t('auth.invalidCredentials', 'Invalid email or password'));
@@ -292,7 +346,7 @@ export default function Login() {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setForgotPasswordError('');
 
@@ -353,6 +407,7 @@ export default function Login() {
           </p>
         </header>
 
+        {consent.pending && <LegalConsentGate gate={consent} framed={false} />}
         {referralCode && isEmailAuthEnabled && (
           <p className="login-v3-referral">{t('auth.referralInvite')}</p>
         )}
@@ -517,9 +572,27 @@ export default function Login() {
                       </div>
                     )}
                   </div>
+                  {authMode === 'register' &&
+                    integrationCapabilities.legalConsent &&
+                    legalConsent?.required && (
+                      <LegalConsent
+                        documents={consent.documents}
+                        accepted={consent.accepted}
+                        onChange={consent.toggle}
+                        disabled={busy}
+                      />
+                    )}
                   <button
                     type="submit"
-                    disabled={busy}
+                    disabled={
+                      busy ||
+                      Boolean(
+                        authMode === 'register' &&
+                          integrationCapabilities.legalConsent &&
+                          legalConsent?.required &&
+                          !consent.allAccepted,
+                      )
+                    }
                     className="login-v3-button login-v3-primary"
                   >
                     {isLoading ? (

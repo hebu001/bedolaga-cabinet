@@ -37,23 +37,7 @@ export function useBranding() {
   const hasCustomLogo = branding?.has_custom_logo || false;
   const logoUrl = branding ? brandingApi.getLogoUrl(branding) : null;
 
-  // Set document title
-  useEffect(() => {
-    document.title = appName || 'VPN';
-  }, [appName]);
-
-  // Update favicon
-  useEffect(() => {
-    if (!logoUrl) return;
-
-    const link =
-      document.querySelector<HTMLLinkElement>("link[rel*='icon']") ||
-      document.createElement('link');
-    link.type = 'image/x-icon';
-    link.rel = 'shortcut icon';
-    link.href = logoUrl;
-    document.head.appendChild(link);
-  }, [logoUrl]);
+  // Заголовок, фавикон и метатеги ведёт useDocumentBranding на уровне приложения.
 
   // Fullscreen setting from server
   const { data: fullscreenSetting } = useQuery({

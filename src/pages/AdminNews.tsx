@@ -8,105 +8,15 @@ import { Toggle } from '../components/admin/Toggle';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import type { NewsListItem } from '../types/news';
-
-// Icons
-const PlusIcon = () => (
-  <svg
-    className="h-5 w-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-    aria-hidden="true"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-  </svg>
-);
-
-const RefreshIcon = () => (
-  <svg
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-    aria-hidden="true"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-    />
-  </svg>
-);
-
-const PencilIcon = () => (
-  <svg
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-    aria-hidden="true"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-    />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-    aria-hidden="true"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-    />
-  </svg>
-);
-
-const StarIcon = ({ filled }: { filled: boolean }) => (
-  <svg
-    className="h-4 w-4"
-    fill={filled ? 'currentColor' : 'none'}
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-    aria-hidden="true"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-    />
-  </svg>
-);
-
-const NewsIcon = () => (
-  <svg
-    className="h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={1.5}
-    aria-hidden="true"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"
-    />
-  </svg>
-);
+import { ListRowSkeleton } from '@/components/admin/ListRowSkeleton';
+import {
+  PlusIcon,
+  RefreshIcon,
+  PencilIcon,
+  TrashIcon,
+  StarIcon,
+  NewsIcon,
+} from '@/components/icons';
 
 // --- Security: hex color validation to prevent CSS injection ---
 const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
@@ -134,11 +44,12 @@ const ArticleRow = memo(function ArticleRow({
 
   return (
     <div className="apple-card-grad rounded-2xl bg-apple-card p-4 transition-all">
-      <div className="flex items-start gap-4">
+      {/* На телефоне кнопки — отдельной строкой: рядом с ними заголовку оставалось 72 px. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
             <span
-              className="inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase"
+              className="inline-flex max-w-full items-center gap-1 rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase [overflow-wrap:anywhere]"
               style={{
                 color,
                 background: `${color}15`,
@@ -170,20 +81,20 @@ const ArticleRow = memo(function ArticleRow({
             <p className="mt-1 truncate text-xs text-apple-mute">{article.excerpt}</p>
           )}
 
-          <div className="mt-2 flex items-center gap-4 text-xs text-apple-faint">
-            <span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-apple-faint">
+            <span className="whitespace-nowrap">
               {article.published_at ? new Date(article.published_at).toLocaleDateString() : '-'}
             </span>
-            <span>
+            <span className="whitespace-nowrap">
               {article.read_time_minutes} {t('news.readTime')}
             </span>
-            <span>
+            <span className="whitespace-nowrap">
               {article.views_count} {t('news.views')}
             </span>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center justify-end gap-1.5 border-t border-apple-hairline/50 pt-2 sm:border-0 sm:pt-0">
           <button
             type="button"
             onClick={onToggleFeatured}
@@ -195,7 +106,7 @@ const ArticleRow = memo(function ArticleRow({
             title={t('news.admin.featured')}
             aria-label={t('news.admin.featured')}
           >
-            <StarIcon filled={article.is_featured} />
+            <StarIcon className="h-4 w-4" filled={article.is_featured} />
           </button>
           <Toggle
             checked={article.is_published}
@@ -218,7 +129,7 @@ const ArticleRow = memo(function ArticleRow({
             title={t('news.admin.delete')}
             aria-label={t('news.admin.delete')}
           >
-            <TrashIcon />
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -344,8 +255,8 @@ export default function AdminNews() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 basis-48 items-center gap-3">
           <AdminBackButton />
           <div>
             <h1 className="text-xl font-bold text-apple-ink">{t('news.admin.title')}</h1>
@@ -375,30 +286,12 @@ export default function AdminNews() {
 
       {/* Articles list */}
       {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="apple-card-grad animate-pulse rounded-2xl bg-apple-card p-4">
-              <div className="flex items-start gap-4">
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="flex gap-2">
-                    <div className="h-4 w-16 rounded bg-apple-elevated" />
-                    <div className="h-4 w-12 rounded bg-apple-elevated" />
-                  </div>
-                  <div className="h-5 w-3/4 rounded bg-apple-elevated" />
-                  <div className="h-3 w-1/2 rounded bg-apple-elevated" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-apple-elevated" />
-                  <div className="h-8 w-14 rounded-full bg-apple-elevated" />
-                  <div className="h-8 w-8 rounded-lg bg-apple-elevated" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ListRowSkeleton
+          actions={[{ width: 'w-8' }, { width: 'w-14', pill: true }, { width: 'w-8' }]}
+        />
       ) : articles.length === 0 ? (
         <div className="apple-card-grad flex flex-col items-center rounded-2xl bg-apple-card p-8 text-center text-apple-mute">
-          <NewsIcon />
+          <NewsIcon className="h-6 w-6" />
           <p className="mt-2">{t('news.noNews')}</p>
         </div>
       ) : (

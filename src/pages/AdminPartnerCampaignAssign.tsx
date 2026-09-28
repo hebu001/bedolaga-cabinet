@@ -1,14 +1,16 @@
-import { useParams, useNavigate } from 'react-router';
+import { useLocation, useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { partnerApi } from '../api/partners';
 import { campaignsApi } from '../api/campaigns';
-import { AdminBackButton } from '../components/admin';
+import { AdminBackButton, backTo } from '../components/admin';
+import { Skeleton, SkeletonGroup } from '../components/ui/skeleton';
 
 export default function AdminPartnerCampaignAssign() {
   const { t } = useTranslation();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   // Fetch partner detail to know already assigned campaign IDs
@@ -58,17 +60,19 @@ export default function AdminPartnerCampaignAssign() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-        </div>
+        <SkeletonGroup className="space-y-3">
+          <Skeleton variant="card" count={3} className="h-16" />
+        </SkeletonGroup>
       ) : available.length === 0 ? (
         <div className="apple-card-grad rounded-2xl bg-apple-card p-6">
           <div className="py-4 text-center text-sm text-apple-faint">
             {t('admin.partnerDetail.campaigns.noAvailable')}
           </div>
           <button
-            onClick={() => navigate(`/admin/campaigns/create?partnerId=${userId}`)}
-            className="mt-2 w-full rounded-full bg-[#F97315] px-4 py-3 font-medium text-white transition-opacity hover:opacity-90"
+            onClick={() =>
+              navigate(`/admin/campaigns/create?partnerId=${userId}`, backTo(location))
+            }
+            className="mt-2 w-full rounded-lg bg-[#F97315] px-4 py-3 font-medium text-white transition-colors hover:bg-accent-600"
           >
             {t('admin.partnerDetail.campaigns.createNew')}
           </button>
@@ -79,17 +83,21 @@ export default function AdminPartnerCampaignAssign() {
             <div key={campaign.id} className="rounded-2xl bg-apple-card p-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-apple-ink">{campaign.name}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="min-w-0 font-medium text-apple-ink [overflow-wrap:anywhere]">
+                      {campaign.name}
+                    </span>
                     {!campaign.is_active && (
                       <span className="rounded-full bg-apple-elevated px-2.5 py-1 text-[11px] font-semibold text-apple-mute">
                         {t('admin.campaigns.table.inactive')}
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-apple-faint">
-                    <span className="font-mono">?start={campaign.start_parameter}</span>
-                    <span>
+                  <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-apple-faint">
+                    <span className="min-w-0 font-mono break-all">
+                      ?start={campaign.start_parameter}
+                    </span>
+                    <span className="whitespace-nowrap">
                       {campaign.registrations_count}{' '}
                       {t('admin.campaigns.overview.registrations').toLowerCase()}
                     </span>
@@ -111,14 +119,16 @@ export default function AdminPartnerCampaignAssign() {
             <div key={campaign.id} className="rounded-2xl bg-apple-card p-4 opacity-50">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-apple-mute">{campaign.name}</span>
-                    <span className="rounded-full bg-apple-blue/15 px-2.5 py-1 text-[11px] font-semibold text-apple-blue">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="min-w-0 font-medium text-apple-mute [overflow-wrap:anywhere]">
+                      {campaign.name}
+                    </span>
+                    <span className="min-w-0 max-w-full rounded bg-purple-500/20 px-1.5 py-0.5 text-xs text-purple-400 [overflow-wrap:anywhere]">
                       {campaign.partner_name}
                     </span>
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-apple-faint">
-                    <span className="font-mono">?start={campaign.start_parameter}</span>
+                  <div className="mt-1 text-xs text-apple-faint">
+                    <span className="font-mono break-all">?start={campaign.start_parameter}</span>
                   </div>
                 </div>
               </div>

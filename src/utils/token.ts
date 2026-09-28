@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { safeSession } from './safeStorage';
+import { reportPossibleBackendDown } from '../api/health';
 import { authNowMs, observeAuthServerTime } from './authClock';
 import {
   advanceSession,
@@ -365,6 +367,7 @@ class TokenRefreshManager {
       } catch (error) {
         assertCurrentSession(owner);
         const status = (error as { response?: { status?: number } }).response?.status;
+        if (!status && axios.isAxiosError(error)) void reportPossibleBackendDown();
         if (status !== 401 && status !== 403) throw error;
         if (!exclusive) {
           // An advisory fallback cannot distinguish terminal rejection from a
@@ -409,15 +412,15 @@ export function saveReturnUrl(): void {
   if (typeof window !== 'undefined') {
     const currentPath = window.location.pathname + window.location.search;
     if (currentPath && currentPath !== '/login') {
-      sessionStorage.setItem(RETURN_URL_KEY, currentPath);
+      safeSession.setItem(RETURN_URL_KEY, currentPath);
     }
   }
 }
 
 export function getAndClearReturnUrl(): string | null {
   if (typeof window !== 'undefined') {
-    const url = sessionStorage.getItem(RETURN_URL_KEY);
-    sessionStorage.removeItem(RETURN_URL_KEY);
+    const url = safeSession.getItem(RETURN_URL_KEY);
+    safeSession.removeItem(RETURN_URL_KEY);
     return url;
   }
   return null;

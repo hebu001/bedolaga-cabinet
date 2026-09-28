@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { transliterate } from '../utils/transliterate';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExtension from '@tiptap/extension-image';
@@ -12,115 +13,33 @@ import UnderlineExtension from '@tiptap/extension-underline';
 import HighlightExtension from '@tiptap/extension-highlight';
 import { VideoExtension } from '../lib/tiptap-video';
 import { newsApi } from '../api/news';
+import { usePrompt } from '../store/promptDialog';
 import { AdminBackButton } from '../components/admin';
 import { ColoredItemCombobox } from '../components/admin/ColoredItemCombobox';
 import { Toggle } from '../components/admin/Toggle';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { cn } from '../lib/utils';
 import type { NewsCategory, NewsTag, NewsCreateRequest } from '../types/news';
-
-// --- Icons ---
-const BoldIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" />
-  </svg>
-);
-
-const ItalicIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
-  </svg>
-);
-
-const UnderlineIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z" />
-  </svg>
-);
-
-const StrikeIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M10 19h4v-3h-4v3zM5 4v3h5v3h4V7h5V4H5zM3 14h18v-2H3v2z" />
-  </svg>
-);
-
-const H1Icon = () => <span className="text-xs font-bold">H1</span>;
-
-const H2Icon = () => <span className="text-xs font-bold">H2</span>;
-
-const H3Icon = () => <span className="text-xs font-bold">H3</span>;
-
-const ListBulletIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z" />
-  </svg>
-);
-
-const ListOrderedIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z" />
-  </svg>
-);
-
-const QuoteIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
-  </svg>
-);
-
-const CodeBlockIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
-  </svg>
-);
-
-const ImageIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-    />
-  </svg>
-);
-
-const LinkIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
-    />
-  </svg>
-);
-
-const AlignLeftIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z" />
-  </svg>
-);
-
-const AlignCenterIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z" />
-  </svg>
-);
-
-const HighlightIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M16.56 3.44a1.5 1.5 0 012.12 0l1.88 1.88a1.5 1.5 0 010 2.12L8.44 19.56 3 21l1.44-5.44L16.56 3.44z" />
-  </svg>
-);
-
-const UploadIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-    />
-  </svg>
-);
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import {
+  BoldIcon,
+  ItalicIcon,
+  UnderlineIcon,
+  StrikeIcon,
+  H1Icon,
+  H2Icon,
+  H3Icon,
+  ListBulletIcon,
+  ListOrderedIcon,
+  QuoteIcon,
+  CodeBlockIcon,
+  ImageIcon,
+  LinkIcon,
+  AlignLeftIcon,
+  AlignCenterIcon,
+  HighlightIcon,
+  UploadIcon,
+} from '@/components/icons';
 
 // --- Toolbar Button ---
 interface ToolbarButtonProps {
@@ -165,47 +84,8 @@ function isSafeUrl(url: string | null | undefined): boolean {
 }
 
 // --- Slug utility ---
-const TRANSLIT_MAP: Record<string, string> = {
-  а: 'a',
-  б: 'b',
-  в: 'v',
-  г: 'g',
-  д: 'd',
-  е: 'e',
-  ё: 'yo',
-  ж: 'zh',
-  з: 'z',
-  и: 'i',
-  й: 'y',
-  к: 'k',
-  л: 'l',
-  м: 'm',
-  н: 'n',
-  о: 'o',
-  п: 'p',
-  р: 'r',
-  с: 's',
-  т: 't',
-  у: 'u',
-  ф: 'f',
-  х: 'kh',
-  ц: 'ts',
-  ч: 'ch',
-  ш: 'sh',
-  щ: 'shch',
-  ъ: '',
-  ы: 'y',
-  ь: '',
-  э: 'e',
-  ю: 'yu',
-  я: 'ya',
-};
-
 function generateSlug(title: string): string {
-  const lower = title.toLowerCase();
-  const transliterated = Array.from(lower)
-    .map((ch) => TRANSLIT_MAP[ch] ?? ch)
-    .join('');
+  const transliterated = transliterate(title);
   return transliterated
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/[\s_]+/g, '-')
@@ -601,34 +481,38 @@ export default function AdminNewsCreate() {
   };
 
   // Toolbar actions
-  const addLink = () => {
-    const url = window.prompt(t('news.admin.toolbar.linkUrlPrompt'));
-    if (url && editor) {
-      try {
-        const parsed = new URL(url);
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
-      } catch {
-        return;
-      }
-      editor.chain().focus().setLink({ href: url }).run();
+  const promptDialog = usePrompt();
+  const addLink = async () => {
+    if (!editor) return;
+    const url = await promptDialog({
+      label: t('news.admin.toolbar.linkUrlPrompt'),
+      inputType: 'url',
+    });
+    if (!url) return;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
+    } catch {
+      return;
     }
+    editor.chain().focus().setLink({ href: url }).run();
   };
 
   if (isEdit && isLoadingArticle) {
     return (
-      <div className="space-y-6">
-        <div className="skeleton h-8 w-48 rounded-lg" />
-        <div className="skeleton h-12 w-full rounded-xl" />
-        <div className="skeleton h-64 w-full rounded-xl" />
-      </div>
+      <SkeletonGroup className="space-y-6">
+        <Skeleton className="h-8 w-48 rounded-lg" />
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </SkeletonGroup>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 basis-48 items-center gap-3">
           <AdminBackButton to="/admin/news" />
           <h1 className="text-xl font-bold text-apple-ink">
             {isEdit ? t('news.admin.edit') : t('news.admin.create')}
@@ -646,11 +530,12 @@ export default function AdminNewsCreate() {
       {/* Form */}
       <div className="space-y-5">
         {/* Title */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-apple-mute">
+        <div>
+          <label htmlFor="news-title" className="label">
             {t('news.admin.titleLabel')}
           </label>
           <input
+            id="news-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -660,11 +545,12 @@ export default function AdminNewsCreate() {
         </div>
 
         {/* Slug */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-apple-mute">
+        <div>
+          <label htmlFor="news-slug" className="label">
             {t('news.admin.slugLabel')}
           </label>
           <input
+            id="news-slug"
             type="text"
             value={slug}
             onChange={(e) => {
@@ -689,6 +575,7 @@ export default function AdminNewsCreate() {
               onCreateNew={handleCreateCategory}
               onDelete={handleDeleteCategory}
               placeholder={t('news.admin.combobox.selectCategory')}
+              ariaLabel={t('news.admin.categoryLabel')}
             />
           </div>
           <div className="space-y-1.5">
@@ -702,16 +589,18 @@ export default function AdminNewsCreate() {
               onCreateNew={handleCreateTag}
               onDelete={handleDeleteTag}
               placeholder={t('news.admin.combobox.selectTag')}
+              ariaLabel={t('news.admin.tagLabel')}
             />
           </div>
         </div>
 
         {/* Read time */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-apple-mute">
+        <div>
+          <label htmlFor="news-readtime" className="label">
             {t('news.admin.readTimeLabel')}
           </label>
           <input
+            id="news-readtime"
             type="number"
             value={readTimeMinutes}
             onChange={(e) => setReadTimeMinutes(Number(e.target.value) || 1)}
@@ -722,11 +611,12 @@ export default function AdminNewsCreate() {
         </div>
 
         {/* Excerpt */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-apple-mute">
+        <div>
+          <label htmlFor="news-excerpt" className="label">
             {t('news.admin.excerptLabel')}
           </label>
           <textarea
+            id="news-excerpt"
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
             className="min-h-[80px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
@@ -735,12 +625,13 @@ export default function AdminNewsCreate() {
         </div>
 
         {/* Featured Image URL */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-medium text-apple-mute">
+        <div>
+          <label htmlFor="news-image" className="label">
             {t('news.admin.imageLabel')}
           </label>
           <div className="flex items-center gap-2">
             <input
+              id="news-image"
               type="text"
               value={featuredImageUrl}
               onChange={(e) => setFeaturedImageUrl(e.target.value)}
@@ -757,7 +648,7 @@ export default function AdminNewsCreate() {
               {isFeaturedImageUploading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
               ) : (
-                <UploadIcon />
+                <UploadIcon className="h-4 w-4" />
               )}
               <span className="hidden sm:inline">{t('news.admin.uploadFeaturedImage')}</span>
             </button>
@@ -842,28 +733,28 @@ export default function AdminNewsCreate() {
                   isActive={editor.isActive('bold')}
                   title={t('news.admin.toolbar.bold')}
                 >
-                  <BoldIcon />
+                  <BoldIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleItalic().run()}
                   isActive={editor.isActive('italic')}
                   title={t('news.admin.toolbar.italic')}
                 >
-                  <ItalicIcon />
+                  <ItalicIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleUnderline().run()}
                   isActive={editor.isActive('underline')}
                   title={t('news.admin.toolbar.underline')}
                 >
-                  <UnderlineIcon />
+                  <UnderlineIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleStrike().run()}
                   isActive={editor.isActive('strike')}
                   title={t('news.admin.toolbar.strikethrough')}
                 >
-                  <StrikeIcon />
+                  <StrikeIcon className="h-4 w-4" />
                 </ToolbarButton>
 
                 <div className="mx-1 h-5 w-px bg-apple-hairline" />
@@ -873,7 +764,7 @@ export default function AdminNewsCreate() {
                   isActive={editor.isActive('heading', { level: 1 })}
                   title={t('news.admin.toolbar.heading1')}
                 >
-                  <H1Icon />
+                  <H1Icon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -904,21 +795,21 @@ export default function AdminNewsCreate() {
                   isActive={editor.isActive('orderedList')}
                   title={t('news.admin.toolbar.orderedList')}
                 >
-                  <ListOrderedIcon />
+                  <ListOrderedIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleBlockquote().run()}
                   isActive={editor.isActive('blockquote')}
                   title={t('news.admin.toolbar.blockquote')}
                 >
-                  <QuoteIcon />
+                  <QuoteIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                   isActive={editor.isActive('codeBlock')}
                   title={t('news.admin.toolbar.codeBlock')}
                 >
-                  <CodeBlockIcon />
+                  <CodeBlockIcon className="h-4 w-4" />
                 </ToolbarButton>
 
                 <div className="mx-1 h-5 w-px bg-apple-hairline" />
@@ -928,14 +819,14 @@ export default function AdminNewsCreate() {
                   isActive={editor.isActive({ textAlign: 'left' })}
                   title={t('news.admin.toolbar.alignLeft')}
                 >
-                  <AlignLeftIcon />
+                  <AlignLeftIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => editor.chain().focus().setTextAlign('center').run()}
                   isActive={editor.isActive({ textAlign: 'center' })}
                   title={t('news.admin.toolbar.alignCenter')}
                 >
-                  <AlignCenterIcon />
+                  <AlignCenterIcon className="h-4 w-4" />
                 </ToolbarButton>
 
                 <div className="mx-1 h-5 w-px bg-apple-hairline" />
@@ -945,10 +836,10 @@ export default function AdminNewsCreate() {
                   isActive={editor.isActive('highlight')}
                   title={t('news.admin.toolbar.highlight')}
                 >
-                  <HighlightIcon />
+                  <HighlightIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton onClick={addLink} title={t('news.admin.toolbar.link')}>
-                  <LinkIcon />
+                  <LinkIcon className="h-4 w-4" />
                 </ToolbarButton>
                 <ToolbarButton
                   onClick={() => mediaInputRef.current?.click()}
@@ -958,7 +849,7 @@ export default function AdminNewsCreate() {
                   {isUploading ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
                   ) : (
-                    <ImageIcon />
+                    <ImageIcon className="h-4 w-4" />
                   )}
                 </ToolbarButton>
               </div>

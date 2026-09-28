@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { PiCaretDown } from 'react-icons/pi';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +12,7 @@ import {
   type SupportedLocale,
   toLocaleDict,
 } from '../api/landings';
-import { tariffsApi, TariffListItem, PeriodPrice } from '../api/tariffs';
+import { tariffsApi, type TariffListItem, type PeriodPrice } from '../api/tariffs';
 import { formatPrice } from '../utils/format';
 import { useCurrency } from '../hooks/useCurrency';
 import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
@@ -52,15 +53,7 @@ function isoToDatetimeLocal(iso: string): string {
 }
 
 const ChevronDownIcon = ({ open }: { open: boolean }) => (
-  <svg
-    className={cn('h-5 w-5 transition-transform', open && 'rotate-180')}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-  </svg>
+  <PiCaretDown className={cn('h-5 w-5 transition-transform', open && 'rotate-180')} />
 );
 
 // ============ Collapsible Section ============
@@ -998,8 +991,13 @@ export default function AdminLandingEditor() {
                           Math.floor((firstPeriod.price_kopeks * pct) / 100),
                       );
                       return (
-                        <div key={tariffId} className="flex items-center gap-2 py-1">
-                          <span className="text-sm text-apple-mute">{tariff.name}:</span>
+                        <div
+                          key={tariffId}
+                          className="flex flex-wrap items-center gap-x-2 gap-y-1 py-1"
+                        >
+                          <span className="min-w-0 text-sm text-apple-mute [overflow-wrap:anywhere]">
+                            {tariff.name}:
+                          </span>
                           <span className="text-xs text-apple-faint line-through">
                             {formatPrice(firstPeriod.price_kopeks)}
                           </span>
@@ -1050,11 +1048,13 @@ export default function AdminLandingEditor() {
                         onChange={() => togglePaymentMethod(sysMethod.method_id)}
                         className="h-4 w-4 rounded accent-[#F97315]"
                       />
-                      <span className="flex items-center gap-2 text-sm font-medium text-apple-ink">
-                        {sysMethod.display_name ?? sysMethod.default_display_name}
+                      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-apple-ink">
+                        <span className="min-w-0 [overflow-wrap:anywhere]">
+                          {sysMethod.display_name ?? sysMethod.default_display_name}
+                        </span>
                         {sysMethod.available_sub_options &&
                           sysMethod.available_sub_options.length > 0 && (
-                            <span className="rounded-full bg-apple-card px-1.5 py-0.5 text-[10px] text-apple-mute">
+                            <span className="whitespace-nowrap rounded-full bg-apple-elevated px-1.5 py-0.5 text-[10px] text-apple-mute">
                               {sysMethod.available_sub_options.map((o) => o.name).join(' / ')}
                             </span>
                           )}

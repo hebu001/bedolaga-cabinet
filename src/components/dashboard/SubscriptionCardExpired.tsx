@@ -1,3 +1,4 @@
+import { uiLocale } from '@/utils/uiLocale';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useLocation } from 'react-router';
@@ -10,6 +11,8 @@ import { useCurrency } from '../../hooks/useCurrency';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 import { getGlassColors } from '../../utils/glassTheme';
 import { getInsufficientBalanceError } from '../../utils/subscriptionHelpers';
+import { needsTariff, tariffSelectionPath } from '../../utils/legacySubscription';
+import { ClockIcon, ExclamationIcon, PlusIcon, SubscriptionIcon } from '@/components/icons';
 
 interface SubscriptionCardExpiredProps {
   subscription: Subscription;
@@ -36,7 +39,7 @@ export default function SubscriptionCardExpired({
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
 
-  const formattedDate = new Date(subscription.end_date).toLocaleDateString();
+  const formattedDate = new Date(subscription.end_date).toLocaleDateString(uiLocale());
 
   // Detect limited (traffic exhausted) state
   const isLimited = subscription.is_limited;
@@ -44,6 +47,21 @@ export default function SubscriptionCardExpired({
   // Detect daily subscription (disabled or expired)
   const isDaily = subscription.is_daily;
   const isDisabledDaily = subscription.status === 'disabled' && isDaily;
+
+  /*
+   * Списывать с баланса прямо из карточки можно только там, где выбирать нечего:
+   * суточный тариф стоит один день, а приостановленный просто возобновляется.
+   *
+   * Обычной подписке период выбирает клиент. Кнопка раньше молча продлевала на
+   * 30 дней — то есть решала за него и мимо скидок за длинные периоды (месяц за
+   * 600 ₽ против полугода со скидкой). Хуже того, тариф вообще мог не
+   * продаваться месяцем: тогда сервер отвечал «период недоступен», и кнопка
+   * выглядела сломанной. Теперь она открывает выбор периода текущего тарифа.
+   */
+  const isInstantRenew = isDisabledDaily || (isDaily && !!subscription.tariff_id);
+  // Старая подписка (куплена в классике, тарифа нет): продлевать нечего,
+  // единственная кнопка ведёт на витрину тарифов с этой подпиской.
+  const requiresTariff = needsTariff(subscription);
 
   // For daily subs, check if balance covers daily price; otherwise 100 kopeks minimum
   const dailyPrice = subscription.daily_price_kopeks ?? 0;
@@ -59,10 +77,17 @@ export default function SubscriptionCardExpired({
         // Resume daily subscription via toggle pause endpoint
         await subscriptionApi.togglePause(subscription.id);
       } else if (isDaily && subscription.tariff_id) {
-        // Expired daily tariff — purchase for 1 day
-        await subscriptionApi.purchaseTariff(subscription.tariff_id, 1);
+        // Expired daily tariff — purchase for 1 day. Pass subscription.id
+        // so the backend resolves the EXACT row instead of doing a
+        // (user_id, tariff_id) re-lookup that races with concurrent
+        // panel webhooks (would surface as "Тариф уже активен" + refund).
+        await subscriptionApi.purchaseTariff(subscription.tariff_id, 1, undefined, subscription.id);
       } else {
-        await subscriptionApi.renewSubscription(30, subscription.id);
+        // Сюда кнопка не ведёт: обычной подписке период выбирает клиент. Если
+        // условия показа когда-нибудь разъедутся, открываем выбор периода, а не
+        // списываем месяц молча.
+        navigate(`/subscriptions/${subscription.id}/renew`);
+        return;
       }
       haptic.success();
       queryClient.invalidateQueries({
@@ -104,14 +129,14 @@ export default function SubscriptionCardExpired({
         r: 255,
         g: 184,
         b: 0,
-        hex: '#FFB800',
+        hex: 'rgb(var(--color-urgent-400))',
         gradient: 'linear-gradient(135deg, #FFB800, #FF8C00)',
       }
     : {
         r: 255,
         g: 59,
         b: 92,
-        hex: '#FF3B5C',
+        hex: 'rgb(var(--color-critical-500))',
         gradient: 'linear-gradient(135deg, #FF3B5C, #FF6B35)',
       };
 
@@ -164,39 +189,13 @@ export default function SubscriptionCardExpired({
           style={{
             background: `rgba(${accent.r},${accent.g},${accent.b},0.1)`,
             border: `1px solid rgba(${accent.r},${accent.g},${accent.b},0.15)`,
+            color: accent.hex,
           }}
         >
           {isLimited ? (
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={accent.hex}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
+            <ExclamationIcon className="h-[22px] w-[22px]" />
           ) : (
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={accent.hex}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-            </svg>
+            <ClockIcon className="h-[22px] w-[22px]" />
           )}
         </div>
         <h2 className="text-lg font-bold tracking-tight text-dark-50">
@@ -219,7 +218,9 @@ export default function SubscriptionCardExpired({
 
       {/* Expired date + Balance row */}
       <div
-        className="mb-5 flex items-center justify-between rounded-[14px]"
+        // Дата и баланс разведены зазором; не влезли в строку — баланс уходит
+        // ниже. Было «01.09.2026БАЛАНС», а крупная сумма вылезала за плашку.
+        className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-[14px]"
         style={{
           background: `rgba(${accent.r},${accent.g},${accent.b},0.04)`,
           border: `1px solid rgba(${accent.r},${accent.g},${accent.b},0.08)`,
@@ -227,7 +228,7 @@ export default function SubscriptionCardExpired({
         }}
       >
         <div className="flex items-center">
-          <div className="mb-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-dark-50/30">
+          <div className="mb-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-apple-mute">
             {isLimited
               ? t('dashboard.expired.activeUntil')
               : t('dashboard.expired.expiredDate', {
@@ -237,15 +238,18 @@ export default function SubscriptionCardExpired({
           <div className="ml-3 text-base font-bold tracking-tight text-dark-50/50">
             {formattedDate}
           </div>
+          <div className="text-base font-bold tracking-tight text-dark-50/50">{formattedDate}</div>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-dark-50/30">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-dark-400">
             {t('dashboard.expired.balance')}
           </span>
           <span
-            className={`text-sm font-semibold ${hasBalance ? 'text-success-400' : 'text-dark-50/30'}`}
+            className={`whitespace-nowrap text-sm font-semibold ${hasBalance ? 'text-success-400' : 'text-dark-400'}`}
           >
-            {formatAmount(balanceRubles)} {currencySymbol}
+            {formatAmount(balanceRubles)}
+            {'\u00A0'}
+            {currencySymbol}
           </span>
         </div>
       </div>
@@ -264,34 +268,45 @@ export default function SubscriptionCardExpired({
       <div className="flex gap-2.5">
         {isLimited ? (
           <Link
-            to={`/subscriptions/${subscription.id}`}
+            to={
+              requiresTariff
+                ? tariffSelectionPath(subscription.id)
+                : `/subscriptions/${subscription.id}`
+            }
             className="flex flex-1 items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-semibold tracking-tight text-white transition-all duration-300"
             style={{
               background: accent.gradient,
               boxShadow: `0 4px 20px rgba(${accent.r},${accent.g},${accent.b},0.2)`,
             }}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            {t('subscription.buyTraffic')}
+            <PlusIcon className="h-4 w-4" />
+            {requiresTariff ? t('subscription.cta.moveToTariff') : t('subscription.buyTraffic')}
           </Link>
         ) : (
           <>
             {/* Quick Renew or Top Up button (hidden for expired trials) */}
             {!subscription.is_trial && (
               <>
-                {hasBalance ? (
+                {!isInstantRenew ? (
+                  <Link
+                    to={
+                      requiresTariff
+                        ? tariffSelectionPath(subscription.id)
+                        : `/subscriptions/${subscription.id}/renew`
+                    }
+                    onClick={() => haptic.buttonPressHeavy()}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-semibold tracking-tight text-white transition-all duration-300"
+                    style={{
+                      background: accent.gradient,
+                      boxShadow: `0 4px 20px rgba(${accent.r},${accent.g},${accent.b},0.2)`,
+                    }}
+                  >
+                    <SubscriptionIcon className="h-4 w-4" />
+                    {requiresTariff
+                      ? t('subscription.cta.moveToTariff')
+                      : t('dashboard.expired.quickRenew')}
+                  </Link>
+                ) : hasBalance ? (
                   <button
                     type="button"
                     onClick={handleQuickRenew}
@@ -308,19 +323,7 @@ export default function SubscriptionCardExpired({
                         aria-hidden="true"
                       />
                     ) : (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                      </svg>
+                      <SubscriptionIcon className="h-4 w-4" />
                     )}
                     {isRenewing
                       ? t('common.loading')
@@ -338,19 +341,7 @@ export default function SubscriptionCardExpired({
                       boxShadow: `0 4px 20px rgba(${accent.r},${accent.g},${accent.b},0.2)`,
                     }}
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
+                    <PlusIcon className="h-4 w-4" />
                     {t('dashboard.expired.topUp')}
                   </button>
                 )}
@@ -358,25 +349,27 @@ export default function SubscriptionCardExpired({
             )}
 
             {/* Tariffs (go to purchase page) — full-width for trials */}
-            <Link
-              to="/subscription/purchase"
-              className={`flex items-center justify-center rounded-[14px] px-5 py-3.5 text-[15px] font-semibold tracking-tight transition-colors duration-200 ${
-                subscription.is_trial ? 'flex-1 text-white' : 'text-dark-50/50'
-              }`}
-              style={
-                subscription.is_trial
-                  ? {
-                      background: accent.gradient,
-                      boxShadow: `0 4px 20px rgba(${accent.r},${accent.g},${accent.b},0.2)`,
-                    }
-                  : {
-                      background: g.innerBg,
-                      border: `1px solid ${g.innerBorder}`,
-                    }
-              }
-            >
-              {t('dashboard.expired.tariffs')}
-            </Link>
+            {!requiresTariff && (
+              <Link
+                to="/subscription/purchase"
+                className={`flex items-center justify-center rounded-[14px] px-5 py-3.5 text-[15px] font-semibold tracking-tight transition-colors duration-200 ${
+                  subscription.is_trial ? 'flex-1 text-white' : 'text-dark-50/50'
+                }`}
+                style={
+                  subscription.is_trial
+                    ? {
+                        background: accent.gradient,
+                        boxShadow: `0 4px 20px rgba(${accent.r},${accent.g},${accent.b},0.2)`,
+                      }
+                    : {
+                        background: g.innerBg,
+                        border: `1px solid ${g.innerBorder}`,
+                      }
+                }
+              >
+                {t('dashboard.expired.tariffs')}
+              </Link>
+            )}
           </>
         )}
       </div>

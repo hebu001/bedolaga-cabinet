@@ -1,26 +1,22 @@
 import { useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { serversApi, ServerListItem } from '../api/servers';
-import { SyncIcon, EditIcon, CheckIcon, XIcon, UsersIcon, GiftIcon } from '../components/icons';
+import { serversApi, type ServerListItem } from '../api/servers';
+import {
+  SyncIcon,
+  EditIcon,
+  CheckIcon,
+  XIcon,
+  UsersIcon,
+  GiftIcon,
+  BackIcon,
+} from '../components/icons';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import Twemoji from 'react-twemoji';
 
-// BackIcon
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-apple-mute"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
-
 // Country flags (simple emoji mapping)
 import { getFlagEmoji as getCountryFlag } from '../utils/subscriptionHelpers';
+import { Skeleton, SkeletonGroup } from '../components/ui/skeleton';
 
 export default function AdminServers() {
   const { t } = useTranslation();
@@ -90,9 +86,9 @@ export default function AdminServers() {
 
       {/* Servers List */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-        </div>
+        <SkeletonGroup className="space-y-3">
+          <Skeleton variant="card" count={3} className="h-16" />
+        </SkeletonGroup>
       ) : servers.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-apple-mute">{t('admin.servers.noServers')}</p>
@@ -113,12 +109,15 @@ export default function AdminServers() {
                 server.is_available ? '' : 'opacity-60'
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center gap-2">
+                  <div className="mb-1 flex flex-wrap items-center gap-2">
                     <span className="text-lg">{getCountryFlag(server.country_code)}</span>
-                    <h3 className="truncate font-medium text-apple-ink">
-                      <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+                    <h3 className="min-w-0 font-medium text-apple-ink [overflow-wrap:anywhere]">
+                      <Twemoji
+                        tag="span"
+                        options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}
+                      >
                         {server.display_name}
                       </Twemoji>
                     </h3>
@@ -144,18 +143,21 @@ export default function AdminServers() {
                       {server.current_users}
                       {server.max_users ? ` / ${server.max_users}` : ''}
                     </span>
-                    <span>{server.price_rubles} ₽</span>
+                    <span>
+                      {server.price_rubles}
+                      {'\u00A0'}₽
+                    </span>
                     <span className="max-w-[200px] truncate font-mono text-xs text-apple-faint">
                       {server.squad_uuid}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 border-t border-apple-hairline pt-3 sm:border-0 sm:pt-0">
                   {/* Toggle Available */}
                   <button
                     onClick={() => toggleMutation.mutate(server.id)}
-                    className={`rounded-lg p-2 transition-opacity hover:opacity-80 ${
+                    className={`flex flex-1 justify-center rounded-lg p-2 transition-colors sm:flex-none ${
                       server.is_available
                         ? 'bg-apple-red/15 text-apple-red'
                         : 'bg-apple-green/15 text-apple-green'
@@ -170,7 +172,7 @@ export default function AdminServers() {
                   {/* Toggle Trial */}
                   <button
                     onClick={() => toggleTrialMutation.mutate(server.id)}
-                    className={`rounded-lg p-2 transition-opacity hover:opacity-80 ${
+                    className={`flex flex-1 justify-center rounded-lg p-2 transition-colors sm:flex-none ${
                       server.is_trial_eligible
                         ? 'bg-apple-amber/15 text-apple-amber'
                         : 'bg-apple-elevated text-apple-mute'

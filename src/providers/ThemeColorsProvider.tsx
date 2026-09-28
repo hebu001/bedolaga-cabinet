@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { SessionQueryScope } from './SessionQueryProvider';
 import { useQuery } from '@tanstack/react-query';
-import { themeColorsApi } from '../api/themeColors';
+import { themeColorsQueryOptions } from '../api/themeColors';
 import { DEFAULT_THEME_COLORS } from '../types/theme';
 import { applyThemeColors } from '../hooks/useThemeColors';
 import { usePlatform } from '@/platform';
@@ -25,13 +25,7 @@ export function ThemeColorsProvider({ children }: ThemeColorsProviderProps) {
 }
 
 function ThemeColorsEffects() {
-  const { data: colors } = useQuery({
-    queryKey: ['theme-colors'],
-    queryFn: themeColorsApi.getColors,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-    retry: 1,
-  });
+  const { data: colors } = useQuery(themeColorsQueryOptions());
 
   const { theme: platformTheme, capabilities } = usePlatform();
   const { isDark } = useTheme();
@@ -48,9 +42,14 @@ function ThemeColorsEffects() {
     const themeColors = colors || DEFAULT_THEME_COLORS;
     // Use surface color for header/bottom bar to match app UI
     const headerColor = isDark ? themeColors.darkSurface : themeColors.lightSurface;
+    // Фон клиента под страницей — тот же, что у самой страницы. Иначе на
+    // Android всё, что WebView не успел отрисовать, просвечивает цветом
+    // клиента: чёрные прямоугольники и «прыгающие» цвета на Xiaomi.
+    const pageColor = isDark ? themeColors.darkBackground : themeColors.lightBackground;
 
     platformTheme.setHeaderColor(headerColor);
     platformTheme.setBottomBarColor(headerColor);
+    platformTheme.setBackgroundColor(pageColor);
   }, [capabilities.hasThemeSync, colors, isDark, platformTheme]);
 
   // Apply Telegram colors when theme or colors change

@@ -1,3 +1,4 @@
+import { Skeleton, SkeletonGroup } from '../ui/skeleton';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -7,7 +8,7 @@ import { authApi } from '../../api/auth';
 import { brandingApi, type TelegramWidgetConfig, type EmailAuthEnabled } from '../../api/branding';
 import { useToast } from '../Toast';
 import ProviderIcon from '../ProviderIcon';
-import { LINK_OAUTH_STATE_KEY, LINK_OAUTH_PROVIDER_KEY, getErrorDetail } from '../../utils/oauth';
+import { saveLinkOAuthState, getErrorDetail } from '../../utils/oauth';
 import { getTelegramInitData } from '../../hooks/useTelegramSDK';
 import { usePlatform, useIsTelegram } from '@/platform/hooks/usePlatform';
 import { useAuthStore } from '../../store/auth';
@@ -51,7 +52,7 @@ function PrimaryButton({
 }
 
 /** Telegram account linking widget (browser only). Supports OIDC popup and legacy widget. */
-function TelegramLinkWidget() {
+export function TelegramLinkWidget() {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -298,27 +299,6 @@ function TelegramLinkWidget() {
   return <div ref={containerRef} className="flex items-center" />;
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-xl bg-apple-elevated p-3">
-          <div className="flex animate-pulse items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-6 w-6 rounded-full bg-apple-card" />
-              <div className="space-y-2">
-                <div className="h-4 w-24 rounded bg-apple-card" />
-                <div className="h-3 w-32 rounded bg-apple-card" />
-              </div>
-            </div>
-            <div className="h-8 w-20 rounded-full bg-apple-card" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /** Connected-accounts management, restyled apple-dark for inline embedding. */
 export default function ConnectedAccountsPanel() {
   const { t } = useTranslation();
@@ -545,8 +525,11 @@ export default function ConnectedAccountsPanel() {
       } else {
         // Regular browser: navigate within the same tab.
         // Save state in sessionStorage for the callback page to verify.
-        sessionStorage.setItem(LINK_OAUTH_STATE_KEY, state);
-        sessionStorage.setItem(LINK_OAUTH_PROVIDER_KEY, provider);
+        if (!saveLinkOAuthState(state, provider)) {
+          throw new Error(
+            t('auth.storageUnavailable', 'Разрешите хранение данных в браузере и повторите вход.'),
+          );
+        }
         window.location.href = authorize_url;
       }
     } catch (err: unknown) {
@@ -649,9 +632,12 @@ export default function ConnectedAccountsPanel() {
     return null;
   };
 
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
+  if (isLoading)
+    return (
+      <SkeletonGroup className="space-y-3">
+        <Skeleton variant="card" count={3} className="h-16" />
+      </SkeletonGroup>
+    );
 
   if (isError) {
     return (

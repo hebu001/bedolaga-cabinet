@@ -1,13 +1,30 @@
+import { useAdminTicketDetail } from '@/components/admin/userDetail/useAdminTicketDetail';
+import { getSessionGeneration, isCurrentSession } from '@/utils/session';
 import { useState, useRef, useEffect } from 'react';
 import logger from '../utils/logger';
 import { linkifyText } from '../utils/linkify';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
-import { useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { backTo } from '@/components/admin';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminApi, AdminTicket, AdminTicketDetail } from '../api/admin';
+import { adminApi, type AdminTicket, type AdminTicketDetail } from '../api/admin';
 import { ticketsApi } from '../api/tickets';
+import { copyToClipboard as copyText } from '../utils/clipboard';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import {
+  BackIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  InboxIcon,
+  PaperclipIcon,
+  SettingsIcon,
+  TicketIcon,
+  XCircleIcon,
+  XIcon,
+} from '@/components/icons';
+import { StatCard } from '@/components/stats';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 interface MediaAttachment {
   id: string;
@@ -38,26 +55,35 @@ const ALLOWED_FILE_TYPES: Record<string, string> = {
 const ACCEPT_STRING = Object.keys(ALLOWED_FILE_TYPES).join(',');
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-// BackIcon
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-apple-mute"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
-
 export default function AdminTickets() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { ticketId } = useParams<{ ticketId: string }>();
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
 
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const selectedTicketIdRef = useRef(selectedTicketId);
+  selectedTicketIdRef.current = selectedTicketId;
+
+  // Deep-link: /admin/tickets/:ticketId (or a startapp param routed here) opens
+  // the given ticket directly — used by the admin-chat notification buttons.
+  // Both routes render the same component instance (no remount), so we mirror the
+  // URL param into the selection: navigating to the bare /admin/tickets list
+  // clears any deep-linked selection, keeping URL and detail pane in sync. (This
+  // only fires on mount or an actual param change, never on in-list clicks, since
+  // ticketId stays undefined on the bare route.)
+  useEffect(() => {
+    if (!ticketId) {
+      setSelectedTicketId(null);
+      return;
+    }
+    const id = Number(ticketId);
+    if (Number.isInteger(id) && id > 0) {
+      setSelectedTicketId(id);
+    }
+  }, [ticketId]);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
@@ -94,21 +120,29 @@ export default function AdminTickets() {
       }),
   });
 
+  const ticketQuery = useAdminTicketDetail(selectedTicketId);
   const {
     data: selectedTicket,
     isLoading: ticketLoading,
-    refetch: refreshTicketMedia,
-  } = useQuery({
-    queryKey: ['admin-ticket', selectedTicketId],
-    queryFn: () => adminApi.getTicket(selectedTicketId!),
-    enabled: !!selectedTicketId,
-  });
+    refreshMedia: refreshTicketMedia,
+  } = ticketQuery;
 
   const statusMutation = useMutation({
-    mutationFn: ({ ticketId, status }: { ticketId: number; status: string }) =>
-      adminApi.updateTicketStatus(ticketId, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-ticket', selectedTicketId] });
+    mutationFn: async ({ ticketId, status }: { ticketId: number; status: string }) => {
+      const owner = getSessionGeneration();
+      await adminApi.updateTicketStatus(ticketId, status);
+      return { owner };
+    },
+    onSuccess: async ({ owner }, variables) => {
+      if (!isCurrentSession(owner)) return;
+      await queryClient.cancelQueries({
+        queryKey: ['admin-ticket', variables.ticketId],
+        exact: true,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['admin-ticket', variables.ticketId],
+        exact: true,
+      });
       queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
       queryClient.invalidateQueries({ queryKey: ['admin-ticket-stats'] });
     },
@@ -180,7 +214,7 @@ export default function AdminTickets() {
     }
   };
 
-  const handleReply = async (e: React.FormEvent) => {
+  const handleReply = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!selectedTicketId) return;
     if (attachments.some((a) => a.uploading || a.error)) return;
@@ -205,23 +239,30 @@ export default function AdminTickets() {
         }
       : undefined;
 
+    const owner = getSessionGeneration();
+    const replyingTo = selectedTicketId;
     setIsReplying(true);
     setReplyError(null);
     try {
-      await adminApi.replyToTicket(selectedTicketId, replyText, media);
+      await adminApi.replyToTicket(replyingTo, replyText, media);
+      if (!isCurrentSession(owner)) return;
     } catch (err) {
+      if (!isCurrentSession(owner)) return;
       logger.error('Ticket reply failed:', err);
       const msg =
         err instanceof Error ? err.message : t('admin.tickets.replyFailed', 'Failed to send reply');
-      setReplyError(msg);
+      if (selectedTicketIdRef.current === replyingTo) setReplyError(msg);
       setIsReplying(false);
       return;
     }
 
-    setReplyText('');
-    clearAttachments();
+    if (selectedTicketIdRef.current === replyingTo) {
+      setReplyText('');
+      clearAttachments();
+    }
     setIsReplying(false);
-    queryClient.invalidateQueries({ queryKey: ['admin-ticket', selectedTicketId] });
+    await queryClient.cancelQueries({ queryKey: ['admin-ticket', replyingTo], exact: true });
+    await queryClient.invalidateQueries({ queryKey: ['admin-ticket', replyingTo], exact: true });
     queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
     queryClient.invalidateQueries({ queryKey: ['admin-ticket-stats'] });
   };
@@ -263,14 +304,7 @@ export default function AdminTickets() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    });
+    void copyText(text);
   };
 
   return (
@@ -286,32 +320,13 @@ export default function AdminTickets() {
               <BackIcon />
             </button>
           )}
-          <h1 className="text-2xl font-bold text-apple-ink sm:text-3xl">
-            {t('admin.tickets.title')}
-          </h1>
+          <h1 className="text-xl font-bold text-apple-ink">{t('admin.tickets.title')}</h1>
         </div>
         <button
           onClick={() => navigate('/admin/tickets/settings')}
           className="flex items-center gap-2 rounded-full bg-apple-elevated px-4 py-2 text-[15px] font-medium text-apple-ink transition-colors hover:bg-apple-card"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
+          <SettingsIcon className="h-5 w-5" />
           {t('admin.tickets.settings')}
         </button>
       </div>
@@ -319,33 +334,37 @@ export default function AdminTickets() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold text-apple-ink">{stats.total}</div>
-            <div className="mt-1 text-[13px] text-apple-mute">{t('admin.tickets.total')}</div>
-          </div>
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
-              {stats.open}
-            </div>
-            <div className="mt-1 text-[13px] text-apple-mute">{t('admin.tickets.statusOpen')}</div>
-          </div>
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold text-apple-amber">{stats.pending}</div>
-            <div className="mt-1 text-[13px] text-apple-mute">
-              {t('admin.tickets.statusPending')}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="text-2xl font-bold text-apple-green">{stats.answered}</div>
-            <div className="mt-1 text-[13px] text-apple-mute">
-              {t('admin.tickets.statusAnswered')}
-            </div>
-          </div>
-          <div className="col-span-2 rounded-2xl bg-apple-card p-4 text-center sm:col-span-1">
-            <div className="text-2xl font-bold text-apple-mute">{stats.closed}</div>
-            <div className="mt-1 text-[13px] text-apple-mute">
-              {t('admin.tickets.statusClosed')}
-            </div>
+          <StatCard
+            label={t('admin.tickets.total')}
+            value={stats.total}
+            icon={<TicketIcon className="h-5 w-5" />}
+            tone="neutral"
+          />
+          <StatCard
+            label={t('admin.tickets.statusOpen')}
+            value={stats.open}
+            icon={<InboxIcon className="h-5 w-5" />}
+            tone="accent"
+          />
+          <StatCard
+            label={t('admin.tickets.statusPending')}
+            value={stats.pending}
+            icon={<ClockIcon className="h-5 w-5" />}
+            tone="warning"
+          />
+          <StatCard
+            label={t('admin.tickets.statusAnswered')}
+            value={stats.answered}
+            icon={<CheckCircleIcon className="h-5 w-5" />}
+            tone="success"
+          />
+          <div className="col-span-2 sm:col-span-1">
+            <StatCard
+              label={t('admin.tickets.statusClosed')}
+              value={stats.closed}
+              icon={<XCircleIcon className="h-5 w-5" />}
+              tone="neutral"
+            />
           </div>
         </div>
       )}
@@ -372,9 +391,9 @@ export default function AdminTickets() {
           </div>
 
           {ticketsLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-            </div>
+            <SkeletonGroup className="space-y-3">
+              <Skeleton variant="card" count={3} className="h-16" />
+            </SkeletonGroup>
           ) : ticketsData?.items.length === 0 ? (
             <div className="py-12 text-center text-apple-faint">{t('admin.tickets.noTickets')}</div>
           ) : (
@@ -464,20 +483,8 @@ export default function AdminTickets() {
         <div className="apple-card-grad rounded-2xl bg-apple-card p-4 lg:col-span-2">
           {!selectedTicketId ? (
             <div className="flex h-64 flex-col items-center justify-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated">
-                <svg
-                  className="h-8 w-8 text-apple-faint"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"
-                  />
-                </svg>
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-card">
+                <TicketIcon className="h-8 w-8 text-apple-faint" />
               </div>
               <div className="text-apple-mute">{t('admin.tickets.selectTicket')}</div>
             </div>
@@ -493,20 +500,34 @@ export default function AdminTickets() {
                   <h3 className="text-lg font-semibold text-apple-ink">
                     #{selectedTicket.id} {selectedTicket.title}
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex shrink-0 gap-2">
                     <span className={getStatusBadge(selectedTicket.status)}>
                       {t(
                         `admin.tickets.status${selectedTicket.status.charAt(0).toUpperCase() + selectedTicket.status.slice(1)}`,
                       )}
                     </span>
                     <span className={getPriorityBadge(selectedTicket.priority)}>
-                      {selectedTicket.priority}
+                      {t(`admin.tickets.priorities.${selectedTicket.priority}`, {
+                        defaultValue: selectedTicket.priority,
+                      })}
                     </span>
                   </div>
                 </div>
                 <div className="mb-4 flex items-center gap-2 text-sm text-apple-faint">
                   <span>
-                    {t('admin.tickets.from')}: {formatUser(selectedTicket)}
+                    {t('admin.tickets.from')}:{' '}
+                    {selectedTicket.user ? (
+                      <Link
+                        to={`/admin/users/${selectedTicket.user.id}`}
+                        {...backTo(location)}
+                        title={t('admin.tickets.viewUser')}
+                        className="font-medium text-[#F97315] underline decoration-accent-400/40 underline-offset-2 transition-colors hover:text-accent-300 hover:decoration-accent-300"
+                      >
+                        {formatUser(selectedTicket)}
+                      </Link>
+                    ) : (
+                      formatUser(selectedTicket)
+                    )}
                     {selectedTicket.user?.telegram_id && (
                       <button
                         onClick={() => copyToClipboard(String(selectedTicket.user!.telegram_id))}
@@ -519,14 +540,6 @@ export default function AdminTickets() {
                     | {t('admin.tickets.created')}:{' '}
                     {new Date(selectedTicket.created_at).toLocaleString()}
                   </span>
-                  {selectedTicket.user && (
-                    <button
-                      onClick={() => navigate(`/admin/users/${selectedTicket.user!.id}`)}
-                      className="shrink-0 rounded-lg bg-[#F97315]/10 px-2 py-0.5 text-xs text-[#F97315] transition-colors hover:bg-[#F97315]/20"
-                    >
-                      {t('admin.tickets.viewUser')}
-                    </button>
-                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {['open', 'pending', 'answered', 'closed'].map((s) => (
@@ -571,7 +584,7 @@ export default function AdminTickets() {
                     </div>
                     {msg.message_text && (
                       <p
-                        className="whitespace-pre-wrap text-apple-ink [&_a]:text-[#F97315] [&_a]:underline"
+                        className="whitespace-pre-wrap break-words text-apple-ink [&_a]:text-[#F97315] [&_a]:underline"
                         dangerouslySetInnerHTML={{ __html: linkifyText(msg.message_text) }}
                       />
                     )}
@@ -580,9 +593,9 @@ export default function AdminTickets() {
                       translateError={t('support.imageLoadFailed')}
                       translateRetry={t('common.retry')}
                       onRefreshMedia={async () =>
-                        (
-                          await refreshTicketMedia({ cancelRefetch: false, throwOnError: true })
-                        ).data?.messages.find((message) => message.id === msg.id)
+                        (await refreshTicketMedia()).data?.messages.find(
+                          (message) => message.id === msg.id,
+                        )
                       }
                     />
                   </div>
@@ -609,6 +622,7 @@ export default function AdminTickets() {
                             <img
                               src={att.preview}
                               alt="Preview"
+                              loading="lazy"
                               className="h-16 w-16 rounded-lg object-cover"
                             />
                           ) : (
@@ -631,19 +645,7 @@ export default function AdminTickets() {
                             onClick={() => removeAttachment(idx)}
                             className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-apple-elevated text-apple-mute hover:bg-apple-red hover:text-white"
                           >
-                            <svg
-                              className="h-3 w-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
+                            <XIcon className="h-3 w-3" />
                           </button>
                         </div>
                       ))}
@@ -665,26 +667,14 @@ export default function AdminTickets() {
                     </div>
                   )}
 
-                  <div className="mt-3 flex items-center justify-between">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={attachments.length >= 10 || attachments.some((a) => a.uploading)}
                       className="flex items-center gap-2 rounded-lg bg-apple-elevated px-3 py-2 text-sm text-apple-mute transition-colors hover:bg-apple-card hover:text-apple-ink disabled:opacity-50"
                     >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"
-                        />
-                      </svg>
+                      <PaperclipIcon className="h-4 w-4" />
                       {t('admin.tickets.attachMedia')}{' '}
                       {attachments.length > 0 && `(${attachments.length}/10)`}
                     </button>

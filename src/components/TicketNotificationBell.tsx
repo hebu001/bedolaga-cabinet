@@ -5,25 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { ticketNotificationsApi } from '../api/ticketNotifications';
 import { useAuthStore } from '../store/auth';
 import { useToast } from './Toast';
-import { useWebSocket, WSMessage } from '../hooks/useWebSocket';
+import { useWebSocket, type WSMessage } from '../hooks/useWebSocket';
 import { useHeaderHeight } from '../hooks/useHeaderHeight';
 import type { TicketNotification } from '../types';
-
-const BellIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-    />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-  </svg>
-);
+import { BellIcon, CheckIcon } from '@/components/icons';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 interface TicketNotificationBellProps {
   isAdmin?: boolean;
@@ -281,9 +267,9 @@ export default function TicketNotificationBell({
           {/* Notifications list */}
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
-              <div className="p-8 text-center text-dark-500">
-                <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent"></div>
-              </div>
+              <SkeletonGroup className="space-y-3">
+                <Skeleton variant="card" count={3} className="h-16" />
+              </SkeletonGroup>
             ) : notificationsData?.items && notificationsData.items.length > 0 ? (
               notificationsData.items.map((notification: TicketNotification) => (
                 <button

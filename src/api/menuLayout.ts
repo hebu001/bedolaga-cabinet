@@ -39,13 +39,11 @@ export const BUILTIN_SECTIONS = [
   'language',
 ] as const;
 
-export type BuiltinSection = (typeof BUILTIN_SECTIONS)[number];
-
 export const STYLE_OPTIONS = [
   { value: 'default' as const, colorClass: 'bg-dark-500' },
-  { value: 'primary' as const, colorClass: 'bg-blue-500' },
+  { value: 'primary' as const, colorClass: 'bg-accent-500' },
   { value: 'success' as const, colorClass: 'bg-success-500' },
-  { value: 'danger' as const, colorClass: 'bg-red-500' },
+  { value: 'danger' as const, colorClass: 'bg-error-500' },
 ];
 
 const DEFAULT_CONFIG: MenuConfig = { rows: [], callback_actions: [] };

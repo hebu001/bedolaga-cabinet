@@ -1,0 +1,474 @@
+{
+  "status": "frontend-verification-passed-backend-integration-pending",
+  "verifiedAt": "2026-09-28T02:38:15.819718+00:00",
+  "head": "b1a44d3769fa90f73c86c08db09bed843884f237",
+  "mergeHead": "f5ea595f8f732c37f2d5c270f34879ab2e2fba2d",
+  "testedIndexTree": "8bede158a32fa2a5b1655a58f1ab9f013901a605",
+  "sourceManifestSha256": "e337f119fe2689d273d2370db5dd67daa2c1dd95b5dfb7c67e29e61cd2a30e5c",
+  "sourceManifestUnchanged": true,
+  "runtime": {
+    "node": "24.19.0",
+    "npm": "11.8.0",
+    "platform": "darwin-arm64",
+    "ciNode26Run": false,
+    "install": "npm ci, HUSKY=0, lifecycle scripts enabled",
+    "browser": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  },
+  "commands": [
+    {
+      "name": "install",
+      "command": ["npm", "ci"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:27:41.331720+00:00",
+      "seconds": 14.838,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/install.log",
+      "sha256": "9618bc22ee7bb8befdf9e57203fbc811f6d30963366a90757972f6b5f32b0b36",
+      "inheritedFromPreAdminStyleSnapshot": true
+    },
+    {
+      "name": "nginx",
+      "command": ["npm", "run", "test:nginx"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:29:26.102658+00:00",
+      "seconds": 0.638,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/nginx.log",
+      "sha256": "7732532420dde7f83c9f48f59db11f488bfbca131656d14d94ea97cc356bfe67",
+      "inheritedFromPreAdminStyleSnapshot": true
+    },
+    {
+      "name": "dependencies",
+      "command": ["npm", "run", "test:dependencies"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:29:55.650220+00:00",
+      "seconds": 1.117,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/dependencies.log",
+      "sha256": "c0dd2894c2816be44ae252a2561c631f1d85c1f850ccd51da7ca5bc809a93461",
+      "inheritedFromPreAdminStyleSnapshot": true
+    },
+    {
+      "name": "audit",
+      "command": ["npm", "audit", "--json"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:29:56.767627+00:00",
+      "seconds": 0.889,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/audit.log",
+      "sha256": "8c717d548420271fb63173c0326aec24db7442dcafbdc1abcc5a1b4c16bbe162",
+      "inheritedFromPreAdminStyleSnapshot": true
+    },
+    {
+      "name": "test",
+      "command": ["npm", "test"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:36:22.143985+00:00",
+      "seconds": 35.73,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/post-admin-visual/test.log",
+      "sha256": "a09b0130a5062b1a8d01a520c0eb509c58f039501c26c26fae3d7d250f5ecfaf"
+    },
+    {
+      "name": "lint",
+      "command": ["npm", "run", "lint"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:36:57.876731+00:00",
+      "seconds": 4.934,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/post-admin-visual/lint.log",
+      "sha256": "8c92e998b5effc3ed9cbf5f949833dd407f913979d111174c19debf4034a7efc"
+    },
+    {
+      "name": "format",
+      "command": ["npm", "run", "format:check"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:37:02.811115+00:00",
+      "seconds": 0.314,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/post-admin-visual/format.log",
+      "sha256": "b5dfa862706712c48080f4e9dd00abdd42301d02445ed22b6888c9c1c5346c92"
+    },
+    {
+      "name": "type-check",
+      "command": ["npm", "run", "type-check"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:37:03.125316+00:00",
+      "seconds": 17.176,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/post-admin-visual/type-check.log",
+      "sha256": "c2e720f6d0a98504a9c5549f16a01d91e4508075e6529dbd059c11b32b5f730c"
+    },
+    {
+      "name": "build",
+      "command": ["npm", "run", "build"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:37:20.302236+00:00",
+      "seconds": 18.204,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/post-admin-visual/build.log",
+      "sha256": "c90448c27fe922add2476177a699920ed8ccdb23b972ad8f0b6611795c902204"
+    },
+    {
+      "name": "bundle",
+      "command": ["npm", "run", "check:bundle"],
+      "cwd": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928",
+      "startedAt": "2026-09-28T02:37:38.506768+00:00",
+      "seconds": 0.155,
+      "exitCode": 0,
+      "fullLog": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/post-admin-visual/bundle.log",
+      "sha256": "f7bdf868d95e79498c17fff8affe3971a2a26f4c94407fd65542768c74083d98"
+    }
+  ],
+  "tests": {
+    "custom": [
+      {
+        "suite": "test:auth",
+        "tests": 60,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:ws",
+        "tests": 14,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:media",
+        "tests": 14,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:payments",
+        "tests": 18,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:connection",
+        "tests": 8,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:aurora",
+        "tests": 7,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:startup",
+        "tests": 11,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:trial",
+        "tests": 3,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:login",
+        "tests": 7,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:admin",
+        "tests": 4,
+        "fail": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "test:scroll",
+        "tests": 5,
+        "fail": 0,
+        "skipped": 0
+      }
+    ],
+    "customTotal": 151,
+    "vitestFiles": 233,
+    "vitestTests": 1449
+  },
+  "nginxRuntime": {
+    "tests": 4,
+    "passed": 4,
+    "version": "1.30.5",
+    "toolchain": {
+      "url": "https://nginx.org/download/nginx-1.30.5.tar.gz",
+      "archiveSha256": "6c20565aa2325cb82216ae804f4a4ff1875179014759a381c42ddc8e11c4906d",
+      "source": "/var/folders/kf/p1hq71kx4jl3g0kvv9hpm09r0000gn/T/cabinet-nginx-toolchain-qgab5s1d/nginx-1.30.5",
+      "binary": "/var/folders/kf/p1hq71kx4jl3g0kvv9hpm09r0000gn/T/cabinet-nginx-toolchain-qgab5s1d/nginx-1.30.5/objs/nginx",
+      "commands": [
+        {
+          "command": [
+            "./configure",
+            "--prefix=/var/folders/kf/p1hq71kx4jl3g0kvv9hpm09r0000gn/T/cabinet-nginx-toolchain-qgab5s1d/install",
+            "--with-http_ssl_module",
+            "--with-cc-opt=-I/opt/homebrew/opt/openssl@3/include -I/opt/homebrew/opt/pcre2/include",
+            "--with-ld-opt=-L/opt/homebrew/opt/openssl@3/lib -L/opt/homebrew/opt/pcre2/lib"
+          ],
+          "exitCode": 0,
+          "seconds": 16.854
+        },
+        {
+          "command": ["make", "-j4"],
+          "exitCode": 0,
+          "seconds": 6.4
+        }
+      ]
+    },
+    "scope": "synthetic local IPv4 loopback only; no installed system service"
+  },
+  "dependencySmoke": {
+    "passed": true,
+    "checks": 7
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 271,
+    "infos": 114
+  },
+  "npmAudit": {
+    "auditReportVersion": 2,
+    "vulnerabilities": {},
+    "metadata": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      },
+      "dependencies": {
+        "prod": 248,
+        "dev": 278,
+        "optional": 64,
+        "peer": 1,
+        "peerOptional": 0,
+        "total": 528
+      }
+    }
+  },
+  "bundle": {
+    "initial": {
+      "raw": 893183,
+      "gzip": 284650,
+      "files": [
+        {
+          "file": "assets/index-DpnjDDMM.js",
+          "raw": 229859,
+          "gzip": 65249
+        },
+        {
+          "file": "assets/vendor-react-B-9vT6tx.js",
+          "raw": 252808,
+          "gzip": 82180
+        },
+        {
+          "file": "assets/vendor-query-CfhxqOC7.js",
+          "raw": 40461,
+          "gzip": 11920
+        },
+        {
+          "file": "assets/vendor-i18n-3IIYkeh6.js",
+          "raw": 56338,
+          "gzip": 18426
+        },
+        {
+          "file": "assets/vendor-telegram-CNPfH8iO.js",
+          "raw": 53767,
+          "gzip": 17619
+        },
+        {
+          "file": "assets/vendor-utils-BUY9imPQ.js",
+          "raw": 81260,
+          "gzip": 28811
+        },
+        {
+          "file": "assets/vendor-twemoji-CtPLeamR.js",
+          "raw": 22706,
+          "gzip": 5497
+        },
+        {
+          "file": "assets/vendor-motion-Dv7KSJfb.js",
+          "raw": 127397,
+          "gzip": 41846
+        },
+        {
+          "file": "assets/vendor-radix-react-slot-eY9aKvb4.js",
+          "raw": 2543,
+          "gzip": 1187
+        },
+        {
+          "file": "assets/vendor-radix-react-compose-refs-B82_Ryru.js",
+          "raw": 536,
+          "gzip": 360
+        },
+        {
+          "file": "assets/vendor-radix-react-tooltip-QOPLuEA6.js",
+          "raw": 6154,
+          "gzip": 2406
+        },
+        {
+          "file": "assets/vendor-radix-react-context-ECYBngSx.js",
+          "raw": 1775,
+          "gzip": 777
+        },
+        {
+          "file": "assets/vendor-radix-react-dismissable-layer-CU0A48tO.js",
+          "raw": 5566,
+          "gzip": 1999
+        },
+        {
+          "file": "assets/vendor-radix-primitive-B2KxKFY1.js",
+          "raw": 953,
+          "gzip": 509
+        },
+        {
+          "file": "assets/vendor-radix-react-primitive-DPgyRS3B.js",
+          "raw": 655,
+          "gzip": 456
+        },
+        {
+          "file": "assets/vendor-radix-react-use-callback-ref-uU7kglrb.js",
+          "raw": 278,
+          "gzip": 232
+        },
+        {
+          "file": "assets/vendor-radix-react-popper-FsMpmM6G.js",
+          "raw": 5101,
+          "gzip": 2320
+        },
+        {
+          "file": "assets/vendor-radix-react-arrow-BlZf-KKv.js",
+          "raw": 462,
+          "gzip": 345
+        },
+        {
+          "file": "assets/vendor-radix-react-use-layout-effect-BniXQQGf.js",
+          "raw": 115,
+          "gzip": 130
+        },
+        {
+          "file": "assets/vendor-radix-react-use-size-CPKcURiL.js",
+          "raw": 672,
+          "gzip": 429
+        },
+        {
+          "file": "assets/vendor-radix-react-portal-FfdRTvgD.js",
+          "raw": 491,
+          "gzip": 356
+        },
+        {
+          "file": "assets/vendor-radix-react-presence-n_-uPGE7.js",
+          "raw": 2800,
+          "gzip": 1236
+        },
+        {
+          "file": "assets/vendor-radix-react-visually-hidden-DdJAHL2I.js",
+          "raw": 486,
+          "gzip": 360
+        }
+      ]
+    },
+    "locales": {
+      "ru": {
+        "raw": 119321,
+        "gzip": 29500,
+        "files": [
+          {
+            "file": "assets/ru-m69t-_Mm.json",
+            "raw": 119321,
+            "gzip": 29500
+          }
+        ]
+      },
+      "en": {
+        "raw": 77939,
+        "gzip": 23249,
+        "files": [
+          {
+            "file": "assets/en-CThkgokX.json",
+            "raw": 77939,
+            "gzip": 23249
+          }
+        ]
+      },
+      "fa": {
+        "raw": 103770,
+        "gzip": 25979,
+        "files": [
+          {
+            "file": "assets/fa-DEGINo1P.json",
+            "raw": 103770,
+            "gzip": 25979
+          }
+        ]
+      },
+      "zh": {
+        "raw": 70236,
+        "gzip": 23718,
+        "files": [
+          {
+            "file": "assets/zh-DhsIzuk3.json",
+            "raw": 70236,
+            "gzip": 23718
+          }
+        ]
+      }
+    },
+    "budgets": {
+      "initial": {
+        "raw": 900000,
+        "gzip": 285000
+      },
+      "userLocale": {
+        "raw": 120000,
+        "gzip": 30000
+      }
+    }
+  },
+  "bundleBudgetUnchangedFrom": "55a4038f4ae8692922abc2622f97309840f71064",
+  "limitations": [
+    "Target bot SHA/schema and live integration are unknown, not validated.",
+    "Docker container smoke unavailable: no Docker executable/daemon.",
+    "Node 26 CI matrix was not run locally.",
+    "Health module received a narrow verifier-authored fix reviewed separately by cabinet_final_security_review."
+  ],
+  "evidenceDirectory": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928",
+  "latestEvidenceDirectory": "/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-final-verification-20260928/post-admin-visual",
+  "adminPresentationReview": {
+    "result": "PASS",
+    "paths": [
+      "src/components/admin/userDetail/PanelSyncCard.tsx",
+      "src/components/admin/userDetail/ReferralsTab.tsx",
+      "src/components/admin/userDetail/SubscriptionTab.tsx",
+      "src/components/admin/userDetail/SupportDetails.tsx",
+      "src/components/admin/userDetail/TicketsTab.tsx",
+      "src/components/admin/userDetail/UserActionsMenu.tsx",
+      "src/components/admin/userDetail/UserHeader.tsx",
+      "src/components/admin/userDetail/sectionParts.tsx",
+      "src/components/admin/users/FiltersPopover.tsx",
+      "src/components/admin/users/UserAvatar.tsx",
+      "src/components/admin/users/UserCards.tsx",
+      "src/components/admin/users/UsersTable.tsx",
+      "src/pages/AdminUserDetail.tsx"
+    ],
+    "patchSha256": "7e0d4120d710e8bc12dc9a444d5305328a1aa4b45305bcac50c65e136dd6e869",
+    "findings": [],
+    "observations": [
+      "All changes are JSX class strings and two layout comments; no API, RBAC, handlers, payloads or data behavior changed.",
+      "Tailwind apple.hairline is rgba(255,255,255,0.08); removing slash opacity restores its original alpha rather than replacing it with 30-80%.",
+      "Avatar uses existing apple.blue token (#F97315) and dark orange gradient endpoint; panels and buttons use existing neutral Apple tokens.",
+      "Card merges caller classes after variants through cn/twMerge, allowing local neutral palette without changing shared primitives.",
+      "UserHeader mobile two-column grid gives name and email width, actions use their own second row; sm restores prior three-column positions and truncation.",
+      "Desktop layout and semantic buttons, aria labels and event handlers remain intact."
+    ]
+  },
+  "inheritedChecksRationale": "Only the 13 reviewed admin presentation paths changed. Dependency lock, transport, nginx configuration and dependency smoke code were unchanged, so clean install, audit, nginx and dependency browser results remain applicable without repetition."
+}

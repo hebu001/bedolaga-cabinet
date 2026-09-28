@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { EnabledThemes, DEFAULT_ENABLED_THEMES } from '../types/theme';
 import { themeColorsApi } from '../api/themeColors';
 import { STORAGE_KEYS } from '../config/constants';
+import { safeLocal } from '../utils/safeStorage';
+import { getTelegramColorScheme } from './useTelegramSDK';
 
 type Theme = 'dark' | 'light';
 
@@ -52,7 +54,7 @@ export function useTheme() {
 
     // Check localStorage first
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(THEME_KEY) as Theme | null;
+      const stored = safeLocal.getItem(THEME_KEY) as Theme | null;
       if (stored === 'light' && enabled.light) {
         return 'light';
       }
@@ -62,6 +64,13 @@ export function useTheme() {
       // If stored theme is disabled, use the enabled one
       if (stored && !enabled[stored]) {
         return enabled.dark ? 'dark' : 'light';
+      }
+      // No stored preference: follow the Telegram client's color scheme in a Mini App.
+      if (!stored) {
+        const tgScheme = getTelegramColorScheme();
+        if (tgScheme && enabled[tgScheme]) {
+          return tgScheme;
+        }
       }
       // Check system preference
       if (window.matchMedia('(prefers-color-scheme: light)').matches && enabled.light) {
@@ -155,7 +164,7 @@ export function useTheme() {
       root.classList.add('dark');
     }
 
-    localStorage.setItem(THEME_KEY, theme);
+    safeLocal.setItem(THEME_KEY, theme);
     // Notify other useTheme() instances in the same tab
     window.dispatchEvent(new CustomEvent(THEME_CHANGED_EVENT, { detail: theme }));
   }, [theme, enabledThemes]);
@@ -176,7 +185,7 @@ export function useTheme() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
 
     const handleChange = (e: MediaQueryListEvent) => {
-      const stored = localStorage.getItem(THEME_KEY);
+      const stored = safeLocal.getItem(THEME_KEY);
       // Only auto-switch if user hasn't set a preference and theme is enabled
       if (!stored) {
         const newTheme = e.matches ? 'light' : 'dark';

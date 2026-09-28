@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { safeSession } from '../utils/safeStorage';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -39,11 +40,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     // Auto-reload on chunk load failures (stale deploy)
     if (isChunkLoadError(error)) {
       const reloadKey = 'chunk_reload_ts';
-      const lastReload = Number(sessionStorage.getItem(reloadKey) || '0');
+      const lastReload = Number(safeSession.getItem(reloadKey) || '0');
       const now = Date.now();
       // Prevent reload loop — only auto-reload once per 30 seconds
-      if (now - lastReload > 30_000) {
-        sessionStorage.setItem(reloadKey, String(now));
+      // См. App.tsx lazyWithRetry: без переживающей reload метки перезагрузка
+      // зациклится, поэтому перезагружаемся только если метка реально легла.
+      if (now - lastReload > 30_000 && safeSession.setItem(reloadKey, String(now))) {
         window.location.reload();
         return;
       }
@@ -65,7 +67,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     if (level === 'app') {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-dark-900 p-4">
+        <div className="min-h-viewport flex items-center justify-center bg-dark-900 p-4">
           <div className="max-w-md text-center">
             <div className="mb-4 text-4xl">⚠️</div>
             <h1 className="mb-2 text-xl font-bold text-dark-50">Something went wrong</h1>
@@ -74,7 +76,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="rounded-xl bg-accent-500 px-6 py-3 font-medium text-white transition-colors hover:bg-accent-600"
+              className="rounded-xl bg-accent-500 px-6 py-3 font-medium text-on-accent transition-colors hover:bg-accent-600"
             >
               Reload page
             </button>
@@ -110,7 +112,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-xl bg-accent-500 px-6 py-3 font-medium text-white transition-colors hover:bg-accent-600"
+            className="rounded-xl bg-accent-500 px-6 py-3 font-medium text-on-accent transition-colors hover:bg-accent-600"
           >
             {isChunk ? 'Reload' : 'Try again'}
           </button>

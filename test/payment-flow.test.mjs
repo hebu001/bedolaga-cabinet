@@ -7,6 +7,8 @@ import { createRequire } from 'node:module';
 import { setImmediate as flush } from 'node:timers/promises';
 import * as flow from '../src/utils/topUpFlow.ts';
 import * as statuses from '../src/utils/paymentStatus.ts';
+import * as bestValue from '../src/utils/bestValue.ts';
+import * as legacySubscription from '../src/utils/legacySubscription.ts';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -131,6 +133,20 @@ function loadComponent(relative, options = {}) {
     require(specifier) {
       if (modules[specifier]) return modules[specifier];
       if (specifier.endsWith('/topUpFlow')) return flow;
+      if (specifier.endsWith('/bestValue')) return bestValue;
+      if (specifier.endsWith('/legacySubscription')) return legacySubscription;
+      if (
+        specifier.endsWith('/icons') ||
+        specifier.endsWith('/skeleton') ||
+        specifier.endsWith('/BestValueBadge')
+      )
+        return new Proxy({}, { get: (_, name) => (name === '__esModule' ? true : () => null) });
+      if (specifier.endsWith('/useHaptic')) return { useHaptic: () => ({ impact: noop }) };
+      if (specifier.endsWith('/api/branding')) return { brandingApi: {} };
+      if (specifier.endsWith('/supportContact')) return { supportContactLink: () => undefined };
+      if (specifier.endsWith('/safeRedirect')) return { safeRedirect: (value) => value };
+      if (specifier.endsWith('/session'))
+        return { getSessionGeneration: () => 1, isCurrentSession: () => true };
       if (specifier.endsWith('/paymentStatus')) return statuses;
       if (specifier.endsWith('/topUpStorage'))
         return {
@@ -191,7 +207,7 @@ function nodes(tree) {
 }
 function text(tree) {
   if (tree == null || typeof tree === 'boolean') return '';
-  if (typeof tree !== 'object') return String(tree);
+  if (typeof tree !== 'object') return String(tree).replace(/\u00a0/g, ' ');
   if (Array.isArray(tree)) return tree.map(text).join(' ');
   if (typeof tree.type === 'function') return text(tree.type(tree.props));
   return text(tree.props?.children);
@@ -462,23 +478,31 @@ test('return paths allow only intended local subscription routes', () => {
 // Read actual query declarations through the TS AST; compare the values used by
 // two subscriptions with identical selections, then execute mutation guards.
 test('classic and tariff-switch pricing keys isolate subscription IDs; fetching/errors block confirmation', () => {
-  const source = fs.readFileSync(path.join(root, 'src/pages/SubscriptionPurchase.tsx'), 'utf8');
-  const ast = ts.createSourceFile('SubscriptionPurchase.tsx', source, ts.ScriptTarget.Latest, true);
   const selected = new Map();
-  const visit = (node) => {
-    if (ts.isVariableStatement(node)) {
-      const name = node.declarationList.declarations[0]?.name.getText(ast);
-      if (
-        name?.includes('data: preview,') ||
-        name?.includes('data: switchPreview,') ||
-        name === 'purchaseMutation' ||
-        name === 'switchTariffMutation'
-      )
-        selected.set(name, node.getText(ast));
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(ast);
+  for (const relative of [
+    'src/components/subscription/purchase/ClassicPurchaseWizard.tsx',
+    'src/components/subscription/sheets/SwitchTariffSheet.tsx',
+  ]) {
+    const source = fs.readFileSync(path.join(root, relative), 'utf8');
+    const ast = ts.createSourceFile(relative, source, ts.ScriptTarget.Latest, true);
+    const visit = (node) => {
+      if (ts.isVariableStatement(node)) {
+        const name = node.declarationList.declarations[0]?.name.getText(ast);
+        if (
+          name?.includes('data: preview,') ||
+          name?.includes('data: switchPreview,') ||
+          name === 'purchaseMutation' ||
+          name === 'switchMutation'
+        )
+          selected.set(
+            name === 'switchMutation' ? 'switchTariffMutation' : name,
+            node.getText(ast),
+          );
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+  }
   const keyDeclarations = [...selected.entries()]
     .filter(([name]) => name.startsWith('{'))
     .map(([, value]) => value)
@@ -488,7 +512,7 @@ test('classic and tariff-switch pricing keys isolate subscription IDs; fetching/
     const context = {
       subscriptionId: id,
       currentSelection: { days: 30 },
-      switchTariffId: 8,
+      tariffId: 8,
       selectedPeriod: {},
       showPurchaseForm: true,
       currentStep: 'confirm',
@@ -513,6 +537,8 @@ test('classic and tariff-switch pricing keys isolate subscription IDs; fetching/
   ]) {
     for (const blockedBy of [loading, error]) {
       const context = {
+        sessionGeneration: 1,
+        isCurrentSession: () => true,
         [loading]: false,
         [error]: false,
         [blockedBy]: true,
@@ -640,12 +666,15 @@ test('missing exact resolution preserves invoice but never fabricates a verified
 });
 
 test('tariff cart preflight accepts only expected 402; completed purchase skips the invoice', async () => {
-  const source = fs.readFileSync(path.join(root, 'src/pages/SubscriptionPurchase.tsx'), 'utf8');
-  const ast = ts.createSourceFile('SubscriptionPurchase.tsx', source, ts.ScriptTarget.Latest, true);
+  const source = fs.readFileSync(
+    path.join(root, 'src/components/subscription/purchase/PurchaseTopUpSheet.tsx'),
+    'utf8',
+  );
+  const ast = ts.createSourceFile('PurchaseTopUpSheet.tsx', source, ts.ScriptTarget.Latest, true);
   let callback;
   function visit(node) {
-    if (ts.isJsxAttribute(node) && node.name.getText(ast) === 'onBeforeTopUp')
-      callback = node.initializer.expression.getText(ast);
+    if (ts.isVariableDeclaration(node) && node.name.getText(ast) === 'prepare')
+      callback = node.initializer.getText(ast);
     ts.forEachChild(node, visit);
   }
   visit(ast);
@@ -666,23 +695,23 @@ test('tariff cart preflight accepts only expected 402; completed purchase skips 
     const context = {
       AxiosError,
       TopUpPreparationError: flow.TopUpPreparationError,
-      topUpSheet: { tariffId: 3, periodDays: 90, trafficGb: 20, missingKopeks: 1000 },
-      setTopUpSheet: (sheet) => {
-        state.sheet = sheet;
+      quotedMissing: 1000,
+      sessionGeneration: 1,
+      isCurrentSession: () => true,
+      setQuotedMissing: (missing) => {
+        state.sheet = { missingKopeks: missing };
       },
       t: (key) => key,
       queryClient: { invalidateQueries: noop },
       navigate: (url) => {
         state.navigation = url;
       },
-      subscriptionApi: {
-        purchaseTariff: async () => {
-          if (status !== 200)
-            throw new AxiosError('Failure', 'ERR_BAD_RESPONSE', undefined, undefined, {
-              status,
-              data: { detail: { missing_amount: missingKopeks } },
-            });
-        },
+      preparePurchase: async () => {
+        if (status !== 200)
+          throw new AxiosError('Failure', 'ERR_BAD_RESPONSE', undefined, undefined, {
+            status,
+            data: { detail: { missing_amount: missingKopeks } },
+          });
       },
     };
     vm.runInNewContext(
@@ -698,10 +727,8 @@ test('tariff cart preflight accepts only expected 402; completed purchase skips 
     } else if (status === 402 && missingKopeks !== 1000) {
       await assert.rejects(context.prepare(), /balance.amountChanged/);
       assert.equal(state.sheet.missingKopeks, missingKopeks);
-      assert.equal(state.sheet.tariffId, 3);
-      assert.equal(state.sheet.trafficGb, 20);
       // Reconfirmation uses the freshly displayed quote and only then succeeds.
-      context.topUpSheet = state.sheet;
+      context.quotedMissing = state.sheet.missingKopeks;
       assert.equal(await context.prepare(), undefined);
     } else assert.equal(await context.prepare(), status === 200 ? false : undefined);
     assert.equal(state.navigation, status === 200 ? '/subscriptions' : null);

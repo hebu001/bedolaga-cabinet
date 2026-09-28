@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { SettingDefinition } from '../../api/adminSettings';
+import type { SettingDefinition } from '../../api/adminSettings';
 import { cn } from '../../lib/utils';
 import { StarIcon, LockIcon, RefreshIcon } from './icons';
 import { SettingInput } from './SettingInput';
@@ -37,6 +37,8 @@ export function SettingsTableRow({
   const isModified = setting.has_override;
   const isBool = setting.type === 'bool';
   const boolChecked = setting.current === true || setting.current === 'true';
+  // env-locked keys are pinned in .env and shadow the DB — show value, no input.
+  const locked = setting.read_only || setting.env_locked;
 
   const isLongValue = (() => {
     const val = String(setting.current ?? '');
@@ -84,14 +86,17 @@ export function SettingsTableRow({
               </span>
             )}
 
-            {setting.has_override && !setting.read_only && (
+            {setting.has_override && !locked && (
               <span className="rounded-full bg-apple-blue/15 px-2.5 py-1 text-[11px] font-semibold leading-none text-apple-blue">
                 {t('admin.settings.badgeDb')}
               </span>
             )}
 
-            {setting.read_only && (
-              <span className="flex items-center gap-0.5 rounded-full bg-apple-amber/15 px-2.5 py-1 text-[11px] font-semibold leading-none text-apple-amber">
+            {setting.env_locked && (
+              <span
+                className="flex items-center gap-0.5 rounded-full bg-warning-500/15 px-1.5 py-0.5 text-[10px] font-medium leading-none text-apple-amber"
+                title={t('admin.settings.envLockedHint')}
+              >
                 {t('admin.settings.badgeEnv')}
                 <LockIcon className="h-3 w-3" />
               </span>
@@ -112,11 +117,13 @@ export function SettingsTableRow({
         {/* Right side: control + action buttons */}
         <div
           className={cn(
-            'flex items-center gap-2',
-            isLongValue ? 'w-full' : 'max-lg:self-end lg:flex-shrink-0',
+            // На телефоне правая часть во всю ширину строки и справа: выровненная
+            // self-end, она не помещалась и уезжала за левый край таблицы.
+            'flex min-w-0 items-center gap-2',
+            isLongValue ? 'w-full' : 'max-lg:w-full max-lg:justify-end lg:flex-shrink-0',
           )}
         >
-          {setting.read_only ? (
+          {locked ? (
             <span className="max-w-[240px] truncate rounded-lg bg-apple-elevated px-3 py-1.5 font-mono text-xs text-apple-mute">
               {isBool
                 ? boolChecked
@@ -132,13 +139,15 @@ export function SettingsTableRow({
               aria-label={displayName}
             />
           ) : (
-            <div className={cn(isLongValue && 'w-full')}>
+            <div
+              className={cn('min-w-0', isLongValue ? 'flex-1' : 'max-lg:flex max-lg:justify-end')}
+            >
               <SettingInput setting={setting} onUpdate={onUpdate} disabled={isUpdating} />
             </div>
           )}
 
           {/* Reset button -- hover-reveal when has_override */}
-          {isModified && !setting.read_only && (
+          {isModified && !locked && (
             <button
               onClick={onReset}
               disabled={isResetting}
@@ -156,8 +165,8 @@ export function SettingsTableRow({
             className={cn(
               'flex-shrink-0 rounded-lg p-1.5 transition-all',
               isFavorite
-                ? 'text-apple-amber hover:bg-apple-amber/15'
-                : 'text-apple-faint opacity-0 hover:bg-apple-elevated hover:text-apple-amber group-hover:opacity-100 max-lg:opacity-100',
+                ? 'text-apple-amber hover:bg-warning-500/15'
+                : 'text-apple-faint opacity-0 hover:bg-apple-elevated/50 hover:text-apple-amber group-focus-within:opacity-100 group-hover:opacity-100 max-lg:opacity-100 [@media(hover:none)]:opacity-100',
             )}
             title={
               isFavorite

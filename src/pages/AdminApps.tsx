@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminAppsApi } from '../api/adminApps';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { BackIcon } from '@/components/icons';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 export default function AdminApps() {
   const { t } = useTranslation();
@@ -10,7 +12,7 @@ export default function AdminApps() {
   const queryClient = useQueryClient();
   const { capabilities } = usePlatform();
 
-  // RemnaWave status
+  // Remnawave status
   const { data: status } = useQuery({
     queryKey: ['remnawave-status'],
     queryFn: adminAppsApi.getRemnaWaveStatus,
@@ -43,17 +45,9 @@ export default function AdminApps() {
         {!capabilities.hasBackButton && (
           <button
             onClick={() => navigate('/admin')}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-elevated transition-opacity hover:opacity-90"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-apple-hairline bg-apple-card transition-colors hover:border-apple-hairline"
           >
-            <svg
-              className="h-5 w-5 text-apple-mute"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
+            <BackIcon className="h-5 w-5 text-apple-mute" />
           </button>
         )}
         <h1 className="text-2xl font-bold text-apple-ink sm:text-3xl">{t('admin.apps.title')}</h1>
@@ -67,8 +61,8 @@ export default function AdminApps() {
           />
           <span className="text-sm font-medium text-apple-ink">
             {status?.enabled
-              ? t('admin.apps.remnaWaveConnected', 'RemnaWave connected')
-              : t('admin.apps.remnaWaveDisconnected', 'RemnaWave not connected')}
+              ? t('admin.apps.remnaWaveConnected', 'Remnawave connected')
+              : t('admin.apps.remnaWaveDisconnected', 'Remnawave not connected')}
           </span>
         </div>
         {status?.config_uuid && (
@@ -84,9 +78,9 @@ export default function AdminApps() {
           {t('admin.apps.availableConfigs', 'Available configs')}
         </h2>
         {isLoadingConfigs ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-          </div>
+          <SkeletonGroup className="space-y-3">
+            <Skeleton variant="card" count={3} className="h-16" />
+          </SkeletonGroup>
         ) : configs && configs.length > 0 ? (
           <div className="space-y-2">
             {configs.map((config) => (

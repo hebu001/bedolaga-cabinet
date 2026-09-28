@@ -3,7 +3,9 @@ import { useAuthStore } from '../../store/auth';
 import { usePermissionStore } from '../../store/permissions';
 import { saveReturnUrl } from '../../utils/token';
 import PageLoader from '../common/PageLoader';
-import Layout from '../layout/Layout';
+import { lazy, Suspense } from 'react';
+
+const Layout = lazy(() => import('../layout/Layout'));
 
 interface PermissionRouteProps {
   children: React.ReactNode;
@@ -67,5 +69,9 @@ export function PermissionRoute({
     }
   }
 
-  return <Layout key={sessionGeneration}>{children}</Layout>;
+  return (
+    <Suspense fallback={<PageLoader variant="light" />}>
+      <Layout key={sessionGeneration}>{children}</Layout>
+    </Suspense>
+  );
 }

@@ -192,6 +192,7 @@ export default React.memo(function BackgroundBeamsCollision({ settings }: Props)
 
       gl.clearColor(0, 0, 0, 1);
       gl.clear(gl.COLOR_BUFFER_BIT);
+      // biome-ignore lint/correctness/useHookAtTopLevel: WebGLRenderingContext.useProgram is not a React hook.
       gl.useProgram(program);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.uniform1f(uTime, 0.00025 * tickRef.current * speed);

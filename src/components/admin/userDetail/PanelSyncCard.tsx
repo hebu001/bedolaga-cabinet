@@ -1,0 +1,202 @@
+import { canCreatePanelUser } from '@/api/adminPanelIdentity';
+import { useTranslation } from 'react-i18next';
+import type { PanelSyncStatusResponse } from '@/api/adminUsers';
+import { relativeLabel } from '@/components/admin/users';
+import { RemnawaveIcon } from '@/components/icons';
+import { Spinner } from '@/components/ui/Spinner';
+import { cn } from '@/lib/utils';
+import { useNativeDialog } from '@/platform/hooks/useNativeDialog';
+import { formatDayMonth, formatShortDate } from '@/utils/format';
+import { formatGb } from '@/utils/formatNumber';
+import { relativeTimeParts } from '@/utils/relativeTime';
+import {
+  type SyncRowKey,
+  isBotStatusLive,
+  isPanelStatusLive,
+  panelSyncRows,
+} from './panelSyncRows';
+import { Section } from './sectionParts';
+
+interface PanelSyncCardProps {
+  status: PanelSyncStatusResponse | null;
+  /** Сверка обновляется сама (открытие вкладки, возврат в окно, после действий). */
+  loading: boolean;
+  busy: boolean;
+  onPull: () => Promise<boolean>;
+  onPush: () => Promise<boolean>;
+}
+
+type Tone = 'success' | 'warning' | 'neutral';
+
+const TONE: Record<Tone, string> = {
+  success: 'bg-success-500/15 text-apple-green',
+  warning: 'bg-warning-500/15 text-apple-amber',
+  neutral: 'bg-apple-card text-apple-mute',
+};
+
+/**
+ * Блок «Панель Remnawave» во вкладке «Подписка»: что в боте и что в панели — таблицей,
+ * всегда, отличия подсвечены строкой. Направлений ровно два: из панели в бота и из
+ * бота в панель; обе кнопки спрашивают подтверждение. Отдельной «Сверить сейчас» нет —
+ * сверка обновляется сама.
+ */
+export function PanelSyncCard({ status, loading, busy, onPull, onPush }: PanelSyncCardProps) {
+  const { t } = useTranslation();
+  const dialog = useNativeDialog();
+  const ns = 'admin.users.detail.panel';
+  const gb = (value: number) => `${formatGb(value)} ${t('common.units.gb')}`;
+  const limitGb = (value: number) => (value > 0 ? gb(value) : t('admin.users.unlimited'));
+
+  const notLinked = status !== null && !status.panel_found;
+  const differs = Boolean(status?.panel_found && status.has_differences);
+  // Временный доступ — не поломка: пока он открыт, панель держит его настройки,
+  // и карточка объясняет это вместо красного «Есть отличия».
+  const onGrace = Boolean(status?.panel_found && status.grace_open);
+  const tone: Tone = !status ? 'neutral' : notLinked || differs || onGrace ? 'warning' : 'success';
+  const label = !status
+    ? t(`${ns}.unknown`)
+    : notLinked
+      ? t(`${ns}.notLinked`)
+      : differs
+        ? t(`${ns}.differs`)
+        : onGrace
+          ? t('admin.users.subscriptionChips.graceUntil', {
+              date: formatDayMonth(status.grace_until ?? null),
+            })
+          : t(`${ns}.matches`);
+
+  const pull = async () => {
+    if (!status?.panel_identity || !status.panel_found) return;
+    if (await dialog.confirm(t(`${ns}.confirmPull`), t(`${ns}.pullTitle`))) await onPull();
+  };
+  const push = async () => {
+    if (!status || !canCreatePanelUser(status.user_id)) return;
+    if (await dialog.confirm(t(`${ns}.confirmPush`), t(`${ns}.pushTitle`))) await onPush();
+  };
+
+  const liveWord = (live: boolean) => t(live ? `${ns}.live` : `${ns}.notLive`);
+  const cells: Record<SyncRowKey, (s: PanelSyncStatusResponse) => [string, string]> = {
+    status: (s) => [
+      liveWord(isBotStatusLive(s.bot_subscription_status)),
+      liveWord(isPanelStatusLive(s.panel_status)),
+    ],
+    until: (s) => [
+      formatShortDate(s.bot_subscription_end_date),
+      formatShortDate(s.panel_expire_at),
+    ],
+    trafficLimit: (s) => [limitGb(s.bot_traffic_limit_gb), limitGb(s.panel_traffic_limit_gb)],
+    trafficUsed: (s) => [gb(s.bot_traffic_used_gb), gb(s.panel_traffic_used_gb)],
+    devices: (s) => [String(s.bot_device_limit), String(s.panel_device_limit)],
+    squads: (s) => [String(s.bot_squads?.length ?? 0), String(s.panel_squads?.length ?? 0)],
+  };
+
+  return (
+    <Section
+      icon={<RemnawaveIcon className="h-5 w-5" />}
+      title={t(`${ns}.title`)}
+      action={
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+            TONE[tone],
+          )}
+        >
+          {loading && <Spinner className="h-3 w-3" />}
+          {label}
+        </span>
+      }
+    >
+      {status?.panel_found && (
+        <div className="overflow-x-auto rounded-xl bg-apple-card/40">
+          <table className="w-full whitespace-nowrap text-left text-[13px] sm:text-sm">
+            <thead>
+              <tr className="text-xs text-apple-faint">
+                <th scope="col" className="w-2/5 px-2.5 py-2.5 font-medium sm:px-3">
+                  <span className="sr-only">{t(`${ns}.title`)}</span>
+                </th>
+                <th scope="col" className="px-2.5 py-2.5 font-medium sm:px-3">
+                  {t('admin.users.detail.sync.bot')}
+                </th>
+                <th scope="col" className="px-2.5 py-2.5 font-medium sm:px-3">
+                  {t('admin.users.detail.sync.panel')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {panelSyncRows(status).map((row) => {
+                const [bot, panel] = cells[row.key](status);
+                return (
+                  <tr
+                    key={row.key}
+                    className={cn(
+                      'border-t border-apple-hairline',
+                      (row.differs || row.byGrace) && 'bg-warning-500/[0.06]',
+                    )}
+                  >
+                    <th scope="row" className="px-2.5 py-2 font-normal text-apple-mute sm:px-3">
+                      <span className="inline-flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            'h-1.5 w-1.5 shrink-0 rounded-full',
+                            row.differs || row.byGrace ? 'bg-warning-400' : 'bg-transparent',
+                          )}
+                        />
+                        {t(`${ns}.rows.${row.key}`)}
+                      </span>
+                    </th>
+                    <td className="px-2.5 py-2 tabular-nums text-apple-ink sm:px-3">{bot}</td>
+                    <td
+                      className={cn(
+                        'px-2.5 py-2 tabular-nums sm:px-3',
+                        row.differs || row.byGrace
+                          ? 'font-medium text-apple-amber'
+                          : 'text-apple-ink',
+                      )}
+                    >
+                      {panel}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {onGrace && (
+        <p className="text-xs text-apple-amber/90">
+          {t(`${ns}.graceNote`, { date: formatShortDate(status?.grace_until ?? null) })}
+        </p>
+      )}
+
+      {status?.last_sync && (
+        <p className="text-xs text-apple-faint">
+          {t(`${ns}.checked`)}: {relativeLabel(relativeTimeParts(status.last_sync), t)}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        {/* Два направления, других нет. При отличиях главная — «из панели в бота»: панель — истина. */}
+        {status?.panel_found && (
+          <button
+            type="button"
+            onClick={pull}
+            disabled={busy || !status.panel_identity}
+            className={differs ? 'btn-primary' : 'btn-secondary'}
+          >
+            {t(`${ns}.pull`)}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={push}
+          disabled={busy || !status || !canCreatePanelUser(status.user_id)}
+          className="btn-secondary"
+        >
+          {t(`${ns}.pushManual`)}
+        </button>
+      </div>
+    </Section>
+  );
+}

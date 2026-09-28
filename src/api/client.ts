@@ -1,5 +1,5 @@
 import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
-import { retrieveRawInitData } from '@telegram-apps/sdk-react';
+import { getTelegramInitData as readTelegramInitData } from '../utils/telegramInitData';
 import { tokenStorage, isTokenExpired, tokenRefreshManager } from '../utils/token';
 import { observeAuthServerTime } from '../utils/authClock';
 import {
@@ -11,6 +11,7 @@ import {
   SessionChangedError,
 } from '../utils/session';
 import { useBlockingStore } from '../store/blocking';
+import { reportPossibleBackendDown, markBackendReached } from './health';
 import { API } from '../config/constants';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -44,13 +45,11 @@ function ensureCsrfToken(): string {
 const getTelegramInitData = (): string | null => {
   if (typeof window === 'undefined') return null;
 
-  try {
-    const raw = retrieveRawInitData();
-    if (raw) {
-      tokenStorage.setTelegramInitData(raw);
-      return raw;
-    }
-  } catch {}
+  const raw = readTelegramInitData();
+  if (raw) {
+    tokenStorage.setTelegramInitData(raw);
+    return raw;
+  }
 
   return tokenStorage.getTelegramInitData();
 };
@@ -105,6 +104,7 @@ const AUTH_ENDPOINTS = [
   '/cabinet/auth/telegram/widget',
   '/cabinet/auth/email/login',
   '/cabinet/auth/email/register/standalone',
+  '/cabinet/auth/email/register/resend',
   '/cabinet/auth/email/verify',
   '/cabinet/auth/refresh',
   '/cabinet/auth/password/forgot',
@@ -245,6 +245,7 @@ apiClient.interceptors.response.use(
   async (response) => {
     const config = response.config as SessionRequestConfig;
     observeAuthServerTime(response.headers?.date);
+    markBackendReached();
     config._disposeSessionSignal?.();
     if (config._sessionOwner !== undefined && !isCurrentSession(config._sessionOwner)) {
       // Auth requests are not aborted: returned orphan credentials must be revoked.
@@ -264,6 +265,18 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     const owner = originalRequest._sessionOwner;
     assertCurrentSession(owner);
+
+    // Transport-level failure: no HTTP response at all (backend unreachable, DNS
+    // failure, connection refused, timeout). All the coded guards below need
+    // `error.response`, so this case had zero handling and produced a blank
+    // screen during bootstrap. Confirm the outage with a liveness probe (so a
+    // one-off blip doesn't blank an already-loaded app) and, if confirmed, flip
+    // the full-screen ServiceUnavailableScreen. Fire-and-forget — the original
+    // request still rejects now. Axios cancellations are not outages.
+    if (!error.response && error.code !== 'ERR_CANCELED') {
+      void reportPossibleBackendDown();
+      return Promise.reject(error);
+    }
 
     if (isMaintenanceError(error)) {
       const detail = (error.response?.data as { detail: MaintenanceError }).detail;

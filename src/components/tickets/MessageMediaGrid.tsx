@@ -1,5 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { usePlatform } from '@/platform';
+import { reserveDocumentPopup } from '@/platform/webDocumentPopup';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
+
+import { ChevronLeftIcon, ChevronRightIcon, DocumentIcon, XIcon } from '@/components/icons';
+
 import { ticketsApi } from '../../api/tickets';
 
 import { useTicketMedia } from '../../hooks/useTicketMedia';
@@ -23,6 +29,8 @@ export function MessageMediaGrid({
   translateRetry?: string;
   onRefreshMedia?: () => Promise<MediaMessage | undefined>;
 }) {
+  const { t } = useTranslation();
+  const { platform, openLink } = usePlatform();
   const { items, refreshing, failed, failedUrls, refreshMedia, mediaFailed } = useTicketMedia(
     message,
     onRefreshMedia,
@@ -36,6 +44,16 @@ export function MessageMediaGrid({
   const otherItems = items.filter((i) => i.type !== 'photo');
 
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+  const [retryDocumentId, setRetryDocumentId] = useState<string | null>(null);
+  const pendingDocument = useRef(false);
+  const documentPopup = useRef<Window | null>(null);
+  useEffect(
+    () => () => {
+      documentPopup.current?.close();
+      documentPopup.current = null;
+    },
+    [],
+  );
 
   const openFullscreen = (idx: number) => {
     setFullscreenIndex(idx);
@@ -43,26 +61,66 @@ export function MessageMediaGrid({
   };
   const closeFullscreen = useCallback(() => setFullscreenIndex(null), []);
 
-  const openDocument = async (event: React.MouseEvent<HTMLAnchorElement>, item: MediaItem) => {
+  const openDocument = async (event: React.MouseEvent<HTMLElement>, item: MediaItem) => {
     // Date is checked at activation as background timers can be throttled.
-    if (mediaUrl(item)) return;
     event.preventDefault();
+    if (pendingDocument.current) return;
+    setRetryDocumentId(null);
+    const currentUrl = mediaUrl(item);
+    if (currentUrl) {
+      try {
+        openLink(currentUrl);
+      } catch {
+        setRetryDocumentId(item.file_id);
+      }
+      return;
+    }
     if (refreshing) return;
     const owner = getSessionGeneration();
-    const popup = window.open('about:blank', '_blank');
-    if (popup) popup.opener = null;
-    const fresh = await refreshMedia(true);
-    const replacement =
-      fresh && getMessageMedia(fresh).find((candidate) => candidate.file_id === item.file_id);
-    const url =
-      replacement && !isMediaTokenExpired(replacement.token)
-        ? ticketsApi.getMediaUrl(replacement.file_id, replacement.token)
-        : null;
-    if (url && isCurrentSession(owner)) {
-      if (popup) popup.location.replace(url);
-      // If popup blocking denied the window, the updated signed anchor remains
-      // available for the user's next click; never navigate to an unsigned URL.
-    } else popup?.close();
+    pendingDocument.current = true;
+    let popup: Window | null = null;
+    try {
+      if (platform === 'web') {
+        // Reserve the window inside the click gesture. Opening it after the
+        // renewal GET can be blocked once browser user activation has expired.
+        popup = reserveDocumentPopup();
+        documentPopup.current = popup;
+      }
+      const fresh = await refreshMedia(true);
+      if (!isCurrentSession(owner)) return;
+      const replacement =
+        fresh && getMessageMedia(fresh).find((candidate) => candidate.file_id === item.file_id);
+      const url =
+        replacement && !isMediaTokenExpired(replacement.token)
+          ? ticketsApi.getMediaUrl(replacement.file_id, replacement.token)
+          : null;
+      if (!url) {
+        setRetryDocumentId(item.file_id);
+        return;
+      }
+      if (platform === 'web') {
+        if (popup) {
+          // Closing the placeholder is a cancellation, not permission to open
+          // another window when the network eventually finishes.
+          if (popup.closed) return;
+          popup.location.replace(url);
+          documentPopup.current = null;
+          popup = null;
+        } else {
+          // Popup blocking is recoverable with a new explicit click on the
+          // now-renewed document; never attempt another asynchronous popup.
+          setRetryDocumentId(item.file_id);
+        }
+      } else {
+        openLink(url);
+      }
+    } catch {
+      if (isCurrentSession(owner)) setRetryDocumentId(item.file_id);
+    } finally {
+      popup?.close();
+      if (documentPopup.current === popup) documentPopup.current = null;
+      pendingDocument.current = false;
+    }
   };
 
   // Escape + arrow keys for fullscreen nav
@@ -135,7 +193,7 @@ export function MessageMediaGrid({
                   <span className="p-2 text-xs text-dark-400">{translateError}</span>
                 )}
                 {isLastVisible && (
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/60 text-2xl font-semibold text-white">
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-dark-950/60 text-2xl font-semibold text-white">
                     +{hiddenCount}
                   </div>
                 )}
@@ -174,22 +232,14 @@ export function MessageMediaGrid({
             referrerPolicy="no-referrer"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-dark-700 px-3 py-2 text-sm text-dark-200 transition-colors hover:bg-dark-600"
+            // Длинное имя файла переносится внутри пузыря, а не выталкивает его
+            // за карточку; без подписи — «Скачать файл», а не «Download document».
+            className="inline-flex max-w-full items-center gap-2 rounded-lg bg-dark-700 px-3 py-2 text-sm text-dark-200 transition-colors hover:bg-dark-600"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-              />
-            </svg>
-            {item.caption || `Download ${item.type}`}
+            <DocumentIcon className="h-4 w-4" />
+            <span className="min-w-0 [overflow-wrap:anywhere]">
+              {item.caption || t('support.downloadFile')}
+            </span>
           </a>
         );
       })}
@@ -198,7 +248,7 @@ export function MessageMediaGrid({
         photoItems[fullscreenIndex] &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] bg-black"
+            className="fixed inset-0 z-[9999] bg-dark-950"
             style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
           >
             <button
@@ -206,15 +256,7 @@ export function MessageMediaGrid({
               className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-xl transition-colors hover:bg-gray-200"
               onClick={closeFullscreen}
             >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <XIcon className="h-5 w-5" />
             </button>
 
             {photoItems.length > 1 && (
@@ -225,15 +267,7 @@ export function MessageMediaGrid({
                   onClick={() => setFullscreenIndex(fullscreenIndex - 1)}
                   className="absolute left-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-black shadow-xl transition-colors hover:bg-white disabled:opacity-30"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <ChevronLeftIcon className="h-5 w-5" />
                 </button>
                 <button
                   type="button"
@@ -241,17 +275,9 @@ export function MessageMediaGrid({
                   onClick={() => setFullscreenIndex(fullscreenIndex + 1)}
                   className="absolute right-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-black shadow-xl transition-colors hover:bg-white disabled:opacity-30"
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRightIcon className="h-5 w-5" />
                 </button>
-                <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-sm text-white">
+                <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full bg-dark-950/70 px-3 py-1 text-sm text-white">
                   {fullscreenIndex + 1} / {photoItems.length}
                 </div>
               </>
@@ -286,7 +312,22 @@ export function MessageMediaGrid({
           document.body,
         )}
 
-      {(failed || items.some((item) => isMediaTokenExpired(item.token))) && (
+      {retryDocumentId && (
+        <div className="flex items-center gap-2 text-xs text-dark-400" role="alert">
+          <span>{translateError}</span>
+          <button
+            type="button"
+            className="underline"
+            onClick={(event) => {
+              const item = items.find((candidate) => candidate.file_id === retryDocumentId);
+              if (item) void openDocument(event, item);
+            }}
+          >
+            {translateRetry}
+          </button>
+        </div>
+      )}
+      {!retryDocumentId && (failed || items.some((item) => isMediaTokenExpired(item.token))) && (
         <div className="flex items-center gap-2 text-xs text-dark-400" role="status">
           <span>{translateError}</span>
           {onRefreshMedia && (

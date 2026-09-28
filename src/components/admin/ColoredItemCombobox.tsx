@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CheckIcon, ChevronDownIcon, CloseIcon, PlusIcon } from '@/components/icons';
 import { cn } from '../../lib/utils';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 
@@ -27,6 +28,7 @@ interface ColoredItemComboboxProps {
   onCreateNew: (name: string, color: string) => Promise<ColoredItem>;
   onDelete?: (item: ColoredItem) => Promise<void>;
   placeholder?: string;
+  ariaLabel?: string;
   isLoading?: boolean;
   colors?: string[];
   className?: string;
@@ -39,6 +41,7 @@ export function ColoredItemCombobox({
   onCreateNew,
   onDelete,
   placeholder,
+  ariaLabel,
   isLoading = false,
   colors = DEFAULT_COLORS,
   className,
@@ -190,6 +193,7 @@ export function ColoredItemCombobox({
           isOpen ? 'ring-2 ring-[#F97315]/50' : 'hover:opacity-90',
           isLoading && 'animate-pulse',
         )}
+        aria-label={ariaLabel}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
@@ -206,9 +210,7 @@ export function ColoredItemCombobox({
               className="shrink-0 rounded p-0.5 text-apple-faint transition-colors hover:text-apple-mute"
               aria-label={t('news.admin.combobox.clear')}
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-              </svg>
+              <CloseIcon className="h-4 w-4" />
             </button>
           </>
         ) : (
@@ -219,16 +221,12 @@ export function ColoredItemCombobox({
             </span>
           </>
         )}
-        <svg
+        <ChevronDownIcon
           className={cn(
             'h-4 w-4 shrink-0 text-apple-faint transition-transform duration-200',
             isOpen && 'rotate-180',
           )}
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M7 10l5 5 5-5z" />
-        </svg>
+        />
       </button>
 
       {/* Dropdown */}
@@ -275,16 +273,7 @@ export function ColoredItemCombobox({
                       style={{ backgroundColor: item.color }}
                     />
                     <span className="flex-1 truncate">{item.name}</span>
-                    {value?.id === item.id && (
-                      <svg
-                        className="h-4 w-4 shrink-0"
-                        style={{ color: '#F97315' }}
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                      </svg>
-                    )}
+                    {value?.id === item.id && <CheckIcon className="h-4 w-4 shrink-0" />}
                     {onDelete && (
                       <button
                         type="button"
@@ -296,9 +285,7 @@ export function ColoredItemCombobox({
                         {deletingId === item.id ? (
                           <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-apple-red border-t-transparent" />
                         ) : (
-                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                          </svg>
+                          <CloseIcon className="h-3.5 w-3.5" />
                         )}
                       </button>
                     )}
@@ -363,9 +350,7 @@ export function ColoredItemCombobox({
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (
                   <>
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                    </svg>
+                    <PlusIcon className="h-4 w-4" />
                     {t('news.admin.combobox.create')}
                   </>
                 )}

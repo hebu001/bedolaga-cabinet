@@ -1,3 +1,7 @@
+import { RemountOnParam } from './components/RemountOnParam';
+import { integrationCapabilities } from './config/integrationCapabilities';
+import { safeSession } from './utils/safeStorage';
+import { useDoneKey } from './hooks/useDoneKey';
 import { Fragment, lazy, Suspense, type ComponentType } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router';
 import { useAuthStore } from './store/auth';
@@ -11,9 +15,8 @@ function lazyWithRetry<T extends ComponentType<unknown>>(factory: () => Promise<
   return lazy(() =>
     factory().catch(() => {
       const key = 'chunk_reload_ts';
-      const last = Number(sessionStorage.getItem(key) || '0');
-      if (Date.now() - last > 30_000) {
-        sessionStorage.setItem(key, String(Date.now()));
+      const last = Number(safeSession.getItem(key) || '0');
+      if (Date.now() - last > 30_000 && safeSession.setItem(key, String(Date.now()))) {
         window.location.reload();
       }
       // Re-throw so ErrorBoundary catches it if reload guard prevents loop
@@ -22,13 +25,14 @@ function lazyWithRetry<T extends ComponentType<unknown>>(factory: () => Promise<
   );
 }
 import { useBlockingStore } from './store/blocking';
-import Layout from './components/layout/Layout';
+const Layout = lazy(() => import('./components/layout/Layout'));
 import PageLoader from './components/common/PageLoader';
 import {
   MaintenanceScreen,
   ChannelSubscriptionScreen,
   BlacklistedScreen,
   AccountDeletedScreen,
+  ServiceUnavailableScreen,
 } from './components/blocking';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PermissionRoute } from '@/components/auth/PermissionRoute';
@@ -55,6 +59,22 @@ function lazyAdmin(factory: () => Promise<{ default: ComponentType<unknown> }>) 
     );
   };
 }
+
+const GiftClaim = lazyWithRetry(() => import('./pages/GiftClaim'));
+const AdminGraceAccess = lazyAdmin(() => import('./pages/AdminGraceAccess'));
+const AdminCoupons = lazyAdmin(() => import('./pages/AdminCoupons'));
+const AdminCouponCreate = lazyAdmin(() => import('./pages/AdminCouponCreate'));
+const AdminCouponDetail = lazyAdmin(() => import('./pages/AdminCouponDetail'));
+const CouponStatus = lazyWithRetry(() => import('./pages/CouponStatus'));
+const AdminReferralLevels = lazyAdmin(() => import('./pages/AdminReferralLevels'));
+const AdminReachability = lazyAdmin(() => import('./pages/AdminReachability'));
+const AdminReachabilityHistory = lazyAdmin(() => import('./pages/AdminReachabilityHistory'));
+const AdminReachabilityOther = lazyAdmin(() => import('./pages/AdminReachabilityOther'));
+const AdminReminders = lazyAdmin(() => import('./pages/AdminReminders'));
+const AdminReminderEdit = lazyAdmin(() => import('./pages/AdminReminderEdit'));
+const AdminSystemErrors = lazyAdmin(() => import('./pages/AdminSystemErrors'));
+const AdminLegalPages = lazyAdmin(() => import('./pages/AdminLegalPages'));
+const PublicLegal = lazy(() => import('./pages/PublicLegal'));
 
 // User pages - lazy load
 const Subscriptions = lazyWithRetry(() => import('./pages/Subscriptions'));
@@ -157,7 +177,6 @@ const AdminBroadcastDetail = lazyAdmin(() => import('./pages/AdminBroadcastDetai
 const AdminPinnedMessages = lazyAdmin(() => import('./pages/AdminPinnedMessages'));
 const AdminPinnedMessageCreate = lazyAdmin(() => import('./pages/AdminPinnedMessageCreate'));
 const AdminChannelSubscriptions = lazyAdmin(() => import('./pages/AdminChannelSubscriptions'));
-const AdminEmailTemplatePreview = lazyAdmin(() => import('./pages/AdminEmailTemplatePreview'));
 const AdminRoles = lazyAdmin(() => import('./pages/AdminRoles'));
 const AdminRoleEdit = lazyAdmin(() => import('./pages/AdminRoleEdit'));
 const AdminRoleAssign = lazyAdmin(() => import('./pages/AdminRoleAssign'));
@@ -201,7 +220,9 @@ function ProtectedRoute({
   }
 
   return withLayout ? (
-    <Layout key={sessionGeneration}>{children}</Layout>
+    <Suspense fallback={<PageLoader variant="dark" />}>
+      <Layout key={sessionGeneration}>{children}</Layout>
+    </Suspense>
   ) : (
     <Fragment key={sessionGeneration}>{children}</Fragment>
   );
@@ -227,7 +248,11 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/" replace />;
   }
 
-  return <Layout key={sessionGeneration}>{children}</Layout>;
+  return (
+    <Suspense fallback={<PageLoader variant="dark" />}>
+      <Layout key={sessionGeneration}>{children}</Layout>
+    </Suspense>
+  );
 }
 
 // Suspense wrapper for lazy components
@@ -249,6 +274,8 @@ function BlockingOverlay() {
   if (blockingType === 'blacklisted') {
     return <BlacklistedScreen />;
   }
+
+  if (blockingType === 'backend_unavailable') return <ServiceUnavailableScreen />;
 
   if (blockingType === 'account_deleted') {
     return <AccountDeletedScreen />;
@@ -279,6 +306,7 @@ function AppSessionEffects() {
 }
 
 function App() {
+  useDoneKey();
   const sessionGeneration = useAuthStore((state) => state.sessionGeneration);
   return (
     <>
@@ -534,6 +562,258 @@ function App() {
             </LazyPage>
           }
         />
+
+        {integrationCapabilities.legalConsent ? (
+          <Route
+            path="/offer"
+            element={
+              <LazyPage>
+                <PublicLegal doc="offer" />
+              </LazyPage>
+            }
+          />
+        ) : (
+          <Route path="/offer" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.legalConsent ? (
+          <Route
+            path="/privacy"
+            element={
+              <LazyPage>
+                <PublicLegal doc="privacy" />
+              </LazyPage>
+            }
+          />
+        ) : (
+          <Route path="/privacy" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.legalConsent ? (
+          <Route
+            path="/recurrent-payments"
+            element={
+              <LazyPage>
+                <PublicLegal doc="recurrent" />
+              </LazyPage>
+            }
+          />
+        ) : (
+          <Route path="/recurrent-payments" element={<Navigate to="/" replace />} />
+        )}
+        <Route
+          path="/buy/gift/:token"
+          element={
+            <LazyPage>
+              <GiftClaim />
+            </LazyPage>
+          }
+        />
+        {integrationCapabilities.coupons ? (
+          <Route
+            path="/coupon/:token"
+            element={
+              <LazyPage>
+                <CouponStatus />
+              </LazyPage>
+            }
+          />
+        ) : (
+          <Route path="/coupon/:token" element={<Navigate to="/" replace />} />
+        )}
+        <Route
+          path="/admin/tickets/:ticketId"
+          element={
+            <PermissionRoute permission="tickets:read">
+              <LazyPage>
+                <AdminTickets />
+              </LazyPage>
+            </PermissionRoute>
+          }
+        />
+        {integrationCapabilities.graceAccess ? (
+          <Route
+            path="/admin/grace-access"
+            element={
+              <PermissionRoute permission="settings:read">
+                <LazyPage>
+                  <AdminGraceAccess />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/grace-access" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.reachability ? (
+          <Route
+            path="/admin/reachability"
+            element={
+              <PermissionRoute permission="reachability:read">
+                <LazyPage>
+                  <AdminReachability />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/reachability" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.reachability ? (
+          <Route
+            path="/admin/reachability/history"
+            element={
+              <PermissionRoute permission="reachability:read">
+                <LazyPage>
+                  <AdminReachabilityHistory />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/reachability/history" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.reachability ? (
+          <Route
+            path="/admin/reachability/other"
+            element={
+              <PermissionRoute permission="reachability:read">
+                <LazyPage>
+                  <AdminReachabilityOther />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/reachability/other" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.coupons ? (
+          <Route
+            path="/admin/coupons"
+            element={
+              <PermissionRoute permission="coupons:read">
+                <LazyPage>
+                  <AdminCoupons />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/coupons" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.coupons ? (
+          <Route
+            path="/admin/coupons/create"
+            element={
+              <PermissionRoute permission="coupons:create">
+                <LazyPage>
+                  <AdminCouponCreate />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/coupons/create" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.coupons ? (
+          <Route
+            path="/admin/coupons/:id"
+            element={
+              <PermissionRoute permission="coupons:read">
+                <LazyPage>
+                  <AdminCouponDetail />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/coupons/:id" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.referralLevels ? (
+          <Route
+            path="/admin/partners/referral-levels"
+            element={
+              /* Право совпадает с тем, что требуют сами эндпоинты уровней:
+               с одним partners:read страница открывалась и падала в общую
+               ошибку загрузки, не сообщая, что дело в правах. */
+              <PermissionRoute permission="partners:settings">
+                <LazyPage>
+                  <AdminReferralLevels />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/partners/referral-levels" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.reminders ? (
+          <Route
+            path="/admin/reminders"
+            element={
+              <PermissionRoute permission="user_reminders:read">
+                <LazyPage>
+                  <AdminReminders />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/reminders" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.reminders ? (
+          <Route
+            path="/admin/reminders/create"
+            element={
+              <PermissionRoute permission="user_reminders:create">
+                <LazyPage>
+                  <AdminReminderEdit />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/reminders/create" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.reminders ? (
+          <Route
+            path="/admin/reminders/:id/edit"
+            element={
+              <PermissionRoute permission="user_reminders:edit">
+                <LazyPage>
+                  <AdminReminderEdit />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/reminders/:id/edit" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.legalConsent ? (
+          <Route
+            path="/admin/legal-pages"
+            element={
+              <PermissionRoute permission="info_pages:read">
+                <LazyPage>
+                  <AdminLegalPages />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/legal-pages" element={<Navigate to="/" replace />} />
+        )}
+        {integrationCapabilities.systemErrors ? (
+          <Route
+            path="/admin/system-errors"
+            element={
+              <PermissionRoute permission="system_errors:read">
+                <LazyPage>
+                  <AdminSystemErrors />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/system-errors" element={<Navigate to="/" replace />} />
+        )}
 
         {/* Protected routes */}
         <Route
@@ -1172,7 +1452,9 @@ function App() {
           element={
             <PermissionRoute permission="partners:read">
               <LazyPage>
-                <AdminPartnerDetail />
+                <RemountOnParam name="userId">
+                  <AdminPartnerDetail />
+                </RemountOnParam>
               </LazyPage>
             </PermissionRoute>
           }
@@ -1362,7 +1644,9 @@ function App() {
           element={
             <PermissionRoute permission="users:read">
               <LazyPage>
-                <AdminUserDetail />
+                <RemountOnParam name="id">
+                  <AdminUserDetail />
+                </RemountOnParam>
               </LazyPage>
             </PermissionRoute>
           }
@@ -1422,7 +1706,7 @@ function App() {
           element={
             <PermissionRoute permission="email_templates:read">
               <LazyPage>
-                <AdminEmailTemplatePreview />
+                <Navigate to="/admin/email-templates" replace />
               </LazyPage>
             </PermissionRoute>
           }

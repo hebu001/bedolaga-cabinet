@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/auth';
-import { localizeServerMessage } from '../utils/serverMessages';
+import { useLegalConsentGate } from '../hooks/useLegalConsentGate';
+import LegalConsentGate from '../components/LegalConsentGate';
+import { getApiErrorMessage } from '../utils/api-error';
 
 export default function TelegramCallback() {
   const { t } = useTranslation();
@@ -11,6 +13,7 @@ export default function TelegramCallback() {
   const [error, setError] = useState('');
   const loginWithTelegramWidget = useAuthStore((state) => state.loginWithTelegramWidget);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const consent = useLegalConsentGate();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -43,33 +46,51 @@ export default function TelegramCallback() {
         return;
       }
 
+      const widgetData = {
+        id: parsedId,
+        first_name: firstName,
+        last_name: lastName || undefined,
+        username: username || undefined,
+        photo_url: photoUrl || undefined,
+        auth_date: parsedAuthDate,
+        hash: hash,
+      };
+
       try {
-        await loginWithTelegramWidget({
-          id: parsedId,
-          first_name: firstName,
-          last_name: lastName || undefined,
-          username: username || undefined,
-          photo_url: photoUrl || undefined,
-          auth_date: parsedAuthDate,
-          hash: hash,
-        });
+        await loginWithTelegramWidget(widgetData);
         navigate('/');
       } catch (err: unknown) {
-        const error = err as { response?: { data?: { detail?: string } } };
-        setError(localizeServerMessage(error.response?.data?.detail, t) || t('common.error'));
+        // Новый пользователь без согласия: бэк ответил 428, показываем чекбоксы
+        // и повторяем тот же payload виджета с галочками.
+        const needsConsent = consent.capture(err, async (accepted) => {
+          await loginWithTelegramWidget(widgetData, accepted);
+          navigate('/');
+        });
+        if (needsConsent) return;
+        setError(getApiErrorMessage(err, t('common.error')));
       }
     };
 
     authenticate();
-  }, [searchParams, loginWithTelegramWidget, navigate, isAuthenticated, t]);
+  }, [searchParams, loginWithTelegramWidget, navigate, isAuthenticated, t, consent.capture]);
+
+  if (consent.pending) {
+    return (
+      <div className="min-h-viewport flex items-center justify-center bg-dark-950 px-4 py-8">
+        <div className="w-full max-w-md">
+          <LegalConsentGate gate={consent} />
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
+      <div className="min-h-viewport flex items-center justify-center bg-dark-950 px-4 py-8">
         <div className="w-full max-w-md text-center">
-          <div className="mb-4 text-5xl text-red-500">✗</div>
-          <h2 className="mb-2 text-lg font-semibold text-gray-900">{t('auth.loginFailed')}</h2>
-          <p className="mb-6 text-sm text-gray-500">{error}</p>
+          <div className="mb-4 text-5xl text-error-500">✗</div>
+          <h2 className="mb-2 text-lg font-semibold text-dark-50">{t('auth.loginFailed')}</h2>
+          <p className="mb-6 text-sm text-dark-400">{error}</p>
           <button onClick={() => navigate('/login')} className="btn-primary">
             {t('auth.tryAgain')}
           </button>
@@ -79,11 +100,11 @@ export default function TelegramCallback() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="min-h-viewport flex items-center justify-center bg-dark-950">
       <div className="text-center">
-        <div className="border-primary-600 mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2"></div>
-        <h2 className="text-lg font-semibold text-gray-900">{t('auth.authenticating')}</h2>
-        <p className="mt-2 text-sm text-gray-500">{t('common.loading')}</p>
+        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-accent-500 border-t-transparent"></div>
+        <h2 className="text-lg font-semibold text-dark-50">{t('auth.authenticating')}</h2>
+        <p className="mt-2 text-sm text-dark-400">{t('common.loading')}</p>
       </div>
     </div>
   );

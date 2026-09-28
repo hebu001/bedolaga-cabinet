@@ -2,8 +2,15 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { rbacApi, AccessPolicy, CreatePolicyPayload, UpdatePolicyPayload } from '@/api/rbac';
+import {
+  rbacApi,
+  type AccessPolicy,
+  type CreatePolicyPayload,
+  type UpdatePolicyPayload,
+} from '@/api/rbac';
 import { AdminBackButton } from '@/components/admin';
+import { XIcon } from '@/components/icons';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 // === Types ===
 
@@ -150,15 +157,7 @@ function IpTagInput({ values, onChange }: IpTagInputProps) {
             className="text-apple-mute transition-colors hover:text-apple-ink"
             aria-label={t('admin.policies.conditions.removeIp', { ip })}
           >
-            <svg
-              className="h-3 w-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XIcon className="h-3 w-3" />
           </button>
         </span>
       ))}
@@ -320,7 +319,7 @@ export default function AdminPolicyEdit() {
   }, []);
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: React.SyntheticEvent) => {
       e.preventDefault();
       setFormError(null);
 
@@ -376,9 +375,9 @@ export default function AdminPolicyEdit() {
   // Loading state
   if (isEdit && isLoadingPolicy) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={1} titleWidth="w-56" className="space-y-6">
+        <Skeleton variant="card" className="h-96" />
+      </PageSkeleton>
     );
   }
 
@@ -458,8 +457,8 @@ export default function AdminPolicyEdit() {
                   onClick={() => setFormData((prev) => ({ ...prev, effect: 'deny' }))}
                   className={`flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
                     formData.effect === 'deny'
-                      ? 'bg-apple-red/15 text-apple-red'
-                      : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
+                      ? 'border-error-500/50 bg-error-500/10 text-apple-red'
+                      : 'border-apple-hairline bg-apple-card text-apple-mute hover:border-dark-500'
                   }`}
                 >
                   {t('admin.policies.effectDeny')}

@@ -191,7 +191,7 @@ export function DesktopSidebar({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">{displayName(user)}</p>
-            <p className="truncate text-xs text-white/40">
+            <p className="truncate text-xs text-apple-mute">
               @{user?.username || `ID: ${user?.telegram_id}`}
             </p>
           </div>
@@ -202,7 +202,7 @@ export function DesktopSidebar({
             haptic.impact('light');
             logout();
           }}
-          className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/40 transition-all duration-200 hover:bg-error-500/10 hover:text-error-400"
+          className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-apple-mute transition-all duration-200 hover:bg-error-500/10 hover:text-error-400"
         >
           <LogoutIcon className="h-5 w-5 shrink-0" />
           <span>{t('nav.logout')}</span>
@@ -210,7 +210,7 @@ export function DesktopSidebar({
       </div>
 
       {/* Footer */}
-      <small className="px-6 pb-6 text-xs text-white/25">© 2026</small>
+      <small className="px-6 pb-6 text-xs text-apple-mute">© 2026</small>
     </aside>
   );
 }

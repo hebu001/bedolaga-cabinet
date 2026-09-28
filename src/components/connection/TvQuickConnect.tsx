@@ -1,0 +1,270 @@
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  openQrScanner,
+  isQrScannerSupported,
+  retrieveLaunchParams,
+} from '@telegram-apps/sdk-react';
+import { blockButtonClass } from './blocks/buttonStyles';
+import { loadHtml5Qrcode, type Html5QrcodeInstance } from '@/utils/qrScanner';
+import { CameraIcon } from '@/components/icons';
+
+const TG_MOBILE_PLATFORMS = new Set(['ios', 'android', 'android_x', 'ios_x']);
+
+function isTelegramMobile(): boolean {
+  try {
+    const platform = retrieveLaunchParams().tgWebAppPlatform;
+    return TG_MOBILE_PLATFORMS.has(platform);
+  } catch {
+    return false;
+  }
+}
+
+const HAPP_TV_API = 'https://check.happ.su/sendtv';
+
+interface Props {
+  subscriptionUrl: string;
+  isLight: boolean;
+}
+
+export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
+  const { t } = useTranslation();
+  const [code, setCode] = useState('');
+  const [sending, setSending] = useState(false);
+  const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [tgNative, setTgNative] = useState(false);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const scannerRef = useRef<Html5QrcodeInstance | null>(null);
+
+  useEffect(() => {
+    try {
+      setTgNative(isTelegramMobile() && isQrScannerSupported() && openQrScanner.isAvailable());
+    } catch {
+      setTgNative(false);
+    }
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      if (scannerRef.current) {
+        scannerRef.current
+          .stop()
+          .catch(() => undefined)
+          .finally(() => {
+            scannerRef.current?.clear();
+            scannerRef.current = null;
+          });
+      }
+    };
+  }, []);
+
+  const showToast = useCallback((text: string, type: 'success' | 'error') => {
+    setToast({ text, type });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
+  }, []);
+
+  const sendToTV = useCallback(
+    async (tvCode: string) => {
+      if (sending) return;
+      const clean = tvCode.trim().toUpperCase();
+      if (!(clean.length === 5 && /^[A-Z0-9]+$/.test(clean))) {
+        showToast(t('subscription.tvQuickConnect.badCode'), 'error');
+        return;
+      }
+
+      setSending(true);
+      try {
+        const b64 = btoa(unescape(encodeURIComponent(subscriptionUrl)));
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 10000);
+
+        const res = await fetch(`${HAPP_TV_API}/${encodeURIComponent(clean)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: b64 }),
+          signal: ctrl.signal,
+        });
+        clearTimeout(timer);
+
+        if (res.ok) {
+          showToast(t('subscription.tvQuickConnect.sent'), 'success');
+          setCode('');
+        } else {
+          showToast(t('subscription.tvQuickConnect.error'), 'error');
+        }
+      } catch {
+        showToast(t('subscription.tvQuickConnect.error'), 'error');
+      } finally {
+        setSending(false);
+      }
+    },
+    [sending, subscriptionUrl, showToast, t],
+  );
+
+  const stopScan = useCallback(() => {
+    if (scannerRef.current) {
+      scannerRef.current
+        .stop()
+        .catch(() => undefined)
+        .finally(() => {
+          scannerRef.current?.clear();
+          scannerRef.current = null;
+        });
+    }
+    setScanning(false);
+  }, []);
+
+  const onScanDecoded = useCallback(
+    (decoded: string) => {
+      const parsed = parseQRCode(decoded);
+      if (!parsed) return;
+      stopScan();
+      setCode(parsed);
+      showToast(`${t('subscription.tvQuickConnect.codeFound')}: ${parsed}`, 'success');
+      setTimeout(() => sendToTV(parsed), 500);
+    },
+    [stopScan, showToast, sendToTV, t],
+  );
+
+  const startScan = useCallback(async () => {
+    // Telegram Mini App: native scanner
+    if (tgNative) {
+      try {
+        const qr = await openQrScanner({
+          text: t('subscription.tvQuickConnect.scanDescription'),
+          capture: (s: string) => parseQRCode(s) !== null,
+        });
+        if (qr) {
+          const parsed = parseQRCode(qr);
+          if (parsed) {
+            setCode(parsed);
+            showToast(t('subscription.tvQuickConnect.codeFound'), 'success');
+            sendToTV(parsed);
+          }
+        }
+      } catch {
+        showToast(t('subscription.tvQuickConnect.error'), 'error');
+      }
+      return;
+    }
+
+    // Browser fallback (Mac/iOS Safari, desktop Chrome): html5-qrcode.
+    // Загрузка вынесена в общий хелпер — он подключает скрипт с проверкой
+    // целостности (SRI), чтобы подмена на стороне CDN не исполнилась в кабинете.
+    const Html5Qrcode = await loadHtml5Qrcode();
+    if (!Html5Qrcode) {
+      showToast(t('subscription.tvQuickConnect.noCamera'), 'error');
+      return;
+    }
+    setScanning(true);
+    const scanner = new Html5Qrcode('tv-qr-reader');
+    scannerRef.current = scanner;
+    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+    try {
+      await scanner.start({ facingMode: 'environment' }, config, onScanDecoded, () => undefined);
+    } catch {
+      try {
+        await scanner.start({ facingMode: 'user' }, config, onScanDecoded, () => undefined);
+      } catch {
+        showToast(t('subscription.tvQuickConnect.noCamera'), 'error');
+        scannerRef.current = null;
+        setScanning(false);
+      }
+    }
+  }, [tgNative, sendToTV, showToast, onScanDecoded, t]);
+
+  const inputClass = isLight
+    ? 'w-full rounded-xl border border-dark-700/60 bg-white px-4 py-3 text-center text-2xl font-bold tracking-[0.3em] uppercase text-dark-100 outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500'
+    : 'w-full rounded-xl border border-dark-700 bg-dark-900/50 px-4 py-3 text-center text-2xl font-bold tracking-[0.3em] uppercase text-dark-100 outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500';
+
+  // Full-width buttons in the same outlined-accent language as the config blocks
+  // (so the Happ TV block adapts to the subscription-page styles, not a one-off).
+  const actionBtnClass = `${blockButtonClass('light', isLight)} flex w-full items-center justify-center`;
+
+  return (
+    <div className="mt-3 space-y-4">
+      {/* Code import — the block step (timeline/cards/accordion/minimal) is the
+          wrapper; here we only render the interactive controls so the widget
+          inherits whatever style the panel config produced. */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-dark-200">
+          {t('subscription.tvQuickConnect.title')}
+        </p>
+        <input
+          type="text"
+          maxLength={5}
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+          placeholder="A1B2C"
+          autoComplete="one-time-code"
+          inputMode="text"
+          className={inputClass}
+        />
+        <button
+          onClick={() => sendToTV(code)}
+          disabled={sending || code.length !== 5}
+          className={`${actionBtnClass} disabled:opacity-50`}
+        >
+          {sending ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500/30 border-t-accent-500" />
+          ) : (
+            t('subscription.tvQuickConnect.sendBtn')
+          )}
+        </button>
+      </div>
+
+      {/* QR scan */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-dark-200">
+          {t('subscription.tvQuickConnect.scanTitle')}
+        </p>
+        {!scanning && (
+          <button onClick={startScan} className={actionBtnClass}>
+            <CameraIcon className="mr-2 h-5 w-5" />
+            {t('subscription.tvQuickConnect.scanBtn')}
+          </button>
+        )}
+        <div className={scanning ? 'space-y-2' : 'hidden'}>
+          <div id="tv-qr-reader" className="overflow-hidden rounded-xl" />
+          {scanning && (
+            <button onClick={stopScan} className={actionBtnClass}>
+              {t('subscription.tvQuickConnect.stopScan')}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <div
+          // На мобильном стоит над нижней панелью: на bottom-6 тост целиком уходил за неё.
+          className={`fixed bottom-[var(--mobile-nav-clearance)] left-1/2 z-50 -translate-x-1/2 rounded-xl px-5 py-3 text-sm font-medium shadow-lg transition-all lg:bottom-6 ${
+            toast.type === 'success' ? 'bg-success-500/90 text-white' : 'bg-error-500/90 text-white'
+          }`}
+        >
+          {toast.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function parseQRCode(data: string): string | null {
+  if (data.length === 5 && /^[A-Z0-9]+$/i.test(data)) {
+    return data.toUpperCase();
+  }
+  try {
+    const url = new URL(data);
+    const parts = url.pathname.split('/').filter((p) => p.length > 0);
+    if (parts.length > 0) {
+      const last = parts[parts.length - 1];
+      if (last.length === 5 && /^[A-Z0-9]+$/i.test(last)) return last.toUpperCase();
+    }
+    const codeParam = url.searchParams.get('code');
+    if (codeParam?.length === 5 && /^[A-Z0-9]+$/i.test(codeParam)) return codeParam.toUpperCase();
+  } catch {
+    const m = data.match(/[/=]([A-Z0-9]{5})(?:[/?&\s]|$)/i);
+    if (m?.[1]) return m[1].toUpperCase();
+  }
+  return null;
+}

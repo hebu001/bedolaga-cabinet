@@ -3,9 +3,24 @@ import { useNavigate } from 'react-router';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { campaignsApi, CampaignListItem, CampaignBonusType } from '../api/campaigns';
-import { PlusIcon, EditIcon, TrashIcon, CheckIcon, XIcon, ChartIcon } from '../components/icons';
+import { campaignsApi, type CampaignListItem, type CampaignBonusType } from '../api/campaigns';
+import {
+  PlusIcon,
+  EditIcon,
+  TrashIcon,
+  CheckIcon,
+  XIcon,
+  ChartIcon,
+  BackIcon,
+  CampaignIcon,
+  BoltIcon,
+  UserPlusIcon,
+  BanknotesIcon,
+} from '../components/icons';
+import { StatCard } from '../components/stats';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { Skeleton, SkeletonGroup } from '../components/ui/skeleton';
 
 const PAGE_SIZE = 50;
 
@@ -36,19 +51,6 @@ const bonusTypeConfig: Record<
   },
 };
 
-// Icons
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-apple-mute"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
-
 // Locale mapping for formatting
 const localeMap: Record<string, string> = { ru: 'ru-RU', en: 'en-US', zh: 'zh-CN', fa: 'fa-IR' };
 
@@ -69,6 +71,9 @@ export default function AdminCampaigns() {
   const { capabilities } = usePlatform();
 
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const deleteDialogRef = useFocusTrap<HTMLDivElement>(deleteConfirm !== null, {
+    onEscape: () => setDeleteConfirm(null),
+  });
 
   // Queries
   const {
@@ -142,38 +147,38 @@ export default function AdminCampaigns() {
       {/* Overview */}
       {overview && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
-            <div className="text-2xl font-bold text-apple-ink">{overview.total}</div>
-            <div className="text-sm text-apple-mute">
-              {t('admin.campaigns.overview.totalCampaigns')}
-            </div>
-          </div>
-          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
-            <div className="text-2xl font-bold text-apple-green">{overview.active}</div>
-            <div className="text-sm text-apple-mute">{t('admin.campaigns.overview.active')}</div>
-          </div>
-          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
-            <div className="text-2xl font-bold text-[#F97315]">{overview.total_registrations}</div>
-            <div className="text-sm text-apple-mute">
-              {t('admin.campaigns.overview.registrations')}
-            </div>
-          </div>
-          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
-            <div className="text-2xl font-bold text-apple-green">
-              {formatRubles(overview.total_balance_issued_kopeks)}
-            </div>
-            <div className="text-sm text-apple-mute">
-              {t('admin.campaigns.overview.bonusesIssued')}
-            </div>
-          </div>
+          <StatCard
+            label={t('admin.campaigns.overview.totalCampaigns')}
+            value={overview.total}
+            icon={<CampaignIcon className="h-5 w-5" />}
+            tone="neutral"
+          />
+          <StatCard
+            label={t('admin.campaigns.overview.active')}
+            value={overview.active}
+            icon={<BoltIcon className="h-5 w-5" />}
+            tone="success"
+          />
+          <StatCard
+            label={t('admin.campaigns.overview.registrations')}
+            value={overview.total_registrations}
+            icon={<UserPlusIcon className="h-5 w-5" />}
+            tone="accent"
+          />
+          <StatCard
+            label={t('admin.campaigns.overview.bonusesIssued')}
+            value={formatRubles(overview.total_balance_issued_kopeks)}
+            icon={<BanknotesIcon className="h-5 w-5" />}
+            tone="success"
+          />
         </div>
       )}
 
       {/* Campaigns List */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-        </div>
+        <SkeletonGroup className="space-y-3">
+          <Skeleton variant="card" count={3} className="h-16" />
+        </SkeletonGroup>
       ) : campaigns.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-apple-mute">{t('admin.campaigns.noData')}</p>
@@ -187,10 +192,15 @@ export default function AdminCampaigns() {
                 campaign.is_active ? '' : 'opacity-60'
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
+              {/* Как у промокодов: на телефоне название, чипы и кнопки — отдельными
+                  строками. В одну строку с четырьмя кнопками название сжималось до
+                  «Осен…», а чип партнёра налезал на кнопки. */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center gap-2">
-                    <h3 className="truncate font-medium text-apple-ink">{campaign.name}</h3>
+                  <h3 className="mb-2 font-medium text-apple-ink [overflow-wrap:anywhere]">
+                    {campaign.name}
+                  </h3>
+                  <div className="mb-2 flex flex-wrap gap-1.5">
                     <span
                       className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${bonusTypeConfig[campaign.bonus_type].bgColor} ${bonusTypeConfig[campaign.bonus_type].color}`}
                     >
@@ -208,7 +218,9 @@ export default function AdminCampaigns() {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-apple-mute">
-                    <span className="font-mono text-xs">?start={campaign.start_parameter}</span>
+                    <span className="w-full font-mono text-xs break-all">
+                      ?start={campaign.start_parameter}
+                    </span>
                     <span>
                       {t('admin.campaigns.table.registrations', {
                         count: campaign.registrations_count,
@@ -225,7 +237,7 @@ export default function AdminCampaigns() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 border-t border-apple-hairline pt-3 sm:border-0 sm:pt-0">
                   {/* Stats */}
                   <button
                     onClick={() => navigate(`/admin/campaigns/${campaign.id}/stats`)}
@@ -238,7 +250,7 @@ export default function AdminCampaigns() {
                   {/* Toggle Active */}
                   <button
                     onClick={() => toggleMutation.mutate(campaign.id)}
-                    className={`rounded-lg p-2 transition-colors ${
+                    className={`flex flex-1 justify-center rounded-lg p-2 transition-colors sm:flex-none ${
                       campaign.is_active
                         ? 'bg-apple-green/15 text-apple-green hover:bg-apple-green/25'
                         : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
@@ -295,8 +307,20 @@ export default function AdminCampaigns() {
       {/* Delete Confirmation */}
       {deleteConfirm !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="apple-card-grad w-full max-w-sm rounded-2xl bg-apple-card p-6">
-            <h3 className="mb-2 text-lg font-semibold text-apple-ink">
+          <div
+            className="absolute inset-0 bg-dark-950/60"
+            onClick={() => setDeleteConfirm(null)}
+            aria-hidden="true"
+          />
+          <div
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="campaign-delete-title"
+            tabIndex={-1}
+            className="relative w-full max-w-sm rounded-xl bg-apple-card p-6"
+          >
+            <h3 id="campaign-delete-title" className="mb-2 text-lg font-semibold text-apple-ink">
               {t('admin.campaigns.confirm.deleteTitle')}
             </h3>
             <p className="mb-6 text-apple-mute">{t('admin.campaigns.confirm.deleteText')}</p>

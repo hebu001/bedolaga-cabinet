@@ -1,17 +1,19 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import type { SalesStatsParams } from '../../api/adminSalesStats';
 import { salesStatsApi } from '../../api/adminSalesStats';
 import { SALES_STATS } from '../../constants/salesStats';
 import { useCurrency } from '../../hooks/useCurrency';
+import { BanknotesIcon, CardIcon, TicketIcon, TrophyIcon } from '../../components/icons';
 import { StatCard } from '../stats';
 
+import { BreakdownList } from './BreakdownList';
 import { DonutChart } from './DonutChart';
-import { MultiSeriesAreaChart } from './MultiSeriesAreaChart';
 import { SimpleAreaChart } from './SimpleAreaChart';
-import { SimpleBarChart } from './SimpleBarChart';
+import { StackedBarChart } from './StackedBarChart';
+import { StatsTabSkeleton } from './StatsTabSkeleton';
 
 interface SalesTabProps {
   params: SalesStatsParams;
@@ -25,6 +27,7 @@ export function SalesTab({ params }: SalesTabProps) {
     queryKey: ['sales-stats', 'sales', params],
     queryFn: () => salesStatsApi.getSales(params),
     staleTime: SALES_STATS.STALE_TIME,
+    placeholderData: keepPreviousData,
   });
 
   const dailyByTariffData = useMemo(
@@ -35,21 +38,16 @@ export function SalesTab({ params }: SalesTabProps) {
   );
 
   if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        {Array.from({ length: 3 }, (_, i) => (
-          <div key={i} className="h-24 rounded-xl bg-dark-800/30" />
-        ))}
-      </div>
-    );
+    return <StatsTabSkeleton />;
   }
 
   if (isError || !data) {
-    return <div className="py-8 text-center text-red-400">{t('admin.salesStats.loadError')}</div>;
+    return <div className="py-8 text-center text-error-400">{t('admin.salesStats.loadError')}</div>;
   }
 
-  const tariffBarData = data.by_tariff.map((item) => ({
-    name: item.tariff_name,
+  const tariffBreakdown = data.by_tariff.map((item) => ({
+    key: String(item.tariff_id),
+    label: item.tariff_name,
     value: item.count,
   }));
 
@@ -65,18 +63,35 @@ export function SalesTab({ params }: SalesTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard label={t('admin.salesStats.sales.totalSales')} value={data.total_sales} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard
+          label={t('admin.salesStats.sales.totalSales')}
+          value={data.total_sales}
+          icon={<TicketIcon className="h-5 w-5" />}
+          tone="accent"
+        />
+        <StatCard
+          label={t('admin.salesStats.sales.totalRevenue')}
+          value={formatWithCurrency(data.total_revenue_kopeks / SALES_STATS.KOPEKS_DIVISOR, 0)}
+          icon={<BanknotesIcon className="h-5 w-5" />}
+          tone="success"
+        />
         <StatCard
           label={t('admin.salesStats.sales.avgOrder')}
           value={formatWithCurrency(data.avg_order_kopeks / SALES_STATS.KOPEKS_DIVISOR)}
-          valueClassName="text-success-400"
+          icon={<CardIcon className="h-5 w-5" />}
+          tone="success"
         />
-        <StatCard label={t('admin.salesStats.sales.topTariff')} value={data.top_tariff_name} />
+        <StatCard
+          label={t('admin.salesStats.sales.topTariff')}
+          value={data.top_tariff_name}
+          icon={<TrophyIcon className="h-5 w-5" />}
+          tone="warning"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SimpleBarChart data={tariffBarData} title={t('admin.salesStats.sales.byTariff')} />
+        <BreakdownList title={t('admin.salesStats.sales.byTariff')} items={tariffBreakdown} />
         <DonutChart data={periodPieData} title={t('admin.salesStats.sales.byPeriod')} />
       </div>
 
@@ -87,11 +102,10 @@ export function SalesTab({ params }: SalesTabProps) {
         valueLabel={t('admin.salesStats.summary.revenue')}
       />
 
-      <MultiSeriesAreaChart
+      <StackedBarChart
         data={dailyByTariffData}
         title={t('admin.salesStats.sales.dailyByTariff')}
-        chartId="sales-daily-by-tariff"
-        valueLabel={t('admin.salesStats.sales.subscriptions')}
+        valueFormatter={(v) => String(v)}
       />
     </div>
   );

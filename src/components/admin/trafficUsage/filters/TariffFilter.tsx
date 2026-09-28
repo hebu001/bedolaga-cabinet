@@ -1,0 +1,109 @@
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ChevronDownIcon, FilterIcon } from '../TrafficIcons';
+import { CheckIcon } from '@/components/icons';
+
+export function TariffFilter({
+  available,
+  selected,
+  onChange,
+}: {
+  available: string[];
+  selected: Set<string>;
+  onChange: (next: Set<string>) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  if (available.length === 0) return null;
+
+  const allSelected = selected.size === 0;
+  const activeCount = selected.size;
+
+  const toggle = (tariff: string) => {
+    const next = new Set(selected);
+    if (next.has(tariff)) {
+      next.delete(tariff);
+    } else {
+      next.add(tariff);
+    }
+    onChange(next);
+  };
+
+  const selectAll = () => onChange(new Set());
+
+  return (
+    <div className="sm:relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+          activeCount > 0
+            ? 'border-[#F97315]/50 bg-[#F97315]/10 text-[#F97315]'
+            : 'border-apple-hairline bg-apple-card text-apple-ink hover:border-apple-hairline hover:bg-apple-elevated'
+        }`}
+      >
+        <FilterIcon className="h-4 w-4" />
+        {t('admin.trafficUsage.tariff')}
+        {activeCount > 0 && (
+          <span className="rounded-full bg-[#F97315] px-1.5 text-[10px] text-white">
+            {activeCount}
+          </span>
+        )}
+        <ChevronDownIcon className="h-3 w-3" />
+      </button>
+
+      {open && (
+        <div className="absolute inset-x-0 top-full z-30 mt-1 rounded-xl border border-apple-hairline bg-apple-card py-1 shadow-xl sm:inset-x-auto sm:left-0 sm:w-56">
+          <button
+            onClick={selectAll}
+            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-apple-elevated ${
+              allSelected ? 'text-[#F97315]' : 'text-apple-mute'
+            }`}
+          >
+            <span
+              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                allSelected ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
+              }`}
+            >
+              {allSelected && <CheckIcon className="h-3 w-3 text-white" />}
+            </span>
+            {t('admin.trafficUsage.allTariffs')}
+          </button>
+
+          <div className="mx-2 border-t border-apple-hairline" />
+
+          <div className="max-h-48 overflow-y-auto">
+            {available.map((tariff) => {
+              const checked = selected.has(tariff);
+              return (
+                <button
+                  key={tariff}
+                  onClick={() => toggle(tariff)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-apple-mute transition-colors hover:bg-apple-elevated"
+                >
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                      checked ? 'border-[#F97315] bg-[#F97315]' : 'border-apple-hairline'
+                    }`}
+                  >
+                    {checked && <CheckIcon className="h-3 w-3 text-white" />}
+                  </span>
+                  {tariff}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

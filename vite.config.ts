@@ -2,17 +2,37 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import packageJson from './package.json';
+import { brandingHtml } from './vite-plugins/brandingHtml';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  // Dev proxy target — set VITE_DEV_PROXY_TARGET in a gitignored .env.local
-  // to point at a remote backend. Defaults to a local backend so nothing
-  // environment-specific gets committed.
+  // Переменные из .env и из окружения сборки (Docker передаёт их через ENV);
+  // окружение сильнее файла — как и у самого Vite.
+  const env = { ...loadEnv(mode, __dirname, 'VITE_'), ...process.env };
   const proxyTarget = env.VITE_DEV_PROXY_TARGET || 'http://localhost:8080';
-
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      {
+        name: 'compact-json-assets',
+        generateBundle(_options, bundle) {
+          // URL-imported dictionaries are served as JSON assets, not JS modules.
+          // Compact their actual payload; admin assets remain separately lazy.
+          for (const asset of Object.values(bundle)) {
+            if (asset.type !== 'asset' || !asset.fileName.endsWith('.json')) continue;
+            const text =
+              typeof asset.source === 'string'
+                ? asset.source
+                : new TextDecoder().decode(asset.source);
+            asset.source = JSON.stringify(JSON.parse(text));
+          }
+        },
+      },
+      brandingHtml({
+        name: env.VITE_APP_NAME ?? '',
+        apiUrl: env.VITE_API_URL ?? '',
+      }),
+    ],
     define: {
       __APP_VERSION__: JSON.stringify(packageJson.version),
     },
@@ -30,11 +50,17 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': {
           target: proxyTarget,
-          changeOrigin: true,
-          secure: false,
           ws: true,
+          changeOrigin: true,
           // Strip /api prefix: /api/cabinet/auth -> /cabinet/auth
           rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        // The backend serves its liveness endpoint at the host root (not under
+        // /api). Proxy it too so the "service unavailable" detection probe hits the
+        // real backend in dev instead of the Vite server (which would mask outages).
+        '/health': {
+          target: proxyTarget,
+          changeOrigin: true,
         },
       },
     },
@@ -57,22 +83,29 @@ export default defineConfig(({ mode }) => {
             if (id.includes('@tanstack/react-table')) return 'vendor-table';
             if (id.includes('i18next') || id.includes('react-i18next')) return 'vendor-i18n';
             if (id.includes('framer-motion')) return 'vendor-motion';
-            if (id.includes('@radix-ui/')) return 'vendor-radix';
+            if (id.includes('@radix-ui/')) {
+              const primitive = id.match(/@radix-ui\/([^/]+)/)?.[1] ?? 'shared';
+              return `vendor-radix-${primitive}`;
+            }
             if (id.includes('@dnd-kit/')) return 'vendor-dnd';
             if (id.includes('@telegram-apps/') || id.includes('/@tma.js/'))
               return 'vendor-telegram';
             if (id.includes('/ogl/')) return 'vendor-webgl';
             if (id.includes('/cmdk/')) return 'vendor-cmdk';
+            if (id.includes('/dompurify/')) return 'vendor-sanitizer';
             if (id.includes('twemoji') || id.includes('@twemoji/')) return 'vendor-twemoji';
             if (id.includes('/jsencrypt/') || id.includes('@kastov/')) return 'vendor-crypto';
             if (id.includes('@lottiefiles/')) return 'vendor-lottie';
+            // Heavy admin-only deps — split so they don't bloat the shared
+            // chunks of other lazy admin pages that don't use them.
+            if (id.includes('/recharts/') || id.includes('/d3-')) return 'vendor-recharts';
+            if (id.includes('@tiptap/') || id.includes('/prosemirror-')) return 'vendor-tiptap';
             if (
               id.includes('/axios/') ||
               id.includes('/zustand/') ||
               id.includes('/clsx/') ||
               id.includes('/tailwind-merge/') ||
-              id.includes('class-variance-authority') ||
-              id.includes('/dompurify/')
+              id.includes('class-variance-authority')
             )
               return 'vendor-utils';
           },

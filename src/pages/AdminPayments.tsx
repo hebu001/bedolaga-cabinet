@@ -1,46 +1,25 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
+import { backTo } from '@/components/admin';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { METHOD_LABELS } from '../constants/paymentMethods';
 import { adminPaymentsApi, type SearchStats } from '../api/adminPayments';
+import { DateField } from '../components/DateField';
 import { useCurrency } from '../hooks/useCurrency';
 import type { PendingPayment, PaginatedResponse } from '../types';
 import { usePlatform } from '../platform/hooks/usePlatform';
-
-// BackIcon
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-apple-mute"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
-
-// SearchIcon
-const SearchIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-    />
-  </svg>
-);
-
-// CalendarIcon
-const CalendarIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-    />
-  </svg>
-);
+import { StatCard } from '@/components/stats';
+import {
+  BackIcon,
+  SearchIcon,
+  CalendarIcon,
+  RefreshIcon,
+  CheckCircleIcon,
+  ChartBarIcon,
+  ClockIcon,
+  XCircleIcon,
+} from '@/components/icons';
 
 interface StatusBadgeProps {
   status: string;
@@ -48,9 +27,9 @@ interface StatusBadgeProps {
 
 function StatusBadge({ status }: StatusBadgeProps) {
   const styles: Record<string, string> = {
-    paid: 'bg-apple-green/15 text-apple-green',
-    pending: 'bg-apple-amber/15 text-apple-amber',
-    cancelled: 'bg-apple-red/15 text-apple-red',
+    paid: 'bg-success-500/20 text-apple-green',
+    pending: 'bg-warning-500/20 text-apple-amber',
+    cancelled: 'bg-error-500/20 text-apple-red',
   };
 
   const normalized = status.toLowerCase();
@@ -65,39 +44,10 @@ function StatusBadge({ status }: StatusBadgeProps) {
   );
 }
 
-interface StatCardProps {
-  label: string;
-  value: number;
-  color: 'blue' | 'amber' | 'green' | 'red';
-  isActive: boolean;
-  onClick: () => void;
-}
-
-function StatCard({ label, value, color, isActive, onClick }: StatCardProps) {
-  const colors: Record<string, string> = {
-    blue: 'bg-apple-blue/15 text-apple-blue',
-    amber: 'bg-apple-amber/15 text-apple-amber',
-    green: 'bg-apple-green/15 text-apple-green',
-    red: 'bg-apple-red/15 text-apple-red',
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-2xl p-4 text-left transition-all ${
-        isActive ? colors[color] : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
-      }`}
-    >
-      <div className={`text-2xl font-bold ${isActive ? '' : 'text-apple-ink'}`}>{value}</div>
-      <div className="text-sm opacity-80">{label}</div>
-    </button>
-  );
-}
-
 export default function AdminPayments() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { formatAmount, currencySymbol } = useCurrency();
   const { capabilities } = usePlatform();
@@ -242,19 +192,7 @@ export default function AdminPayments() {
           </div>
         </div>
         <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-            />
-          </svg>
+          <RefreshIcon className="h-4 w-4" />
           {t('common.refresh')}
         </button>
       </div>
@@ -337,7 +275,7 @@ export default function AdminPayments() {
                 : 'bg-apple-card text-apple-mute hover:bg-apple-elevated'
             }`}
           >
-            <CalendarIcon />
+            <CalendarIcon className="h-4 w-4" />
             {t('admin.payments.periodCustom')}
           </button>
 
@@ -351,7 +289,7 @@ export default function AdminPayments() {
               <option value="">{t('admin.payments.allMethods')}</option>
               {methodOptions.map((method) => (
                 <option key={method} value={method}>
-                  {method}
+                  {METHOD_LABELS[method] ?? method}
                 </option>
               ))}
             </select>
@@ -366,22 +304,22 @@ export default function AdminPayments() {
             <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.payments.dateFrom')}
             </label>
-            <input
-              type="date"
+            <DateField
               value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full rounded-xl bg-apple-elevated px-3 py-2 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
+              max={dateTo}
+              onChange={setDateFrom}
+              className="flex w-full items-center gap-2 rounded-lg border border-apple-hairline bg-apple-card px-3 py-2 text-sm text-apple-ink transition-colors hover:border-[#F97315]"
             />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <label className="mb-1 block text-[13px] font-medium text-apple-mute">
               {t('admin.payments.dateTo')}
             </label>
-            <input
-              type="date"
+            <DateField
               value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full rounded-xl bg-apple-elevated px-3 py-2 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
+              min={dateFrom}
+              onChange={setDateTo}
+              className="flex w-full items-center gap-2 rounded-lg border border-apple-hairline bg-apple-card px-3 py-2 text-sm text-apple-ink transition-colors hover:border-[#F97315]"
             />
           </div>
           <button onClick={() => refetch()} className="btn-primary px-4 py-2 text-sm">
@@ -393,34 +331,62 @@ export default function AdminPayments() {
       {/* Stats cards */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard
-            label={t('admin.payments.totalCount')}
-            value={stats.total}
-            color="blue"
-            isActive={statusFilter === 'all'}
+          <button
+            type="button"
             onClick={() => handleStatusCardClick('all')}
-          />
-          <StatCard
-            label={t('admin.payments.pendingCount')}
-            value={stats.pending}
-            color="amber"
-            isActive={statusFilter === 'pending'}
+            className={`rounded-xl text-left transition-all ${
+              statusFilter === 'all' ? 'ring-2 ring-accent-500' : ''
+            }`}
+          >
+            <StatCard
+              label={t('admin.payments.totalCount')}
+              value={stats.total}
+              icon={<ChartBarIcon className="h-5 w-5" />}
+              tone="accent"
+            />
+          </button>
+          <button
+            type="button"
             onClick={() => handleStatusCardClick('pending')}
-          />
-          <StatCard
-            label={t('admin.payments.paidCount')}
-            value={stats.paid}
-            color="green"
-            isActive={statusFilter === 'paid'}
+            className={`rounded-xl text-left transition-all ${
+              statusFilter === 'pending' ? 'ring-2 ring-warning-500' : ''
+            }`}
+          >
+            <StatCard
+              label={t('admin.payments.pendingCount')}
+              value={stats.pending}
+              icon={<ClockIcon className="h-5 w-5" />}
+              tone="warning"
+            />
+          </button>
+          <button
+            type="button"
             onClick={() => handleStatusCardClick('paid')}
-          />
-          <StatCard
-            label={t('admin.payments.cancelledCount')}
-            value={stats.cancelled}
-            color="red"
-            isActive={statusFilter === 'cancelled'}
+            className={`rounded-xl text-left transition-all ${
+              statusFilter === 'paid' ? 'ring-2 ring-success-500' : ''
+            }`}
+          >
+            <StatCard
+              label={t('admin.payments.paidCount')}
+              value={stats.paid}
+              icon={<CheckCircleIcon className="h-5 w-5" />}
+              tone="success"
+            />
+          </button>
+          <button
+            type="button"
             onClick={() => handleStatusCardClick('cancelled')}
-          />
+            className={`rounded-xl text-left transition-all ${
+              statusFilter === 'cancelled' ? 'ring-2 ring-error-500' : ''
+            }`}
+          >
+            <StatCard
+              label={t('admin.payments.cancelledCount')}
+              value={stats.cancelled}
+              icon={<XCircleIcon className="h-5 w-5" />}
+              tone="error"
+            />
+          </button>
         </div>
       )}
 
@@ -447,7 +413,7 @@ export default function AdminPayments() {
               return (
                 <div key={paymentKey} className="rounded-xl bg-apple-elevated p-4">
                   <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 basis-60">
                       {/* Status badge + method */}
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <StatusBadge status={payment.status_text} />
@@ -469,12 +435,14 @@ export default function AdminPayments() {
                             : 'text-apple-ink'
                         }`}
                       >
-                        {formatAmount(payment.amount_rubles)} {currencySymbol}
+                        {formatAmount(payment.amount_rubles)}
+                        {'\u00A0'}
+                        {currencySymbol}
                       </div>
 
                       {/* Invoice ID */}
                       <div className="mt-1 text-sm text-apple-mute">
-                        <code className="font-mono" style={{ color: '#F97315' }}>
+                        <code className="font-mono text-[#F97315] break-all">
                           {payment.identifier}
                         </code>
                       </div>
@@ -489,9 +457,9 @@ export default function AdminPayments() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/admin/users/${payment.user_id}`);
+                                navigate(`/admin/users/${payment.user_id}`, backTo(location));
                               }}
-                              className="inline-flex items-center gap-1 transition-colors hover:underline"
+                              className="inline-flex max-w-full flex-wrap items-center gap-x-1 text-left transition-colors [overflow-wrap:anywhere] hover:underline"
                             >
                               {payment.user_username && (
                                 <span style={{ color: '#F97315' }}>@{payment.user_username}</span>
@@ -538,7 +506,7 @@ export default function AdminPayments() {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap gap-2 sm:flex-col">
                       {payment.payment_url && (
                         <a
                           href={payment.payment_url}
@@ -589,8 +557,8 @@ export default function AdminPayments() {
                       <div
                         className={`mt-3 rounded-lg p-2 text-sm ${
                           checkPaymentMutation.data?.status_changed
-                            ? 'bg-apple-green/15 text-apple-green'
-                            : 'bg-apple-card text-apple-mute'
+                            ? 'border border-success-500/30 bg-success-500/10 text-apple-green'
+                            : 'bg-apple-elevated/30 text-apple-mute'
                         }`}
                       >
                         {checkPaymentMutation.data?.message}
@@ -610,19 +578,7 @@ export default function AdminPayments() {
         ) : (
           <div className="py-12 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-apple-elevated">
-              <svg
-                className="h-8 w-8 text-apple-faint"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <CheckCircleIcon className="h-8 w-8 text-apple-faint" />
             </div>
             <div className="text-apple-mute">{t('admin.payments.noPayments')}</div>
           </div>

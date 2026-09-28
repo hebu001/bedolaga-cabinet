@@ -67,8 +67,8 @@ export function BackgroundEditor() {
           className={cn(
             'w-full rounded-full py-3 text-sm font-medium transition-colors',
             saveStatus === 'saved'
-              ? 'bg-apple-green/20 text-apple-green'
-              : 'bg-[#F97315] text-white hover:opacity-90 disabled:opacity-50',
+              ? 'bg-success-500/20 text-apple-green'
+              : 'bg-[#F97315] text-white hover:bg-accent-600 disabled:opacity-50',
           )}
         >
           {saveStatus === 'saving'

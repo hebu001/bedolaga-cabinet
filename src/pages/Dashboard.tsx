@@ -1,4 +1,8 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useDashboardSubscriptionActions } from '../hooks/useDashboardSubscriptionActions';
+import { getApiErrorMessage } from '../utils/api-error';
+import { needsTariff, tariffSelectionPath } from '../utils/legacySubscription';
+import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -108,19 +112,40 @@ export default function Dashboard() {
     refetchOnMount: true,
   });
 
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<number | undefined>();
+  const {
+    data: multiSubData,
+    isLoading: listLoading,
+    isError: listError,
+  } = useQuery({
+    queryKey: ['subscriptions-list'],
+    queryFn: subscriptionApi.getSubscriptions,
+    staleTime: API.BALANCE_STALE_TIME_MS,
+  });
+  const isMultiTariff = multiSubData?.multi_tariff_enabled === true;
+  const firstSubscription =
+    multiSubData?.subscriptions.find((item) => item.id === selectedSubscriptionId) ??
+    multiSubData?.subscriptions.find((item) => item.status === 'active') ??
+    multiSubData?.subscriptions[0];
+  const subscriptionId = isMultiTariff ? firstSubscription?.id : undefined;
+
   const {
     data: subscriptionResponse,
-    isLoading: subLoading,
-    isError: subError,
+    isLoading: singleLoading,
+    isError: singleError,
     refetch: refetchSubscription,
   } = useQuery({
-    queryKey: ['subscription'],
-    queryFn: () => subscriptionApi.getSubscription(),
+    queryKey: ['subscription', subscriptionId],
+    queryFn: () => subscriptionApi.getSubscription(subscriptionId),
+    enabled: !isMultiTariff || subscriptionId !== undefined,
     retry: false,
     staleTime: API.BALANCE_STALE_TIME_MS,
     refetchOnMount: true,
   });
 
+  const subLoading =
+    listLoading || ((!isMultiTariff || subscriptionId !== undefined) && singleLoading);
+  const subError = singleError || listError;
   const subscription = subscriptionResponse?.subscription ?? null;
 
   const { data: trialInfo, isLoading: trialLoading } = useQuery({
@@ -130,18 +155,16 @@ export default function Dashboard() {
   });
 
   const { data: devicesData } = useQuery({
-    queryKey: ['devices'],
-    queryFn: () => subscriptionApi.getDevices(),
+    queryKey: ['devices', subscriptionId],
+    queryFn: () => subscriptionApi.getDevices(subscriptionId),
     enabled: !!subscription,
     staleTime: API.BALANCE_STALE_TIME_MS,
   });
 
-  const deleteDeviceMutation = useMutation({
-    mutationFn: (hwid: string) => subscriptionApi.deleteDevice(hwid),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['devices'] });
-    },
-  });
+  const { trafficData, deleteDevice, deletingDevice } = useDashboardSubscriptionActions(
+    subscriptionId,
+    !!subscription,
+  );
 
   // Fetch purchase options for min price display
   const { data: purchaseOptions } = useQuery({
@@ -168,80 +191,44 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
       refreshUser();
     },
-    onError: (error: { response?: { data?: { detail?: string } } }) => {
-      setTrialError(error.response?.data?.detail || t('common.error'));
+    onError: (error: unknown) => {
+      setTrialError(getApiErrorMessage(error, t('common.error')));
     },
   });
-
-  // Traffic refresh state and mutation
-  const [trafficRefreshCooldown, setTrafficRefreshCooldown] = useState(0);
-  const [trafficData, setTrafficData] = useState<{
-    traffic_used_gb: number;
-    traffic_used_percent: number;
-    is_unlimited: boolean;
-  } | null>(null);
-
-  const refreshTrafficMutation = useMutation({
-    mutationFn: () => subscriptionApi.refreshTraffic(),
-    onSuccess: (data) => {
-      setTrafficData({
-        traffic_used_gb: data.traffic_used_gb,
-        traffic_used_percent: data.traffic_used_percent,
-        is_unlimited: data.is_unlimited,
-      });
-      localStorage.setItem('traffic_refresh_ts', Date.now().toString());
-      if (data.rate_limited && data.retry_after_seconds) {
-        setTrafficRefreshCooldown(data.retry_after_seconds);
-      } else {
-        setTrafficRefreshCooldown(30);
-      }
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-    },
-    onError: (error: {
-      response?: { status?: number; headers?: { get?: (key: string) => string } };
-    }) => {
-      if (error.response?.status === 429) {
-        const retryAfter = error.response.headers?.get?.('Retry-After');
-        setTrafficRefreshCooldown(retryAfter ? parseInt(retryAfter, 10) : 30);
-      }
-    },
-  });
-
-  // Cooldown timer
-  useEffect(() => {
-    if (trafficRefreshCooldown <= 0) return;
-    const timer = setInterval(() => {
-      setTrafficRefreshCooldown((prev) => Math.max(0, prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [trafficRefreshCooldown]);
-
-  // Auto-refresh traffic on mount (with 30s caching)
-  const hasAutoRefreshed = useRef(false);
-
-  useEffect(() => {
-    if (!subscription) return;
-    if (hasAutoRefreshed.current) return;
-    hasAutoRefreshed.current = true;
-
-    const lastRefresh = localStorage.getItem('traffic_refresh_ts');
-    const now = Date.now();
-    const cacheMs = API.TRAFFIC_CACHE_MS;
-
-    if (lastRefresh && now - parseInt(lastRefresh, 10) < cacheMs) {
-      const elapsed = now - parseInt(lastRefresh, 10);
-      const remaining = Math.ceil((cacheMs - elapsed) / 1000);
-      if (remaining > 0) {
-        setTrafficRefreshCooldown(remaining);
-      }
-      return;
-    }
-
-    refreshTrafficMutation.mutate();
-  }, [subscription, refreshTrafficMutation]);
 
   const hasNoSubscription =
-    subscriptionResponse?.has_subscription === false && !subLoading && !subError;
+    !subLoading &&
+    !subError &&
+    (isMultiTariff
+      ? multiSubData?.subscriptions.length === 0
+      : subscriptionResponse?.has_subscription === false);
+
+  useEffect(() => {
+    setShowDevicePanel(false);
+  }, [subscriptionId]);
+  const renewalPath =
+    subscription && needsTariff(subscription)
+      ? tariffSelectionPath(subscription.id)
+      : subscription
+        ? `/subscription/purchase?renew=1&subscriptionId=${subscription.id}`
+        : '/subscription/purchase';
+  const subscriptionPicker = isMultiTariff && (multiSubData?.subscriptions.length ?? 0) > 1 && (
+    <label className="my-2 flex items-center gap-3 text-sm text-apple-mute">
+      <span>{t('subscription.title')}</span>
+      <select
+        aria-label={t('subscription.title')}
+        value={subscriptionId}
+        onChange={(event) => setSelectedSubscriptionId(Number(event.target.value))}
+        className="min-w-0 flex-1 rounded-xl bg-apple-card p-2 text-apple-ink"
+      >
+        {multiSubData?.subscriptions.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.tariff_name || `#${item.id}`}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 
   // ── Derived display data ──
   const usedGb = trafficData?.traffic_used_gb ?? subscription?.traffic_used_gb ?? 0;
@@ -292,6 +279,14 @@ export default function Dashboard() {
     return t('dashboard.fromPrice', { price: `${rubles}\u00A0₽` });
   }, [purchaseOptions, t]);
 
+  if (subLoading && !subscription)
+    return (
+      <PageSkeleton titleWidth="w-40">
+        <Skeleton variant="card" className="h-56" />
+        <Skeleton variant="card" className="h-14" />
+      </PageSkeleton>
+    );
+
   // ── Expired / Disabled / Limited ──
   if (
     !subLoading &&
@@ -315,6 +310,7 @@ export default function Dashboard() {
         className="fixed-screen dashboard-screen flex flex-col overflow-hidden px-5"
         style={{ overscrollBehavior: 'none' }}
       >
+        {subscriptionPicker}
         {/* Hero area — large status text replaces logo */}
         <div className="dashboard-hero relative flex min-h-0 flex-1 items-center justify-center">
           <motion.div
@@ -354,7 +350,7 @@ export default function Dashboard() {
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <Link
-              to="/subscription/purchase?renew=1"
+              to={renewalPath}
               onClick={() => haptic.buttonPressMedium()}
               className="fixed-screen-action flex h-14 w-full transform-gpu items-center justify-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
               style={{ background: 'var(--figma-green)' }}
@@ -372,7 +368,7 @@ export default function Dashboard() {
             transition={{ duration: 0.4, delay: 0.3 }}
           >
             <Link
-              to="/connection"
+              to={subscription ? `/connection?sub=${subscription.id}` : '/connection'}
               onClick={() => haptic.buttonPressMedium()}
               className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
             >
@@ -399,6 +395,7 @@ export default function Dashboard() {
         <PendingGiftCard gifts={pendingGifts} className="dashboard-gifts space-y-3" />
       )}
 
+      {subscriptionPicker}
       {/* ─── Hero Area: Logo ─── */}
       <div className="dashboard-hero relative flex min-h-0 flex-1 items-center justify-center">
         <motion.div
@@ -532,7 +529,7 @@ export default function Dashboard() {
                               {displayName}
                             </div>
                             {subtitle && subtitle !== displayName && (
-                              <div className="dashboard-device-subtitle truncate text-[11px] text-white/40">
+                              <div className="dashboard-device-subtitle truncate text-[11px] text-apple-mute">
                                 {subtitle}
                               </div>
                             )}
@@ -542,11 +539,11 @@ export default function Dashboard() {
                           onClick={() => {
                             haptic.buttonPressMedium();
                             if (confirm(t('subscription.confirmDeleteDevice'))) {
-                              deleteDeviceMutation.mutate(device.hwid);
+                              deleteDevice(device.hwid);
                             }
                           }}
-                          disabled={deleteDeviceMutation.isPending}
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-red-500/15 hover:text-red-400 disabled:opacity-50"
+                          disabled={deletingDevice}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-apple-mute transition-colors hover:bg-red-500/15 hover:text-red-400 disabled:opacity-50"
                           title={t('subscription.deleteDevice')}
                         >
                           <svg
@@ -569,7 +566,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="flex flex-col items-center gap-1.5 py-4 text-center">
                     <span className="text-[20px] opacity-30">📱</span>
-                    <div className="text-[12px] text-white/40">
+                    <div className="text-[12px] text-apple-mute">
                       {t('subscription.noDevicesConnected', {
                         defaultValue: 'Нет подключенных устройств',
                       })}
@@ -585,10 +582,10 @@ export default function Dashboard() {
         {subLoading && (
           <div className="flex items-center justify-between py-4">
             <div>
-              <div className="skeleton mb-2 h-5 w-40" />
-              <div className="skeleton h-4 w-24" />
+              <Skeleton className="mb-2 h-5 w-40" />
+              <Skeleton className="h-4 w-24" />
             </div>
-            <div className="skeleton h-8 w-28 rounded-full" />
+            <Skeleton className="h-8 w-28 rounded-full" />
           </div>
         )}
 
@@ -618,7 +615,7 @@ export default function Dashboard() {
             transition={{ duration: 0.4, delay: 0.3 }}
           >
             <Link
-              to={hasNoSubscription ? '/subscription/purchase' : '/subscription/purchase?renew=1'}
+              to={renewalPath}
               onClick={() => haptic.buttonPressMedium()}
               className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full px-[18px] text-base font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] active:brightness-90"
               style={{ background: 'var(--figma-green)' }}
@@ -642,7 +639,7 @@ export default function Dashboard() {
           transition={{ duration: 0.4, delay: 0.4 }}
         >
           <Link
-            to="/connection"
+            to={subscription ? `/connection?sub=${subscription.id}` : '/connection'}
             onClick={() => haptic.buttonPressMedium()}
             className="fixed-screen-action flex h-14 w-full transform-gpu items-center gap-2 rounded-full bg-white px-[18px] text-base font-medium text-black transition-all duration-200 hover:brightness-95 active:scale-[0.97] active:brightness-90"
           >

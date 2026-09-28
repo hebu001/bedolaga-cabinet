@@ -1,3 +1,5 @@
+import { PromptDialogHost } from '@/components/PromptDialogHost';
+import { resetVirtualKeyboard, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -59,42 +61,12 @@ export function AppShell({ children }: AppShellProps) {
   const isMobileFullscreen = isFullscreen && isMobile;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const isKeyboardOpen = useVirtualKeyboard();
 
   // Reset keyboard state on route change — prevents bottom nav staying hidden after navigation
   useEffect(() => {
-    setIsKeyboardOpen(false);
+    resetVirtualKeyboard();
   }, [location.pathname]);
-
-  // Keyboard detection for hiding bottom nav
-  useEffect(() => {
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-        setIsKeyboardOpen(true);
-      }
-    };
-
-    const handleFocusOut = (e: FocusEvent) => {
-      const relatedTarget = e.relatedTarget as HTMLElement | null;
-      if (
-        !relatedTarget ||
-        (relatedTarget.tagName !== 'INPUT' &&
-          relatedTarget.tagName !== 'TEXTAREA' &&
-          !relatedTarget.isContentEditable)
-      ) {
-        setIsKeyboardOpen(false);
-      }
-    };
-
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
-
-    return () => {
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
-    };
-  }, []);
 
   const desktopNavItems = useDockItems(wheelEnabled);
 
@@ -142,6 +114,7 @@ export function AppShell({ children }: AppShellProps) {
       <WebSocketNotifications />
       <CampaignBonusNotifier />
       <SuccessNotificationModal />
+      <PromptDialogHost />
 
       {/* Desktop sidebar shares the five mobile dock destinations. */}
       <aside className="desktop-sidebar fixed inset-y-0 left-0 z-50 hidden bg-apple-card lg:flex">

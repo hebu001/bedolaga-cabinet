@@ -1,4 +1,5 @@
 # Dependencies
+node_modules
 node_modules/
 
 # Claude local settings
@@ -50,3 +51,11 @@ CLAUDE.md
 **/CLAUDE.md
 # heroui-agents-md
 .heroui-docs/
+
+# Impeccable design context (local only, not for shared repo)
+PRODUCT.md
+DESIGN.md
+DESIGN.json
+
+# Локальные архивы исходников — не для репозитория
+*.zip

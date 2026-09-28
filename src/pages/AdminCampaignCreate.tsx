@@ -2,43 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { transliterate } from '../utils/transliterate';
 import {
   campaignsApi,
-  CampaignCreateRequest,
-  CampaignBonusType,
-  ServerSquadInfo,
-  TariffListItem,
+  type CampaignCreateRequest,
+  type CampaignBonusType,
+  type ServerSquadInfo,
+  type TariffListItem,
 } from '../api/campaigns';
 import { partnerApi } from '../api/partners';
 import { AdminBackButton } from '../components/admin';
 import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import Twemoji from 'react-twemoji';
-// Icons
-const CampaignIcon = () => (
-  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46"
-    />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-  </svg>
-);
-
-const RefreshIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-    />
-  </svg>
-);
+import { CampaignIcon, CheckIcon, LinkIcon, RefreshIcon } from '@/components/icons';
 
 // Bonus type config
 const bonusTypeConfig: Record<
@@ -99,16 +75,14 @@ function ServerSelector({
             }`}
           >
             <div
-              className={`flex h-5 w-5 items-center justify-center rounded ${
-                selected.includes(server.squad_uuid)
-                  ? 'bg-[#F97315] text-white'
-                  : 'bg-apple-elevated'
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${
+                selected.includes(server.squad_uuid) ? 'bg-[#F97315] text-white' : 'bg-dark-600'
               }`}
             >
               {selected.includes(server.squad_uuid) && <CheckIcon />}
             </div>
-            <span className="text-sm font-medium">
-              <Twemoji options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
+            <span className="min-w-0 text-sm font-medium [overflow-wrap:anywhere]">
+              <Twemoji tag="span" options={{ className: 'twemoji', folder: 'svg', ext: '.svg' }}>
                 {server.display_name}
               </Twemoji>
             </span>
@@ -133,10 +107,14 @@ function TariffSelector({
 
   return (
     <div>
-      <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+      <label
+        htmlFor="campaign-tariff-select"
+        className="mb-2 block text-[13px] font-medium text-apple-mute"
+      >
         {t('admin.campaigns.form.selectTariff')}
       </label>
       <select
+        id="campaign-tariff-select"
         value={value || ''}
         onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
         className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none focus:ring-2 focus:ring-[#F97315]/50"
@@ -154,8 +132,7 @@ function TariffSelector({
 }
 
 function slugify(text: string): string {
-  return text
-    .toLowerCase()
+  return transliterate(text)
     .replace(/[^a-z0-9]+/gi, '_')
     .replace(/^_|_$/g, '')
     .slice(0, 30);
@@ -277,7 +254,7 @@ export default function AdminCampaignCreate() {
         <AdminBackButton />
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-[#F97315]/20 p-2 text-[#F97315]">
-            <CampaignIcon />
+            <CampaignIcon className="h-6 w-6" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-apple-ink">
@@ -292,19 +269,7 @@ export default function AdminCampaignCreate() {
       {partnerId && partner && (
         <div className="rounded-2xl bg-[#F97315]/10 p-4">
           <div className="flex items-start gap-3">
-            <svg
-              className="mt-0.5 h-5 w-5 shrink-0 text-[#F97315]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
-              />
-            </svg>
+            <LinkIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#F97315]" />
             <p className="text-sm text-[#F97315]">
               {t('admin.campaigns.form.partnerAutoAssign', {
                 name: partner.first_name || partner.username || `#${partnerId}`,
@@ -318,11 +283,15 @@ export default function AdminCampaignCreate() {
       <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5">
         {/* Name */}
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="campaign-name"
+            className="mb-2 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.campaigns.form.name')}
             <span className="text-apple-red">*</span>
           </label>
           <input
+            id="campaign-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -339,11 +308,15 @@ export default function AdminCampaignCreate() {
 
         {/* Start Parameter */}
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="campaign-start-param"
+            className="mb-2 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.campaigns.form.startParameter')}
             <span className="text-apple-red">*</span>
           </label>
           <input
+            id="campaign-start-param"
             type="text"
             value={startParameter}
             onChange={(e) => setStartParameter(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
@@ -364,6 +337,9 @@ export default function AdminCampaignCreate() {
           <button
             type="button"
             onClick={() => setIsActive(!isActive)}
+            role="switch"
+            aria-checked={isActive}
+            aria-label={t('admin.campaigns.form.active')}
             className={`relative h-6 w-11 rounded-full transition-colors ${
               isActive ? 'bg-[#F97315]' : 'bg-apple-card'
             }`}
@@ -379,15 +355,21 @@ export default function AdminCampaignCreate() {
 
       {/* Bonus Type */}
       <div className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5">
-        <h2 className="text-lg font-semibold text-apple-ink">
+        <h2 id="bonus-type-label" className="text-lg font-semibold text-apple-ink">
           {t('admin.campaigns.form.bonusType')}
         </h2>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div
+          className="grid grid-cols-2 gap-3"
+          role="radiogroup"
+          aria-labelledby="bonus-type-label"
+        >
           {(Object.keys(bonusTypeConfig) as CampaignBonusType[]).map((type) => (
             <button
               key={type}
               type="button"
+              role="radio"
+              aria-checked={bonusType === type}
               onClick={() => setBonusType(type)}
               className={`rounded-xl p-4 text-left transition-all ${
                 bonusType === type
@@ -429,10 +411,14 @@ export default function AdminCampaignCreate() {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+              <label
+                htmlFor="campaign-sub-days"
+                className="mb-2 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.campaigns.form.days')}
               </label>
               <input
+                id="campaign-sub-days"
                 type="number"
                 value={subscriptionDays}
                 onChange={createNumberInputHandler(setSubscriptionDays, 1)}
@@ -441,10 +427,14 @@ export default function AdminCampaignCreate() {
               />
             </div>
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+              <label
+                htmlFor="campaign-sub-traffic"
+                className="mb-2 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.campaigns.form.trafficGb')}
               </label>
               <input
+                id="campaign-sub-traffic"
                 type="number"
                 value={subscriptionTraffic}
                 onChange={createNumberInputHandler(setSubscriptionTraffic, 0)}
@@ -453,10 +443,14 @@ export default function AdminCampaignCreate() {
               />
             </div>
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+              <label
+                htmlFor="campaign-sub-devices"
+                className="mb-2 block text-[13px] font-medium text-apple-mute"
+              >
                 {t('admin.campaigns.form.devices')}
               </label>
               <input
+                id="campaign-sub-devices"
                 type="number"
                 value={subscriptionDevices}
                 onChange={createNumberInputHandler(setSubscriptionDevices, 1)}
@@ -479,10 +473,14 @@ export default function AdminCampaignCreate() {
           <TariffSelector tariffs={tariffs} value={tariffId} onChange={setTariffId} />
 
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="campaign-tariff-days"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.campaigns.form.durationDays')}
             </label>
             <input
+              id="campaign-tariff-days"
               type="number"
               value={tariffDays}
               onChange={createNumberInputHandler(setTariffDays, 1)}
@@ -512,7 +510,7 @@ export default function AdminCampaignCreate() {
           disabled={!isValid || createMutation.isPending}
           className="flex items-center gap-2 rounded-full bg-[#F97315] px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          {createMutation.isPending ? <RefreshIcon /> : <CampaignIcon />}
+          {createMutation.isPending ? <RefreshIcon /> : <CampaignIcon className="h-6 w-6" />}
           {t('admin.campaigns.form.save')}
         </button>
       </div>

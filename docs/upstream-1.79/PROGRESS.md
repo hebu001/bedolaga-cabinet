@@ -1,55 +1,55 @@
-# Перенос кабинета на upstream 1.79.0: состояние
+# Кабинет 1.79.0: состояние переноса
 
-Дата: 2026-09-28. Текущий статус: **baseline-contract-documentation-ready; target integration pending**. Полный этап 1 не завершён: fixtures и визуальные эталоны ещё не подготовлены.
+Дата: 2026-09-28. Подготовлен независимый frontend-кандидат с сохранением кастома EvoVPN. Конфликты исходников разрешены; независимая frontend-проверка пройдена. Результаты подготовлены для интеграции с ботом. Совместимость с новым ботом и тестовый релиз ожидают его готовности.
 
-Принятое уточнение пользователя: новый бот ещё мержится; в этом чате выполнить всё возможное без него, после его готовности продолжить зависимые работы. Разрешены независимые изменения frontend source/tooling/UI/tests/session. Целевые API-схемы, Remnawave ID и live release ожидают бота; текущий бот в этой задаче не изменяется.
+Пользователь поручил выполнить всё возможное без бота, который мержится в соседней задаче. Здесь изменяются только локальные исходники, проверки и документы кабинета. Тестовые серверы, установленный кабинет, бот, панель и прод в этой работе не изменялись.
 
-## Зафиксированные источники
+## Источники и Git
 
 | Назначение | Значение |
 | --- | --- |
-| Отдельный checkout | `/Users/a001/Documents/ChatGPT/testbotbedol/work/cabinet-upstream-v1.79.0-20260928` |
 | Рабочая ветка | `codex/cabinet-upstream-v1.79.0` |
-| HEAD / установленный fork baseline | `55a4038f4ae8692922abc2622f97309840f71064`, package version 1.57.1 |
-| Upstream release | tag `v1.79.0` → `f5ea595f8f732c37f2d5c270f34879ab2e2fba2d` |
+| Установленный fork / исходная база | `55a4038f4ae8692922abc2622f97309840f71064`, версия 1.57.1 |
+| Включаемый upstream | tag `v1.79.0`, `f5ea595f8f732c37f2d5c270f34879ab2e2fba2d` |
 | Общий предок | `206926a3a315d8c2f6f2c56052f6d147b00dd734` (1.51.0) |
-| Origin | `https://github.com/hebu001/bedolaga-cabinet.git` |
-| Upstream remote | `https://github.com/BEDOLAGA-DEV/bedolaga-cabinet.git` |
-| Текущий бот | 3.66.0, `4b06edcdce26850c03ca474e8d195ef94ddb347e` |
-| Целевой бот/schema | Не определены; интеграционная зависимость |
-| Панель | Remnawave **2.8.1** закреплена; не обновляется в этой задаче |
+| HEAD до итогового merge | `b1a44d3769fa90f73c86c08db09bed843884f237` — коммит трёх подготовительных документов поверх fork; это не установленная версия |
+| Текущий тестовый бот | 3.66.0, `4b06edcdce26850c03ca474e8d195ef94ddb347e` |
+| Целевой бот | SHA и схемы ещё не переданы |
+| Панель | Remnawave **2.8.1** закреплена и не меняется |
 
-Managed `create_worktree` был вызван с baseline SHA и вернул `invalid reference`: root repo не содержит этот commit. Создан отдельный clone из локального `work/cabinet-upstream-audit-20260928/repository.git` через `git clone --no-hardlinks --no-checkout`, затем новая ветка от точного SHA. Это самостоятельный checkout, не managed worktree; dirty clones не использовались. Network fetch не выполнялся: Git objects и tag уже закреплены аудитом. URL remote настроены без push.
+Checkout создан отдельно в `work/cabinet-upstream-v1.79.0-20260928` из полного локального репозитория через clone без hardlinks. Старые dirty checkout не использованы. Origin — `hebu001/bedolaga-cabinet`, upstream — `BEDOLAGA-DEV/bedolaga-cabinet`.
 
-## Последовательные gate
+Этап оформляется обычным merge с двумя родителями: подготовленный fork HEAD `b1a44d3769fa90f73c86c08db09bed843884f237` и upstream `f5ea595f8f732c37f2d5c270f34879ab2e2fba2d`. Итоговый commit следует смотреть через `git show` на этой ветке и в итоговой выдаче задачи; данные дерева на момент проверки сохранены в [VERIFICATION](VERIFICATION.md). Слияние исходников не означает публикацию или установку версии 1.79.0.
 
-| Gate | Требуемый результат | Текущее состояние / блокер |
+## Выполнено независимо от бота
+
+| Область | Результат | Свидетельства |
 | --- | --- | --- |
-| G0 / изоляция | Отдельная ветка от baseline, pinned upstream, известные sources, нет посторонних правок | Выполнено: clone, refs, merge-base и remotes проверены; исходники не менялись |
-| G1a / документирование | Реестр всех инвариантов с источниками/проверками; current/target контракт и границы неизвестного | Подготовлено: [CUSTOMIZATION-MATRIX](CUSTOMIZATION-MATRIX.md), [CONTRACT](CONTRACT.md); требуется отдельная review |
-| G1b / визуальный baseline и fixtures | Детерминированные current fixtures и mobile/desktop screenshots; затем target schema fixtures после получения SHA | Pending. Список кадров есть в матрице; снимков/fixtures нет. Это не завершённый phase 1 |
-| G2 / инфраструктура и transport | Обычный merge pinned upstream с сохранением истории обоих родителей; осознанные package/tooling/lockfile; оба test suites в CI; session/WS/media invariants | Не начат. Слияние не запускалось. Независимая часть tooling/session может разрабатываться при неизвестном target bot; общая совместимость от этого не считается подтверждённой |
-| G3 / подписки, оплата, профиль | Новая декомпозиция upstream, Apple Dark и inline top-up; exact payment identity; target subscription ID, trial, INCY/Happ, profile/80/90 | Не начат. Schema-dependent части требуют подтверждения целевых endpoint/payload/capability; визуальный перенос сверять с G1b |
-| G4 / админка и locales | Новая структура admin, сохранённые поиск/bulk/permissions, согласованный panel ID, capability gating, ru/en/fa/zh и lazy admin locales | Не начат. Numeric/UUID и новые modules зависят от контракта бота; возможна независимая работа над подтверждёнными инвариантами |
-| G5 / чистая проверка | Clean install на выбранных Node/npm, custom + upstream tests, type-check, lint, build, dependency/nginx checks где применимы, bundle и visual comparisons | Не начат; нельзя объявлять merge проверенным по старому baseline test log |
-| G6 / интеграция и тестовый релиз | Согласованные SHA/панель, live E2E test Origin/Telegram/Web/payment/media/roles/sub2, backup и совместимый rollback | Заблокирован неизвестным target bot и невыполненными G3–G5. Ни один сервер не изменён; prod исключён |
+| Session / auth / WS | Сохранены generation boundary, серверные часы, ротация refresh, приватный QueryClient, ticket-only WS. Новые auth-сценарии используют тот же lifecycle | [CORE-MERGE](CORE-MERGE.md), [CONTRACT](CONTRACT.md) |
+| Подписка / оплата / профиль | Новая декомпозиция покупки, inline top-up, точный invoice, выбранная подписка и период, Apple Dark, объединённый профиль, INCY/Happ и уведомления 80/90 | [USER-MERGE](USER-MERGE.md), [матрица кастома](CUSTOMIZATION-MATRIX.md) |
+| Админка | Новые модули, сохранённые debounce/abort/retry/bulk, права, aliases и signed media; явный UUID/numeric boundary без приведения типов | [ADMIN-MERGE](ADMIN-MERGE.md) |
+| Tooling / производительность | Node 24, Router 8, Biome и Vitest; все 11 custom suites в `npm test` и CI. Lazy user/admin locales и исходные bundle budgets сохранены | [CORE-MERGE](CORE-MERGE.md), [bundle metrics](bundle-metrics-final.json), [audit](npm-audit-final.json) |
+| Визуальная проверка | 54 снимка: 24 baseline + 30 кандидата, mobile 390×844 и desktop 1440×900; основные экраны, список пользователей, обзор карточки пользователя и её диалог тикета. Исправлены акценты покупки/админки, hairlines и обрезание mobile header | Локальный visual report, описанный ниже |
+| Независимые исправления | Reset/Back не возвращает устаревший поиск; ticket GET не затирает reply/status; callbacks прежней подписки изолированы; обновление подписи документа сохраняет popup gesture; health probe при `/api` идёт через API proxy | Отчёты модулей и [health tests](../../src/api/health.proxy.test.ts) |
 
-Неизвестный целевой бот/schema блокирует **schema-dependent modules, интеграционные проверки и release**, но не независимый перенос tooling и проверенного session transport. На подготовительном шаге действовал отдельный предел: не запускать merge, не менять исходники, не делать commit. Этот предел соблюдён.
+Все **14** интеграционных флагов по умолчанию выключены. Это локальные настройки выпуска, а не обнаруженные возможности backend и не замена RBAC. Меню, прямые маршруты и запросы учитывают соответствующие флаги. Точный список и условия включения — в [CONTRACT](CONTRACT.md).
 
-При дальнейшем merge не принимать все конфликты одной стороной. Audit preview насчитал 156 конфликтующих путей, но это моделирование bare merge-tree, а не изменения этой ветки. Не представлять промежуточное конфликтное дерево как сборку. Итоговый merge должен сохранять обоих родителей для будущих обновлений.
+## Проверки и оставшиеся границы
 
-## Проверки подготовительного шага
+Окончательные результаты общей проверки сведены в [FRONTEND-HANDOFF](FRONTEND-HANDOFF.md) и [VERIFICATION](VERIFICATION.md): 151 custom test во всех 11 suites и 1449 Vitest tests в 233 файлах, без failures/skips; type-check, lint, format, build, bundle, browser smoke и nginx runtime — PASS; audit — 0 advisories. Промежуточные запуски владельцев модулей не заменяют этот результат. Исторические 157/157 тестов baseline также не являются проверкой слияния.
 
-- Подтверждены `HEAD`, `refs/tags/v1.79.0^{commit}`, `git merge-base`, имя ветки и оба remote URL.
-- Прочитаны применимые AGENTS, исходный audit и bot-contract. В baseline cabinet checkout дополнительных AGENTS.md не найдено.
-- Проверены source/test paths матрицы, состав 11 suite baseline `npm test`, сценарии auth/WS/media/payment/connection/admin/startup/trial/login/scroll/aurora.
-- После добавления документов выполнены `git diff --check`, `git diff --exit-code`, `git diff --cached --exit-code`; tracked source/index diff и MERGE_HEAD отсутствуют. Обнаружены только три untracked Markdown-файла в `docs/upstream-1.79/`. Все относительные Markdown-ссылки этих документов ведут к существующим файлам/каталогам; object alternates отсутствуют.
-- Исторический baseline audit: 157/157 тестов, Node 25.5.0, переиспользованные node_modules при совпадающем lockfile SHA. В этом checkout tests/build/npm install не запускались; результаты нового checkout или merge не заявляются.
+Свежая независимая source/security review завершилась PASS: session/auth clock/private QueryClient, consent ownership, ticket-only WS, direct-route gates, explicit panel identity, Dashboard A→B callbacks и signed-document lifecycle. Health proxy и loopback-only nginx fixture исправлены и проверены. Исключений тестов или ослабления общих guards не обнаружено. Это проверка исходников, а не live API.
 
-Не выполнены: fixtures, screenshots, merge, source edits, commits, push, PR, CI, live API/browser E2E, server access, deployment. Секреты не читались и не сохранялись. Действующая тестовая связка и prod не затронуты.
+Визуальные данные находятся вне Git-репозитория кабинета: локальный `work/cabinet-visual-20260928/README.md` и `evidence/` в общей рабочей папке. [Открыть локальный отчёт](../../../cabinet-visual-20260928/README.md) можно только при наличии соседнего каталога. В отдельном clone эта ссылка недоступна; краткий результат сохранён здесь и в handoff. Все 54 итоговых кадра показали 0 browser page errors, 0 неожиданных fixture API-запросов и 0 горизонтальных переполнений. Это Chromium с синтетическими данными и заблокированной внешней сетью. Telegram WebView, нативная клавиатура и все варианты ошибок визуально не подтверждены.
 
-## Следующий проверяемый шаг
+Не выполнены target-bot fixtures, живые REST/WS/media/payment E2E, проверка миграций панели, тестовый deploy и rollback. Новые модули с неподтверждёнными схемами остаются выключенными. Исходная фаза и локальные проверки не означают готовность всей связки к выпуску.
 
-Отдельная review этих трёх документов и точности refs. Затем G1b для current baseline и независимая часть G2 в рамках согласованного плана. Для target fixtures и schema-dependent модулей получить зафиксированный контракт из задачи обновления бота; не выдумывать целевой SHA или версию панели.
+## Продолжение после готовности бота
 
-При будущем тестовом релизе сохранить старый dist/config; опубликовать hashed assets перед атомарной заменой index.html и оставить старые assets для открытых вкладок. Каталог dist, примонтированный в Caddy, нельзя просто переименовать. Совместимость old frontend/new backend для отката проверяется отдельно; frontend-only rollback не возвращает прежнюю схему БД.
+1. Получить точный SHA бота, схемы/маршруты и migrations; отдельно закрепить версию панели. Текущую Remnawave 2.8.1 не обновлять автоматически.
+2. Подготовить синтетические fixtures на основе этих схем: auth/rotation, WS tickets, UUID/numeric identity, payment/подписки, signed media, permissions и планируемые новые возможности.
+3. Проверить каждый флаг и включить только подтверждённые контракты, включая доступ по прямому URL; повторить затронутые frontend checks.
+4. На тестовом окружении проверить Telegram/Web login, logout/account switch, REST/WS, sandbox top-up/renewal, несколько подписок, media, админские роли и ссылку sub2. Проверить health probe через фактический proxy.
+5. Подготовить согласованный тестовый релиз и откат. Сохранить прежние dist/config и старые hashed assets; публиковать assets перед атомарной заменой index.html. Проверить old frontend/new backend: откат frontend не откатывает БД и mapping панели. Каталог dist, уже примонтированный в Caddy, нельзя просто переименовать.
+
+Прод в эту последовательность не входит.

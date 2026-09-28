@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { SettingDefinition } from '../../api/adminSettings';
+import type { SettingDefinition } from '../../api/adminSettings';
 import { cn } from '../../lib/utils';
 import { formatSettingKey } from './utils';
 
@@ -13,7 +13,9 @@ interface QuickTogglesProps {
 export function QuickToggles({ settings, onUpdate, disabled, className }: QuickTogglesProps) {
   const { t } = useTranslation();
 
-  const booleanSettings = settings.filter((s) => s.type === 'bool' && !s.read_only);
+  const booleanSettings = settings.filter(
+    (s) => s.type === 'bool' && !s.read_only && !s.env_locked,
+  );
 
   if (booleanSettings.length === 0) {
     return null;
@@ -37,8 +39,10 @@ export function QuickToggles({ settings, onUpdate, disabled, className }: QuickT
               onClick={() => onUpdate(setting.key, isOn ? 'false' : 'true')}
               disabled={disabled}
               className={cn(
-                'flex min-h-[44px] items-center gap-2 rounded-lg px-2.5 py-2.5 text-xs font-medium transition-all',
-                isOn ? 'bg-apple-green/[0.12] text-apple-ink' : 'bg-apple-elevated text-apple-mute',
+                'flex min-h-[44px] max-w-full items-center gap-2 rounded-lg border px-2.5 py-2.5 text-left text-xs font-medium transition-all',
+                isOn
+                  ? 'border-success-500/20 bg-success-500/[0.08] text-apple-ink'
+                  : 'border-apple-hairline/50 bg-apple-elevated/20 text-apple-mute',
                 disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80',
               )}
             >
@@ -56,7 +60,7 @@ export function QuickToggles({ settings, onUpdate, disabled, className }: QuickT
                   )}
                 />
               </div>
-              <span className="max-w-[120px] truncate">{label}</span>
+              <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">{label}</span>
             </button>
           );
         })}

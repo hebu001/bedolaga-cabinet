@@ -18,3 +18,5 @@ export default function ConnectedAccounts() {
     </div>
   );
 }
+
+export { TelegramLinkWidget } from '../components/profile/ConnectedAccountsPanel';

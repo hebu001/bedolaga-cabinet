@@ -70,6 +70,8 @@ export interface TicketSettings {
   support_system_mode: string; // tickets, contact, both
   cabinet_user_notifications_enabled: boolean;
   cabinet_admin_notifications_enabled: boolean;
+  /** Поля, закреплённые в .env: из кабинета их не изменить. */
+  env_locked?: string[];
 }
 
 export interface TicketSettingsUpdate {
@@ -118,8 +120,8 @@ export const adminApi = {
   },
 
   // Get single ticket with messages
-  getTicket: async (ticketId: number): Promise<AdminTicketDetail> => {
-    const response = await apiClient.get(`/cabinet/admin/tickets/${ticketId}`);
+  getTicket: async (ticketId: number, signal?: AbortSignal): Promise<AdminTicketDetail> => {
+    const response = await apiClient.get(`/cabinet/admin/tickets/${ticketId}`, { signal });
     return response.data;
   },
 

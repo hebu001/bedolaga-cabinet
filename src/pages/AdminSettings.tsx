@@ -1,12 +1,19 @@
+import { getPageScrollTarget } from '../utils/pageScroll';
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminSettingsApi, SettingDefinition } from '../api/adminSettings';
+import { adminSettingsApi, type SettingDefinition } from '../api/adminSettings';
 import { themeColorsApi } from '../api/themeColors';
 import { useFavoriteSettings } from '../hooks/useFavoriteSettings';
-import { getPageScrollTarget } from '../utils/pageScroll';
-import { SETTINGS_TREE, findTreeLocation, formatSettingKey } from '../components/admin';
+import {
+  OTHER_CATEGORIES,
+  SETTINGS_TREE,
+  findTreeLocation,
+  formatSettingKey,
+  findSettingsSection,
+  getMappedCategoryKeys,
+} from '../components/admin';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { AnalyticsTab } from '../components/admin/AnalyticsTab';
 import { BrandingTab } from '../components/admin/BrandingTab';
@@ -17,32 +24,7 @@ import { SettingsTab } from '../components/admin/SettingsTab';
 import { SettingsTreeSidebar } from '../components/admin/SettingsTreeSidebar';
 import { SettingsMobileTabs } from '../components/admin/SettingsMobileTabs';
 import { SettingsSearchMobile, SettingsSearchResults } from '../components/admin/SettingsSearch';
-
-// BackIcon
-const BackIcon = () => (
-  <svg
-    className="h-5 w-5 text-apple-mute"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-);
-
-// ChevronRight for breadcrumbs
-const ChevronRightIcon = () => (
-  <svg
-    className="h-3.5 w-3.5 text-apple-faint"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2}
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-  </svg>
-);
+import { BackIcon, ChevronRightIcon } from '@/components/icons';
 
 // Settings that require SALES_MODE=tariffs to be visible
 const TARIFF_MODE_SETTINGS = ['MULTI_TARIFF_ENABLED', 'MAX_ACTIVE_SUBSCRIPTIONS'];
@@ -50,10 +32,13 @@ const TARIFF_MODE_SETTINGS = ['MULTI_TARIFF_ENABLED', 'MAX_ACTIVE_SUBSCRIPTIONS'
 export default function AdminSettings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { capabilities } = usePlatform();
 
-  // State
-  const [activeSection, setActiveSection] = useState('branding');
+  // State: `?section=<id>` открывает нужный раздел сразу (ссылки из других разделов админки).
+  const [activeSection, setActiveSection] = useState(
+    () => findSettingsSection(searchParams.get('section')) ?? 'branding',
+  );
   const [searchQuery, setSearchQuery] = useState('');
 
   // Favorites hook
@@ -101,10 +86,18 @@ export default function AdminSettings() {
     if (!activeTreeInfo || !allSettings || !Array.isArray(allSettings)) return [];
 
     const categoryKeys = activeTreeInfo.child.categories;
+    // Пункт-сборник показывает всё, чему не нашлось места в дереве: категории на
+    // бэкенде выводятся из имени ключа, поэтому новая настройка легко создаёт
+    // категорию, которой здесь нет — раньше такие настройки просто исчезали.
+    const isOtherSection = categoryKeys.includes(OTHER_CATEGORIES);
+    const mappedCategories = isOtherSection ? getMappedCategoryKeys() : null;
     const categoryMap = new Map<string, SettingDefinition[]>();
 
     for (const setting of allSettings) {
-      if (categoryKeys.includes(setting.category.key)) {
+      const belongsHere = mappedCategories
+        ? !mappedCategories.has(setting.category.key)
+        : categoryKeys.includes(setting.category.key);
+      if (belongsHere) {
         // Hide tariff-dependent settings when not in tariffs mode
         if (!isTariffsMode && TARIFF_MODE_SETTINGS.includes(setting.key)) continue;
 
@@ -259,7 +252,7 @@ export default function AdminSettings() {
       </div>
 
       {/* Desktop Layout - fixed sidebar, scrollable content */}
-      <div className="hidden h-[calc(100vh-120px)] lg:flex">
+      <div className="hidden h-[calc(100dvh-120px)] lg:flex">
         {/* Fixed Sidebar */}
         <div className="w-[264px] shrink-0 overflow-y-auto border-r border-apple-hairline">
           <div className="border-b border-apple-hairline p-4">
@@ -299,7 +292,7 @@ export default function AdminSettings() {
               >
                 {t(`admin.settings.groups.${activeTreeInfo.group.id}`)}
               </button>
-              <ChevronRightIcon />
+              <ChevronRightIcon className="h-3.5 w-3.5" />
               <span className="text-apple-mute">
                 {t(`admin.settings.tree.${activeTreeInfo.child.id}`)}
               </span>

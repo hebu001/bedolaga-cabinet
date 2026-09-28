@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { withdrawalApi, AdminWithdrawalItem } from '../api/withdrawals';
+import { withdrawalApi, type AdminWithdrawalItem } from '../api/withdrawals';
 import { AdminBackButton } from '../components/admin';
+import { ChevronRightIcon, ClockIcon, WalletIcon } from '@/components/icons';
+import { StatCard } from '@/components/stats';
 import { useCurrency } from '../hooks/useCurrency';
 import { formatDate, getWithdrawalStatusBadge, getRiskColor } from '../utils/withdrawalUtils';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 // Status filter tabs
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled';
@@ -56,20 +59,18 @@ export default function AdminWithdrawals() {
       {/* Overview Stats */}
       {data && (
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
-            <div className="text-2xl font-bold text-apple-amber">{pendingCount}</div>
-            <div className="text-sm text-apple-mute">
-              {t('admin.withdrawals.overview.pendingCount')}
-            </div>
-          </div>
-          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
-            <div className="text-2xl font-bold text-apple-amber">
-              {formatWithCurrency(pendingTotal / 100, 0)}
-            </div>
-            <div className="text-sm text-apple-mute">
-              {t('admin.withdrawals.overview.pendingAmount')}
-            </div>
-          </div>
+          <StatCard
+            label={t('admin.withdrawals.overview.pendingCount')}
+            value={pendingCount}
+            icon={<ClockIcon className="h-5 w-5" />}
+            tone="warning"
+          />
+          <StatCard
+            label={t('admin.withdrawals.overview.pendingAmount')}
+            value={formatWithCurrency(pendingTotal / 100, 0)}
+            icon={<WalletIcon className="h-5 w-5" />}
+            tone="warning"
+          />
         </div>
       )}
 
@@ -81,8 +82,8 @@ export default function AdminWithdrawals() {
             onClick={() => setStatusFilter(filter)}
             className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               statusFilter === filter
-                ? 'bg-[#F97315] text-white hover:opacity-90'
-                : 'bg-apple-elevated text-apple-mute hover:text-apple-ink'
+                ? 'bg-[#F97315] text-white'
+                : 'bg-apple-card/40 text-apple-mute hover:bg-apple-elevated/50 hover:text-apple-ink'
             }`}
           >
             {t(`admin.withdrawals.filter.${filter}`)}
@@ -92,9 +93,9 @@ export default function AdminWithdrawals() {
 
       {/* Withdrawal Cards List */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-        </div>
+        <SkeletonGroup className="space-y-3">
+          <Skeleton variant="card" count={3} className="h-16" />
+        </SkeletonGroup>
       ) : items.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-apple-mute">{t('admin.withdrawals.noData')}</p>
@@ -152,19 +153,7 @@ export default function AdminWithdrawals() {
                   </div>
 
                   {/* Chevron right */}
-                  <svg
-                    className="mt-1 h-5 w-5 shrink-0 text-apple-faint"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                    />
-                  </svg>
+                  <ChevronRightIcon className="mt-1 h-5 w-5 shrink-0 text-apple-faint" />
                 </div>
               </button>
             );

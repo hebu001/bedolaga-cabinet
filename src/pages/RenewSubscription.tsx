@@ -1,12 +1,20 @@
-import { useState, useEffect } from 'react';
+import {
+  BEST_VALUE_BORDER,
+  BestValueBadge,
+  bestValueFrame,
+} from '../components/subscription/BestValueBadge';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
+import { pickBestValue } from '../utils/bestValue';
 import { useCurrency } from '../hooks/useCurrency';
 import { useHaptic } from '../platform';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { WebBackButton } from '../components/WebBackButton';
+import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
+import { needsTariff, tariffSelectionPath } from '../utils/legacySubscription';
 
 export default function RenewSubscription() {
   const { subscriptionId } = useParams<{ subscriptionId: string }>();
@@ -26,7 +34,7 @@ export default function RenewSubscription() {
   const [error, setError] = useState<string | null>(null);
 
   // Load subscription detail for tariff name
-  const { data: subscriptionResponse } = useQuery({
+  const { data: subscriptionResponse, isLoading: isSubscriptionLoading } = useQuery({
     queryKey: ['subscription', subId],
     queryFn: () => subscriptionApi.getSubscription(subId),
     enabled: !!subId,
@@ -49,6 +57,14 @@ export default function RenewSubscription() {
     refetchOnMount: 'always',
   });
 
+  // Отмеченный оператором вариант выбираем сразу, как только приехал список.
+  // Без отметки выбор остаётся за человеком: сами выгоду не выдумываем.
+  useEffect(() => {
+    if (selectedPeriod !== null) return;
+    const best = pickBestValue(options);
+    if (best) setSelectedPeriod(best.period_days);
+  }, [options, selectedPeriod]);
+
   // Load balance
   const {
     data: purchaseOptions,
@@ -70,7 +86,7 @@ export default function RenewSubscription() {
       options.length > 0 &&
       !options.some((option) => option.period_days === selectedPeriod)
     ) {
-      setSelectedPeriod(options[0].period_days);
+      setSelectedPeriod((pickBestValue(options) ?? options[0]).period_days);
     }
   }, [options, selectedPeriod]);
 
@@ -123,11 +139,20 @@ export default function RenewSubscription() {
     return <Navigate to="/subscriptions" replace />;
   }
 
-  if (isLoading) {
+  // Старая подписка (куплена в классике, тарифа нет): продлевать нечего, бот
+  // отдаёт пустой список — уводим на витрину тарифов с этой подпиской.
+  if (needsTariff(subscription)) {
+    return <Navigate to={tariffSelectionPath(subId)} replace />;
+  }
+
+  if (isLoading || isSubscriptionLoading) {
     return (
-      <div className="flex min-h-64 items-center justify-center">
-        <div className="h-9 w-9 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton leading={1} titleWidth="w-56" className="space-y-5">
+        <Skeleton variant="card" className="h-16" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Skeleton variant="card" count={4} className="h-20" />
+        </div>
+      </PageSkeleton>
     );
   }
 
@@ -159,7 +184,9 @@ export default function RenewSubscription() {
       <div className="flex items-center justify-between rounded-2xl bg-apple-card px-4 py-3.5">
         <span className="text-[13px] text-apple-mute">{t('common.balance', 'Баланс')}</span>
         <span className="text-[15px] font-semibold text-apple-ink">
-          {balanceKopeks == null ? '—' : `${formatAmount(balanceKopeks / 100)} ${currencySymbol}`}
+          {balanceKopeks == null
+            ? '—'
+            : `${formatAmount(balanceKopeks / 100)}\u00A0${currencySymbol}`}
         </span>
       </div>
 
@@ -215,9 +242,18 @@ export default function RenewSubscription() {
                     setSearchParams({ period: String(option.period_days) }, { replace: true });
                     setError(null);
                   }}
-                  className="relative overflow-hidden rounded-2xl bg-apple-elevated py-3.5 pl-[18px] pr-4 text-left transition-transform active:scale-[0.97]"
-                  style={isSelected ? { boxShadow: 'inset 0 0 0 1.5px #F97315' } : undefined}
+                  aria-pressed={isSelected}
+                  className={`relative overflow-hidden rounded-2xl bg-apple-elevated py-3.5 pl-[18px] pr-4 text-left transition-transform active:scale-[0.97] ${option.is_highlighted ? bestValueFrame(isSelected) : ''}`}
+                  style={{
+                    borderColor: option.is_highlighted ? BEST_VALUE_BORDER : undefined,
+                    background:
+                      option.is_highlighted && isSelected
+                        ? 'rgba(var(--color-accent-400), 0.1)'
+                        : undefined,
+                    boxShadow: isSelected ? 'inset 0 0 0 1.5px #F97315' : undefined,
+                  }}
                 >
+                  {option.is_highlighted && <BestValueBadge className="mb-2" />}
                   {option.discount_percent > 0 && (
                     <div className="absolute -right-2 -top-2 rounded-full bg-[#F97315] px-2 py-0.5 text-xs font-medium text-white">
                       -{option.discount_percent}%
@@ -230,19 +266,21 @@ export default function RenewSubscription() {
                     <span className="text-2xl font-semibold tracking-tight text-white">
                       {isFree
                         ? t('subscription.free', 'Бесплатно')
-                        : `${formatAmount(option.price_kopeks / 100)} ${currencySymbol}`}
+                        : `${formatAmount(option.price_kopeks / 100)}\u00A0${currencySymbol}`}
                     </span>
                     {option.original_price_kopeks &&
                       option.original_price_kopeks > option.price_kopeks && (
                         <span className="text-sm text-apple-faint line-through">
-                          {formatAmount(option.original_price_kopeks / 100)} {currencySymbol}
+                          {formatAmount(option.original_price_kopeks / 100)}
+                          {'\u00A0'}
+                          {currencySymbol}
                         </span>
                       )}
                   </div>
                   <small className="mt-0.5 block text-xs text-apple-faint">
                     {isFree
                       ? ' '
-                      : `${formatAmount(perMonth / 100)} ${currencySymbol}/${t('subscription.month', 'мес')}`}
+                      : `${formatAmount(perMonth / 100)}\u00A0${currencySymbol}/${t('subscription.month', 'мес')}`}
                   </small>
                 </button>
               );

@@ -7,6 +7,8 @@ import { fireAnalyticsEvent, getYandexCid } from '../hooks/useAnalyticsCounters'
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
 import { landingApi } from '../api/landings';
+import { pickBestValue } from '../utils/bestValue';
+import { BestValueBadge, bestValueFrame } from '../components/subscription/BestValueBadge';
 import type {
   LandingConfig,
   LandingTariff,
@@ -14,12 +16,25 @@ import type {
   LandingPaymentMethod,
   PurchaseRequest,
 } from '../api/landings';
-import { StaticBackgroundRenderer } from '../components/backgrounds/BackgroundRenderer';
+import {
+  BackgroundRenderer,
+  StaticBackgroundRenderer,
+} from '../components/backgrounds/BackgroundRenderer';
+import {
+  CheckCircleIcon,
+  CheckIcon,
+  DevicesIcon,
+  DownloadIcon,
+  WarningCircleIcon,
+} from '@/components/icons';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { cn } from '../lib/utils';
 import { getApiErrorMessage } from '../utils/api-error';
+import { getPendingCampaignSlug } from '../utils/campaign';
+import { readContactPrefill, stripContactFromUrl } from '../utils/contactPrefill';
 import { formatPrice } from '../utils/format';
 import { useCurrency } from '../hooks/useCurrency';
+import { safeSession } from '../utils/safeStorage';
 
 function detectContactType(value: string): 'email' | 'telegram' {
   return value.startsWith('@') ? 'telegram' : 'email';
@@ -68,19 +83,7 @@ function ErrorState({ message }: { message: string }) {
     <div className="flex min-h-dvh items-center justify-center bg-dark-950 px-4">
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-error-500/10">
-          <svg
-            className="h-8 w-8 text-error-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-            />
-          </svg>
+          <WarningCircleIcon className="h-8 w-8 text-error-400" />
         </div>
         <h2 className="text-lg font-semibold text-dark-50">{t('landing.error', 'Error')}</h2>
         <p className="text-sm text-dark-300">{message}</p>
@@ -110,7 +113,7 @@ function PeriodTabs({
           className={cn(
             'whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
             selectedDays === period.days
-              ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25'
+              ? 'bg-accent-500 text-on-accent shadow-lg shadow-accent-500/25'
               : 'bg-dark-800/50 text-dark-300 hover:bg-dark-700/50 hover:text-dark-100',
           )}
         >
@@ -265,15 +268,20 @@ function TariffCard({
       aria-checked={isSelected}
       onClick={onSelect}
       className={cn(
-        'relative flex w-full flex-col rounded-2xl border p-5 text-start transition-all duration-200',
-        isSelected
-          ? 'border-accent-500/50 bg-accent-500/5 ring-1 ring-accent-500/25'
-          : 'border-dark-800/50 bg-dark-900/50 hover:border-dark-700/50 hover:bg-dark-800/30',
+        'relative flex w-full flex-col rounded-2xl p-5 text-start transition-all duration-200',
+        tariff.is_highlighted
+          ? cn(bestValueFrame(isSelected), isSelected ? 'bg-accent-500/5' : 'bg-dark-900/50')
+          : isSelected
+            ? 'border border-accent-500/50 bg-accent-500/5 ring-1 ring-accent-500/25'
+            : 'border border-dark-800/50 bg-dark-900/50 hover:border-dark-700/50 hover:bg-dark-800/30',
       )}
     >
+      {/* Отметка оператора первой строкой, как в покупке и продлении: этот тариф
+          выбран сразу — подпись объясняет почему. */}
+      {tariff.is_highlighted && <BestValueBadge className="mb-3 self-start" />}
       {/* Header */}
-      <div className="mb-3 flex items-start justify-between">
-        <div>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="text-base font-semibold text-dark-50">{tariff.name}</h3>
           {tariff.description && (
             <p className="mt-0.5 text-xs text-dark-400">{tariff.description}</p>
@@ -285,52 +293,18 @@ function TariffCard({
             isSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600',
           )}
         >
-          {isSelected && (
-            <svg
-              className="h-3 w-3 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={3}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
+          {isSelected && <CheckIcon className="h-3 w-3 text-white" />}
         </div>
       </div>
 
       {/* Info row */}
       <div className="flex items-center gap-3 text-xs text-dark-400">
         <span className="flex items-center gap-1">
-          <svg
-            className="h-3.5 w-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-            />
-          </svg>
+          <DownloadIcon className="h-3.5 w-3.5" />
           {tariff.traffic_limit_gb === 0 ? '∞' : tariff.traffic_limit_gb} {t('landing.gb', 'GB')}
         </span>
         <span className="flex items-center gap-1">
-          <svg
-            className="h-3.5 w-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
-            />
-          </svg>
+          <DevicesIcon className="h-3.5 w-3.5" />
           {tariff.device_limit} {t('landing.devices', 'devices')}
         </span>
       </div>
@@ -431,7 +405,7 @@ function PaymentMethodCard({
                 className={cn(
                   'rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200',
                   selectedSubOption === opt.id
-                    ? 'bg-accent-500 text-white shadow-sm shadow-accent-500/25'
+                    ? 'bg-accent-500 text-on-accent shadow-sm shadow-accent-500/25'
                     : 'bg-dark-800/50 text-dark-300 hover:bg-dark-700/50 hover:text-dark-100',
                 )}
               >
@@ -550,15 +524,7 @@ function SummaryCard({
           {config.features.map((feature, idx) => (
             <div key={idx} className="flex gap-3">
               <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success-500/10">
-                <svg
-                  className="h-3 w-3 text-success-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+                <CheckCircleIcon className="h-3 w-3 text-success-500" />
               </div>
               <div>
                 <p className="text-sm font-medium text-dark-100">{feature.title}</p>
@@ -589,6 +555,8 @@ function SummaryCard({
           <div
             className="fixed bottom-0 left-0 right-0 z-50 p-3"
             style={{
+              // Ярлык iOS: под кнопкой ещё индикатор «Домой» (safe-area снизу).
+              paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
               background:
                 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, transparent 100%)',
             }}
@@ -600,9 +568,9 @@ function SummaryCard({
                   const el = document.getElementById('contact-input');
                   if (el) {
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    el.classList.add('!border-red-500', '!ring-2', '!ring-red-500/50');
+                    el.classList.add('!border-error-500', '!ring-2', '!ring-error-500/50');
                     setTimeout(() => {
-                      el.classList.remove('!border-red-500', '!ring-2', '!ring-red-500/50');
+                      el.classList.remove('!border-error-500', '!ring-2', '!ring-error-500/50');
                     }, 2000);
                   }
                   return;
@@ -613,7 +581,7 @@ function SummaryCard({
               className={cn(
                 'flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold transition-all duration-200',
                 canSubmit && !isSubmitting
-                  ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-400 hover:shadow-accent-500/40 active:scale-[0.98]'
+                  ? 'bg-accent-500 text-on-accent shadow-lg shadow-accent-500/25 hover:bg-accent-400 hover:shadow-accent-500/40 active:scale-[0.98]'
                   : 'cursor-not-allowed bg-dark-800 text-dark-500',
               )}
             >
@@ -643,12 +611,12 @@ function SummaryCard({
               const el = document.getElementById('contact-input');
               if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.classList.add('!border-red-500', '!ring-2', '!ring-red-500/50');
+                el.classList.add('!border-error-500', '!ring-2', '!ring-error-500/50');
                 setTimeout(() => {
                   el.focus();
                 }, 300);
                 setTimeout(() => {
-                  el.classList.remove('!border-red-500', '!ring-2', '!ring-red-500/50');
+                  el.classList.remove('!border-error-500', '!ring-2', '!ring-error-500/50');
                 }, 2000);
               }
               return;
@@ -659,7 +627,7 @@ function SummaryCard({
           className={cn(
             'flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold transition-all duration-200',
             canSubmit && !isSubmitting
-              ? 'bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:bg-accent-400 hover:shadow-accent-500/40 active:scale-[0.98]'
+              ? 'bg-accent-500 text-on-accent shadow-lg shadow-accent-500/25 hover:bg-accent-400 hover:shadow-accent-500/40 active:scale-[0.98]'
               : 'cursor-not-allowed bg-dark-800 text-dark-500',
           )}
         >
@@ -764,7 +732,7 @@ function DiscountBanner({
       <div className="flex flex-col items-center gap-4 px-5 py-5 sm:flex-row sm:justify-between">
         {/* Left: badge + text */}
         <div className="flex items-center gap-3">
-          <span className="shrink-0 rounded-full bg-accent-500 px-3 py-1 text-sm font-bold text-white shadow-lg shadow-accent-500/25">
+          <span className="shrink-0 rounded-full bg-accent-500 px-3 py-1 text-sm font-bold text-on-accent shadow-lg shadow-accent-500/25">
             -{discount.percent}%
           </span>
           {discount.badge_text && (
@@ -829,13 +797,13 @@ export default function QuickPurchase() {
   // Clamp to 500 chars -- backend `referrer` column is max_length=500 and would
   // otherwise reject long ad-click referrers (gclid+gbraid+params) with 422.
   useEffect(() => {
-    if (document.referrer && !sessionStorage.getItem('landing_referrer')) {
-      sessionStorage.setItem('landing_referrer', document.referrer.slice(0, 500));
+    if (document.referrer && !safeSession.getItem('landing_referrer')) {
+      safeSession.setItem('landing_referrer', document.referrer.slice(0, 500));
     }
     // Save subid from URL (also clamped to backend limit of 255)
     const urlSubid = new URLSearchParams(window.location.search).get('subid');
     if (urlSubid) {
-      sessionStorage.setItem('landing_subid', urlSubid.slice(0, 255));
+      safeSession.setItem('landing_subid', urlSubid.slice(0, 255));
     }
   }, []);
 
@@ -862,13 +830,12 @@ export default function QuickPurchase() {
   const [selectedTariffId, setSelectedTariffId] = useState<number | null>(null);
   const [selectedPeriodDays, setSelectedPeriodDays] = useState<number | null>(null);
   const contactKey = `lp_contact_${slug ?? ''}`;
-  const [contactValue, setContactValue] = useState(() => {
-    try {
-      return localStorage.getItem(contactKey) || '';
-    } catch {
-      return '';
-    }
-  });
+  const [contactValue, setContactValue] = useState(() => readContactPrefill(contactKey));
+  // Контакт уже в состоянии — вычищаем его из адресной строки, чтобы личный
+  // email не уехал в Метрику, Referer и историю браузера.
+  useEffect(() => {
+    stripContactFromUrl();
+  }, []);
   const [isGift, setIsGift] = useState(false);
   const [giftRecipient, setGiftRecipient] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
@@ -907,18 +874,29 @@ export default function QuickPurchase() {
     );
   }, [config, selectedPeriodDays]);
 
-  // Auto-select first tariff, period, method on config load
+  // Тариф по умолчанию: отмеченный оператором как выгодный, иначе первый по
+  // счёту. Считается один раз на оба эффекта ниже — они срабатывают в одном
+  // проходе, и разойдись они в выборе, победил бы второй.
+  const defaultTariff = useMemo(
+    () => pickBestValue(visibleTariffs) ?? visibleTariffs[0],
+    [visibleTariffs],
+  );
+
+  // Auto-select tariff, period, method on config load. Отмеченные оператором
+  // выгодные тариф и период выбираются сразу, вместо первого по счёту и самого
+  // короткого периода; период берётся у того же тарифа, что выбран.
   useEffect(() => {
     if (!config) return;
 
-    // Auto-select first period from all available periods
+    // Auto-select the best-value period, else the first of all available
     if (allPeriods.length > 0 && selectedPeriodDays === null) {
-      setSelectedPeriodDays(allPeriods[0].days);
+      const best = pickBestValue(defaultTariff?.periods);
+      setSelectedPeriodDays(best?.days ?? allPeriods[0].days);
     }
 
-    // Auto-select first visible tariff
-    if (visibleTariffs.length > 0 && selectedTariffId === null) {
-      setSelectedTariffId(visibleTariffs[0].id);
+    // Auto-select the best-value visible tariff, else the first one
+    if (defaultTariff && selectedTariffId === null) {
+      setSelectedTariffId(defaultTariff.id);
     }
 
     if (config.payment_methods.length > 0 && selectedMethod === null) {
@@ -930,26 +908,29 @@ export default function QuickPurchase() {
         setSelectedSubOption(null);
       }
     }
-  }, [config, allPeriods, visibleTariffs, selectedTariffId, selectedPeriodDays, selectedMethod]);
+  }, [config, allPeriods, defaultTariff, selectedTariffId, selectedPeriodDays, selectedMethod]);
 
-  // When period changes, auto-select first visible tariff if current is hidden
+  // When period changes, auto-select the default tariff if current is hidden
   useEffect(() => {
-    if (!visibleTariffs.length) return;
+    if (!defaultTariff) return;
     const currentVisible = visibleTariffs.find((tariff) => tariff.id === selectedTariffId);
     if (!currentVisible) {
-      setSelectedTariffId(visibleTariffs[0].id);
+      setSelectedTariffId(defaultTariff.id);
     }
-  }, [visibleTariffs, selectedTariffId]);
+  }, [defaultTariff, visibleTariffs, selectedTariffId]);
 
-  // SEO: set document title
+  // SEO: set document title. Fall back to the landing's own title when no
+  // dedicated meta_title is set — otherwise the tab keeps the static
+  // index.html "VPN" placeholder and never reflects the landing.
   useEffect(() => {
-    if (!config?.meta_title) return;
+    const pageTitle = config?.meta_title || config?.title;
+    if (!pageTitle) return;
     const prev = document.title;
-    document.title = config.meta_title;
+    document.title = pageTitle;
     return () => {
       document.title = prev;
     };
-  }, [config?.meta_title]);
+  }, [config?.meta_title, config?.title]);
 
   // SEO: set meta description
   useEffect(() => {
@@ -1061,7 +1042,7 @@ export default function QuickPurchase() {
       payment_method: paymentMethod,
       language: i18n.language,
       is_gift: isGift,
-      referrer: sessionStorage.getItem('landing_referrer') || undefined,
+      referrer: safeSession.getItem('landing_referrer') || undefined,
     };
 
     if (isGift && giftRecipient) {
@@ -1073,8 +1054,14 @@ export default function QuickPurchase() {
     // Get Yandex CID for offline conversions (sync from localStorage)
     const ymCid = getYandexCid();
     if (ymCid) data.yandex_cid = ymCid;
-    const subid = sessionStorage.getItem('landing_subid');
+    const subid = safeSession.getItem('landing_subid');
     if (subid) (data as unknown as Record<string, unknown>).subid = subid;
+
+    // Слаг рекламной кампании захватил captureCampaignFromUrl() при заходе по
+    // рекламной ссылке. Читаем БЕЗ потребления: гость может позже войти в
+    // кабинет, и там привязка должна остаться возможной.
+    const campaignSlug = getPendingCampaignSlug();
+    if (campaignSlug) data.campaign_slug = campaignSlug;
 
     // Fire landing-specific click goal
     if (config?.analytics_click_enabled && config?.analytics_click_goal) {
@@ -1110,8 +1097,16 @@ export default function QuickPurchase() {
   const showTariffCards = visibleTariffs.length > 1;
 
   return (
-    <div className={cn('min-h-dvh overflow-x-hidden', !config.background_config && 'bg-dark-950')}>
-      {config.background_config && <StaticBackgroundRenderer config={config.background_config} />}
+    <div className="min-h-dvh overflow-x-hidden">
+      {/* Background: the landing's own per-landing theme when configured, else
+          fall back to the cabinet's global animated theme (instead of a bare
+          dark canvas). Both render via a portal behind the content, so the
+          wrapper stays transparent over the body's #0a0f1a. */}
+      {config.background_config ? (
+        <StaticBackgroundRenderer config={config.background_config} />
+      ) : (
+        <BackgroundRenderer />
+      )}
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Language switcher */}
         <div className="mb-4 flex justify-end">

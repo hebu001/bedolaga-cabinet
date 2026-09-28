@@ -42,7 +42,8 @@ function harness({ desktop = true, frame = true } = {}) {
   const hooks = {
     useRef(initial) {
       const i = slot++;
-      return (refs[i] ??= { current: initial });
+      refs[i] ??= { current: initial };
+      return refs[i];
     },
     useEffect(fn, deps) {
       const i = slot++;
@@ -58,7 +59,8 @@ function harness({ desktop = true, frame = true } = {}) {
   };
   function load(file) {
     if (modules[file]) return modules[file].exports;
-    const module = (modules[file] = { exports: {} });
+    const module = { exports: {} };
+    modules[file] = module;
     const code = ts.transpileModule(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText;
@@ -85,6 +87,7 @@ function harness({ desktop = true, frame = true } = {}) {
     navigate(next) {
       pathname = next;
       slot = 0;
+      // biome-ignore lint/correctness/useHookAtTopLevel: VM harness invokes the hook against its simulated React dispatcher.
       useScrollRestoration();
       pending.splice(0).forEach((fn) => fn());
     },

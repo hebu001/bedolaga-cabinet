@@ -1,67 +1,75 @@
 # Контракт кабинета 1.79.0 с ботом
 
-Дата: 2026-09-28. Статус: зафиксирован текущий контракт; целевой бот и его schema fixtures ещё неизвестны. Это документ подготовки, а не подтверждение совместимости новой связки.
-
-Пользователь подтвердил, что новый бот ещё мержится. В кабинете продолжается вся независимая frontend-работа; к целевым схемам и live-интеграции вернёмся после готовности бота. Текущий бот не меняется.
+Дата: 2026-09-28. Независимый frontend-кандидат подготовлен; целевой бот ещё мержится в другой задаче. Синтетические frontend fixtures и browser-проверки существуют, но схемы завершённого бота ещё не получены. Этот документ не подтверждает совместимость новой живой связки.
 
 | Компонент | Зафиксированная версия |
 | --- | --- |
-| Baseline frontend | `hebu001/bedolaga-cabinet`, `55a4038f4ae8692922abc2622f97309840f71064`, 1.57.1 |
-| Target frontend | `BEDOLAGA-DEV/bedolaga-cabinet`, tag `v1.79.0`, `f5ea595f8f732c37f2d5c270f34879ab2e2fba2d` |
-| Текущий тестовый бот | 3.66.0, `4b06edcdce26850c03ca474e8d195ef94ddb347e`; base `cde43dd6396da5db8ba7492f4693e3be63c5caed` + исправление sync |
-| Целевой бот | **Не определён**: нужны репозиторий, SHA, версии схем, migrations и capabilities из задачи бота |
-| Текущая тестовая панель | **Remnawave 2.8.1, не менять** в задаче кабинета |
+| Установленный frontend / fork baseline | `55a4038f4ae8692922abc2622f97309840f71064`, 1.57.1 |
+| Upstream frontend кандидата | tag `v1.79.0`, `f5ea595f8f732c37f2d5c270f34879ab2e2fba2d` |
+| Текущий тестовый бот | 3.66.0, `4b06edcdce26850c03ca474e8d195ef94ddb347e`; base `cde43dd6396da5db8ba7492f4693e3be63c5caed` + sync fix |
+| Целевой бот | **Ожидается:** репозиторий, SHA, схемы, migrations и доступные возможности |
+| Тестовая панель | **Remnawave 2.8.1**, не изменялась |
 
-Кабинет обращается к Cabinet API бота; API-токен Remnawave во frontend не передаётся. Прод не изменяется. Основание: [аудит](../../../cabinet-upstream-audit-20260928/audit.md), [исходный контракт](../../../cabinet-upstream-audit-20260928/bot-contract.md), точные исходники указанных SHA. Наличие routes и backend version сами по себе не доказывают совпадение response shape.
+Кабинет обращается к Cabinet API бота. Remnawave API-токен во frontend не передаётся. Наличие endpoint или номер версии не доказывают совпадение request/response. Исходный аудит относится к зафиксированным SHA, а не к незавершённому дереву соседней задачи.
 
-## Обязательная совместимость
+## Сохранённые обязательные контракты
 
-| Область | Текущий контракт / обязательное поведение | Источник и будущая проверка |
+| Область | Требуемое поведение | Что проверить с целевым ботом |
 | --- | --- | --- |
-| WebSocket | `POST /cabinet/ws/ticket` с Bearer и настоящим browser Origin выдаёт ticket на 30 секунд, одноразовый. Подключение `/cabinet/ws?ticket=...`, новый ticket при reconnect; `?token=JWT` запрещён | Bot `app/cabinet/routes/websocket.py:130,146`, `auth/ws_tickets.py`; frontend `src/utils/cabinetWebSocket.ts`. Mock URL/lifecycle tests + integration Origin/expiry/one-use |
-| Refresh | `POST /cabinet/auth/refresh`, body `{refresh_token}`, opt-in header `X-Refresh-Token-Rotation: 1`. Access и refresh сохраняются атомарно, межвкладочная синхронизация не теряется | Bot `app/cabinet/routes/auth.py:1796,1863`; frontend `src/utils/token.ts`. Rotation race/401/5xx fixtures и два browser context |
-| Logout | `POST /cabinet/auth/logout`, body `{refresh_token}`; revocation/auth_version и session generation исключают восстановление завершённой сессии late refresh/login | Bot `routes/auth.py:1881`; frontend session tests. Отдельно проверить upstream CloudStorage recovery, прежде чем включать |
-| Clock | Доверенный HTTP `Date`, доступный frontend через CORS, плюс монотонное истечение | `src/utils/authClock.ts`; unit skew/invalid Date и интеграционная проверка exposed headers |
-| Ticket media | Индивидуальные `media_token` / `media_items[].token`, authorized GET ticket обновляет подписи. Unsigned URLs не обслуживаются | `docs/mandatory-fixes-phase3.md`, `src/api/tickets.ts`; album/single/missing/expired fixtures и media fetch |
-| Payments | Provider reference и local payment ID различаются; конкретный invoice проверяется по согласованным ID/URL/amount. Return URL и timeout не означают paid | `src/api/balance.ts:46,157`, `test/payment-flow.test.mjs`; create/resolve/status fixtures для методов целевого бота |
-| Subscription ID | Расположение ID зависит от endpoint: большинство текущих операций использует query `subscription_id`; upstream `purchaseTariff` также передаёт ID в JSON body. Следовать реальной схеме конкретного маршрута | Fork `src/api/subscription.ts:16`, upstream `src/api/subscription.ts:492`; request/response fixtures one/multiple subscriptions |
-| Traffic notifications | Enable flag и фиксированные пороги 80/90. Произвольный threshold control не возвращать без изменения логики бота | Fork `src/pages/Profile.tsx`, commit `55a4038f`; профиль on/off fixtures и backend payload |
-| Core auth/RBAC | Telegram/OIDC/email, deeplink request/poll, `/me`, `/me/is-admin`, `/me/permissions` имеются в текущем боте; core RBAC API одинаков в snapshot кабинета | Проверить все новые входы через custom session boundary; ordinary/limited/full admin. `*:*` не заменяет наличие capability |
+| WebSocket | `POST /cabinet/ws/ticket` с Bearer и browser Origin; ticket одноразовый, TTL 30 секунд. Затем `/cabinet/ws?ticket=...`; новый ticket при reconnect. JWT в query не используется | Origin, TTL, one-use, authentication ack, reconnect и события после смены сессии |
+| Refresh / logout | `POST /cabinet/auth/refresh`, body `{refresh_token}`, header `X-Refresh-Token-Rotation: 1`; атомарная смена токенов и межвкладочная синхронизация. `POST /cabinet/auth/logout`, body `{refresh_token}`; late callbacks не восстанавливают завершённую сессию | Rotation/revocation, две вкладки, 401/5xx/timeout, logout/account switch. CloudStorage credential recovery не включать в обход lifecycle |
+| Clock / private state | Доступный через CORS HTTP `Date` плюс монотонное время; session generation владеет queries/mutations/permissions | Exposed Date, неверные часы устройства, приватный cache и поздние ответы |
+| Signed media | `media_token` и индивидуальные `media_items[].token`; authorized ticket GET обновляет подписи. Bounded retry/singleflight; unsigned fallback отсутствует | Album/single/missing/expired signatures, реальный media fetch и гонки reply/status. Web popup и Telegram opener отдельно |
+| Payments | Provider reference отделён от local payment ID; только конкретный server-confirmed invoice означает paid. URL и timeout не подтверждают оплату, ошибка проверки остаётся unknown | Create/resolve/status, ID/URL/amount, ошибки и sandbox каждого включённого метода. `missing_amount` — положительное целое в согласованных единицах |
+| Подписки | Query/cache и callbacks привязаны к выбранному subscription ID. Stale/error preview и неизвестный баланс платного trial блокируют оплату | ID в query/body конкретного endpoint; `purchaseTariff` передаёт ID в JSON. One/multiple/legacy, switch/renew/trial и скидки |
+| Профиль | Объединены профиль/рефералы/accounts; traffic notifications используют enable flag и фиксированные 80/90 | Реальный payload, linked providers, ID copy, существующие referrals без нового gated API |
+| Auth / RBAC | Все входы используют completeLogin/session boundary. Права проверяются независимо от интеграционных флагов | Telegram/OIDC/email/deeplink, обычный/ограниченный/full admin; `*:*` не открывает выключенный модуль |
+| Health / proxy | При относительном `VITE_API_URL=/api` liveness идёт на `/api/health/unified`, чтобы prefix-stripping proxy доставил запрос к боту. Для absolute API URL используется origin `/health/unified`; явный `VITE_HEALTH_URL` имеет приоритет | Фактический proxy, 502/503/504 и recovery. HTML frontend SPA не должен подменять проверку backend |
 
-Ссылки на `app/...` относятся к зафиксированному checkout бота, а не к этому frontend repo. Они не означают, что актуальный upstream bot уже проверен.
+Основные исходники и проверки: [CORE-MERGE](CORE-MERGE.md), [USER-MERGE](USER-MERGE.md), [ADMIN-MERGE](ADMIN-MERGE.md). Нынешние frontend tests проверяют отправляемые значения и lifecycle на mocks; они не удостоверяют, что новый бот уже принимает эти значения.
 
-## UUID против числовой идентичности панели
+## Явная идентичность пользователя панели
 
-| Текущий бот 3.66.0 / панель 2.8.1 | Upstream frontend 1.79.0 |
+| Ответ | Активный UUID-контракт | Будущий numeric-контракт |
+| --- | --- | --- |
+| UserDetail | `remnawave_uuid` | `remnawave_id: number` |
+| PanelUserInfo | `uuid` | `id: number` |
+| SyncToPanel | `panel_uuid` | `panel_user_id: number` |
+| PanelSyncStatus | `remnawave_uuid` | `remnawave_id: number` |
+
+[adminPanelIdentity.ts](../../src/api/adminPanelIdentity.ts) читает выбранную схему, а не угадывает её по наличию полей. При `numericPanelIdentity: false` активен UUID. Отсутствующее ожидаемое поле, чужая схема и строка вместо числа дают contract error; `null` допустим для непривязанного пользователя. Внутренний discriminator `panel_identity` не является новым wire-полем backend. Приведение `Number(uuid)`, cast и эвристика `uuid || id` не используются.
+
+Существующие sync/user actions адресуют `/cabinet/admin/users/{botUserId}`, а не panel ID; optional `subscription_id` сохраняется. Push с `create_if_missing:true` доступен при корректном локальном ID, включая отсутствие пользователя панели. Pull требует реальной привязки. UUID нод и squad не меняются из-за numeric user identity. Mapping и миграции данных панели здесь не выполнялись.
+
+## Все 14 локальных флагов выключены
+
+Источник истины: [integrationCapabilities.ts](../../src/config/integrationCapabilities.ts). Это конфигурация выпуска, а не автоматическое обнаружение backend и не настройка прав пользователя.
+
+| Флаг (сейчас `false`) | Условие включения |
 | --- | --- |
-| `UserDetail.remnawave_uuid` | `UserDetail.remnawave_id: number` или null |
-| `PanelUserInfo.uuid` | `PanelUserInfo.id: number` |
-| `SyncToPanel.panel_uuid` | `SyncToPanel.panel_user_id: number` или null |
-| `PanelSyncStatus.remnawave_uuid` | `PanelSyncStatus.remnawave_id: number` или null |
+| `advancedUserFilters` | Подтвердить новые online/grace/traffic/payment/expiry filters и sort/direction. До этого неподдерживаемые URL-фильтры нормализуются; базовые search/status/tariff/group/campaign работают |
+| `legalConsent` | Подтвердить legal API, `accepted_legal_documents` и HTTP 428 consent flow через тот же session owner |
+| `coupons` | Подтвердить новые схемы coupon screens/editor. Coupons уже есть в текущем боте; флаг не утверждает отсутствия API и не отключает прежние промокоды |
+| `publicEmailResend` | Подтвердить публичный `POST /cabinet/auth/email/register/resend {email}`; authenticated resend — другой контракт |
+| `userAvatar` | Подтвердить `GET /cabinet/auth/me/avatar` и `{photo_url}` |
+| `liteMode` | Подтвердить lite API/flows; основной кастомный экран не заменяется автоматически |
+| `reachability` | Подтвердить routes, responses и permissions `read/run` |
+| `reminders` | Подтвердить routes, responses и permissions `read/create/edit/delete` |
+| `systemErrors` | Подтвердить routes, responses и permissions `read/manage` |
+| `nodeGeoCheck` | Подтвердить GeoCheck API и поддерживаемую версию панели; версия ноды сама по себе недостаточна |
+| `numericPanelIdentity` | Зафиксировать numeric wire-схемы и mapping панели; проверить обе явные схемы и ошибки, не преобразовывать UUID |
+| `recurringPayments` | Подтвердить новые SBP/Lava purchase/manage/binding contracts. Существующая saved-card функциональность сохранена |
+| `referralLevels` | Подтвердить новые referral-level schemas; существующие рефералы работают отдельно |
+| `graceAccess` | Подтвердить grace routes, payloads и разрешения |
 
-Источник: bot `app/cabinet/schemas/users.py:275,680,728,738`; upstream `src/api/adminUsers.ts:155,287,311,319`, `CHANGELOG.md:415` (переход на Remnawave 3.0).
+Защита действует на меню, запросы и соответствующие прямые маршруты; 17 direct-route регрессий проверяют default-off поведение для авторизованного администратора. Изменить только frontend-флаг недостаточно для выпуска.
 
-До согласования нового бота текущие UUID сохраняются. UUID нельзя переименовать в number, преобразовать через `Number(uuid)` или скрыть несовместимость TypeScript cast. Если нужен временный dual support, согласовать явные схемы и discriminator/capability, добавить fixtures обеих схем. Эвристика `uuid || id` не является контрактом. Реальное mapping/migration данных панели относится к отдельной задаче; кабинет не запускает такое преобразование.
+По исходному аудиту текущий бот уже имеет coupons, `partners:settings`, panel recap/devices-stats/top-consumers/health/subscription-requests. Для них нужна сверка схем, а не утверждение, что API отсутствует. Новые reachability/reminders/system-errors/legal/public resend/avatar отсутствовали в зафиксированной текущей версии. Эти сведения не заменяют проверку завершённого целевого бота.
 
-## Optional capabilities: не включать только по наличию frontend-кода
+## Fixtures и переход к тестовому релизу
 
-| Возможность upstream | Текущий бот, по аудиту | Решение до включения |
-| --- | --- | --- |
-| Legal consent: `GET /cabinet/info/legal-consent?language=ru`, `accepted_legal_documents`, HTTP 428 | Отсутствует | Backend implementation + fixtures или прежний login flow. Ответ consent `{required,prechecked,documents}`, 428 `detail.code/message/documents/missing/prechecked`; повторяет тот же login с acceptance |
-| Public `POST /cabinet/auth/email/register/resend {email}` | Отсутствует; authenticated `/email/resend` — другой маршрут | Перенести или скрыть новый сценарий; не подменять endpoints |
-| `GET /cabinet/auth/me/avatar` → `{photo_url}` | Отсутствует | Backend или корректный fallback |
-| Reachability (`read/run`), reminders (`read/create/edit/delete`), system errors (`read/manage`) | Routes/permissions отсутствуют | Backend routes + registry + permissions либо явно скрытые разделы |
-| Coupons и `partners:settings` | Уже есть | Проверить новые поля/поведение, не считать отсутствующими по diff UI |
-| Panel recap/devices-stats/top-consumers/health/subscription-requests | Routes есть, `routes/admin_remnawave.py:244–298` | Сверить response shape с целевым backend/panel |
-| Node GeoCheck `POST /admin/remnawave/nodes/{uuid}/geocheck`, `GET /geocheck/{jobId}` | Нет; upstream указывает Remnawave 3.3.0 | Отдельная capability; не показывать на текущей связке |
-| Platega/Lava recurrent, lite mode, новые referral/grace/tariff/legal API | Полная схемная сверка не выполнена | Pending: изучить целевой бот. Lite mode не должен автоматически заменить основной кастомный экран |
+Уже существуют типизированные [purchase fixtures](../../src/components/subscription/purchase/customFlow.fixtures.ts), DOM/query/API mocks и локальный browser harness. Они построены по frontend-контрактам и подтверждают frontend-поведение. Визуальная проверка содержит 54 итоговых кадра, включая Users, обзор UserDetail и его вкладку тикетов; данные и токены синтетические, внешние HTTP/WS заблокированы. Local artifact: `work/cabinet-visual-20260928/README.md` в общей рабочей папке, вне этого Git repo.
 
-## Fixtures и release gate
+**Target-bot fixtures ещё не созданы.** Для каждого нужны schema SHA/path, HTTP method/path, query/body/headers, success/error responses и соответствующий флаг. Минимум: UUID/numeric, rotation/revocation, WS issue/reconnect, media single/album/expiry, payment create/resolve/status, one/multiple/legacy subscriptions и trial, limited/full permissions, включённые/выключенные возможности, legal 428.
 
-Fixtures ещё не созданы. Их будущие примеры должны быть синтетическими, без реальных пользователей, ключей и подписочных ссылок. Для каждого набора нужны: источник schema SHA/path, HTTP method/path, request body/query/headers, success/error shape и capability. Не выдавать hand-written mock за подтверждённый ответ целевого бота.
-
-Минимальная матрица: current UUID vs согласованная target identity; refresh rotation/revocation; ticket issue/reconnect; media single/album/expiry; payment create/resolve/status; one/multiple subscriptions и trial; limited/full permissions; optional capability present/absent; legal consent/428 при её переносе.
-
-Неизвестный целевой бот блокирует выбор schema-dependent modules, live E2E и release. Он **не блокирует** независимый перенос tooling, сохранение custom test suites и проверенного session/WS transport на подтверждённом текущем контракте. Такой перенос не объявляется доказательством общей совместимости.
-
-Перед совместным тестовым релизом требуются закреплённые SHA, fixtures и migrations; оба набора тестов; проверка ID mapping без потери пользователей/подписок/балансов; REST/WS на test Origin; Telegram/Web login, sandbox top-up/renewal, media и роли; ссылка sub2; проверка старого frontend с новым backend для rollback. Frontend rollback не откатывает DB migration или panel identity.
+После получения SHA: сверить схемы → создать fixtures → проверить нужные флаги → пройти live E2E на тестовых Origins → подготовить backup и совместимый rollback → выполнить согласованный тестовый deploy. Отдельно проверить old frontend/new backend. Frontend rollback не откатывает migrations БД или mapping панели. Prod не меняется; независимая frontend-фаза не означает test deployment.

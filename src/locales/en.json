@@ -26,8 +26,9 @@
     "all": "All",
     "units": {
       "gb": "GB",
-      "perGb": "/GB",
-      "days": "days"
+      "days": "days",
+      "tb": "TB",
+      "mb": "MB"
     },
     "retry": "Retry",
     "saving": "Saving...",
@@ -40,7 +41,30 @@
     "copied": "Copied",
     "no_results": "No results found",
     "balance": "Balance",
-    "processing": "Processing…"
+    "processing": "Processing…",
+    "ok": "OK",
+    "rangeTo": "to",
+    "relative": {
+      "online": "online",
+      "now": "just now",
+      "never": "never",
+      "minutes_one": "{{count}} min ago",
+      "minutes_other": "{{count}} min ago",
+      "hours_one": "{{count}} h ago",
+      "hours_other": "{{count}} h ago",
+      "days_one": "{{count}} day ago",
+      "days_other": "{{count}} days ago",
+      "weeks_one": "{{count}} wk ago",
+      "weeks_other": "{{count}} wks ago",
+      "months_one": "{{count}} mo ago",
+      "months_other": "{{count}} mo ago",
+      "yesterday": "yesterday"
+    },
+    "clear": "Clear",
+    "dayTime": {
+      "today": "today, {{time}}",
+      "yesterday": "yesterday, {{time}}"
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -139,6 +163,18 @@
     "payment": {
       "receivedTitle": "Payment received",
       "receivedMessage": "Payment of {{amount}} {{currency}} received"
+    },
+    "sbpRecurring": {
+      "confirmedTitle": "SBP payment confirmed",
+      "confirmedMessage": "Payment of {{amount}} {{currency}} was charged successfully",
+      "failedTitle": "SBP payment failed",
+      "failedMessage": "Failed to charge your SBP auto-payment",
+      "pastDueTitle": "SBP payment overdue",
+      "pastDueMessage": "Your SBP auto-payment is overdue. Please check your banking app.",
+      "cancelledTitle": "SBP auto-payment disabled",
+      "cancelledMessage": "SBP auto-payment has been disabled",
+      "activatedTitle": "SBP auto-payment connected",
+      "activatedMessage": "SBP auto-payment has been successfully connected"
     }
   },
   "successNotification": {
@@ -295,7 +331,23 @@
       "botNotConfigured": "The bot is not configured",
       "serviceUnavailable": "Service temporarily unavailable"
     },
-    "oauthExpired": "OAuth session expired. Please try again."
+    "oauthExpired": "OAuth session expired. Please try again.",
+    "botOutdated": "The bot version is not compatible with the cabinet. Update the bot to v3.33.0 or newer.",
+    "deepLinkIntro": "Confirm sign-in right in the bot — no phone number needed:",
+    "loginWithBot": "Login via bot",
+    "backToWidget": "Back to widget login",
+    "legalConsentPrefix": "I have read the",
+    "legalConsentTitle": "One more step",
+    "legalConsentSubtitle": "To create an account, confirm that you have read the documents.",
+    "legalConsentContinue": "Continue",
+    "spamHint": "No email? Check your Spam and Promotions folders — delivery can take a few minutes.",
+    "resendVerification": "Send the email again",
+    "resendIn": "Send again in {{seconds}} s",
+    "resendSent": "Email sent. Check your inbox.",
+    "resendError": "Could not send the email. Please try again later.",
+    "resendTooOften": "Too many attempts. Try again in a few minutes.",
+    "useAnotherEmail": "Use a different email",
+    "storageUnavailable": "Browser storage is unavailable. Allow site data to sign in."
   },
   "emailVerification": {
     "title": "Email Verification",
@@ -371,7 +423,7 @@
     "trialOffer": {
       "freeTitle": "Free Trial Available",
       "paidTitle": "Trial Subscription",
-      "freeDesc": "Try our VPN for free — no commitment required",
+      "freeDesc": "Try our VPN for free, no commitment required",
       "paidDesc": "Get started with a trial subscription"
     },
     "stats": {
@@ -391,7 +443,14 @@
       "title": "Subscription expired",
       "desc": "Renew your subscription to keep using the service."
     },
-    "fromPrice": "from {{price}}"
+    "fromPrice": "from {{price}}",
+    "welcomeNoName": "Welcome!",
+    "reminders": {
+      "dismiss": "Dismiss"
+    },
+    "manageAll": "Manage all",
+    "showAll": "Show all",
+    "subscriptions": "Subscriptions"
   },
   "subscription": {
     "title": "Subscription",
@@ -448,7 +507,9 @@
       "expiredHint": "Choose a plan and pay",
       "trialHint": "More traffic and devices",
       "activeHint": "Renewal and plan change",
-      "renewHint": "Subscription renewal"
+      "renewHint": "Subscription renewal",
+      "moveToTariff": "Switch to a plan",
+      "moveToTariffHint": "Bought before plans were introduced"
     },
     "connectionInfo": "Connection Info",
     "copyLink": "Copy Link",
@@ -577,7 +638,8 @@
       "done": "Done",
       "yourLink": "Your subscription link",
       "linkUnavailable": "The connection link is unavailable. Try refreshing the data later.",
-      "downloadUnavailable": "The installation link is unavailable."
+      "downloadUnavailable": "The installation link is unavailable.",
+      "openQr": "Open QR code"
     },
     "myDevices": "My Devices",
     "noDevices": "No connected devices",
@@ -672,13 +734,28 @@
       "buyTraffic": "Buy more traffic",
       "currentTrafficLimit": "Current limit: {{limit}} GB (used {{used}} GB)",
       "buyTrafficTitle": "Buy more traffic",
-      "trafficWarning": "Purchased traffic is added to your current limit and does not carry over to the next period",
+      "trafficWarning": "Purchased traffic is added to your current limit and is valid for 30 days from purchase",
       "trafficUnavailable": "Traffic purchase is not available for your tariff",
       "unlimited": "Unlimited",
       "buyTrafficGb": "Buy {{gb}} GB",
       "buyUnlimited": "Buy Unlimited",
       "manageServers": "Squad management",
-      "manageServersTitle": "Squad management"
+      "manageServersTitle": "Squad management",
+      "reasons": {
+        "noSubscription": "Subscription not found",
+        "noActiveSubscription": "No active subscription",
+        "maxDevicesReached": "Device limit reached ({{count}})",
+        "canAddLimited_one": "You can add at most {{count}} device",
+        "canAddLimited_other": "You can add at most {{count}} devices",
+        "trialNotAllowed": "Device reduction is not available for trial subscriptions"
+      },
+      "connectedDevices": "Connected devices",
+      "currentDeviceLimit": "Current device limit",
+      "decrementDevices": "Decrease devices",
+      "disconnectDevicesFirst": "Disconnect extra devices first",
+      "incrementDevices": "Add devices",
+      "minDeviceLimit": "Minimum device limit",
+      "newDeviceLimit": "New device limit"
     },
     "serverManagement": {
       "statusLegend": "✅ — connected • ➕ — will be added (paid) • ➖ — will be disconnected",
@@ -702,9 +779,10 @@
       "cooldown": "Available in {{minutes}} min {{seconds}} sec"
     },
     "legacy": {
-      "selectTariffTitle": "Select a tariff to renew",
-      "selectTariffDescription": "Your current subscription was created before tariffs were introduced. To renew, please select one of the available tariffs.",
-      "currentSubContinues": "Your current subscription will remain active until it expires."
+      "selectTariffTitle": "Bought before plans were introduced",
+      "selectTariffDescription": "Choose a plan: it applies to this same subscription, your connection link stays the same.",
+      "currentSubContinues": "Remaining days are kept and added to the paid period.",
+      "noTariff": "No plan"
     },
     "promoGroup": {
       "yourGroup": "Your group: {{name}}",
@@ -781,7 +859,77 @@
     "selectPaymentMethod": "Select a payment method",
     "missingAmount": "You need {{amount}} more",
     "payAndActivate": "Pay and activate",
-    "directPayError": "Payment failed. Please try again."
+    "directPayError": "Payment failed. Please try again.",
+    "devicesWord_one": "device",
+    "devicesWord_other": "devices",
+    "bestValue": "Best value",
+    "renameDevicePlaceholder": "Device name",
+    "deviceRenamed": "Device name updated",
+    "sbpRecurring": {
+      "title": "SBP Auto-payment",
+      "connect": "Connect",
+      "confirmInBank": "Confirm in your banking app",
+      "cancel": "Disable",
+      "confirmCancel": "Disable SBP auto-payment? Your subscription will no longer renew automatically via SBP.",
+      "cancelled": "SBP auto-payment disabled",
+      "enableError": "Failed to connect SBP auto-payment",
+      "cancelError": "Failed to cancel SBP auto-payment",
+      "statusPending": "Waiting for confirmation in your banking app",
+      "statusActive": "Active",
+      "statusPastDue": "Payment failed — please retry",
+      "nextCharge": "next charge {{date}}",
+      "amountPerInterval": "{{amount}} ₽ {{interval}}",
+      "interval": {
+        "day": "daily",
+        "week": "weekly",
+        "month": "monthly",
+        "year": "yearly"
+      },
+      "autopayHint": "Your subscription will be charged automatically via SBP, no card required",
+      "purchaseButton": "⚡ Subscribe with SBP auto-payment",
+      "purchaseHint": "First charge confirms the binding in your bank app; renewals are charged automatically per the tariff cadence."
+    },
+    "lavaRecurring": {
+      "title": "Lava auto-renewal",
+      "connect": "Connect",
+      "payFirst": "Pay the first invoice",
+      "cancel": "Disable",
+      "confirmCancel": "Disable Lava auto-renewal? The subscription will no longer renew automatically.",
+      "cancelled": "Lava auto-renewal disabled",
+      "enableError": "Could not enable Lava auto-renewal",
+      "cancelError": "Could not disable Lava auto-renewal",
+      "statusPending": "Waiting for the first invoice to be paid",
+      "statusActive": "Active",
+      "statusPastDue": "Payment failed — please try again",
+      "nextCharge": "next charge on {{date}}",
+      "amountPerPeriod": "{{amount}} ₽ {{period}}",
+      "amountPerDays": "{{amount}} ₽ every {{days}} days",
+      "period": {
+        "day": "daily",
+        "week": "weekly",
+        "month": "monthly",
+        "quarter": "quarterly",
+        "halfYear": "every six months",
+        "year": "yearly"
+      },
+      "autopayHint": "The subscription will renew automatically via Lava",
+      "purchaseButton": "⚡ Subscribe with Lava auto-renewal",
+      "purchaseHint": "The first invoice is paid via a Lava link; renewals are then charged automatically on the product’s schedule."
+    },
+    "connectFooter": {
+      "connect": "Connect a device",
+      "full": "All slots are in use",
+      "connectedDevices": "Connected devices",
+      "disconnect": "Disconnect",
+      "addSlots": "Add slots",
+      "limitExplained_one": "The «{{name}}» plan gives {{count}} slot and it is in use. Free it up or add more.",
+      "limitExplained_other": "The «{{name}}» plan gives {{count}} slots and all are in use. Free one up or add more.",
+      "limitExplainedNoTopup_one": "The «{{name}}» plan gives {{count}} slot and it is in use. Free it up to continue.",
+      "limitExplainedNoTopup_other": "The «{{name}}» plan gives {{count}} slots and all are in use. Free up a slot to continue.",
+      "noTopupHint": "Slots cannot be bought on a trial subscription — free one up or switch to a paid plan."
+    },
+    "newTariff": "New tariff",
+    "servers": "Servers"
   },
   "balance": {
     "title": "Balance",
@@ -865,6 +1013,15 @@
       },
       "apple_iap": {
         "description": "Pay via Apple In-App Purchase"
+      },
+      "cispay": {
+        "description": "Pay by card or via SBP (cisPay)"
+      },
+      "tabpay": {
+        "description": "Pay by card or via SBP (TabPay)"
+      },
+      "paritypay": {
+        "description": "Pay by card or via SBP (ParityPay)"
       }
     },
     "transactionHistory": "Transaction History",
@@ -889,7 +1046,7 @@
       "activate": "Activate",
       "activating": "Activating...",
       "success": "Promo code activated successfully!",
-      "balanceAdded": "Balance added: {{amount}} ₽",
+      "balanceAdded": "Balance added: {{amount}} ₽",
       "errors": {
         "not_found": "Promo code not found",
         "expired": "Promo code has expired",
@@ -898,13 +1055,20 @@
         "used": "Promo code has already been used",
         "already_used_by_user": "You have already used this promo code",
         "user_not_found": "User not found",
-        "server_error": "Server error"
+        "server_error": "Server error",
+        "active_discount_exists": "You already have an active discount. Deactivate it first.",
+        "no_subscription_for_days": "This promo code requires an active or expired subscription",
+        "subscription_not_found": "Subscription not found",
+        "not_first_purchase": "This promo code is only available for your first purchase",
+        "daily_limit": "Too many promo code activations today",
+        "trial_subscription_exists": "You already have a subscription, so this trial code can't be applied",
+        "trial_provisioning_failed": "Couldn't provision the trial right now, please try again later"
       },
       "selectSubscription": "Which subscription should use this promo code?",
       "daysLeft": "{{count}} days"
     },
-    "minAmountError": "Minimum amount: {{amount}} ₽",
-    "maxAmountError": "Maximum amount: {{amount}} ₽",
+    "minAmountError": "Minimum amount: {{amount}} ₽",
+    "maxAmountError": "Maximum amount: {{amount}} ₽",
     "paymentOption": "Payment option",
     "selectPaymentOption": "Select payment option",
     "selectPaymentMethod": "Select payment method",
@@ -930,7 +1094,10 @@
       "pageTitle": "Saved Cards",
       "backToBalance": "Back",
       "empty": "No saved cards. A card will be saved automatically on your next top-up.",
-      "loadError": "Failed to load saved cards. Please try again later."
+      "loadError": "Failed to load saved cards. Please try again later.",
+      "sbpSection": "SBP Auto-payment",
+      "sbpBinding": "SBP binding",
+      "sbpUnlink": "Disable SBP auto-payment"
     },
     "paymentReady": "Payment link is ready",
     "clickToOpenPayment": "Click the button below to open the payment page in a new tab",
@@ -943,7 +1110,7 @@
       "rateLimit": "Please wait {{seconds}} sec.",
       "selectMethod": "Select a method",
       "enterAmount": "Enter an amount",
-      "amountRange": "Amount: {{min}} – {{max}} ₽",
+      "amountRange": "Amount: {{min}} – {{max}} ₽",
       "methodMaximum": "This method allows up to {{max}} {{currency}}. Choose another payment method.",
       "copyFailed": "Could not copy the link. Open the payment page using the button below."
     },
@@ -978,7 +1145,12 @@
     "methodsLoadError": "Could not load payment methods.",
     "amountChanged": "The amount has changed. Review the new amount and confirm the top-up again.",
     "available": "Available",
-    "top_up": "Top up balance"
+    "top_up": "Top up balance",
+    "refund": "Refund",
+    "failedRefund": "Failed refund",
+    "pollReward": "Poll reward",
+    "giftPayment": "Gift payment",
+    "otherOperation": "Operation"
   },
   "referral": {
     "title": "Referral Program",
@@ -994,14 +1166,32 @@
       "totalReferrals": "Total Referrals",
       "activeReferrals": "Active",
       "totalEarnings": "Total Earnings",
-      "commissionRate": "Commission Rate"
+      "commissionRate": "Commission Rate",
+      "earnedDays": "{{count}} subscription days",
+      "chainDepth": "Network depth",
+      "levelsValue": "up to {{count}} lvl.",
+      "yourLevel": "Your level",
+      "levelNotReached": "not reached"
     },
     "terms": {
       "title": "Program Terms",
       "commission": "Commission",
       "minTopup": "Min. Top-up",
       "newUserBonus": "New User Bonus",
-      "inviterBonus": "Inviter Bonus"
+      "inviterBonus": "Inviter Bonus",
+      "noLevels": "Reward levels are not configured yet — nothing is being paid out.",
+      "tierNext": "{{count}} more to reach level {{level}}",
+      "tierNone": "No level reached yet — rewards start at the first threshold.",
+      "modeChain": "Several levels are paid at once: for the person you invited, for the person they invited, and so on.",
+      "modeTiers": "Exactly one level applies — the one you unlocked by the number of people you invited. Rewards come only from people you invited directly.",
+      "currentBadge": "your level",
+      "levelLabel": "Level {{level}}",
+      "fromActive": "from {{count}} referrals who topped up",
+      "fromAny": "from {{count}} invited users",
+      "startingLevel": "available right away",
+      "refereeGets": "the invited user gets: {{reward}}",
+      "paysNothing": "pays you nothing",
+      "personalRate": "You have a personal rate of {{percent}}% — it applies at any level."
     },
     "yourReferrals": "Your Referrals",
     "noReferrals": "No referrals yet. Share your link to invite friends!",
@@ -1021,7 +1211,12 @@
       "referral_registration": "Referral Registration",
       "referral_first_payment": "Referral First Payment",
       "referral_subscription_renewal": "Referral Subscription Renewal",
-      "referral_bonus": "Referral Bonus"
+      "referral_bonus": "Referral Bonus",
+      "referral_first_topup": "First top-up",
+      "referral_commission_topup": "Top-up commission",
+      "referral_registration_reward": "Sign-up reward",
+      "referral_days_reward": "Subscription days",
+      "referral_days_bonus": "Bonus days"
     },
     "disabled": "Referral program is currently disabled",
     "partner": {
@@ -1090,7 +1285,8 @@
         "expectedReferralsPlaceholder": "Estimated number per month",
         "desiredCommission": "Desired Commission (%)",
         "desiredCommissionPlaceholder": "From 1 to 100%"
-      }
+      },
+      "becomePartnerDescNoWithdrawal": "Apply for the partner program to get higher commission rates."
     },
     "withdrawal": {
       "title": "Withdrawal",
@@ -1123,6 +1319,30 @@
         "rejected": "Rejected",
         "cancelled": "Cancelled"
       }
+    },
+    "levelBadge": "level {{count}}",
+    "days": "{{count}} days",
+    "daysWithTariff": "{{count}} days of \"{{tariff}}\"",
+    "shareMessageBonus": "Join {{botName}}! Your sign-up bonus via this link: {{bonus}}",
+    "shareMessagePlain": "Join {{botName}} through my link!",
+    "shareHintLevels": "Share the link with friends — rewards follow the referral program levels.",
+    "rewardSettings": {
+      "title": "Reward settings",
+      "intro": "Choose the form your referral rewards take and which subscription the days go to.",
+      "kindHeader": "What to receive",
+      "kindMoney": "Money to balance",
+      "kindDays": "Subscription days",
+      "kindHint": "Pick one. Applies where a level gives both money and days; if a level gives just one, you get that one.",
+      "targetHeader": "Where the days go",
+      "targetAuto": "Pick automatically",
+      "targetAutoHint": "Days go to the paid subscription with the latest end date.",
+      "targetHint": "If a level targets a tariff, the days still go to that tariff — the administrator set it that way.",
+      "targetNone": "You have no subscriptions to choose between yet.",
+      "subscription": "Subscription",
+      "until": "until {{date}}",
+      "saveError": "Could not save the setting",
+      "kindMoneyHint": "The reward arrives as an amount on your balance",
+      "kindDaysHint": "The reward extends your subscription"
     }
   },
   "support": {
@@ -1165,7 +1385,14 @@
     "openSupport": "Open Support",
     "contactSupport": "Please contact {{username}} for support",
     "contactUs": "Contact Support",
-    "create_ticket": "Create a support ticket"
+    "create_ticket": "Create a support ticket",
+    "downloadFile": "Download file",
+    "writeButton": "Message",
+    "errors": {
+      "alreadyOpenTicket": "You already have an open ticket. Please continue the conversation there — a new ticket can be created once the current one is closed.",
+      "createFailed": "Could not create the ticket. Please try again.",
+      "replyFailed": "Could not send the reply. Please try again."
+    }
   },
   "wheel": {
     "title": "Fortune Wheel",
@@ -1324,39 +1551,22 @@
         "discord": "Discord",
         "vk": "VK"
       },
-      "backToAccounts": "Back to accounts"
-    }
-  },
-  "theme": {
-    "colors": "Theme Colors",
-    "reset": "Reset",
-    "quickPresets": "Quick Presets",
-    "quickPresetsDescription": "Choose a ready-made color scheme",
-    "customColors": "Custom Colors",
-    "customColorsDescription": "Customize each color individually",
-    "accent": "Accent Color",
-    "accentDescription": "Main brand color for buttons, links and interactive elements",
-    "darkTheme": "Dark Theme",
-    "lightTheme": "Light Theme",
-    "background": "Background",
-    "surface": "Surface",
-    "text": "Text",
-    "textSecondary": "Secondary Text",
-    "statusColors": "Status Colors",
-    "success": "Success",
-    "warning": "Warning",
-    "error": "Error",
-    "preview": "Preview",
-    "previewButton": "Primary Button",
-    "previewSecondary": "Secondary Button",
-    "light": "Light Theme",
-    "dark": "Dark Theme"
+      "backToAccounts": "Back to accounts",
+      "unlinkForgetsEmail": "The email {{email}} will be forgotten with it: it came from this service and no password is set for email sign-in."
+    },
+    "emailMergePasswordRequired": "This email already belongs to another account. To merge the accounts, enter that account's password.",
+    "emailMergeCodeSent": "A confirmation code was sent to that email.",
+    "emailMergeCodeDescription": "This email already belongs to another account. We sent a code to it — enter it to confirm ownership and merge the accounts.",
+    "emailMergeCodeLabel": "Code from the email",
+    "emailMergeConfirm": "Confirm and merge",
+    "emailMergeCodeInvalid": "Invalid or expired code"
   },
   "languages": {
     "ru": "Русский",
     "en": "English",
     "zh": "中文",
-    "fa": "فارسی"
+    "fa": "فارسی",
+    "ua": "Ukrainian"
   },
   "contests": {
     "title": "Contests",
@@ -1411,7 +1621,8 @@
     "trafficDiscount": "Traffic",
     "deviceDiscount": "Devices",
     "periodDiscount": "{{days}} days",
-    "noDiscounts": "No discounts"
+    "noDiscounts": "No discounts",
+    "documentUnavailable": "This document is not available yet."
   },
   "onboarding": {
     "skip": "Skip",
@@ -1541,6 +1752,14 @@
       "openBot": "Open the bot",
       "retry": "I pressed /start, retry",
       "hint": "After running /start, return here and tap «Retry»."
+    },
+    "serviceUnavailable": {
+      "title": "Service unavailable",
+      "description": "We can't reach the service right now. It may be undergoing maintenance or there's a temporary connection issue.",
+      "retry": "Try again",
+      "checking": "Checking connection...",
+      "hint": "This page will refresh automatically as soon as the service is back.",
+      "close": "Close"
     }
   },
   "merge": {
@@ -1559,7 +1778,7 @@
     "chooseSubscription": "Choose which subscription to keep",
     "afterMerge": "After merging",
     "allAuthMethodsMerged": "All sign-in methods will be combined",
-    "balanceSummed": "Balance: {{amount}} ₽ (combined)",
+    "balanceSummed": "Balance: {{amount}} ₽ (combined)",
     "unselectedSubscriptionDeleted": "The unselected subscription will be deleted",
     "historyPreserved": "Transaction history will be preserved",
     "confirm": "Merge Accounts",
@@ -1656,7 +1875,39 @@
       "nDays_one": "{{count}} day",
       "nDays_other": "{{count}} days",
       "nMonths_one": "{{count}} month",
-      "nMonths_other": "{{count}} months"
+      "nMonths_other": "{{count}} months",
+      "nDays": "{{count}} days",
+      "nMonths": "{{count}} months"
+    },
+    "giftClaim": {
+      "title": "You have a gift!",
+      "error": "Could not activate the gift.",
+      "notFoundTitle": "Gift not found",
+      "notFoundDesc": "This gift link is invalid or no longer available.",
+      "alreadyTitle": "Gift already activated",
+      "alreadyDesc": "This gift has already been claimed.",
+      "successTitle": "Gift activated!",
+      "connectDesc": "Use this link to connect:",
+      "copyLink": "Copy link",
+      "pendingTitle": "Almost ready…",
+      "pendingDesc": "The payment is still being confirmed. This page will update automatically.",
+      "replaceWarning": "You already have a subscription — activating this gift will replace it.",
+      "activateTelegram": "Activate in Telegram",
+      "activateWeb": "Activate by email",
+      "emailLabel": "Your email",
+      "claimNow": "Get my gift",
+      "failedTitle": "Gift unavailable",
+      "failedDesc": "The payment for this gift did not go through, so it cannot be activated."
+    },
+    "giftLink": {
+      "shareText": "I have a gift for you! Activate it here:",
+      "viaTelegram": "Telegram:",
+      "title": "Gift is ready!",
+      "subtitle": "Send this link to whoever you want to receive the gift — they activate it themselves.",
+      "linkLabel": "Gift link",
+      "telegramLabel": "Telegram link",
+      "alsoSent": "We also emailed it to {{contact}}.",
+      "copyMessage": "Copy message"
     }
   },
   "gift": {
@@ -1730,7 +1981,7 @@
     "activateButton": "Activate gift",
     "activating": "Activating...",
     "activateSuccess": "Gift activated!",
-    "activateSuccessDesc": "{{tariff}} — {{days}} days added to your subscription",
+    "activateSuccessDesc": "{{tariff}}: {{days}} days added to your subscription",
     "activateError": "Failed to activate gift",
     "activateSelfError": "You cannot activate your own gift",
     "myGiftsEmpty": "No gifts yet",
@@ -1762,7 +2013,15 @@
     "shareModalActivateVia": "Activate via bot:",
     "shareModalActivateViaCabinet": "Or via website:",
     "copyMessage": "Copy message",
-    "shareToastCopied": "Message copied"
+    "shareToastCopied": "Message copied",
+    "qrHint": "Scan to activate the gift",
+    "scanButton": "📷 Scan QR",
+    "scanInProgress": "Scanning…",
+    "scanCancel": "Stop scanning",
+    "scanDescription": "Point the camera at the gift QR code",
+    "scanNotRecognized": "No gift code in this QR",
+    "scanError": "Could not scan",
+    "scanNoCamera": "Camera unavailable — enter the code manually"
   },
   "news": {
     "title": "News & Updates",
@@ -1835,6 +2094,121 @@
       }
     }
   },
+  "connection": {
+    "openHint": "Open in app · QR code"
+  },
+  "subscriptions": {
+    "empty": "No subscriptions",
+    "emptyDesc": "You have no active subscriptions yet.",
+    "buy": "Buy subscription",
+    "title": "My subscriptions",
+    "buyAnother": "New plan",
+    "browsePlans": "View plans and subscribe"
+  },
+  "resetPassword": {
+    "title": "New password",
+    "enterNewPassword": "Enter your new password below.",
+    "success": "Password changed!",
+    "redirectingToLogin": "Opening the login page…",
+    "setPassword": "Set password",
+    "invalidToken": "Invalid link",
+    "tokenExpiredOrInvalid": "The password reset link is invalid or has expired."
+  },
+  "navShort": {
+    "wheel": "Wheel"
+  },
+  "coupon": {
+    "title": "Subscription coupon",
+    "subtitle": "A one-time coupon — redeem it to get or extend a subscription",
+    "tariff": "Tariff",
+    "period": "Period",
+    "daysSuffix": "d.",
+    "validUntil": "Redeem before",
+    "openBot": "Redeem in the bot",
+    "redeemCabinet": "Redeem in the cabinet",
+    "redeeming": "Redeeming…",
+    "needAuth": "Sign in to redeem the coupon in the cabinet — or open the link in the bot",
+    "notFound": {
+      "title": "Coupon not found",
+      "text": "The coupon does not exist, was already used or has expired"
+    },
+    "success": {
+      "activated": "Subscription activated!",
+      "renewed": "Subscription extended!",
+      "until": "Valid until"
+    },
+    "errors": {
+      "invalid": "Coupon not found or already used",
+      "expired": "The coupon has expired",
+      "already_redeemed_by_you": "You have already redeemed this coupon",
+      "internal": "Server error, try again later",
+      "generic": "Failed to redeem the coupon"
+    }
+  },
+  "footer": {
+    "offer": "Public Offer",
+    "privacy": "Privacy Policy",
+    "recurrent": "Recurring Payments"
+  },
+  "lite": {
+    "status": {
+      "none": "No subscription yet",
+      "active": "Subscription works until {{date}}",
+      "trial": "Trial until {{date}}",
+      "expiring": "Subscription ends on {{date}}",
+      "expired": "Subscription ended on {{date}}",
+      "limited": "Traffic ran out",
+      "paused": "Subscription is paused",
+      "legacy": "Choose a plan to continue",
+      "many": "Your subscriptions"
+    },
+    "action": {
+      "connect": "Connect a device",
+      "renew": "Renew subscription",
+      "buy": "Choose a plan",
+      "manage": "Open settings",
+      "tryFree": "Try it free",
+      "tryPaid": "Try it for {{price}}",
+      "chooseTariff": "Choose a plan"
+    },
+    "traffic": {
+      "label": "Traffic",
+      "used": "{{used}} of {{total}}",
+      "unlimited": "Unlimited traffic"
+    },
+    "rows": {
+      "devices": "Devices",
+      "devicesValue": "{{used}} of {{total}}",
+      "balance": "Balance",
+      "manage": "Manage subscription",
+      "buyAnother": "Buy another plan",
+      "buyTraffic": "Buy more traffic",
+      "buyDevices": "Buy more devices",
+      "reduceDevices": "Reduce device count",
+      "servers": "Servers",
+      "myDevices": "My devices",
+      "allSettings": "All subscription settings",
+      "delete": "Delete subscription",
+      "plans": "See plans",
+      "support": "Support"
+    },
+    "error": {
+      "load": "Could not load your data",
+      "hint": "Check the connection and try again",
+      "retry": "Try again"
+    },
+    "promo": {
+      "available": "You have an offer",
+      "discountActive": "Discount active"
+    },
+    "tariff": {
+      "current": "current",
+      "unlimitedDevices": "Unlimited devices"
+    },
+    "subscription": {
+      "untitled": "Subscription"
+    }
+  },
   "admin": {
     "nav": {
       "title": "Admin",
@@ -1876,29 +2250,26 @@
     "infoPages": {
       "notFound": "Page not found",
       "faq": {
+        "questions": "Questions & Answers",
+        "questionsCount": "questions",
+        "noQuestions": "No questions yet. Click the button below to add one.",
+        "questionNumber": "Question #{{n}}",
+        "question": "Question",
+        "answer": "Answer",
+        "questionPlaceholder": "Enter question...",
+        "answerPlaceholder": "Enter answer (HTML supported)...",
+        "htmlHint": "HTML markup is supported",
+        "addQuestion": "Add Question",
+        "removeQuestion": "Remove question",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
         "searchPlaceholder": "Search questions...",
-        "noResults": "No results found",
-        "noQuestions": "No questions yet. Click the button below to add one."
+        "noResults": "No results found"
       }
     }
   },
-  "connection": {
-    "openHint": "Open in app · QR code"
-  },
-  "subscriptions": {
-    "empty": "No subscriptions",
-    "emptyDesc": "You have no active subscriptions yet.",
-    "buy": "Buy subscription",
-    "title": "My subscriptions",
-    "buyAnother": "New plan"
-  },
-  "resetPassword": {
-    "title": "New password",
-    "enterNewPassword": "Enter your new password below.",
-    "success": "Password changed!",
-    "redirectingToLogin": "Opening the login page…",
-    "setPassword": "Set password",
-    "invalidToken": "Invalid link",
-    "tokenExpiredOrInvalid": "The password reset link is invalid or has expired."
+  "theme": {
+    "light": "Light Theme",
+    "dark": "Dark Theme"
   }
 }

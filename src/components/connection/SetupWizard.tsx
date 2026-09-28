@@ -1,3 +1,4 @@
+import { copyToClipboard } from '@/utils/clipboard';
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -243,7 +244,7 @@ export default function SetupWizard({
     setCopied(false);
     setCopyError(false);
     try {
-      await navigator.clipboard.writeText(displayUrl);
+      await copyToClipboard(displayUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

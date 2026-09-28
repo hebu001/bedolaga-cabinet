@@ -1,56 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router';
+import { useLocation, useParams, useNavigate, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { campaignsApi, CampaignBonusType } from '../api/campaigns';
+import { campaignsApi, type CampaignBonusType } from '../api/campaigns';
 import type { AdminCampaignChartData } from '../api/campaigns';
-import { AdminBackButton } from '../components/admin';
+import { AdminBackButton, backTo } from '../components/admin';
 import { DailyChart, PeriodComparison, StatCard } from '../components/stats';
 import { PARTNER_STATS } from '../constants/partner';
 import { useCurrency } from '../hooks/useCurrency';
 import { copyToClipboard } from '../utils/clipboard';
 import { useHaptic } from '../platform';
-
-// Icons
-const CopyIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
-    />
-  </svg>
-);
-
-const LinkIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
-    />
-  </svg>
-);
-
-const UsersIcon = () => (
-  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-    />
-  </svg>
-);
-
-const ChartIcon = () => (
-  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
-    />
-  </svg>
-);
+import { ChartIcon, ChevronDownIcon, CopyIcon, LinkIcon, UsersIcon } from '@/components/icons';
+import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 // Bonus type config
 const bonusTypeConfig: Record<
@@ -85,6 +46,7 @@ export default function AdminCampaignStats() {
   const numericId = id ? Number(id) : null;
   const isValidId = numericId !== null && !isNaN(numericId);
   const navigate = useNavigate();
+  const location = useLocation();
   const haptic = useHaptic();
   const { formatWithCurrency } = useCurrency();
   const [copiedBot, setCopiedBot] = useState(false);
@@ -170,9 +132,12 @@ export default function AdminCampaignStats() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-      </div>
+      <PageSkeleton variant="admin" leading={2} titleWidth="w-56" className="space-y-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Skeleton variant="card" count={4} className="h-20" />
+        </div>
+        <Skeleton variant="card" className="h-64" />
+      </PageSkeleton>
     );
   }
 
@@ -205,7 +170,7 @@ export default function AdminCampaignStats() {
         <div className="flex items-center gap-3">
           <AdminBackButton to="/admin/campaigns" />
           <div className="rounded-lg bg-[#F97315]/15 p-2 text-[#F97315]">
-            <ChartIcon />
+            <ChartIcon className="h-6 w-6" />
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-xl font-semibold text-apple-ink">{stats.name}</h1>
@@ -240,7 +205,7 @@ export default function AdminCampaignStats() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
-                    <LinkIcon />
+                    <LinkIcon className="h-4 w-4" />
                     <span className="truncate text-sm text-apple-mute">{stats.deep_link}</span>
                   </div>
                   <button
@@ -264,7 +229,7 @@ export default function AdminCampaignStats() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
-                    <LinkIcon />
+                    <LinkIcon className="h-4 w-4" />
                     <span className="truncate text-sm text-apple-mute">{stats.web_link}</span>
                   </div>
                   <button
@@ -295,7 +260,8 @@ export default function AdminCampaignStats() {
             </div>
           </div>
           <div className="rounded-2xl bg-apple-card p-4 text-center">
-            <div className="truncate text-xl font-bold text-apple-green sm:text-2xl">
+            {/* Без truncate: многоточие съедало цифры суммы. */}
+            <div className="text-lg font-bold text-apple-green [overflow-wrap:anywhere] sm:text-2xl">
               {formatWithCurrency(stats.total_revenue_kopeks / PARTNER_STATS.KOPEKS_DIVISOR)}
             </div>
             <div className="text-xs text-apple-faint">{t('admin.campaigns.stats.revenue')}</div>
@@ -396,13 +362,12 @@ export default function AdminCampaignStats() {
         {/* Analytics Charts */}
         <div className="space-y-4">
           {chartLoading ? (
-            <div className="space-y-3">
-              <div className="h-52 animate-pulse rounded-2xl bg-apple-card" />
+            <SkeletonGroup className="space-y-3">
+              <Skeleton variant="card" className="h-52 rounded-xl" />
               <div className="grid grid-cols-2 gap-3">
-                <div className="h-24 animate-pulse rounded-2xl bg-apple-card" />
-                <div className="h-24 animate-pulse rounded-2xl bg-apple-card" />
+                <Skeleton variant="card" count={2} className="h-24 rounded-xl" />
               </div>
-            </div>
+            </SkeletonGroup>
           ) : chartData ? (
             <>
               {/* Deposits vs Spending */}
@@ -447,7 +412,8 @@ export default function AdminCampaignStats() {
                       <Link
                         key={reg.id}
                         to={`/admin/users/${reg.id}`}
-                        className="flex items-center justify-between rounded-xl bg-apple-elevated p-3 transition-colors hover:opacity-90"
+                        {...backTo(location)}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-apple-hairline/30 bg-apple-card/30 p-3 transition-colors hover:bg-apple-elevated/50"
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex min-w-0 items-center gap-2">
@@ -495,23 +461,17 @@ export default function AdminCampaignStats() {
                 {t('admin.campaigns.stats.users')} ({stats.registrations})
               </span>
             </div>
-            <svg
+            <ChevronDownIcon
               className={`h-5 w-5 text-apple-mute transition-transform ${showUsers ? 'rotate-180' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
+            />
           </button>
 
           {showUsers && (
             <div className="border-t border-apple-hairline p-4">
               {usersLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-                </div>
+                <SkeletonGroup className="space-y-3">
+                  <Skeleton variant="card" count={3} className="h-16" />
+                </SkeletonGroup>
               ) : registrationsData?.registrations.length === 0 ? (
                 <div className="py-8 text-center text-apple-faint">
                   {t('admin.campaigns.stats.noUsers')}
@@ -522,17 +482,18 @@ export default function AdminCampaignStats() {
                     <Link
                       key={reg.id}
                       to={`/admin/users/${reg.user_id}`}
-                      className="flex items-center justify-between rounded-lg bg-apple-elevated p-3 transition-colors hover:opacity-90"
+                      {...backTo(location)}
+                      className="flex flex-col gap-2 rounded-lg bg-apple-elevated/50 p-3 transition-colors hover:bg-apple-elevated sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div>
-                        <div className="font-medium text-apple-ink">
+                      <div className="min-w-0">
+                        <div className="font-medium text-apple-ink [overflow-wrap:anywhere]">
                           {reg.first_name ||
                             reg.username ||
                             `${t('admin.campaigns.stats.users')} #${reg.user_id}`}
                         </div>
                         <div className="text-xs text-apple-faint">{reg.telegram_id}</div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {reg.has_paid && (
                           <span className="rounded-full bg-apple-green/15 px-2.5 py-1 text-[11px] font-semibold text-apple-green">
                             {t('admin.campaigns.stats.paid')}

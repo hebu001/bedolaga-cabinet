@@ -1,3 +1,4 @@
+import { copyToClipboard } from '@/utils/clipboard';
 import { useState, useRef, useMemo, useEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -337,7 +338,7 @@ export default function TopUpPanel({
   const handleCopyUrl = async () => {
     if (!paymentUrl) return;
     try {
-      await navigator.clipboard.writeText(paymentUrl);
+      await copyToClipboard(paymentUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -380,7 +381,9 @@ export default function TopUpPanel({
           <label htmlFor={amountId} className="mb-2 block text-[13px] text-apple-mute">
             {t('balance.enterAmount')} ·{' '}
             <span className="tabular-nums">
-              {formatAmount(minRubles, 0)} – {formatAmount(maxRubles, 0)} {currencySymbol}
+              {formatAmount(minRubles, 0)} – {formatAmount(maxRubles, 0)}
+              {'\u00A0'}
+              {currencySymbol}
             </span>
           </label>
           <div className="relative">

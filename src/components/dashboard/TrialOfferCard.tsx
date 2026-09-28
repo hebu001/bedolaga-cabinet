@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { UseMutationResult } from '@tanstack/react-query';
+import type { UseMutationResult } from '@tanstack/react-query';
 import type { TrialInfo } from '../../types';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
@@ -54,7 +54,7 @@ export default function TrialOfferCard({
       >
         {isFree ? t('dashboard.trialOffer.freeTitle') : t('dashboard.trialOffer.paidTitle')}
       </h2>
-      <p className="mb-6 text-sm text-white/40">
+      <p className="mb-5 text-sm text-dark-400">
         {isFree ? t('dashboard.trialOffer.freeDesc') : t('dashboard.trialOffer.paidDesc')}
       </p>
 
@@ -99,7 +99,7 @@ export default function TrialOfferCard({
             <div className="text-4xl font-extrabold leading-none tracking-tight text-white">
               {stat.value}
             </div>
-            <div className="mt-1 text-xs font-medium text-white/30">{stat.label}</div>
+            <div className="mt-1 text-xs font-medium text-dark-400">{stat.label}</div>
           </div>
         ))}
       </div>
@@ -114,11 +114,11 @@ export default function TrialOfferCard({
           }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm text-white/40">{t('balance.currentBalance')}</span>
+            <span className="text-sm text-dark-400">{t('balance.currentBalance')}</span>
             <span
               className={`font-display text-sm font-semibold ${!balanceReady ? 'text-white/70' : canAfford ? 'text-green-400' : 'text-orange-400'}`}
             >
-              {balanceKnown ? `${formatAmount(balanceRubles)} ${currencySymbol}` : '—'}
+              {balanceKnown ? `${formatAmount(balanceRubles)}\u00A0${currencySymbol}` : '—'}
             </span>
           </div>
           {!balanceReady && (

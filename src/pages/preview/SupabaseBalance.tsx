@@ -39,7 +39,7 @@ export default function SupabaseBalance() {
               marginBottom: 4,
             }}
           >
-            // billing.balance
+            {'// billing.balance'}
           </div>
           <h1
             style={{

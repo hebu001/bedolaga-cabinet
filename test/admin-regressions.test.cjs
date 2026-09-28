@@ -62,7 +62,8 @@ function host(page, http) {
     },
     useRef(initial) {
       const i = index++;
-      return (slots[i] ??= { current: initial });
+      if (!slots[i]) slots[i] = { current: initial };
+      return slots[i];
     },
     useMemo(fn, deps) {
       const i = index++;
@@ -139,6 +140,11 @@ function host(page, http) {
     },
     '@/lib/utils': { cn: (...values) => values.filter(Boolean).join(' ') },
     './client': { default: { get } },
+    '@/components/icons': new Proxy(
+      {},
+      { get: (_, name) => (props) => element(String(name), props) },
+    ),
+    'react-icons/pi': new Proxy({}, { get: (_, name) => (props) => element(String(name), props) }),
     '../api/tariffs': { tariffsApi: { getTariffs: async () => ({ tariffs: [] }) } },
     '../api/promocodes': { promocodesApi: { getPromoGroups: async () => ({ items: [] }) } },
     '../api/campaigns': { campaignsApi: { getCampaigns: async () => ({ campaigns: [] }) } },
@@ -160,8 +166,10 @@ function host(page, http) {
     }).outputText;
     const requireModule = (id) => {
       if (mocks[id]) return mocks[id];
-      if (id.startsWith('.')) {
-        const base = path.resolve(path.dirname(file), id);
+      if (id.startsWith('.') || id.startsWith('@/')) {
+        const base = id.startsWith('@/')
+          ? path.resolve(root, 'src', id.slice(2))
+          : path.resolve(path.dirname(file), id);
         return load(fs.existsSync(base + '.ts') ? base + '.ts' : base + '.tsx');
       }
       return require(id);
@@ -251,103 +259,8 @@ const user = (id, subs = []) => ({
 });
 const usersResponse = (users, total = users.length) => ({ users, total, offset: 0, limit: 20 });
 
-test('rapid search typing commits only final input, retaining rows and resetting page atomically', async () => {
-  const h = host('AdminUsers', async ({ url, params }) =>
-    url.endsWith('/stats') ? {} : usersResponse([user(params?.search === 'alex' ? 2 : 1)], 60),
-  );
-  try {
-    await h.settle();
-    assert.equal(h.requests.filter((r) => r.params).length, 1);
-    find(h.tree, (n) => n.props?.['aria-label'] === 'admin.users.pagination.next').props.onClick();
-    await h.settle();
-    for (const text of ['a', 'al', 'alex']) {
-      find(h.tree, (n) => n.type === 'input' && n.props.type === 'text').props.onChange({
-        target: { value: text },
-      });
-      await h.settle();
-      await h.tick(90);
-    }
-    assert.equal(h.requests.filter((r) => r.params).length, 2);
-    assert.ok(
-      find(h.tree, (n) => n.props?.user?.id === 1),
-      'loaded rows remain during debounce',
-    );
-    await h.tick(210);
-    const list = h.requests.filter((r) => r.params);
-    assert.equal(list.length, 3);
-    assert.equal(list[2].params.search, 'alex');
-    assert.equal(list[2].params.offset, 0);
-  } finally {
-    h.close();
-  }
-});
-
-test('older in-flight search cannot replace the current results and receives cancellation', async () => {
-  const old = deferred(),
-    latest = deferred();
-  const h = host('AdminUsers', ({ url, params }) =>
-    url.endsWith('/stats')
-      ? {}
-      : params?.search === 'old'
-        ? old.promise
-        : params?.search === 'new'
-          ? latest.promise
-          : usersResponse([user(1)]),
-  );
-  try {
-    await h.settle();
-    const type = async (value) => {
-      find(h.tree, (n) => n.type === 'input' && n.props.type === 'text').props.onChange({
-        target: { value },
-      });
-      await h.settle();
-      await h.tick(300);
-    };
-    await type('old');
-    await type('new');
-    const oldRequest = h.requests.find((r) => r.params?.search === 'old');
-    assert.equal(oldRequest.signal.aborted, true);
-    latest.resolve(usersResponse([user(3)]));
-    await h.settle();
-    old.resolve(usersResponse([user(2)]));
-    await h.settle();
-    assert.ok(find(h.tree, (n) => n.props?.user?.id === 3));
-    assert.equal(
-      find(h.tree, (n) => n.props?.user?.id === 2),
-      undefined,
-    );
-  } finally {
-    h.close();
-  }
-});
-
-test('failed user request is an explicit retry state, never a successful empty result; row is a link', async () => {
-  let fail = true;
-  const h = host('AdminUsers', ({ url }) => {
-    if (url.endsWith('/stats')) return {};
-    if (fail) throw Error('503');
-    return usersResponse([user(7)]);
-  });
-  try {
-    await h.settle();
-    const alert = find(h.tree, (n) => n.props?.role === 'alert');
-    assert.ok(alert);
-    assert.equal(
-      find(h.tree, (n) => n.props?.children === 'admin.users.noData'),
-      undefined,
-    );
-    fail = false;
-    find(alert, (n) => n.type === 'button').props.onClick();
-    await h.settle();
-    const row = find(h.tree, (n) => n.props?.user?.id === 7);
-    const rendered = row.type(row.props);
-    assert.equal(rendered.type, 'a');
-    assert.equal(rendered.props.to, '/admin/users/7');
-    assert.equal(rendered.props.onClick, undefined);
-  } finally {
-    h.close();
-  }
-});
+// Search/debounce/abort/retry cases now execute AdminUsers with the real DOM and
+// infinite query observer in src/pages/adminUsers.test.tsx.
 
 test('bulk header tracks some/all immediately and toggles only current page, keeping hidden IDs', async () => {
   const h = host('AdminBulkActions', async ({ params }) =>

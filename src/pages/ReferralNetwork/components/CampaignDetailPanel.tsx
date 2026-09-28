@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { CloseIcon } from '@/components/icons';
 import { referralNetworkApi } from '@/api/referralNetwork';
 import { useReferralNetworkStore } from '@/store/referralNetwork';
 import { formatKopeksToRubles } from '../utils';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 interface CampaignDetailPanelProps {
   campaignId: number;
@@ -37,24 +39,16 @@ export function CampaignDetailPanel({ campaignId, className }: CampaignDetailPan
           className="rounded-lg p-1 text-dark-500 transition-colors hover:bg-dark-800 hover:text-dark-300"
           aria-label={t('common.close')}
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <CloseIcon className="h-5 w-5" />
         </button>
       </div>
 
       {/* Content */}
       <div className="overflow-y-auto p-4 pb-[calc(1rem+var(--safe-bottom,0px))]">
         {isLoading && (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
-          </div>
+          <SkeletonGroup className="space-y-3">
+            <Skeleton variant="card" count={3} className="h-16" />
+          </SkeletonGroup>
         )}
 
         {isError && (
@@ -67,11 +61,13 @@ export function CampaignDetailPanel({ campaignId, className }: CampaignDetailPan
           <div className="space-y-5">
             {/* Info */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-dark-500">
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="shrink-0 text-dark-500">
                   {t('admin.referralNetwork.campaign.startParam')}
                 </span>
-                <span className="font-mono text-dark-200">{campaign.start_parameter}</span>
+                <span className="min-w-0 truncate font-mono text-dark-200">
+                  {campaign.start_parameter}
+                </span>
               </div>
               <div className="flex justify-end">
                 <span
@@ -108,7 +104,8 @@ export function CampaignDetailPanel({ campaignId, className }: CampaignDetailPan
                     {t('admin.referralNetwork.campaign.totalRevenue')}
                   </span>
                   <span className="font-mono text-accent-400">
-                    {formatKopeksToRubles(campaign.total_revenue_kopeks)} ₽
+                    {formatKopeksToRubles(campaign.total_revenue_kopeks)}
+                    {'\u00A0'}₽
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
@@ -124,7 +121,8 @@ export function CampaignDetailPanel({ campaignId, className }: CampaignDetailPan
                     {t('admin.referralNetwork.campaign.avgCheck')}
                   </span>
                   <span className="font-mono text-dark-100">
-                    {formatKopeksToRubles(campaign.avg_check_kopeks)} ₽
+                    {formatKopeksToRubles(campaign.avg_check_kopeks)}
+                    {'\u00A0'}₽
                   </span>
                 </div>
               </div>
@@ -140,17 +138,19 @@ export function CampaignDetailPanel({ campaignId, className }: CampaignDetailPan
                   {campaign.top_referrers.map((referrer, index) => (
                     <div
                       key={referrer.user_id}
-                      className="flex items-center justify-between text-sm"
+                      className="flex items-center justify-between gap-2 text-sm"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-dark-700 text-[10px] font-medium text-dark-300">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-dark-700 text-[10px] font-medium text-dark-300">
                           {index + 1}
                         </span>
-                        <span className="text-dark-200">
+                        <span className="truncate text-dark-200">
                           {referrer.username ? `@${referrer.username}` : `#${referrer.user_id}`}
                         </span>
                       </div>
-                      <span className="font-mono text-dark-300">{referrer.referral_count}</span>
+                      <span className="shrink-0 font-mono text-dark-300">
+                        {referrer.referral_count}
+                      </span>
                     </div>
                   ))}
                 </div>

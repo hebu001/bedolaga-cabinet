@@ -39,7 +39,7 @@ export default function SupabaseSubscription() {
               marginBottom: 4,
             }}
           >
-            // billing.subscription
+            {'// billing.subscription'}
           </div>
           <h1
             style={{
