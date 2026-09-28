@@ -1,10 +1,12 @@
 # Кабинет 1.79.0: передача к интеграции с ботом
 
+Актуализация после интеграции контракта бота: целевой `codex/bot-upstream-v4.15.0`, SHA `741feec565f9c7046ab73566d61f4a9d7fdf68f4`. Кабинет адаптирован локально; `numericPanelIdentity: true`, остальные 13 флагов выключены. Итоговые изменения и новые проверки — [BOT-CONTRACT-INTEGRATION](BOT-CONTRACT-INTEGRATION.md). Live E2E и установка не выполнялись.
+
 Дата: 2026-09-28. Подготовлен локальный frontend-кандидат на ветке `codex/cabinet-upstream-v1.79.0`: кастом EvoVPN перенесён с `55a4038f` на upstream **1.79.0** (`f5ea595f`). Пользовательские экраны, inline top-up, session/WS/media защита и админские сценарии сохранены при новой структуре upstream.
 
 Независимая frontend-проверка пройдена; результаты подготовлены для интеграции с ботом. Этап оформляется обычным merge с двумя родителями: `b1a44d3769fa90f73c86c08db09bed843884f237` и `f5ea595f8f732c37f2d5c270f34879ab2e2fba2d`; итоговый commit — в `git show` этой ветки и итоговой выдаче задачи. Это завершение независимой frontend-работы, **не установка на тестовый сервер и не подтверждение совместимости нового бота**. Установленный кабинет остаётся на 1.57.1. Тестовая Remnawave закреплена на 2.8.1; серверы и прод не менялись.
 
-## Что проверено
+## Историческая frontend-проверка merge 14a8bebc
 
 | Проверка | Результат |
 | --- | --- |
@@ -30,14 +32,14 @@ Health probe исправлен для deployment с `VITE_API_URL=/api`: зап
 
 ## Что ещё не проверено
 
-- Схемы завершённого целевого бота, его migrations и target-bot fixtures; живые REST/WS, подписанные media, sandbox payments, sync и link sub2.
+- Живые REST/WS, подписанные media, sandbox payments, sync и link sub2; применение migrations и совместимость runtime панели. Схемы и target-bot fixtures уже проверены локально в следующем этапе.
 - Telegram native WebView, provider navigation, клавиатура/touch, production fonts/branding и весь набор визуальных error/empty/admin states.
 - Node 26, Docker image/runtime и удалённый CI. Локальный nginx runtime test не равнозначен проверке Docker deployment.
 - Тестовый deploy, совместимость старого frontend с новым backend и практический rollback.
 
 ## Что нужно от готового бота
 
-Получить точный SHA и схемы запросов/ответов, migrations и согласованную версию панели. Затем создать fixtures из этих схем, проверить auth rotation/WS tickets/payment identity/media/подписки/permissions и включать лишь подтверждённые возможности. Сейчас **все 14 integration flags false**, активен явный UUID-контракт; наличие `*:*` не обходит эти ограничения. Полный список — [CONTRACT](CONTRACT.md).
+Точный SHA и схемы уже получены; активен явный numeric-контракт нового бота. Остальные 13 integration flags false, наличие `*:*` не обходит ограничения. Полный список — [CONTRACT](CONTRACT.md). Для релиза остаются проверка migrations, согласование версии панели и живые сценарии.
 
 После этого пройти live E2E только на тестовой связке, подготовить backup dist/config и совместимый rollback, затем переходить к тестовому релизу. Frontend rollback не откатывает БД или panel identity. Prod остаётся вне задачи.
 

@@ -259,8 +259,15 @@ export function RewardSettings({
   );
 }
 
-export function ProgrammeTerms({ terms }: { terms: ReferralTerms }) {
+export function ProgrammeTerms({
+  terms,
+  appearance = 'default',
+}: {
+  terms: ReferralTerms;
+  appearance?: 'default' | 'apple';
+}) {
   const { t } = useTranslation();
+  const apple = appearance === 'apple';
   const isTiers = terms.levels_mode === 'tiers';
   const levels = terms.levels ?? [];
   // Строки-описания остаются запасным путём: они приходят из того же источника
@@ -269,13 +276,19 @@ export function ProgrammeTerms({ terms }: { terms: ReferralTerms }) {
   const progress = tierProgressText(terms, t);
 
   return (
-    <div className="bento-card">
+    <div className={apple ? 'rounded-xl bg-apple-elevated p-4 text-apple-ink' : 'bento-card'}>
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-dark-100">{t('referral.terms.title')}</h2>
+        <h2
+          className={
+            apple ? 'text-lg font-semibold text-apple-ink' : 'text-lg font-semibold text-dark-100'
+          }
+        >
+          {t('referral.terms.title')}
+        </h2>
         {/* Правило режима — одной фразой над лестницей. Без неё список
               уровней в режиме «за приглашённых» читается как складывающиеся
               награды, а в цепочке — наоборот, как выбор одной из них. */}
-        <p className="mt-1 text-sm text-dark-400">
+        <p className={apple ? 'mt-1 text-sm text-apple-mute' : 'mt-1 text-sm text-dark-400'}>
           {isTiers ? t('referral.terms.modeTiers') : t('referral.terms.modeChain')}
         </p>
       </div>
@@ -287,23 +300,45 @@ export function ProgrammeTerms({ terms }: { terms: ReferralTerms }) {
               key={lvl.level}
               className={`rounded-xl border p-3 transition-colors ${
                 lvl.is_current
-                  ? 'border-accent-500/40 bg-accent-500/10'
-                  : 'border-dark-700/40 bg-dark-800/30'
+                  ? apple
+                    ? 'border-[#F97315]/40 bg-[#F97315]/10'
+                    : 'border-accent-500/40 bg-accent-500/10'
+                  : apple
+                    ? 'border-white/10 bg-apple-card'
+                    : 'border-dark-700/40 bg-dark-800/30'
               }`}
             >
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={`inline-flex h-7 min-w-7 items-center justify-center rounded-lg px-2 text-sm font-semibold ${
-                    lvl.is_current ? 'bg-accent-500 text-dark-900' : 'bg-dark-700 text-dark-200'
+                    lvl.is_current
+                      ? apple
+                        ? 'bg-[#F97315] text-white'
+                        : 'bg-accent-500 text-dark-900'
+                      : apple
+                        ? 'bg-apple-card text-apple-ink'
+                        : 'bg-dark-700 text-dark-200'
                   }`}
                 >
                   {lvl.level}
                 </span>
-                <span className="text-sm font-medium text-dark-100">
+                <span
+                  className={
+                    apple
+                      ? 'text-sm font-medium text-apple-ink'
+                      : 'text-sm font-medium text-dark-100'
+                  }
+                >
                   {t('referral.terms.levelLabel', { level: lvl.level })}
                 </span>
                 {lvl.is_current && (
-                  <span className="rounded-full bg-accent-500/20 px-2 py-0.5 text-xs text-accent-300">
+                  <span
+                    className={
+                      apple
+                        ? 'rounded-full bg-[#F97315]/20 px-2 py-0.5 text-xs text-[#F97315]'
+                        : 'rounded-full bg-accent-500/20 px-2 py-0.5 text-xs text-accent-300'
+                    }
+                  >
                     {t('referral.terms.currentBadge')}
                   </span>
                 )}
@@ -320,16 +355,30 @@ export function ProgrammeTerms({ terms }: { terms: ReferralTerms }) {
                     </span>
                   ))
                 ) : (
-                  <span className="rounded-lg bg-dark-700/60 px-2 py-1 text-sm text-dark-400">
+                  <span
+                    className={
+                      apple
+                        ? 'rounded-lg bg-apple-card px-2 py-1 text-sm text-apple-mute'
+                        : 'rounded-lg bg-dark-700/60 px-2 py-1 text-sm text-dark-400'
+                    }
+                  >
                     {t('referral.terms.paysNothing')}
                   </span>
                 )}
                 {lvl.pays_referrer && lvl.trigger_label && (
-                  <span className="text-xs text-dark-400">{lvl.trigger_label}</span>
+                  <span className={apple ? 'text-xs text-apple-mute' : 'text-xs text-dark-400'}>
+                    {lvl.trigger_label}
+                  </span>
                 )}
               </div>
 
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-dark-400">
+              <div
+                className={
+                  apple
+                    ? 'mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-apple-mute'
+                    : 'mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-dark-400'
+                }
+              >
                 {/* Условие показывается только там, где оно есть смысл: в
                       цепочке уровень открывается порогом, а в режиме за
                       приглашённых порог и определяет, какой уровень ваш. */}
@@ -350,8 +399,18 @@ export function ProgrammeTerms({ terms }: { terms: ReferralTerms }) {
       ) : fallbackLines.length > 0 ? (
         <ul className="space-y-2">
           {fallbackLines.map((line) => (
-            <li key={line} className="flex items-start gap-2 text-sm text-dark-200">
-              <span aria-hidden="true" className="mt-1 text-accent-400">
+            <li
+              key={line}
+              className={
+                apple
+                  ? 'flex items-start gap-2 text-sm text-apple-ink'
+                  : 'flex items-start gap-2 text-sm text-dark-200'
+              }
+            >
+              <span
+                aria-hidden="true"
+                className={apple ? 'mt-1 text-[#F97315]' : 'mt-1 text-accent-400'}
+              >
                 •
               </span>
               <span>{line}</span>
@@ -359,7 +418,9 @@ export function ProgrammeTerms({ terms }: { terms: ReferralTerms }) {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-dark-400">{t('referral.terms.noLevels')}</p>
+        <p className={apple ? 'text-sm text-apple-mute' : 'text-sm text-dark-400'}>
+          {t('referral.terms.noLevels')}
+        </p>
       )}
 
       {terms.personal_percent != null && (
@@ -368,7 +429,11 @@ export function ProgrammeTerms({ terms }: { terms: ReferralTerms }) {
         </p>
       )}
 
-      {progress && <p className="mt-4 text-sm text-dark-300">{progress}</p>}
+      {progress && (
+        <p className={apple ? 'mt-4 text-sm text-apple-mute' : 'mt-4 text-sm text-dark-300'}>
+          {progress}
+        </p>
+      )}
     </div>
   );
 }

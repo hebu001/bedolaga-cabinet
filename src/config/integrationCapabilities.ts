@@ -13,7 +13,8 @@ export const integrationCapabilities = Object.freeze({
   reminders: false,
   systemErrors: false,
   nodeGeoCheck: false,
-  numericPanelIdentity: false,
+  // Verified against merged bot 741feec565f9c7046ab73566d61f4a9d7fdf68f4.
+  numericPanelIdentity: true,
   recurringPayments: false,
   referralLevels: false,
   graceAccess: false,

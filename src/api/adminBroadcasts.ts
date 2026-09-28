@@ -74,12 +74,6 @@ export interface BroadcastCreateRequest {
   media?: BroadcastMedia;
 }
 
-export interface EmailBroadcastCreateRequest {
-  target: string;
-  subject: string;
-  html_content: string;
-}
-
 export interface CombinedBroadcastCreateRequest {
   channel: BroadcastChannel;
   target: string;
@@ -220,12 +214,6 @@ export const adminBroadcastsApi = {
   // Create and start broadcast (Telegram only - legacy)
   create: async (data: BroadcastCreateRequest): Promise<Broadcast> => {
     const response = await apiClient.post<Broadcast>('/cabinet/admin/broadcasts', data);
-    return response.data;
-  },
-
-  // Create email broadcast
-  createEmail: async (data: EmailBroadcastCreateRequest): Promise<Broadcast> => {
-    const response = await apiClient.post<Broadcast>('/cabinet/admin/broadcasts/email', data);
     return response.data;
   },
 

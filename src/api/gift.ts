@@ -97,7 +97,7 @@ export interface PendingGift {
 }
 
 export interface SentGift {
-  /** Short display id only — NOT claimable. Sharing must use gift_code / *_claim_url. */
+  /** Public 12-character claim code (including migrated legacy prefixes). Prefer canonical links. */
   token: string;
   tariff_name: string | null;
   period_days: number;

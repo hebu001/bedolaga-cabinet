@@ -1,4 +1,5 @@
 import { copyToClipboard } from '@/utils/clipboard';
+import { useTariffRequiredRecovery } from '../hooks/useTariffRequiredRecovery';
 import { safeLocal } from '../utils/safeStorage';
 import {
   needsTariff,
@@ -521,6 +522,11 @@ export default function Subscription() {
     setShowServerManagement(false);
   }, []);
   useCloseOnSuccessNotification(handleCloseAllModals);
+  const tariffRecovery = useTariffRequiredRecovery(subscription?.id, subscriptionId, () => {
+    handleCloseAllModals();
+    setSelectedTrafficPackage(null);
+    setTopUpSheet(null);
+  });
 
   // Devices: one slider drives both add (above current limit) and reduce (below)
   const deviceCurrentLimit = subscription?.device_limit ?? 0;
@@ -545,6 +551,7 @@ export default function Subscription() {
   // — we surface the in-page top-up sheet pre-filled with `missing_amount`.
   // The webhook auto-completes the device add-on after payment.
   const devicePurchaseMutation = useMutation({
+    onMutate: tariffRecovery.capture,
     mutationFn: () => subscriptionApi.purchaseDevices(deviceAddCount, subscriptionId),
     onSuccess: async () => {
       // Renewal and purchase screens derive their initial device count from
@@ -570,7 +577,8 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['balance'] });
       setShowDeviceManage(false);
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _variables, target) => {
+      if (!tariffRecovery.isActive(target) || tariffRecovery.recover(error, target)) return;
       const missing = extractInsufficientMissing(error);
       if (missing != null) {
         setTopUpSheet({ missingKopeks: missing });
@@ -601,6 +609,7 @@ export default function Subscription() {
 
   // Device reduction mutation
   const deviceReductionMutation = useMutation({
+    onMutate: tariffRecovery.capture,
     mutationFn: () => subscriptionApi.reduceDevices(targetDeviceLimit, subscriptionId),
     onSuccess: async () => {
       await Promise.all([
@@ -621,6 +630,9 @@ export default function Subscription() {
       queryClient.invalidateQueries({ queryKey: ['devices'] });
       queryClient.invalidateQueries({ queryKey: ['device-reduction-info', subscriptionId] });
       setShowDeviceManage(false);
+    },
+    onError: (error: unknown, _variables, target) => {
+      tariffRecovery.recover(error, target);
     },
   });
 
@@ -676,6 +688,7 @@ export default function Subscription() {
   // pre-filled with `missing_amount` from the response, so the webhook can
   // auto-fulfill the GB purchase after payment lands.
   const trafficPurchaseMutation = useMutation({
+    onMutate: tariffRecovery.capture,
     mutationFn: (gb: number) => subscriptionApi.purchaseTraffic(gb, subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
@@ -685,7 +698,8 @@ export default function Subscription() {
       setShowTrafficTopup(false);
       setSelectedTrafficPackage(null);
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _variables, target) => {
+      if (!tariffRecovery.isActive(target) || tariffRecovery.recover(error, target)) return;
       // Insufficient funds — backend already saved the add_traffic cart;
       // open the top-up sheet with the exact prorated `missing_amount`.
       const missing = extractInsufficientMissing(error);

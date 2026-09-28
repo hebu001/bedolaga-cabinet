@@ -1,81 +1,68 @@
 import { describe, expect, it } from 'vitest';
-import { buildGiftClaimArtifacts } from './giftShare';
-
-/**
- * Ссылка на подарок из кабинета обязана открываться в боте.
- *
- * Раньше карточка строила код и обе ссылки из `gift.token.slice(0, 12)`, а бот
- * отвергает любой claim-вход короче 48 символов — то есть кнопка «поделиться»
- * выдавала получателю deep link, который бот отказывался открывать. Канонический
- * код бэкенд отдаёт сам: GIFT_ + 59 символов, ровно предел start_param у Telegram.
- */
-
-const TOKEN = 'T'.repeat(64);
-const CANONICAL_CODE = `GIFT_${'T'.repeat(59)}`;
-
-const gift = {
-  token: TOKEN.slice(0, 12),
-  gift_code: CANONICAL_CODE,
-  bot_claim_url: `https://t.me/ExampleBot?start=${CANONICAL_CODE}`,
-  cabinet_claim_url: `https://cab.example/buy/gift/${TOKEN}`,
-};
+import { mergedBotContract } from '../test/fixtures/mergedBotContract';
+import { buildGiftActivationLinks, buildGiftClaimArtifacts } from './giftShare';
 
 const context = { botUsername: 'ExampleBot', origin: 'https://cab.example' };
+const gift = mergedBotContract.gift;
 
 describe('buildGiftClaimArtifacts', () => {
-  it('берёт канонические ссылки из API, а не режет токен', () => {
-    const artifacts = buildGiftClaimArtifacts(gift, context);
-
-    expect(artifacts.code).toBe(CANONICAL_CODE);
-    expect(artifacts.botLink).toBe(gift.bot_claim_url);
-    expect(artifacts.cabinetLink).toBe(gift.cabinet_claim_url);
+  it('uses the merged bot canonical 12-character public code and links unchanged', () => {
+    expect(gift.token).toHaveLength(12);
+    expect(buildGiftClaimArtifacts(gift, context)).toEqual({
+      code: gift.gift_code,
+      botLink: gift.bot_claim_url,
+      cabinetLink: gift.cabinet_claim_url,
+    });
   });
 
-  it('отдаёт боту фрагмент длиннее порога в 48 символов', () => {
-    const artifacts = buildGiftClaimArtifacts(gift, context);
-    const startParam = artifacts.botLink?.split('?start=')[1] ?? '';
-
-    expect(startParam.startsWith('GIFT_')).toBe(true);
-    expect(startParam.length).toBeLessThanOrEqual(64);
-    expect(startParam.slice('GIFT_'.length).length).toBeGreaterThanOrEqual(48);
+  it('preserves canonical artifacts even when a legacy token differs', () => {
+    expect(buildGiftClaimArtifacts({ ...gift, token: 'legacy_token'.repeat(5) }, context)).toEqual({
+      code: gift.gift_code,
+      botLink: gift.bot_claim_url,
+      cabinetLink: gift.cabinet_claim_url,
+    });
   });
 
-  it('падает обратно на короткий код, когда бэкенд ещё не отдаёт канонический', () => {
+  it('supports the old long canonical format without rewriting it', () => {
+    const code = `GIFT_${'T'.repeat(59)}`;
     const legacy = {
-      token: TOKEN.slice(0, 12),
-      gift_code: null,
-      bot_claim_url: null,
-      cabinet_claim_url: null,
+      token: 'T'.repeat(12),
+      gift_code: code,
+      bot_claim_url: `https://t.me/ExampleBot?start=${code}`,
+      cabinet_claim_url: `https://cab.example/buy/gift/${'T'.repeat(64)}`,
     };
-
-    const artifacts = buildGiftClaimArtifacts(legacy, context);
-
-    expect(artifacts.code).toBe(`GIFT-${TOKEN.slice(0, 12)}`);
-    expect(artifacts.botLink).toBe(`https://t.me/ExampleBot?start=GIFT_${TOKEN.slice(0, 12)}`);
-    expect(artifacts.cabinetLink).toBe(
-      `https://cab.example/gift?tab=activate&code=${TOKEN.slice(0, 12)}`,
-    );
+    expect(buildGiftClaimArtifacts(legacy, context)).toEqual({
+      code,
+      botLink: legacy.bot_claim_url,
+      cabinetLink: legacy.cabinet_claim_url,
+    });
   });
 
-  it('не выдумывает ссылку на бота, когда username неизвестен', () => {
-    const legacy = {
-      token: TOKEN.slice(0, 12),
-      gift_code: null,
-      bot_claim_url: null,
-      cabinet_claim_url: null,
-    };
-
-    expect(buildGiftClaimArtifacts(legacy, { ...context, botUsername: '' }).botLink).toBeNull();
-  });
-});
-
-it('сохраняет полный legacy claim, если API ещё не вернул canonical artifacts', () => {
-  const token = 'full_claim_'.repeat(5);
-  const artifacts = buildGiftClaimArtifacts(
-    { token, gift_code: null, bot_claim_url: null, cabinet_claim_url: null },
-    context,
+  it.each([gift.token, 'legacy_claim_'.repeat(4)])(
+    'preserves the complete fallback code %s',
+    (token) => {
+      const artifacts = buildGiftClaimArtifacts(
+        { token, gift_code: null, bot_claim_url: null, cabinet_claim_url: null },
+        context,
+      );
+      expect(artifacts).toEqual({
+        code: `GIFT-${token}`,
+        botLink: `https://t.me/ExampleBot?start=GIFT_${token}`,
+        cabinetLink: `https://cab.example/gift?tab=activate&code=${token}`,
+      });
+    },
   );
-  expect(artifacts.code).toBe(`GIFT-${token}`);
-  expect(artifacts.cabinetLink).toContain(`code=${token}`);
-  expect(artifacts.botLink).toContain(`start=GIFT_${token}`);
+
+  it('does not invent a bot link when its username is unavailable', () => {
+    expect(
+      buildGiftClaimArtifacts({ token: gift.token }, { ...context, botUsername: '' }).botLink,
+    ).toBeNull();
+  });
+
+  it('uses the same compact claim links on the purchase result screen', () => {
+    expect(buildGiftActivationLinks(gift.token, '@ExampleBot', context.origin)).toEqual({
+      botLink: gift.bot_claim_url,
+      cabinetLink: gift.cabinet_claim_url,
+    });
+  });
 });

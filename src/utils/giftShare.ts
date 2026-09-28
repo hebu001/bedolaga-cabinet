@@ -3,14 +3,9 @@ import type { SentGift } from '../api/gift';
 /**
  * Claim artifacts for a sent gift.
  *
- * The backend hands out canonical ones: the code is `GIFT_` + 59 characters, which is
- * exactly Telegram's 64-character `start_param` limit. `SentGift.token` is only a
- * 12-character display id — the bot rejects any claim input shorter than 48 characters,
- * so links built from it handed the recipient a deep link the bot refused to open.
- *
- * Token-derived values remain only for backends that predate the canonical fields.
- * Preserve their full claim code; a newer API may return a short display token, so
- * always prefer its canonical artifacts whenever present.
+ * Merged bot v4.15.0 returns a 12-character public claim code, including for
+ * migrated gifts. Prefer canonical API artifacts; older backends may supply long
+ * tokens, which must remain intact when building fallback links.
  */
 export interface GiftClaimArtifacts {
   code: string;

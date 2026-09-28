@@ -1,13 +1,15 @@
 # Контракт кабинета 1.79.0 с ботом
 
-Дата: 2026-09-28. Независимый frontend-кандидат подготовлен; целевой бот ещё мержится в другой задаче. Синтетические frontend fixtures и browser-проверки существуют, но схемы завершённого бота ещё не получены. Этот документ не подтверждает совместимость новой живой связки.
+Актуализация после интеграции контракта бота: целевой `codex/bot-upstream-v4.15.0`, SHA `741feec565f9c7046ab73566d61f4a9d7fdf68f4`. Кабинет адаптирован локально; `numericPanelIdentity: true`, остальные 13 флагов выключены. Итоговые изменения и новые проверки — [BOT-CONTRACT-INTEGRATION](BOT-CONTRACT-INTEGRATION.md). Live E2E и установка не выполнялись.
+
+Дата: 2026-09-28. Независимый frontend-кандидат адаптирован к контракту завершённого бота. Синтетические fixtures сверены со схемами и runtime source точного SHA. Этот документ не подтверждает совместимость новой живой связки.
 
 | Компонент | Зафиксированная версия |
 | --- | --- |
 | Установленный frontend / fork baseline | `55a4038f4ae8692922abc2622f97309840f71064`, 1.57.1 |
 | Upstream frontend кандидата | tag `v1.79.0`, `f5ea595f8f732c37f2d5c270f34879ab2e2fba2d` |
 | Текущий тестовый бот | 3.66.0, `4b06edcdce26850c03ca474e8d195ef94ddb347e`; base `cde43dd6396da5db8ba7492f4693e3be63c5caed` + sync fix |
-| Целевой бот | **Ожидается:** репозиторий, SHA, схемы, migrations и доступные возможности |
+| Целевой бот | `hebu001/remnawave-bedolaga-telegram-bot`, `741feec565f9c7046ab73566d61f4a9d7fdf68f4`; схемы получены, migrations/live ещё не применялись |
 | Тестовая панель | **Remnawave 2.8.1**, не изменялась |
 
 Кабинет обращается к Cabinet API бота. Remnawave API-токен во frontend не передаётся. Наличие endpoint или номер версии не доказывают совпадение request/response. Исходный аудит относится к зафиксированным SHA, а не к незавершённому дереву соседней задачи.
@@ -30,22 +32,22 @@
 
 ## Явная идентичность пользователя панели
 
-| Ответ | Активный UUID-контракт | Будущий numeric-контракт |
+| Ответ | Исторический UUID-контракт | Активный numeric-контракт |
 | --- | --- | --- |
 | UserDetail | `remnawave_uuid` | `remnawave_id: number` |
 | PanelUserInfo | `uuid` | `id: number` |
 | SyncToPanel | `panel_uuid` | `panel_user_id: number` |
 | PanelSyncStatus | `remnawave_uuid` | `remnawave_id: number` |
 
-[adminPanelIdentity.ts](../../src/api/adminPanelIdentity.ts) читает выбранную схему, а не угадывает её по наличию полей. При `numericPanelIdentity: false` активен UUID. Отсутствующее ожидаемое поле, чужая схема и строка вместо числа дают contract error; `null` допустим для непривязанного пользователя. Внутренний discriminator `panel_identity` не является новым wire-полем backend. Приведение `Number(uuid)`, cast и эвристика `uuid || id` не используются.
+[adminPanelIdentity.ts](../../src/api/adminPanelIdentity.ts) читает выбранную схему, а не угадывает её по наличию полей. При `numericPanelIdentity: true` активен numeric-контракт целевого бота. UUID-режим сохранён только как явный альтернативный адаптер. Отсутствующее ожидаемое поле, чужая схема и строка вместо числа дают contract error; `null` допустим для непривязанного пользователя. Внутренний discriminator `panel_identity` не является новым wire-полем backend. Приведение `Number(uuid)`, cast и эвристика `uuid || id` не используются.
 
 Существующие sync/user actions адресуют `/cabinet/admin/users/{botUserId}`, а не panel ID; optional `subscription_id` сохраняется. Push с `create_if_missing:true` доступен при корректном локальном ID, включая отсутствие пользователя панели. Pull требует реальной привязки. UUID нод и squad не меняются из-за numeric user identity. Mapping и миграции данных панели здесь не выполнялись.
 
-## Все 14 локальных флагов выключены
+## Один флаг включён, 13 выключены
 
 Источник истины: [integrationCapabilities.ts](../../src/config/integrationCapabilities.ts). Это конфигурация выпуска, а не автоматическое обнаружение backend и не настройка прав пользователя.
 
-| Флаг (сейчас `false`) | Условие включения |
+| Флаг (false, кроме numericPanelIdentity) | Условие включения / состояние |
 | --- | --- |
 | `advancedUserFilters` | Подтвердить новые online/grace/traffic/payment/expiry filters и sort/direction. До этого неподдерживаемые URL-фильтры нормализуются; базовые search/status/tariff/group/campaign работают |
 | `legalConsent` | Подтвердить legal API, `accepted_legal_documents` и HTTP 428 consent flow через тот же session owner |
@@ -57,7 +59,7 @@
 | `reminders` | Подтвердить routes, responses и permissions `read/create/edit/delete` |
 | `systemErrors` | Подтвердить routes, responses и permissions `read/manage` |
 | `nodeGeoCheck` | Подтвердить GeoCheck API и поддерживаемую версию панели; версия ноды сама по себе недостаточна |
-| `numericPanelIdentity` | Зафиксировать numeric wire-схемы и mapping панели; проверить обе явные схемы и ошибки, не преобразовывать UUID |
+| `numericPanelIdentity` | **true:** схемы нового бота и synthetic fixtures подтверждают integer ID; migrations/runtime панели проверяются отдельно |
 | `recurringPayments` | Подтвердить новые SBP/Lava purchase/manage/binding contracts. Существующая saved-card функциональность сохранена |
 | `referralLevels` | Подтвердить новые referral-level schemas; существующие рефералы работают отдельно |
 | `graceAccess` | Подтвердить grace routes, payloads и разрешения |
@@ -70,6 +72,6 @@
 
 Уже существуют типизированные [purchase fixtures](../../src/components/subscription/purchase/customFlow.fixtures.ts), DOM/query/API mocks и локальный browser harness. Они построены по frontend-контрактам и подтверждают frontend-поведение. Визуальная проверка содержит 54 итоговых кадра, включая Users, обзор UserDetail и его вкладку тикетов; данные и токены синтетические, внешние HTTP/WS заблокированы. Local artifact: `work/cabinet-visual-20260928/README.md` в общей рабочей папке, вне этого Git repo.
 
-**Target-bot fixtures ещё не созданы.** Для каждого нужны schema SHA/path, HTTP method/path, query/body/headers, success/error responses и соответствующий флаг. Минимум: UUID/numeric, rotation/revocation, WS issue/reconnect, media single/album/expiry, payment create/resolve/status, one/multiple/legacy subscriptions и trial, limited/full permissions, включённые/выключенные возможности, legal 428.
+**Target-bot numeric identity и gift fixtures созданы** (см. BOT-CONTRACT-INTEGRATION). Остальные сценарии остаются в матрице расширенной/live проверки. Для каждого нужны schema SHA/path, HTTP method/path, query/body/headers, success/error responses и соответствующий флаг. Минимум: UUID/numeric, rotation/revocation, WS issue/reconnect, media single/album/expiry, payment create/resolve/status, one/multiple/legacy subscriptions и trial, limited/full permissions, включённые/выключенные возможности, legal 428.
 
 После получения SHA: сверить схемы → создать fixtures → проверить нужные флаги → пройти live E2E на тестовых Origins → подготовить backup и совместимый rollback → выполнить согласованный тестовый deploy. Отдельно проверить old frontend/new backend. Frontend rollback не откатывает migrations БД или mapping панели. Prod не меняется; независимая frontend-фаза не означает test deployment.

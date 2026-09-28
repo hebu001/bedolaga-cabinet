@@ -37,8 +37,12 @@ import {
 } from '@/components/icons';
 import ConnectedAccountsPanel from '@/components/profile/ConnectedAccountsPanel';
 import InfoPanel from '@/components/profile/InfoPanel';
+import { ReferralReward } from '@/components/profile/ReferralReward';
 
 const UpdatedReferral = lazy(() => import('./Referral'));
+const ProgrammeTerms = lazy(() =>
+  import('./Referral').then((module) => ({ default: module.ProgrammeTerms })),
+);
 
 // Apple-dark surface helper
 const cardCls = 'apple-card-grad rounded-2xl bg-apple-card';
@@ -353,10 +357,13 @@ export default function Profile() {
 
   const shareReferralLink = () => {
     if (!referralLink) return;
-    const shareText = t('referral.shareMessage', {
-      percent: referralInfo?.commission_percent || 0,
-      botName: branding?.name || import.meta.env.VITE_APP_NAME || 'Cabinet',
-    });
+    const shareText = t(
+      referralTerms?.scheme === 'levels' ? 'referral.shareMessagePlain' : 'referral.shareMessage',
+      {
+        percent: referralInfo?.commission_percent || 0,
+        botName: branding?.name || import.meta.env.VITE_APP_NAME || 'Cabinet',
+      },
+    );
 
     if (navigator.share) {
       navigator
@@ -378,6 +385,13 @@ export default function Profile() {
   // Program terms memo
   const programTerms = useMemo(() => {
     if (!referralTerms) return null;
+    if (referralTerms.scheme === 'levels') {
+      return (
+        <Suspense fallback={<div role="status">{t('common.loading')}</div>}>
+          <ProgrammeTerms terms={referralTerms} appearance="apple" />
+        </Suspense>
+      );
+    }
     const showNewUserBonus = referralTerms.first_topup_bonus_kopeks > 0;
     const showInviterBonus = referralTerms.inviter_bonus_kopeks > 0;
 
@@ -949,15 +963,32 @@ export default function Profile() {
                       {t('referral.stats.totalEarnings')}
                     </div>
                     <div className="mt-1 text-[20px] font-bold text-apple-green">
-                      {formatPositive(referralInfo?.total_earnings_rubles || 0)}
+                      <ReferralReward
+                        money={referralInfo?.total_earnings_rubles ?? 0}
+                        days={referralInfo?.total_earnings_days ?? 0}
+                        formatMoney={formatPositive}
+                      />
                     </div>
                   </div>
                   <div className="rounded-xl bg-apple-elevated p-3.5">
                     <div className="text-[13px] text-apple-mute">
-                      {t('referral.stats.commissionRate')}
+                      {t(
+                        referralTerms?.scheme === 'levels'
+                          ? referralTerms.levels_mode === 'tiers'
+                            ? 'referral.stats.yourLevel'
+                            : 'referral.stats.chainDepth'
+                          : 'referral.stats.commissionRate',
+                      )}
                     </div>
                     <div className="mt-1 text-[20px] font-bold" style={{ color: '#F97315' }}>
-                      {referralInfo?.commission_percent || 0}%
+                      {referralTerms?.scheme === 'levels'
+                        ? referralTerms.levels_mode === 'tiers'
+                          ? (referralTerms.tier_current_level ??
+                            t('referral.stats.levelNotReached'))
+                          : t('referral.stats.levelsValue', {
+                              count: referralTerms.max_level_depth ?? 1,
+                            })
+                        : `${referralInfo?.commission_percent || 0}%`}
                     </div>
                   </div>
                 </div>
@@ -1058,7 +1089,12 @@ export default function Profile() {
                     </div>
                   </div>
                   <p className="mt-3 text-sm text-apple-faint">
-                    {t('referral.shareHint', { percent: referralInfo?.commission_percent || 0 })}
+                    {t(
+                      referralTerms?.scheme === 'levels'
+                        ? 'referral.shareHintLevels'
+                        : 'referral.shareHint',
+                      { percent: referralInfo?.commission_percent || 0 },
+                    )}
                   </p>
                 </div>
 
@@ -1122,11 +1158,19 @@ export default function Profile() {
                             </div>
                             <div className="mt-0.5 text-xs text-apple-faint">
                               {t(`referral.reasons.${earning.reason}`, earning.reason)} •{' '}
+                              {earning.level != null && (
+                                <>{t('referral.terms.levelLabel', { level: earning.level })} • </>
+                              )}
                               {new Date(earning.created_at).toLocaleDateString(i18n.language)}
                             </div>
                           </div>
                           <div className="font-semibold text-apple-green">
-                            {formatPositive(earning.amount_rubles)}
+                            <ReferralReward
+                              money={earning.amount_rubles}
+                              days={earning.days_granted ?? 0}
+                              tariff={earning.tariff_name}
+                              formatMoney={formatPositive}
+                            />
                           </div>
                         </div>
                       ))}

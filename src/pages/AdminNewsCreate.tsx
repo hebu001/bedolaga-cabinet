@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { getApiErrorMessage } from '../utils/api-error';
+import { NEWS_EXCERPT_LIMIT, NEWS_TAG_LIMIT, newsLengthError } from '../utils/newsValidation';
 import { transliterate } from '../utils/transliterate';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -357,11 +359,22 @@ export default function AdminNewsCreate() {
 
   const handleCreateTag = useCallback(
     async (name: string, color: string) => {
-      const tag = await newsApi.createTag({ name, color });
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'tags'] });
-      return tag;
+      const validationError = newsLengthError(name, NEWS_TAG_LIMIT, t('news.admin.tagLabel'));
+      if (validationError) {
+        setSaveError(validationError);
+        throw new Error(validationError);
+      }
+      try {
+        const tag = await newsApi.createTag({ name: name.trim(), color });
+        await queryClient.invalidateQueries({ queryKey: ['admin', 'news', 'tags'] });
+        setSaveError(null);
+        return tag;
+      } catch (error) {
+        setSaveError(getApiErrorMessage(error, t('news.admin.saveError')));
+        throw error;
+      }
     },
-    [queryClient],
+    [queryClient, t],
   );
 
   const handleDeleteCategory = useCallback(
@@ -451,13 +464,21 @@ export default function AdminNewsCreate() {
     },
     onError: (error: Error) => {
       haptic.error();
-      setSaveError(error.message || t('news.admin.saveError'));
+      setSaveError(getApiErrorMessage(error, t('news.admin.saveError')));
     },
   });
 
   const handleSave = () => {
     setSaveError(null);
     if (!title.trim() || !slug.trim() || !selectedCategory) return;
+
+    const validationError =
+      newsLengthError(excerpt, NEWS_EXCERPT_LIMIT, t('news.admin.excerptLabel')) ??
+      newsLengthError(selectedTag?.name ?? '', NEWS_TAG_LIMIT, t('news.admin.tagLabel'));
+    if (validationError) {
+      setSaveError(validationError);
+      return;
+    }
 
     const content = editor?.getHTML() ?? '';
     const data: NewsCreateRequest = {
@@ -617,11 +638,17 @@ export default function AdminNewsCreate() {
           </label>
           <textarea
             id="news-excerpt"
+            aria-describedby="news-excerpt-limit"
             value={excerpt}
-            onChange={(e) => setExcerpt(e.target.value)}
+            onChange={(e) =>
+              setExcerpt(Array.from(e.target.value).slice(0, NEWS_EXCERPT_LIMIT).join(''))
+            }
             className="min-h-[80px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             rows={3}
           />
+          <p id="news-excerpt-limit" className="mt-1 text-xs text-apple-mute">
+            {Array.from(excerpt).length} / {NEWS_EXCERPT_LIMIT}
+          </p>
         </div>
 
         {/* Featured Image URL */}
@@ -872,7 +899,7 @@ export default function AdminNewsCreate() {
 
         {/* Error feedback */}
         {saveError && (
-          <div className="rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red">
+          <div role="alert" className="rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red">
             {saveError}
           </div>
         )}
