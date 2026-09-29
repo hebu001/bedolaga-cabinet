@@ -1,4 +1,3 @@
-import { PageLoadingProvider } from './components/common/PageLoadingIndicator';
 import './styles/legacyOrangeButtons.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -117,13 +116,11 @@ if ('requestIdleCallback' in window) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary level="app">
-      <PageLoadingProvider>
-        <I18nBootstrap>
-          <SessionQueryProvider>
-            <AppWithNavigator />
-          </SessionQueryProvider>
-        </I18nBootstrap>
-      </PageLoadingProvider>
+      <I18nBootstrap>
+        <SessionQueryProvider>
+          <AppWithNavigator />
+        </SessionQueryProvider>
+      </I18nBootstrap>
     </ErrorBoundary>
   </React.StrictMode>,
 );
