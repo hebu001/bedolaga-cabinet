@@ -1,18 +1,19 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { ChevronDownIcon } from '@/components/admin/legacyIcons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useEffect,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  buttonStylesApi,
-  type ButtonStylesConfig,
-  DEFAULT_BUTTON_STYLES,
-  BUTTON_SECTIONS,
-  type ButtonSection,
-  BOT_LOCALES,
+BOT_LOCALES,
+BUTTON_SECTIONS,
+type ButtonSection,
+buttonStylesApi,
+type ButtonStylesConfig,
+DEFAULT_BUTTON_STYLES,
 } from '../../api/buttonStyles';
-import { ChevronDownIcon } from '@/components/icons';
-import { Toggle } from './Toggle';
-import { useNotify } from '../../platform/hooks/useNotify';
+
 import { useNativeDialog } from '../../platform/hooks/useNativeDialog';
+import { useNotify } from '../../platform/hooks/useNotify';
+import { Toggle } from './Toggle';
 
 type StyleValue = 'primary' | 'success' | 'danger' | 'default';
 

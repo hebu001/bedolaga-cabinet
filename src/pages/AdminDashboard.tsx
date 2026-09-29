@@ -1,42 +1,36 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
 import { backTo } from '@/components/admin';
-import { useTranslation } from 'react-i18next';
-import { METHOD_LABELS } from '../constants/paymentMethods';
+import { AdminDashboardStatCard } from '@/components/admin/LegacyPageStatCards';
 import { useQuery } from '@tanstack/react-query';
-import { statsApi, type NodeStatus } from '../api/admin';
-import { formatUptime, parseCalendarDate } from '../utils/format';
-
-const CABINET_VERSION = __APP_VERSION__;
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation,useNavigate } from 'react-router';
+import { statsApi,type NodeStatus } from '../api/admin';
+import { METHOD_LABELS } from '../constants/paymentMethods';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform } from '../platform/hooks/usePlatform';
+import { formatUptime,parseCalendarDate } from '../utils/format';
 
-import { StatCard } from '@/components/stats';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+const CABINET_VERSION = __APP_VERSION__;
+
 import {
-  BackIcon,
-  BanknotesIcon,
-  CalendarBlankIcon,
-  CalendarIcon,
-  ChartBarIcon,
-  CheckCircleIcon,
-  ChevronDownIcon,
-  ClockIcon,
-  CreditCardIcon,
-  ExclamationIcon,
-  MegaphoneIcon,
-  PowerIcon,
-  RefreshIcon,
-  RestartIcon,
-  ServerIcon,
-  SparklesIcon,
-  StarIcon,
-  TagIcon,
-  UsersIcon,
-  UsersOnlineIcon,
-  WalletIcon,
-  XCircleIcon,
-} from '@/components/icons';
+BackIcon,
+BanknotesIcon,
+ChartBarIcon,
+ChevronDownIcon,
+ExclamationIcon,
+MegaphoneIcon,
+PowerIcon,
+RefreshIcon,
+RestartIcon,
+ServerIcon,
+SparklesIcon,
+TagIcon,
+UsersIcon,
+UsersOnlineIcon,
+WalletIcon,
+} from '@/components/admin/legacyPageIcons/AdminDashboard';
+import { StatCard } from '@/components/stats';
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 
 interface NodeCardProps {
   node: NodeStatus;
@@ -70,13 +64,11 @@ function NodeCard({ node, onRestart, onToggle, isLoading }: NodeCardProps) {
   const hasError = node.last_status_message && !node.is_connected;
 
   return (
-    <div
-      className={`rounded-xl border bg-apple-card/50 ${node.is_disabled ? 'border-apple-hairline' : node.is_connected ? 'border-success-500/30' : 'border-error-500/30'} p-4 transition-colors hover:border-apple-hairline`}
-    >
+    <div className={`rounded-2xl bg-[#131315] p-4 transition-colors`}>
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
           <div
-            className={`h-3 w-3 shrink-0 rounded-full ${node.is_disabled ? 'bg-dark-500' : node.is_connected ? 'animate-pulse bg-success-500' : 'bg-error-500'}`}
+            className={`h-3 w-3 shrink-0 rounded-full ${node.is_disabled ? 'bg-apple-faint' : node.is_connected ? 'animate-pulse bg-apple-green' : 'bg-apple-red'}`}
           />
           <div className="min-w-0">
             <div className="font-medium text-apple-ink [overflow-wrap:anywhere]">{node.name}</div>
@@ -327,30 +319,30 @@ export default function AdminDashboard() {
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard
-          label={t('adminDashboard.stats.usersOnline')}
+        <AdminDashboardStatCard
+          title={t('adminDashboard.stats.usersOnline')}
           value={stats?.nodes.total_users_online || 0}
           icon={<UsersOnlineIcon className="h-5 w-5" />}
-          tone="success"
+          color="success"
         />
-        <StatCard
-          label={t('adminDashboard.stats.activeSubscriptions')}
+        <AdminDashboardStatCard
+          title={t('adminDashboard.stats.activeSubscriptions')}
           value={stats?.subscriptions.active || 0}
-          subValue={`${t('adminDashboard.stats.total')}: ${stats?.subscriptions.total || 0}`}
+          subtitle={`${t('adminDashboard.stats.total')}: ${stats?.subscriptions.total || 0}`}
           icon={<SparklesIcon className="h-5 w-5" />}
-          tone="accent"
+          color="accent"
         />
-        <StatCard
-          label={t('adminDashboard.stats.incomeToday')}
+        <AdminDashboardStatCard
+          title={t('adminDashboard.stats.incomeToday')}
           value={`${formatAmount(stats?.financial.income_today_rubles || 0)}\u00A0${currencySymbol}`}
           icon={<WalletIcon className="h-5 w-5" />}
-          tone="warning"
+          color="warning"
         />
-        <StatCard
-          label={t('adminDashboard.stats.incomeMonth')}
+        <AdminDashboardStatCard
+          title={t('adminDashboard.stats.incomeMonth')}
           value={`${formatAmount(stats?.financial.income_month_rubles || 0)}\u00A0${currencySymbol}`}
           icon={<ChartBarIcon className="h-5 w-5" />}
-          tone="accent"
+          color="accent"
         />
       </div>
 
@@ -440,18 +432,22 @@ export default function AdminDashboard() {
           </div>
           <RevenueChart data={stats?.revenue_chart || []} />
           <div className="mt-4 grid grid-cols-2 gap-4 border-t border-apple-hairline pt-4">
-            <StatCard
-              label={t('adminDashboard.stats.incomeTotal')}
-              value={`${formatAmount(stats?.financial.income_total_rubles || 0)}\u00A0${currencySymbol}`}
-              icon={<BanknotesIcon className="h-5 w-5" />}
-              tone="neutral"
-            />
-            <StatCard
-              label={t('adminDashboard.stats.subscriptionIncome')}
-              value={`${formatAmount(stats?.financial.subscription_income_rubles || 0)}\u00A0${currencySymbol}`}
-              icon={<SparklesIcon className="h-5 w-5" />}
-              tone="accent"
-            />
+            <div>
+              <div className="mb-1 text-xs text-apple-faint">
+                {t('adminDashboard.stats.incomeTotal')}
+              </div>
+              <div className="text-xl font-bold text-apple-ink">
+                {formatAmount(stats?.financial.income_total_rubles || 0)} {currencySymbol}
+              </div>
+            </div>
+            <div>
+              <div className="mb-1 text-xs text-apple-faint">
+                {t('adminDashboard.stats.subscriptionIncome')}
+              </div>
+              <div className="text-xl font-bold" style={{ color: '#F97315' }}>
+                {formatAmount(stats?.financial.subscription_income_rubles || 0)} {currencySymbol}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -473,55 +469,69 @@ export default function AdminDashboard() {
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <StatCard
-                label={t('adminDashboard.subscriptions.active')}
-                value={stats?.subscriptions.active || 0}
-                icon={<CheckCircleIcon className="h-5 w-5" />}
-                tone="success"
-              />
-              <StatCard
-                label={t('adminDashboard.subscriptions.trial')}
-                value={stats?.subscriptions.trial || 0}
-                icon={<StarIcon className="h-5 w-5" />}
-                tone="warning"
-              />
-              <StatCard
-                label={t('adminDashboard.subscriptions.paid')}
-                value={stats?.subscriptions.paid || 0}
-                icon={<CreditCardIcon className="h-5 w-5" />}
-                tone="accent"
-              />
-              <StatCard
-                label={t('adminDashboard.subscriptions.expired')}
-                value={stats?.subscriptions.expired || 0}
-                icon={<XCircleIcon className="h-5 w-5" />}
-                tone="error"
-              />
+              <div className="rounded-lg bg-apple-elevated p-4">
+                <div className="mb-1 text-xs text-apple-faint">
+                  {t('adminDashboard.subscriptions.active')}
+                </div>
+                <div className="text-2xl font-bold text-apple-green">
+                  {stats?.subscriptions.active || 0}
+                </div>
+              </div>
+              <div className="rounded-lg bg-apple-elevated p-4">
+                <div className="mb-1 text-xs text-apple-faint">
+                  {t('adminDashboard.subscriptions.trial')}
+                </div>
+                <div className="text-2xl font-bold text-apple-amber">
+                  {stats?.subscriptions.trial || 0}
+                </div>
+              </div>
+              <div className="rounded-lg bg-apple-elevated p-4">
+                <div className="mb-1 text-xs text-apple-faint">
+                  {t('adminDashboard.subscriptions.paid')}
+                </div>
+                <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+                  {stats?.subscriptions.paid || 0}
+                </div>
+              </div>
+              <div className="rounded-lg bg-apple-elevated p-4">
+                <div className="mb-1 text-xs text-apple-faint">
+                  {t('adminDashboard.subscriptions.expired')}
+                </div>
+                <div className="text-2xl font-bold text-apple-red">
+                  {stats?.subscriptions.expired || 0}
+                </div>
+              </div>
             </div>
 
             <div className="border-t border-apple-hairline pt-4">
               <div className="mb-3 text-sm font-medium text-apple-mute">
                 {t('adminDashboard.subscriptions.newSubscriptions')}
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
-                <StatCard
-                  label={t('adminDashboard.subscriptions.today')}
-                  value={stats?.subscriptions.purchased_today || 0}
-                  icon={<ClockIcon className="h-5 w-5" />}
-                  tone="neutral"
-                />
-                <StatCard
-                  label={t('adminDashboard.subscriptions.week')}
-                  value={stats?.subscriptions.purchased_week || 0}
-                  icon={<CalendarBlankIcon className="h-5 w-5" />}
-                  tone="neutral"
-                />
-                <StatCard
-                  label={t('adminDashboard.subscriptions.month')}
-                  value={stats?.subscriptions.purchased_month || 0}
-                  icon={<CalendarIcon className="h-5 w-5" />}
-                  tone="neutral"
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center">
+                  <div className="text-xl font-bold text-apple-ink">
+                    {stats?.subscriptions.purchased_today || 0}
+                  </div>
+                  <div className="text-xs text-apple-faint">
+                    {t('adminDashboard.subscriptions.today')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-apple-ink">
+                    {stats?.subscriptions.purchased_week || 0}
+                  </div>
+                  <div className="text-xs text-apple-faint">
+                    {t('adminDashboard.subscriptions.week')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-apple-ink">
+                    {stats?.subscriptions.purchased_month || 0}
+                  </div>
+                  <div className="text-xs text-apple-faint">
+                    {t('adminDashboard.subscriptions.month')}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -689,9 +699,7 @@ export default function AdminDashboard() {
                       {referrersTab === 'earnings' ? (
                         <>
                           <div className="text-xs font-semibold text-apple-green sm:text-sm">
-                            {formatAmount(ref.earnings_total_kopeks / 100)}
-                            {'\u00A0'}
-                            {currencySymbol}
+                            {formatAmount(ref.earnings_total_kopeks / 100)} {currencySymbol}
                           </div>
                           <div className="text-[10px] text-apple-faint sm:text-xs">
                             {ref.invited_count} {t('adminDashboard.topReferrers.invites')}
@@ -706,9 +714,7 @@ export default function AdminDashboard() {
                             {ref.invited_count} {t('adminDashboard.topReferrers.people')}
                           </div>
                           <div className="text-[10px] text-apple-faint sm:text-xs">
-                            {formatAmount(ref.earnings_total_kopeks / 100)}
-                            {'\u00A0'}
-                            {currencySymbol}
+                            {formatAmount(ref.earnings_total_kopeks / 100)} {currencySymbol}
                           </div>
                         </>
                       )}
@@ -718,40 +724,49 @@ export default function AdminDashboard() {
             </div>
 
             {/* Period Stats */}
-            <div className="mt-4 grid grid-cols-2 gap-2 border-t border-apple-hairline pt-4 sm:grid-cols-3 sm:gap-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
-              <StatCard
-                label={t('adminDashboard.period.today')}
-                value={`${formatAmount(
-                  (referrersTab === 'earnings'
-                    ? referrers.by_earnings
-                    : referrers.by_invited
-                  ).reduce((sum, r) => sum + r.earnings_today_kopeks, 0) / 100,
-                )}\u00A0${currencySymbol}`}
-                icon={<ClockIcon className="h-5 w-5" />}
-                tone="neutral"
-              />
-              <StatCard
-                label={t('adminDashboard.period.week')}
-                value={`${formatAmount(
-                  (referrersTab === 'earnings'
-                    ? referrers.by_earnings
-                    : referrers.by_invited
-                  ).reduce((sum, r) => sum + r.earnings_week_kopeks, 0) / 100,
-                )}\u00A0${currencySymbol}`}
-                icon={<CalendarBlankIcon className="h-5 w-5" />}
-                tone="neutral"
-              />
-              <StatCard
-                label={t('adminDashboard.period.month')}
-                value={`${formatAmount(
-                  (referrersTab === 'earnings'
-                    ? referrers.by_earnings
-                    : referrers.by_invited
-                  ).reduce((sum, r) => sum + r.earnings_month_kopeks, 0) / 100,
-                )}\u00A0${currencySymbol}`}
-                icon={<CalendarIcon className="h-5 w-5" />}
-                tone="neutral"
-              />
+            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-apple-hairline pt-4 sm:gap-3">
+              <div className="text-center">
+                <div className="mb-1 text-[10px] text-apple-faint sm:text-xs">
+                  {t('adminDashboard.period.today')}
+                </div>
+                <div className="truncate text-xs font-semibold text-apple-ink sm:text-base">
+                  {formatAmount(
+                    (referrersTab === 'earnings'
+                      ? referrers.by_earnings
+                      : referrers.by_invited
+                    ).reduce((sum, r) => sum + r.earnings_today_kopeks, 0) / 100,
+                  )}{' '}
+                  {currencySymbol}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="mb-1 text-[10px] text-apple-faint sm:text-xs">
+                  {t('adminDashboard.period.week')}
+                </div>
+                <div className="truncate text-xs font-semibold text-apple-ink sm:text-base">
+                  {formatAmount(
+                    (referrersTab === 'earnings'
+                      ? referrers.by_earnings
+                      : referrers.by_invited
+                    ).reduce((sum, r) => sum + r.earnings_week_kopeks, 0) / 100,
+                  )}{' '}
+                  {currencySymbol}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="mb-1 text-[10px] text-apple-faint sm:text-xs">
+                  {t('adminDashboard.period.month')}
+                </div>
+                <div className="truncate text-xs font-semibold text-apple-ink sm:text-base">
+                  {formatAmount(
+                    (referrersTab === 'earnings'
+                      ? referrers.by_earnings
+                      : referrers.by_invited
+                    ).reduce((sum, r) => sum + r.earnings_month_kopeks, 0) / 100,
+                  )}{' '}
+                  {currencySymbol}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -795,9 +810,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <div className="text-xs font-semibold text-apple-amber sm:text-sm">
-                      {formatAmount(campaign.total_revenue_kopeks / 100)}
-                      {'\u00A0'}
-                      {currencySymbol}
+                      {formatAmount(campaign.total_revenue_kopeks / 100)} {currencySymbol}
                     </div>
                     <div className="text-[10px] text-apple-faint sm:text-xs">
                       {campaign.registrations} · {campaign.conversion_rate.toFixed(0)}%
@@ -813,9 +826,7 @@ export default function AdminDashboard() {
                   {t('adminDashboard.topCampaigns.total')}
                 </span>
                 <span className="text-sm font-bold text-apple-amber sm:text-base">
-                  {formatAmount(campaigns.total_revenue_kopeks / 100)}
-                  {'\u00A0'}
-                  {currencySymbol}
+                  {formatAmount(campaigns.total_revenue_kopeks / 100)} {currencySymbol}
                 </span>
               </div>
             </div>

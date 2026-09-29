@@ -1,9 +1,11 @@
+import type { UserDetailResponse,UserPanelInfo } from '@/api/adminUsers';
+import { AdminBackButton } from '@/components/admin/AdminBackButton';
+import { CopyIcon } from '@/components/admin/legacyIcons';
+import { AccountStatusChip,UserAvatar } from '@/components/admin/users';
+import { TelegramSmallIcon } from '@/components/icons';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { UserDetailResponse, UserPanelInfo } from '@/api/adminUsers';
-import { AdminBackButton } from '@/components/admin/AdminBackButton';
-import { AccountStatusChip, UserAvatar } from '@/components/admin/users';
-import { CopyIcon, TelegramSmallIcon } from '@/components/icons';
+
 import { cn } from '@/lib/utils';
 import { useNotify } from '@/platform/hooks/useNotify';
 import { copyToClipboard } from '@/utils/clipboard';

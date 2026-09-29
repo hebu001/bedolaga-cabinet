@@ -1,29 +1,29 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { useHaptic, useNotify } from '../platform';
-import { useNativeDialog } from '../platform/hooks/useNativeDialog';
 import {
-  adminChannelsApi,
-  type RequiredChannel,
-  type CreateChannelRequest,
-  type UpdateChannelRequest,
+ChannelIcon,
+CheckIcon,
+EditIcon,
+LinkIcon,
+PlusIcon,
+RefreshIcon,
+SettingsIcon,
+TrashIcon,
+XIcon,
+} from '@/components/admin/legacyPageIcons/AdminChannelSubscriptions';
+import { PageSkeleton,Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+adminChannelsApi,
+type CreateChannelRequest,
+type RequiredChannel,
+type UpdateChannelRequest,
 } from '../api/adminChannels';
-import { adminSettingsApi, type SettingDefinition } from '../api/adminSettings';
+import { adminSettingsApi,type SettingDefinition } from '../api/adminSettings';
 import { AdminBackButton } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
-import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
-import {
-  ChannelIcon,
-  PlusIcon,
-  RefreshIcon,
-  TrashIcon,
-  CheckIcon,
-  XIcon,
-  EditIcon,
-  LinkIcon,
-  SettingsIcon,
-} from '@/components/icons';
+import { useHaptic,useNotify } from '../platform';
+import { useNativeDialog } from '../platform/hooks/useNativeDialog';
 
 // Setting toggle row for global settings
 const CHANNEL_SETTING_KEYS = [

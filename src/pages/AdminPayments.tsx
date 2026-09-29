@@ -1,25 +1,22 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router';
 import { backTo } from '@/components/admin';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { METHOD_LABELS } from '../constants/paymentMethods';
-import { adminPaymentsApi, type SearchStats } from '../api/adminPayments';
-import { DateField } from '../components/DateField';
-import { useCurrency } from '../hooks/useCurrency';
-import type { PendingPayment, PaginatedResponse } from '../types';
-import { usePlatform } from '../platform/hooks/usePlatform';
-import { StatCard } from '@/components/stats';
+import { RefreshIcon } from '@/components/admin/legacyIcons';
 import {
-  BackIcon,
-  SearchIcon,
-  CalendarIcon,
-  RefreshIcon,
-  CheckCircleIcon,
-  ChartBarIcon,
-  ClockIcon,
-  XCircleIcon,
-} from '@/components/icons';
+BackIcon,
+CalendarIcon,
+SearchIcon,
+} from '@/components/admin/legacyPageIcons/AdminPayments';
+import { AdminPaymentsStatCard } from '@/components/admin/LegacyPageStatCards';
+import { CheckCircleIcon } from '@/components/icons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useEffect,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation,useNavigate } from 'react-router';
+import { adminPaymentsApi,type SearchStats } from '../api/adminPayments';
+import { DateField } from '../components/DateField';
+import { METHOD_LABELS } from '../constants/paymentMethods';
+import { useCurrency } from '../hooks/useCurrency';
+import { usePlatform } from '../platform/hooks/usePlatform';
+import type { PaginatedResponse,PendingPayment } from '../types';
 
 interface StatusBadgeProps {
   status: string;
@@ -331,62 +328,34 @@ export default function AdminPayments() {
       {/* Stats cards */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <button
-            type="button"
+          <AdminPaymentsStatCard
+            label={t('admin.payments.totalCount')}
+            value={stats.total}
+            color="blue"
+            isActive={statusFilter === 'all'}
             onClick={() => handleStatusCardClick('all')}
-            className={`rounded-xl text-left transition-all ${
-              statusFilter === 'all' ? 'ring-2 ring-accent-500' : ''
-            }`}
-          >
-            <StatCard
-              label={t('admin.payments.totalCount')}
-              value={stats.total}
-              icon={<ChartBarIcon className="h-5 w-5" />}
-              tone="accent"
-            />
-          </button>
-          <button
-            type="button"
+          />
+          <AdminPaymentsStatCard
+            label={t('admin.payments.pendingCount')}
+            value={stats.pending}
+            color="amber"
+            isActive={statusFilter === 'pending'}
             onClick={() => handleStatusCardClick('pending')}
-            className={`rounded-xl text-left transition-all ${
-              statusFilter === 'pending' ? 'ring-2 ring-warning-500' : ''
-            }`}
-          >
-            <StatCard
-              label={t('admin.payments.pendingCount')}
-              value={stats.pending}
-              icon={<ClockIcon className="h-5 w-5" />}
-              tone="warning"
-            />
-          </button>
-          <button
-            type="button"
+          />
+          <AdminPaymentsStatCard
+            label={t('admin.payments.paidCount')}
+            value={stats.paid}
+            color="green"
+            isActive={statusFilter === 'paid'}
             onClick={() => handleStatusCardClick('paid')}
-            className={`rounded-xl text-left transition-all ${
-              statusFilter === 'paid' ? 'ring-2 ring-success-500' : ''
-            }`}
-          >
-            <StatCard
-              label={t('admin.payments.paidCount')}
-              value={stats.paid}
-              icon={<CheckCircleIcon className="h-5 w-5" />}
-              tone="success"
-            />
-          </button>
-          <button
-            type="button"
+          />
+          <AdminPaymentsStatCard
+            label={t('admin.payments.cancelledCount')}
+            value={stats.cancelled}
+            color="red"
+            isActive={statusFilter === 'cancelled'}
             onClick={() => handleStatusCardClick('cancelled')}
-            className={`rounded-xl text-left transition-all ${
-              statusFilter === 'cancelled' ? 'ring-2 ring-error-500' : ''
-            }`}
-          >
-            <StatCard
-              label={t('admin.payments.cancelledCount')}
-              value={stats.cancelled}
-              icon={<XCircleIcon className="h-5 w-5" />}
-              tone="error"
-            />
-          </button>
+          />
         </div>
       )}
 

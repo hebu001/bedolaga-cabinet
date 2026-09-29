@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { CheckIcon } from '@/components/admin/legacyIcons';
+import { useEffect,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDownIcon, ServerIcon } from '../TrafficIcons';
-import { CheckIcon } from '@/components/icons';
-import { getFlagEmoji } from '../trafficUsageHelpers';
+import { ChevronDownIcon,ServerIcon } from '../TrafficIcons';
+
 import type { TrafficNodeInfo } from '../../../../api/adminTraffic';
+import { getFlagEmoji } from '../trafficUsageHelpers';
 
 export function NodeFilter({
   available,

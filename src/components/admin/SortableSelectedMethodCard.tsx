@@ -1,13 +1,14 @@
+import { CheckIcon } from '@/components/admin/legacyIcons';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSortable } from '@dnd-kit/sortable';
 import { PiCaretDown } from 'react-icons/pi';
-import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../../lib/utils';
-import { CheckIcon } from '@/components/icons';
-import { GripIcon, TrashIcon } from '../icons/LandingIcons';
-import type { AdminLandingPaymentMethod, EditableMethodField } from '../../api/landings';
+
+import type { AdminLandingPaymentMethod,EditableMethodField } from '../../api/landings';
 import type { PaymentMethodSubOptionInfo } from '../../types';
+import { GripIcon,TrashIcon } from '../icons/LandingIcons';
 
 export type MethodWithId = AdminLandingPaymentMethod & { _id: string };
 

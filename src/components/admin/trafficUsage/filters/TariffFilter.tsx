@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { CheckIcon } from '@/components/admin/legacyIcons';
+import { useEffect,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDownIcon, FilterIcon } from '../TrafficIcons';
-import { CheckIcon } from '@/components/icons';
+import { ChevronDownIcon,FilterIcon } from '../TrafficIcons';
 
 export function TariffFilter({
   available,

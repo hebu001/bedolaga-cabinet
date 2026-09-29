@@ -1,19 +1,19 @@
-import { useMemo } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import DOMPurify from 'dompurify';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
-import { adminUpdatesApi, type ReleaseItem, type ProjectReleasesInfo } from '../api/adminUpdates';
 import {
-  BackIcon,
-  RefreshIcon,
-  BotIcon,
-  CabinetIcon,
-  TagIcon,
-  CalendarIcon,
-  ExternalLinkIcon,
-} from '@/components/icons';
+BackIcon,
+BotIcon,
+CabinetIcon,
+CalendarIcon,
+ExternalLinkIcon,
+RefreshIcon,
+TagIcon,
+} from '@/components/admin/legacyPageIcons/AdminUpdates';
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import DOMPurify from 'dompurify';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { adminUpdatesApi,type ProjectReleasesInfo,type ReleaseItem } from '../api/adminUpdates';
 
 declare const __APP_VERSION__: string;
 

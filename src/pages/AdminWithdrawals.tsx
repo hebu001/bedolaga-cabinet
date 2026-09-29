@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { ChevronRightIcon } from '@/components/admin/legacyIcons';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { withdrawalApi, type AdminWithdrawalItem } from '../api/withdrawals';
+import { useNavigate } from 'react-router';
+import { withdrawalApi,type AdminWithdrawalItem } from '../api/withdrawals';
 import { AdminBackButton } from '../components/admin';
-import { ChevronRightIcon, ClockIcon, WalletIcon } from '@/components/icons';
-import { StatCard } from '@/components/stats';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import { useCurrency } from '../hooks/useCurrency';
-import { formatDate, getWithdrawalStatusBadge, getRiskColor } from '../utils/withdrawalUtils';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { formatDate,getRiskColor,getWithdrawalStatusBadge } from '../utils/withdrawalUtils';
 
 // Status filter tabs
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled';
@@ -59,18 +59,20 @@ export default function AdminWithdrawals() {
       {/* Overview Stats */}
       {data && (
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <StatCard
-            label={t('admin.withdrawals.overview.pendingCount')}
-            value={pendingCount}
-            icon={<ClockIcon className="h-5 w-5" />}
-            tone="warning"
-          />
-          <StatCard
-            label={t('admin.withdrawals.overview.pendingAmount')}
-            value={formatWithCurrency(pendingTotal / 100, 0)}
-            icon={<WalletIcon className="h-5 w-5" />}
-            tone="warning"
-          />
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-amber">{pendingCount}</div>
+            <div className="text-sm text-apple-mute">
+              {t('admin.withdrawals.overview.pendingCount')}
+            </div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-amber">
+              {formatWithCurrency(pendingTotal / 100, 0)}
+            </div>
+            <div className="text-sm text-apple-mute">
+              {t('admin.withdrawals.overview.pendingAmount')}
+            </div>
+          </div>
         </div>
       )}
 

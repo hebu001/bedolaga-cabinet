@@ -1,20 +1,25 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { transliterate } from '../utils/transliterate';
+import { LinkIcon } from '@/components/admin/legacyIcons';
 import {
-  campaignsApi,
-  type CampaignCreateRequest,
-  type CampaignBonusType,
-  type ServerSquadInfo,
-  type TariffListItem,
+CampaignIcon,
+CheckIcon,
+RefreshIcon,
+} from '@/components/admin/legacyPageIcons/AdminCampaignCreate';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useEffect,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useSearchParams } from 'react-router';
+import Twemoji from 'react-twemoji';
+import {
+campaignsApi,
+type CampaignBonusType,
+type CampaignCreateRequest,
+type ServerSquadInfo,
+type TariffListItem,
 } from '../api/campaigns';
 import { partnerApi } from '../api/partners';
 import { AdminBackButton } from '../components/admin';
-import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
-import Twemoji from 'react-twemoji';
-import { CampaignIcon, CheckIcon, LinkIcon, RefreshIcon } from '@/components/icons';
+import { createNumberInputHandler,toNumber } from '../utils/inputHelpers';
+import { transliterate } from '../utils/transliterate';
 
 // Bonus type config
 const bonusTypeConfig: Record<

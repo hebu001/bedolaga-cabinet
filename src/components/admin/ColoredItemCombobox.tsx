@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { CheckIcon,ChevronDownIcon,CloseIcon,PlusIcon } from '@/components/admin/legacyIcons';
+import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckIcon, ChevronDownIcon, CloseIcon, PlusIcon } from '@/components/icons';
+
 import { cn } from '../../lib/utils';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 
@@ -363,4 +364,4 @@ export function ColoredItemCombobox({
   );
 }
 
-export type { ColoredItem, ColoredItemComboboxProps };
+export type { ColoredItem,ColoredItemComboboxProps };

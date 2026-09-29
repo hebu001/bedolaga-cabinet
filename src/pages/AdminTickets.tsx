@@ -1,30 +1,22 @@
-import { useAdminTicketDetail } from '@/components/admin/userDetail/useAdminTicketDetail';
-import { getSessionGeneration, isCurrentSession } from '@/utils/session';
-import { useState, useRef, useEffect } from 'react';
-import logger from '../utils/logger';
-import { linkifyText } from '../utils/linkify';
-import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { backTo } from '@/components/admin';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { XIcon } from '@/components/admin/legacyIcons';
+import { BackIcon } from '@/components/admin/legacyPageIcons/AdminTickets';
+import { useAdminTicketDetail } from '@/components/admin/userDetail/useAdminTicketDetail';
+import { PaperclipIcon,SettingsIcon,TicketIcon } from '@/components/icons';
+import { getSessionGeneration,isCurrentSession } from '@/utils/session';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useEffect,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { adminApi, type AdminTicket, type AdminTicketDetail } from '../api/admin';
+import { Link,useLocation,useNavigate,useParams } from 'react-router';
+import { adminApi,type AdminTicket,type AdminTicketDetail } from '../api/admin';
 import { ticketsApi } from '../api/tickets';
-import { copyToClipboard as copyText } from '../utils/clipboard';
+import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import {
-  BackIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  InboxIcon,
-  PaperclipIcon,
-  SettingsIcon,
-  TicketIcon,
-  XCircleIcon,
-  XIcon,
-} from '@/components/icons';
-import { StatCard } from '@/components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { copyToClipboard as copyText } from '../utils/clipboard';
+import { linkifyText } from '../utils/linkify';
+import logger from '../utils/logger';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 interface MediaAttachment {
   id: string;
@@ -334,37 +326,33 @@ export default function AdminTickets() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <StatCard
-            label={t('admin.tickets.total')}
-            value={stats.total}
-            icon={<TicketIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.tickets.statusOpen')}
-            value={stats.open}
-            icon={<InboxIcon className="h-5 w-5" />}
-            tone="accent"
-          />
-          <StatCard
-            label={t('admin.tickets.statusPending')}
-            value={stats.pending}
-            icon={<ClockIcon className="h-5 w-5" />}
-            tone="warning"
-          />
-          <StatCard
-            label={t('admin.tickets.statusAnswered')}
-            value={stats.answered}
-            icon={<CheckCircleIcon className="h-5 w-5" />}
-            tone="success"
-          />
-          <div className="col-span-2 sm:col-span-1">
-            <StatCard
-              label={t('admin.tickets.statusClosed')}
-              value={stats.closed}
-              icon={<XCircleIcon className="h-5 w-5" />}
-              tone="neutral"
-            />
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-ink">{stats.total}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">{t('admin.tickets.total')}</div>
+          </div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {stats.open}
+            </div>
+            <div className="mt-1 text-[13px] text-apple-mute">{t('admin.tickets.statusOpen')}</div>
+          </div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-amber">{stats.pending}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">
+              {t('admin.tickets.statusPending')}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-green">{stats.answered}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">
+              {t('admin.tickets.statusAnswered')}
+            </div>
+          </div>
+          <div className="col-span-2 rounded-2xl bg-apple-card p-4 text-center sm:col-span-1">
+            <div className="text-2xl font-bold text-apple-mute">{stats.closed}</div>
+            <div className="mt-1 text-[13px] text-apple-mute">
+              {t('admin.tickets.statusClosed')}
+            </div>
           </div>
         </div>
       )}

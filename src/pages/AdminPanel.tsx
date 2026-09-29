@@ -1,14 +1,16 @@
+import { BellIcon } from '@/components/admin/legacyIcons';
+import { LifebuoyIcon,RadarIcon } from '@/components/icons';
 import { integrationCapabilities } from '@/config/integrationCapabilities';
 import { useQuery } from '@tanstack/react-query';
-import { RadarIcon, BellIcon, LifebuoyIcon } from '@/components/icons';
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
-import { Link } from 'react-router';
-import { useTranslation } from 'react-i18next';
-import { usePermissionStore } from '@/store/permissions';
-import { statsApi, type SystemInfo, type DashboardStats } from '@/api/admin';
+
+import { statsApi,type DashboardStats,type SystemInfo } from '@/api/admin';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { cn } from '@/lib/utils';
+import { usePermissionStore } from '@/store/permissions';
+import { memo,useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 const CABINET_VERSION = __APP_VERSION__;
 const IS_MAC = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent);

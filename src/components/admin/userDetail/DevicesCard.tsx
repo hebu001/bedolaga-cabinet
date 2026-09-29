@@ -1,7 +1,9 @@
+import { CheckIcon,EditIcon,XIcon } from '@/components/admin/legacyIcons';
+import { DevicesIcon } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckIcon, DevicesIcon, EditIcon, XIcon } from '@/components/icons';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import { useDestructiveConfirm } from '@/platform/hooks/useNativeDialog';
 import { formatShortDate } from '@/utils/format';
 import { DEVICE_ALIAS_MAX_LENGTH } from '../../../constants/devices';

@@ -1,10 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router';
-import { useTranslation } from 'react-i18next';
-import { adminRemindersApi, type ReminderResponse } from '@/api/adminReminders';
+import { adminRemindersApi,type ReminderResponse } from '@/api/adminReminders';
 import { AdminBackButton } from '@/components/admin';
+import { EditIcon,PlusIcon,TrashIcon } from '@/components/admin/legacyIcons';
 import { PermissionGate } from '@/components/auth/PermissionGate';
-import { EditIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+
 import { useNativeDialog } from '@/platform/hooks/useNativeDialog';
 
 export default function AdminReminders() {
@@ -30,13 +31,13 @@ export default function AdminReminders() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <AdminBackButton />
-          <h1 className="text-xl font-bold text-dark-50">{t('admin.reminders.title')}</h1>
+          <h1 className="text-xl font-bold text-apple-ink">{t('admin.reminders.title')}</h1>
         </div>
         <PermissionGate permission="user_reminders:create">
           <button
             type="button"
             onClick={() => navigate('/admin/reminders/create')}
-            className="flex items-center gap-2 rounded-xl bg-[#F97315] px-4 py-2 text-sm font-medium text-white"
+            className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2 text-sm font-medium text-white"
           >
             <PlusIcon /> {t('admin.reminders.create')}
           </button>
@@ -51,7 +52,7 @@ export default function AdminReminders() {
         {data.map((r) => (
           <div
             key={r.id}
-            className={`rounded-xl border p-4 ${r.is_active ? 'border-success-500/50 bg-success-500/5' : 'border-apple-hairline bg-apple-card/50'}`}
+            className={`apple-card-grad rounded-2xl bg-apple-card p-4 ${r.is_active ? '' : 'opacity-60'}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -70,7 +71,7 @@ export default function AdminReminders() {
                     {t(`admin.reminders.channels.${r.channels}`)}
                   </span>
                 </div>
-                <div className="font-medium text-dark-50">{r.name}</div>
+                <div className="font-medium text-apple-ink">{r.name}</div>
                 <div className="mt-1 text-xs text-apple-mute">
                   {t('admin.reminders.stats', {
                     sent: r.stats.sent_total,

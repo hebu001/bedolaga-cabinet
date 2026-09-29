@@ -1,45 +1,46 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { transliterate } from '../utils/transliterate';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import {
+AlignCenterIcon,
+AlignLeftIcon,
+BoldIcon,
+ChevronDownIcon,
+ChevronUpIcon,
+CodeBlockIcon,
+HighlightIcon,
+ImageIcon,
+ItalicIcon,
+LinkIcon,
+ListBulletIcon,
+ListOrderedIcon,
+PlusSmallIcon,
+QuoteIcon,
+StrikeIcon,
+TrashSmallIcon,
+UnderlineIcon,
+} from '@/components/admin/legacyPageIcons/AdminInfoPageEditor';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import HighlightExtension from '@tiptap/extension-highlight';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import UnderlineExtension from '@tiptap/extension-underline';
-import HighlightExtension from '@tiptap/extension-highlight';
-import { VideoExtension } from '../lib/tiptap-video';
+import { EditorContent,useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useParams,useSearchParams } from 'react-router';
 import { infoPagesApi } from '../api/infoPages';
 import { newsApi } from '../api/news';
-import { usePrompt } from '../store/promptDialog';
 import { AdminBackButton } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
-import { useHapticFeedback } from '../platform/hooks/useHaptic';
+import { VideoExtension } from '../lib/tiptap-video';
 import { cn } from '../lib/utils';
-import {
-  BoldIcon,
-  ItalicIcon,
-  UnderlineIcon,
-  StrikeIcon,
-  ListBulletIcon,
-  ListOrderedIcon,
-  QuoteIcon,
-  CodeBlockIcon,
-  ImageIcon,
-  LinkIcon,
-  AlignLeftIcon,
-  AlignCenterIcon,
-  HighlightIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
-  TrashSmallIcon,
-  PlusSmallIcon,
-} from '@/components/icons';
-import type { InfoPageType, FaqItem, ReplacesTab, InfoPageDisplayMode } from '../api/infoPages';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { useHapticFeedback } from '../platform/hooks/useHaptic';
+import { usePrompt } from '../store/promptDialog';
+import { transliterate } from '../utils/transliterate';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import type { FaqItem,InfoPageDisplayMode,InfoPageType,ReplacesTab } from '../api/infoPages';
 
 const AVAILABLE_LOCALES = ['ru', 'en', 'zh', 'fa'] as const;
 type LocaleCode = (typeof AVAILABLE_LOCALES)[number];

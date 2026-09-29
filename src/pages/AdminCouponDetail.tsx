@@ -1,26 +1,20 @@
+import { BackIcon,CheckIcon,CopyIcon,DownloadIcon } from '@/components/admin/legacyIcons';
+import { ChartBarIcon,CheckCircleIcon,TicketIcon } from '@/components/icons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import i18n from '../i18n';
+import { useNavigate,useParams } from 'react-router';
 import { couponsApi } from '../api/coupons';
-import { usePlatform } from '../platform/hooks/usePlatform';
-import { copyToClipboard } from '../utils/clipboard';
-import { formatPrice, formatShortDate } from '../utils/format';
-import { getApiErrorMessage } from '../utils/api-error';
 import { useToast } from '../components/Toast';
 import { PermissionGate } from '../components/auth/PermissionGate';
-import {
-  BackIcon,
-  CheckIcon,
-  CheckCircleIcon,
-  ChartBarIcon,
-  CopyIcon,
-  DownloadIcon,
-  TicketIcon,
-} from '@/components/icons';
+import i18n from '../i18n';
+import { usePlatform } from '../platform/hooks/usePlatform';
+import { getApiErrorMessage } from '../utils/api-error';
+import { copyToClipboard } from '../utils/clipboard';
+import { formatPrice,formatShortDate } from '../utils/format';
+
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 import { StatCard } from '../components/stats';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminCouponDetail() {
   const { t } = useTranslation();

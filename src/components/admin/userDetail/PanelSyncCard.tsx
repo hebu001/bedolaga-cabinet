@@ -1,19 +1,20 @@
 import { canCreatePanelUser } from '@/api/adminPanelIdentity';
-import { useTranslation } from 'react-i18next';
 import type { PanelSyncStatusResponse } from '@/api/adminUsers';
+import { RemnawaveIcon } from '@/components/admin/legacyIcons';
 import { relativeLabel } from '@/components/admin/users';
-import { RemnawaveIcon } from '@/components/icons';
+import { useTranslation } from 'react-i18next';
+
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 import { useNativeDialog } from '@/platform/hooks/useNativeDialog';
-import { formatDayMonth, formatShortDate } from '@/utils/format';
+import { formatDayMonth,formatShortDate } from '@/utils/format';
 import { formatGb } from '@/utils/formatNumber';
 import { relativeTimeParts } from '@/utils/relativeTime';
 import {
-  type SyncRowKey,
-  isBotStatusLive,
-  isPanelStatusLive,
-  panelSyncRows,
+type SyncRowKey,
+isBotStatusLive,
+isPanelStatusLive,
+panelSyncRows,
 } from './panelSyncRows';
 import { Section } from './sectionParts';
 

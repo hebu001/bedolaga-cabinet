@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { CheckIcon } from '@/components/icons';
-import { ChevronDownIcon, GlobeIcon } from '../TrafficIcons';
+import { CheckIcon } from '@/components/admin/legacyIcons';
+import { useEffect,useRef,useState } from 'react';
+
+import { ChevronDownIcon,GlobeIcon } from '../TrafficIcons';
 import { getFlagEmoji } from '../trafficUsageHelpers';
 
 export function CountryFilter({

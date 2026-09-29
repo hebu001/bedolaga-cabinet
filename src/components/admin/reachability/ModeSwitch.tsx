@@ -1,15 +1,10 @@
+import { GlobeIcon,ServerIcon } from '@/components/admin/legacyIcons';
+import { HistoryIcon,MapPinIcon,ScanIcon,ShieldIcon } from '@/components/icons';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  GlobeIcon,
-  HistoryIcon,
-  MapPinIcon,
-  ScanIcon,
-  ServerIcon,
-  ShieldIcon,
-} from '@/components/icons';
+
 import { cn } from '@/lib/utils';
-import { type PageTab, TAB_KEYS } from './deepLink';
+import { type PageTab,TAB_KEYS } from './deepLink';
 
 interface ModeSwitchProps {
   value: PageTab;

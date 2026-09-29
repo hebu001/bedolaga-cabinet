@@ -1,7 +1,8 @@
+import type { UserNodeUsageResponse } from '@/api/adminUsers';
+import { ChartIcon } from '@/components/admin/legacyIcons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { UserNodeUsageResponse } from '@/api/adminUsers';
-import { ChartIcon } from '@/components/icons';
+
 import { Segmented } from '@/components/admin/Segmented';
 import { formatGb } from '@/utils/formatNumber';
 import { getFlagEmoji } from '../../../utils/subscriptionHelpers';

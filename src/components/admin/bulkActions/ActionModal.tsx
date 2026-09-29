@@ -1,19 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { CheckIcon,ChevronDownIcon,XIcon } from '@/components/admin/legacyIcons';
+import { XCloseIcon } from '@/components/icons';
+import { cn } from '@/lib/utils';
+import { useEffect,useMemo,useRef,useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
-import { CheckIcon, ChevronDownIcon, XCloseIcon, XIcon } from '@/components/icons';
+
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { DropdownSelect } from './DropdownSelect';
-import type { UserListItem } from '../../../api/adminUsers';
-import type { TariffListItem } from '../../../api/tariffs';
-import type { PromoGroup } from '../../../api/promocodes';
 import type {
-  BulkActionType,
-  BulkActionParams,
-  BulkActionResult,
-  BulkProgressEvent,
+BulkActionParams,
+BulkActionResult,
+BulkActionType,
+BulkProgressEvent,
 } from '../../../api/adminBulkActions';
+import type { UserListItem } from '../../../api/adminUsers';
+import type { PromoGroup } from '../../../api/promocodes';
+import type { TariffListItem } from '../../../api/tariffs';
+import { DropdownSelect } from './DropdownSelect';
 
 // ──────────────────────────────────────────────────────────────────
 // ActionModal

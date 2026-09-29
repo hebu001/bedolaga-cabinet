@@ -1,16 +1,17 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
-  rbacApi,
-  type AccessPolicy,
-  type CreatePolicyPayload,
-  type UpdatePolicyPayload,
+rbacApi,
+type AccessPolicy,
+type CreatePolicyPayload,
+type UpdatePolicyPayload,
 } from '@/api/rbac';
 import { AdminBackButton } from '@/components/admin';
-import { XIcon } from '@/components/icons';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { XIcon } from '@/components/admin/legacyIcons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useMemo,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useParams } from 'react-router';
+
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 
 // === Types ===
 

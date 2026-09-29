@@ -1,7 +1,9 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { PlusIcon } from '@/components/admin/legacyIcons';
+import { MinusIcon,ResetIcon } from '@/components/icons';
+import { useLayoutEffect,useMemo,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
-import { MinusIcon, PlusIcon, ResetIcon } from '@/components/icons';
+import { TransformComponent,TransformWrapper } from 'react-zoom-pan-pinch';
+
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**

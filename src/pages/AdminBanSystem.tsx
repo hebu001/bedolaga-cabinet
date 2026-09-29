@@ -1,47 +1,44 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import { StatCard } from '@/components/stats';
+import { PageSkeleton,Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
+import { useCallback,useEffect,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+banSystemApi,
+type BanAgentsListResponse,
+type BanHealthResponse,
+type BanNodesListResponse,
+type BanPunishmentsListResponse,
+type BanReportResponse,
+type BanSettingDefinition,
+type BanSettingsResponse,
+type BanSystemStats,
+type BanSystemStatus,
+type BanTrafficResponse,
+type BanTrafficViolationsResponse,
+type BanUserDetailResponse,
+type BanUsersListResponse,
+} from '../api/banSystem';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { StatCard } from '@/components/stats';
-import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
-import {
-  banSystemApi,
-  type BanSystemStatus,
-  type BanSystemStats,
-  type BanUsersListResponse,
-  type BanUserDetailResponse,
-  type BanPunishmentsListResponse,
-  type BanNodesListResponse,
-  type BanAgentsListResponse,
-  type BanTrafficViolationsResponse,
-  type BanSettingsResponse,
-  type BanSettingDefinition,
-  type BanTrafficResponse,
-  type BanReportResponse,
-  type BanHealthResponse,
-} from '../api/banSystem';
 
+import { BackIcon,ClockIcon,XIcon } from '@/components/admin/legacyIcons';
 import {
-  ShieldIcon,
-  UsersIcon,
-  BanIcon,
-  ServerIcon,
-  AgentIcon,
-  WarningIcon,
-  RefreshIcon,
-  ChartIcon,
-  SearchIcon,
-  SettingsIcon,
-  TrafficIcon,
-  ReportIcon,
-  HealthIcon,
-  ExclamationIcon,
-  BackIcon,
-  XIcon,
-  ClockIcon,
-  StatusIcon,
-} from '@/components/icons';
+AgentIcon,
+BanIcon,
+ChartIcon,
+HealthIcon,
+RefreshIcon,
+ReportIcon,
+SearchIcon,
+ServerIcon,
+SettingsIcon,
+ShieldIcon,
+TrafficIcon,
+UsersIcon,
+WarningIcon,
+} from '@/components/admin/legacyPageIcons/AdminBanSystem';
+import { ExclamationIcon,StatusIcon } from '@/components/icons';
 
 type TabType =
   | 'dashboard'

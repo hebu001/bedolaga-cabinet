@@ -1,27 +1,28 @@
-import '@/styles/legacyApple.css';
 import { PromptDialogHost } from '@/components/PromptDialogHost';
 import { resetVirtualKeyboard, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
+import '@/styles/legacyAdmin.css';
+import '@/styles/legacyApple.css';
 import { useEffect, useState } from 'react';
-import { useLocation, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation } from 'react-router';
 
-import { useAuthStore } from '@/store/auth';
-import { useHaptic } from '@/platform';
-import { useTelegramSDK } from '@/hooks/useTelegramSDK';
-import { useHeaderHeight } from '@/hooks/useHeaderHeight';
 import { useBranding } from '@/hooks/useBranding';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useHeaderHeight } from '@/hooks/useHeaderHeight';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { cn } from '@/lib/utils';
+import { useHaptic } from '@/platform';
+import { useAuthStore } from '@/store/auth';
 
-import WebSocketNotifications from '@/components/WebSocketNotifications';
 import CampaignBonusNotifier from '@/components/CampaignBonusNotifier';
 import SuccessNotificationModal from '@/components/SuccessNotificationModal';
+import WebSocketNotifications from '@/components/WebSocketNotifications';
 import { useDockItems } from './useDockItems';
 
-import { MobileBottomNav } from './MobileBottomNav';
-import { AppHeader } from './AppHeader';
 import { BackgroundRenderer } from '@/components/backgrounds/BackgroundRenderer';
+import { AppHeader } from './AppHeader';
+import { MobileBottomNav } from './MobileBottomNav';
 
 const LogoutIcon = ({ className }: { className?: string }) => (
   <svg
@@ -90,7 +91,14 @@ export function AppShell({ children }: AppShellProps) {
     location.pathname.startsWith('/profile') || location.pathname.startsWith('/referral');
   const isSupport = location.pathname.startsWith('/support');
   const isAdminPage = location.pathname.startsWith('/admin');
+  const keepCurrentAdminStyle = /^\/admin\/(?:(?:users|sales-stats)\/?$|tariffs(?:\/|$))/.test(
+    location.pathname,
+  );
   const isGift = location.pathname.startsWith('/gift');
+  const isNewAdminPage =
+    /^\/admin\/(?:grace-access|reachability|coupons|partners\/referral-levels|reminders|legal-pages|system-errors)(?:\/|$)/.test(
+      location.pathname,
+    );
   const isHeaderHidden =
     isDashboard ||
     isConnection ||
@@ -106,16 +114,21 @@ export function AppShell({ children }: AppShellProps) {
   const isAppleDarkPage =
     isBalance || isSubscription || isProfile || isSupport || isAdminPage || isGift;
 
+  // Portals attach to body; keep the same palette as their admin route.
+  useEffect(() => {
+    if (!isAdminPage || keepCurrentAdminStyle) return;
+    document.body.classList.add('legacy-admin');
+    if (isNewAdminPage) document.body.classList.add('legacy-admin-new');
+    return () => document.body.classList.remove('legacy-admin', 'legacy-admin-new');
+  }, [isAdminPage, keepCurrentAdminStyle, isNewAdminPage]);
+
   return (
     <div
       className={cn(
         'app-shell min-h-[100dvh]',
         isAppleDarkPage && 'bg-black',
-        (isSubscription ||
-          isBalance ||
-          location.pathname === '/admin' ||
-          location.pathname === '/admin/') &&
-          'legacy-apple',
+        (isSubscription || isBalance || (isAdminPage && !keepCurrentAdminStyle)) && 'legacy-apple',
+        isNewAdminPage && 'legacy-admin-new',
       )}
     >
       {/* Animated background renders via portal on document.body at z-index: -1 */}

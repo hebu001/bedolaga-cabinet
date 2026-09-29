@@ -1,16 +1,23 @@
-import { useCallback, useState, memo } from 'react';
-import { useLocation, useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+FileTextIcon,
+PencilIcon,
+PlusIcon,
+RefreshIcon,
+TrashIcon,
+} from '@/components/admin/legacyPageIcons/AdminInfoPages';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { memo,useCallback,useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation,useNavigate } from 'react-router';
 import { infoPagesApi } from '../api/infoPages';
-import { AdminBackButton, backTo } from '../components/admin';
+import { AdminBackButton,backTo } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
+import { cn } from '../lib/utils';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
-import { cn } from '../lib/utils';
-import { FileTextIcon, PencilIcon, PlusIcon, RefreshIcon, TrashIcon } from '@/components/icons';
-import type { InfoPageListItem, InfoPageType } from '../api/infoPages';
+
 import { ListRowSkeleton } from '@/components/admin/ListRowSkeleton';
+import type { InfoPageListItem,InfoPageType } from '../api/infoPages';
 
 type FilterTab = 'all' | 'page' | 'faq';
 

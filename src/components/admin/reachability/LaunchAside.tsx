@@ -1,14 +1,15 @@
+import type { SkippedUnit } from '@/api/reachability';
+import { ChevronDownIcon } from '@/components/admin/legacyIcons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { SkippedUnit } from '@/api/reachability';
-import { ChevronDownIcon } from '@/components/icons';
+
 import { Button } from '@/components/primitives';
-import { HIDDEN_UNDER_KEYBOARD, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
+import { HIDDEN_UNDER_KEYBOARD,useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 import { cn } from '@/lib/utils';
 import { LaunchConfirm } from './LaunchConfirm';
-import type { LaunchState } from './useLaunch';
-import { formatCredits, formatKopeks, formatMoney } from './money';
+import { formatCredits,formatKopeks,formatMoney } from './money';
 import { unitNames } from './unitLabel';
+import type { LaunchState } from './useLaunch';
 import { useUnits } from './useUnits';
 
 export interface LaunchProps {

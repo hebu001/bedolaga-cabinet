@@ -1,10 +1,11 @@
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import { adminUsersApi } from '@/api/adminUsers';
-import { ClockIcon } from '@/components/icons';
+import { ClockIcon } from '@/components/admin/legacyIcons';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+
+import { Segmented } from '@/components/admin/Segmented';
 import { ActivityTab } from './ActivityTab';
 import { GiftsTab } from './GiftsTab';
-import { Segmented } from '@/components/admin/Segmented';
 import { TicketsTab } from './TicketsTab';
 import { Section } from './sectionParts';
 

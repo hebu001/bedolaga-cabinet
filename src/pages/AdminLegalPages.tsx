@@ -1,19 +1,21 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronDownIcon,PlusIcon,TrashIcon } from '@/components/admin/legacyIcons';
+import { ChevronUpIcon } from '@/components/icons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useEffect,useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  adminLegalPagesApi,
-  type FaqPageItem,
-  type FaqSettingItem,
-  type LegalDisplayMode,
+adminLegalPagesApi,
+type FaqPageItem,
+type FaqSettingItem,
+type LegalDisplayMode,
 } from '../api/adminLegalPages';
 import { AdminBackButton } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
+import { cn } from '../lib/utils';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
-import { cn } from '../lib/utils';
-import { ChevronDownIcon, ChevronUpIcon, PlusIcon, TrashIcon } from '@/components/icons';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 type LegalTab = 'privacy' | 'offer' | 'recurrent' | 'rules' | 'faq';
 

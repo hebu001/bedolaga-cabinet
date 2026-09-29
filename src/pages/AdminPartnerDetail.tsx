@@ -1,22 +1,12 @@
-import { useLocation, useParams, useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { partnerApi } from '../api/partners';
-import { AdminBackButton, backTo } from '../components/admin';
-import { useCurrency } from '../hooks/useCurrency';
+import { XIcon } from '@/components/admin/legacyIcons';
 import { StatCard } from '@/components/stats';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
-import {
-  XIcon,
-  UsersIcon,
-  CheckCircleIcon,
-  UsersOnlineIcon,
-  PercentIcon,
-  BanknotesIcon,
-  CalendarIcon,
-  CalendarBlankIcon,
-  CalendarStarIcon,
-} from '@/components/icons';
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { useLocation,useNavigate,useParams } from 'react-router';
+import { partnerApi } from '../api/partners';
+import { AdminBackButton,backTo } from '../components/admin';
+import { useCurrency } from '../hooks/useCurrency';
 
 // Status badge config — keys must match backend PartnerStatus enum values
 const statusConfig: Record<string, { labelKey: string; color: string; bgColor: string }> = {
@@ -133,30 +123,34 @@ export default function AdminPartnerDetail() {
       <div className="space-y-6">
         {/* Referral Stats */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard
-            label={t('admin.partnerDetail.stats.totalReferrals')}
-            value={partner.total_referrals}
-            icon={<UsersIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.partnerDetail.stats.paidReferrals')}
-            value={partner.paid_referrals}
-            icon={<CheckCircleIcon className="h-5 w-5" />}
-            tone="success"
-          />
-          <StatCard
-            label={t('admin.partnerDetail.stats.activeReferrals')}
-            value={partner.active_referrals}
-            icon={<UsersOnlineIcon className="h-5 w-5" />}
-            tone="accent"
-          />
-          <StatCard
-            label={t('admin.partnerDetail.stats.conversionRate')}
-            value={`${partner.conversion_to_paid}%`}
-            icon={<PercentIcon className="h-5 w-5" />}
-            tone="accent"
-          />
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-ink">{partner.total_referrals}</div>
+            <div className="text-xs text-apple-faint">
+              {t('admin.partnerDetail.stats.totalReferrals')}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold text-apple-green">{partner.paid_referrals}</div>
+            <div className="text-xs text-apple-faint">
+              {t('admin.partnerDetail.stats.paidReferrals')}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {partner.active_referrals}
+            </div>
+            <div className="text-xs text-apple-faint">
+              {t('admin.partnerDetail.stats.activeReferrals')}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-apple-card p-4 text-center">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {partner.conversion_to_paid}%
+            </div>
+            <div className="text-xs text-apple-faint">
+              {t('admin.partnerDetail.stats.conversionRate')}
+            </div>
+          </div>
         </div>
 
         {/* Earnings */}
@@ -165,30 +159,38 @@ export default function AdminPartnerDetail() {
             {t('admin.partnerDetail.earnings.title')}
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard
-              label={t('admin.partnerDetail.earnings.allTime')}
-              value={formatWithCurrency(partner.earnings_all_time / 100)}
-              icon={<BanknotesIcon className="h-5 w-5" />}
-              tone="success"
-            />
-            <StatCard
-              label={t('admin.partnerDetail.earnings.today')}
-              value={formatWithCurrency(partner.earnings_today / 100)}
-              icon={<CalendarIcon className="h-5 w-5" />}
-              tone="neutral"
-            />
-            <StatCard
-              label={t('admin.partnerDetail.earnings.week')}
-              value={formatWithCurrency(partner.earnings_week / 100)}
-              icon={<CalendarBlankIcon className="h-5 w-5" />}
-              tone="neutral"
-            />
-            <StatCard
-              label={t('admin.partnerDetail.earnings.month')}
-              value={formatWithCurrency(partner.earnings_month / 100)}
-              icon={<CalendarStarIcon className="h-5 w-5" />}
-              tone="neutral"
-            />
+            <div className="rounded-xl bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
+                {t('admin.partnerDetail.earnings.allTime')}
+              </div>
+              <div className="text-lg font-medium text-apple-green">
+                {formatWithCurrency(partner.earnings_all_time / 100)}
+              </div>
+            </div>
+            <div className="rounded-xl bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
+                {t('admin.partnerDetail.earnings.today')}
+              </div>
+              <div className="text-lg font-medium text-apple-ink">
+                {formatWithCurrency(partner.earnings_today / 100)}
+              </div>
+            </div>
+            <div className="rounded-xl bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
+                {t('admin.partnerDetail.earnings.week')}
+              </div>
+              <div className="text-lg font-medium text-apple-ink">
+                {formatWithCurrency(partner.earnings_week / 100)}
+              </div>
+            </div>
+            <div className="rounded-xl bg-apple-elevated p-3">
+              <div className="mb-1 text-sm text-apple-mute">
+                {t('admin.partnerDetail.earnings.month')}
+              </div>
+              <div className="text-lg font-medium text-apple-ink">
+                {formatWithCurrency(partner.earnings_month / 100)}
+              </div>
+            </div>
           </div>
         </div>
 

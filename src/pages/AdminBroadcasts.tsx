@@ -1,18 +1,18 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import {
+BackIcon,
+BroadcastIcon,
+DocumentIcon,
+PhotoIcon,
+PlusIcon,
+RefreshIcon,
+VideoIcon,
+} from '@/components/admin/legacyPageIcons/AdminBroadcasts';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo,useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { adminBroadcastsApi } from '../api/adminBroadcasts';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import {
-  BackIcon,
-  BroadcastIcon,
-  DocumentIcon,
-  PhotoIcon,
-  PlusIcon,
-  RefreshIcon,
-  VideoIcon,
-} from '@/components/icons';
 
 // Status badge component
 const statusConfig: Record<string, { bg: string; text: string; labelKey: string }> = {

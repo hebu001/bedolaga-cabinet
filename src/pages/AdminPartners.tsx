@@ -1,24 +1,18 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { ChevronRightIcon } from '@/components/admin/legacyIcons';
+import { SettingsIcon } from '@/components/icons';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import {
-  partnerApi,
-  type AdminPartnerItem,
-  type AdminPartnerApplicationItem,
+partnerApi,
+type AdminPartnerApplicationItem,
+type AdminPartnerItem,
 } from '../api/partners';
 import { AdminBackButton } from '../components/admin';
 import { useCurrency } from '../hooks/useCurrency';
-import {
-  BanknotesIcon,
-  ChevronRightIcon,
-  InboxIcon,
-  PartnerIcon,
-  SettingsIcon,
-  UserPlusIcon,
-} from '@/components/icons';
-import { StatCard } from '@/components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 export default function AdminPartners() {
   const { t } = useTranslation();
@@ -67,30 +61,24 @@ export default function AdminPartners() {
       {/* Stats Overview */}
       {stats && (
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <StatCard
-            label={t('admin.partners.totalPartners')}
-            value={stats.total_partners}
-            icon={<PartnerIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.partners.pendingApplications')}
-            value={stats.pending_applications}
-            icon={<InboxIcon className="h-5 w-5" />}
-            tone="accent"
-          />
-          <StatCard
-            label={t('admin.partners.totalReferrals')}
-            value={stats.total_referrals}
-            icon={<UserPlusIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.partners.totalEarnings')}
-            value={formatWithCurrency(stats.total_earnings_kopeks / 100)}
-            icon={<BanknotesIcon className="h-5 w-5" />}
-            tone="success"
-          />
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{stats.total_partners}</div>
+            <div className="text-sm text-apple-mute">{t('admin.partners.totalPartners')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-[#F97315]">{stats.pending_applications}</div>
+            <div className="text-sm text-apple-mute">{t('admin.partners.pendingApplications')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{stats.total_referrals}</div>
+            <div className="text-sm text-apple-mute">{t('admin.partners.totalReferrals')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-green">
+              {formatWithCurrency(stats.total_earnings_kopeks / 100)}
+            </div>
+            <div className="text-sm text-apple-mute">{t('admin.partners.totalEarnings')}</div>
+          </div>
         </div>
       )}
 

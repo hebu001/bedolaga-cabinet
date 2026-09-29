@@ -1,7 +1,8 @@
-import { Fragment, type ReactNode, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import type { Leg } from '@/api/reachability';
-import { ChevronDownIcon } from '@/components/icons';
+import { ChevronDownIcon } from '@/components/admin/legacyIcons';
+import { Fragment,type ReactNode,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '@/lib/utils';
 import { OperatorIcon } from './OperatorIcon';
 import { ProbeDot } from './ProbeDot';

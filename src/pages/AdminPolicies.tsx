@@ -1,26 +1,23 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { rbacApi, type AccessPolicy, type AdminRole } from '@/api/rbac';
-import { PermissionGate } from '@/components/auth/PermissionGate';
-import { usePlatform } from '@/platform/hooks/usePlatform';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { StatCard } from '@/components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { rbacApi,type AccessPolicy,type AdminRole } from '@/api/rbac';
 import {
-  BackIcon,
-  BoltIcon,
-  CalendarIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  EditIcon,
-  GlobeIcon,
-  PlusIcon,
-  ShieldIcon,
-  TrashIcon,
-  XCircleIcon,
-} from '@/components/icons';
+BackIcon,
+BoltIcon,
+CalendarIcon,
+ClockIcon,
+EditIcon,
+GlobeIcon,
+PlusIcon,
+ShieldIcon,
+TrashIcon,
+} from '@/components/admin/legacyPageIcons/AdminPolicies';
+import { PermissionGate } from '@/components/auth/PermissionGate';
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { usePlatform } from '@/platform/hooks/usePlatform';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useMemo,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 interface PolicyConditions {
   time_range?: { start: string; end: string };
@@ -247,30 +244,28 @@ export default function AdminPolicies() {
       {/* Stats Overview */}
       {sortedPolicies.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard
-            label={t('admin.policies.stats.total')}
-            value={sortedPolicies.length}
-            icon={<ShieldIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.policies.stats.allow')}
-            value={sortedPolicies.filter((p) => p.effect === 'allow').length}
-            icon={<CheckCircleIcon className="h-5 w-5" />}
-            tone="success"
-          />
-          <StatCard
-            label={t('admin.policies.stats.deny')}
-            value={sortedPolicies.filter((p) => p.effect === 'deny').length}
-            icon={<XCircleIcon className="h-5 w-5" />}
-            tone="error"
-          />
-          <StatCard
-            label={t('admin.policies.stats.active')}
-            value={sortedPolicies.filter((p) => p.is_active).length}
-            icon={<BoltIcon className="h-5 w-5" />}
-            tone="accent"
-          />
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{sortedPolicies.length}</div>
+            <div className="text-xs text-apple-mute">{t('admin.policies.stats.total')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-green">
+              {sortedPolicies.filter((p) => p.effect === 'allow').length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.policies.stats.allow')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-red">
+              {sortedPolicies.filter((p) => p.effect === 'deny').length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.policies.stats.deny')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {sortedPolicies.filter((p) => p.is_active).length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.policies.stats.active')}</div>
+          </div>
         </div>
       )}
 

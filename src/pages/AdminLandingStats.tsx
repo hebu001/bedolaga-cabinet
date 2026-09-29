@@ -1,39 +1,40 @@
-import { useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { Cell, Funnel, FunnelChart, LabelList, ResponsiveContainer } from 'recharts';
+import { ChevronRightIcon as ChevronRightSmall,WalletIcon } from '@/components/admin/legacyIcons';
 import {
-  adminLandingsApi,
-  resolveLocaleDisplay,
-  type PurchaseItemStatus,
-  type LandingPurchaseItem,
+ArrowRightIcon,
+ChartIcon,
+EmailIcon,
+GiftIcon,
+TelegramSmallIcon,
+} from '@/components/admin/legacyPageIcons/AdminLandingStats';
+import {
+BanknotesIcon,
+CardIcon,
+CheckCircleIcon,
+ChevronLeftIcon as ChevronLeftSmall,
+EyeIcon,
+PercentIcon,
+TicketIcon,
+} from '@/components/icons';
+import { PageSkeleton,Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import { useMemo,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useParams } from 'react-router';
+import { Cell,Funnel,FunnelChart,LabelList,ResponsiveContainer } from 'recharts';
+import {
+adminLandingsApi,
+resolveLocaleDisplay,
+type LandingPurchaseItem,
+type PurchaseItemStatus,
 } from '../api/landings';
-import { useCurrency } from '../hooks/useCurrency';
-import { CHART_COMMON } from '../constants/charts';
 import { AdminBackButton } from '../components/admin';
-import { StatCard } from '../components/stats';
 import { BreakdownList } from '../components/sales-stats/BreakdownList';
 import { DonutChart } from '../components/sales-stats/DonutChart';
-import { SimpleAreaChart } from '../components/sales-stats/SimpleAreaChart';
 import { MultiSeriesAreaChart } from '../components/sales-stats/MultiSeriesAreaChart';
-import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
-import {
-  ChartIcon,
-  EmailIcon,
-  TelegramSmallIcon,
-  ArrowRightIcon,
-  GiftIcon,
-  EyeIcon,
-  CheckCircleIcon,
-  BanknotesIcon,
-  PercentIcon,
-  TicketIcon,
-  CardIcon,
-  WalletIcon,
-  ChevronLeftIcon as ChevronLeftSmall,
-  ChevronRightIcon as ChevronRightSmall,
-} from '@/components/icons';
+import { SimpleAreaChart } from '../components/sales-stats/SimpleAreaChart';
+import { StatCard } from '../components/stats';
+import { CHART_COMMON } from '../constants/charts';
+import { useCurrency } from '../hooks/useCurrency';
 
 const FUNNEL_COLORS = ['#f59e0b', '#34d399'];
 const GIFT_DONUT = { regular: '#818cf8', gift: '#a855f7' };

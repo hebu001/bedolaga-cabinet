@@ -1,20 +1,21 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router';
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { adminUsersApi, type UserDetailResponse } from '@/api/adminUsers';
+import { adminUsersApi,type UserDetailResponse } from '@/api/adminUsers';
 import { backTo } from '@/components/admin/AdminBackButton';
-import { SubscriptionStateChip, UserAvatar, useMoney } from '@/components/admin/users';
-import { CopyIcon, LinkIcon, UsersIcon, WalletIcon, XIcon } from '@/components/icons';
+import { CopyIcon,LinkIcon,UsersIcon,WalletIcon,XIcon } from '@/components/admin/legacyIcons';
+import { SubscriptionStateChip,UserAvatar,useMoney } from '@/components/admin/users';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link,useLocation } from 'react-router';
+
 import { StatCard } from '@/components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useNotify } from '@/platform/hooks/useNotify';
 import { useDestructiveConfirm } from '@/platform/hooks/useNativeDialog';
+import { useNotify } from '@/platform/hooks/useNotify';
 import { copyToClipboard } from '@/utils/clipboard';
 import { formatShortDate } from '@/utils/format';
 import { UserPicker } from './UserPicker';
-import { KeyValues, LinkAction, Section } from './sectionParts';
+import { KeyValues,LinkAction,Section } from './sectionParts';
 import { useAdminAction } from './useAdminAction';
 
 export interface ReferralsTabProps {

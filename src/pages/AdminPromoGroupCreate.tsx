@@ -1,16 +1,21 @@
-import { useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
-  promocodesApi,
-  type PromoGroup,
-  type PromoGroupCreateRequest,
-  type PromoGroupUpdateRequest,
+PlusIcon,
+RefreshIcon,
+TrashIcon,
+} from '@/components/admin/legacyPageIcons/AdminPromoGroupCreate';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useParams } from 'react-router';
+import {
+promocodesApi,
+type PromoGroup,
+type PromoGroupCreateRequest,
+type PromoGroupUpdateRequest,
 } from '../api/promocodes';
 import { AdminBackButton } from '../components/admin';
-import { PlusIcon, RefreshIcon, TrashIcon } from '@/components/icons';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 
 interface PeriodDiscount {
   days: number | '';

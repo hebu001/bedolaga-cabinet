@@ -1,17 +1,24 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import i18n from '../i18n';
 import {
-  promoOffersApi,
-  type PromoOfferLog,
-  OFFER_TYPE_CONFIG,
-  type OfferType,
+BackIcon,
+ClockIcon,
+EditIcon,
+SendIcon,
+UserIcon,
+} from '@/components/admin/legacyPageIcons/AdminPromoOffers';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import {
+OFFER_TYPE_CONFIG,
+promoOffersApi,
+type OfferType,
+type PromoOfferLog,
 } from '../api/promoOffers';
+import i18n from '../i18n';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import { BackIcon, EditIcon, SendIcon, ClockIcon, UserIcon } from '@/components/icons';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 // Helper functions
 const formatDateTime = (date: string | null): string => {

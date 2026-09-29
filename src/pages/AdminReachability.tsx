@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router';
 import { RadarIcon } from '@/components/icons';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link,useSearchParams } from 'react-router';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
 import { Launcher } from '../components/admin/reachability/Launcher';
 import { ModeSwitch } from '../components/admin/reachability/ModeSwitch';
@@ -10,9 +10,9 @@ import { RecentJobs } from '../components/admin/reachability/RecentJobs';
 import { SetupGuide } from '../components/admin/reachability/SetupGuide';
 import { TierBadge } from '../components/admin/reachability/TierBadge';
 import {
-  type PageTab,
-  REACHABILITY_SETTINGS_PATH,
-  parseReachabilityDeepLink,
+type PageTab,
+REACHABILITY_SETTINGS_PATH,
+parseReachabilityDeepLink,
 } from '../components/admin/reachability/deepLink';
 import { FleetCheck } from '../components/admin/reachability/fleet/FleetCheck';
 import { formatCredits } from '../components/admin/reachability/money';
@@ -55,7 +55,7 @@ export default function AdminReachability() {
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-dark-50">{t('admin.reachability.title')}</h1>
+            <h1 className="text-xl font-bold text-apple-ink">{t('admin.reachability.title')}</h1>
             {status?.tier && ready && <TierBadge tier={status.tier} />}
           </div>
           <p className="text-xs text-apple-mute">{t('admin.reachability.subtitle')}</p>

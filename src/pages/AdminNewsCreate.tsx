@@ -1,47 +1,45 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { getApiErrorMessage } from '../utils/api-error';
-import { NEWS_EXCERPT_LIMIT, NEWS_TAG_LIMIT, newsLengthError } from '../utils/newsValidation';
-import { transliterate } from '../utils/transliterate';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import {
+AlignCenterIcon,
+AlignLeftIcon,
+BoldIcon,
+CodeBlockIcon,
+HighlightIcon,
+ImageIcon,
+ItalicIcon,
+LinkIcon,
+ListBulletIcon,
+ListOrderedIcon,
+QuoteIcon,
+StrikeIcon,
+UnderlineIcon,
+UploadIcon,
+} from '@/components/admin/legacyPageIcons/AdminNewsCreate';
+import { H1Icon,H2Icon,H3Icon } from '@/components/icons';
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import HighlightExtension from '@tiptap/extension-highlight';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import UnderlineExtension from '@tiptap/extension-underline';
-import HighlightExtension from '@tiptap/extension-highlight';
-import { VideoExtension } from '../lib/tiptap-video';
+import { EditorContent,useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useParams } from 'react-router';
 import { newsApi } from '../api/news';
-import { usePrompt } from '../store/promptDialog';
 import { AdminBackButton } from '../components/admin';
 import { ColoredItemCombobox } from '../components/admin/ColoredItemCombobox';
 import { Toggle } from '../components/admin/Toggle';
-import { useHapticFeedback } from '../platform/hooks/useHaptic';
+import { VideoExtension } from '../lib/tiptap-video';
 import { cn } from '../lib/utils';
-import type { NewsCategory, NewsTag, NewsCreateRequest } from '../types/news';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
-import {
-  BoldIcon,
-  ItalicIcon,
-  UnderlineIcon,
-  StrikeIcon,
-  H1Icon,
-  H2Icon,
-  H3Icon,
-  ListBulletIcon,
-  ListOrderedIcon,
-  QuoteIcon,
-  CodeBlockIcon,
-  ImageIcon,
-  LinkIcon,
-  AlignLeftIcon,
-  AlignCenterIcon,
-  HighlightIcon,
-  UploadIcon,
-} from '@/components/icons';
+import { useHapticFeedback } from '../platform/hooks/useHaptic';
+import { usePrompt } from '../store/promptDialog';
+import type { NewsCategory,NewsCreateRequest,NewsTag } from '../types/news';
+import { getApiErrorMessage } from '../utils/api-error';
+import { NEWS_EXCERPT_LIMIT,NEWS_TAG_LIMIT,newsLengthError } from '../utils/newsValidation';
+import { transliterate } from '../utils/transliterate';
 
 // --- Toolbar Button ---
 interface ToolbarButtonProps {

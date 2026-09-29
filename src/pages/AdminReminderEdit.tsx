@@ -1,23 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
-import { useTranslation } from 'react-i18next';
-import { PermissionGate } from '@/components/auth/PermissionGate';
 import {
-  adminRemindersApi,
-  type AuthCondition,
-  type ReminderButtonKind,
-  type ReminderChannels,
-  type ReminderPayload,
-  type ReminderText,
-  type SubscriptionSegment,
+adminRemindersApi,
+type AuthCondition,
+type ReminderButtonKind,
+type ReminderChannels,
+type ReminderPayload,
+type ReminderText,
+type SubscriptionSegment,
 } from '@/api/adminReminders';
+import { PermissionGate } from '@/components/auth/PermissionGate';
+import { useMutation,useQuery } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
+import { useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useParams } from 'react-router';
 
 const LANGS = ['ru', 'en', 'ua', 'zh', 'fa'] as const;
 const CABINET_PRESETS = ['/profile/accounts', '/subscriptions', '/balance'];
 const inputClass =
-  'w-full rounded-xl border border-apple-hairline bg-apple-card px-3 py-2 text-sm text-dark-50';
+  'w-full rounded-xl border border-apple-hairline bg-apple-card px-3 py-2 text-sm text-apple-ink';
 
 function toInt(value: string): number | null {
   const n = Number.parseInt(value, 10);
@@ -226,7 +226,7 @@ export default function AdminReminderEdit() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-dark-50">
+      <h1 className="text-xl font-bold text-apple-ink">
         {t(editId !== null ? 'admin.reminders.editTitle' : 'admin.reminders.createTitle')}
       </h1>
 
@@ -472,7 +472,7 @@ export default function AdminReminderEdit() {
 
       <section className="rounded-2xl border border-[#F97315]/30 bg-[#F97315]/5 p-4">
         <div className="text-xs text-apple-mute">{t('admin.reminders.form.preview')}</div>
-        <div className="mt-1 font-semibold text-dark-50">{preview.title}</div>
+        <div className="mt-1 font-semibold text-apple-ink">{preview.title}</div>
         <div className="whitespace-pre-line text-sm text-apple-mute">{preview.body}</div>
       </section>
 

@@ -1,23 +1,21 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import { rbacApi } from '@/api/rbac';
-import { PermissionGate } from '@/components/auth/PermissionGate';
-import { usePermissionStore } from '@/store/permissions';
-import { usePlatform } from '@/platform/hooks/usePlatform';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
 import {
-  BackIcon,
-  PlusIcon,
-  EditIcon,
-  TrashIcon,
-  ShieldIcon,
-  CheckCircleIcon,
-  CogIcon,
-} from '@/components/icons';
-import { StatCard } from '@/components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+BackIcon,
+EditIcon,
+PlusIcon,
+ShieldIcon,
+TrashIcon,
+} from '@/components/admin/legacyPageIcons/AdminRoles';
+import { PermissionGate } from '@/components/auth/PermissionGate';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { usePlatform } from '@/platform/hooks/usePlatform';
+import { usePermissionStore } from '@/store/permissions';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useMemo,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 export default function AdminRoles() {
   const { t } = useTranslation();
@@ -100,24 +98,22 @@ export default function AdminRoles() {
       {/* Stats Overview */}
       {sortedRoles.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <StatCard
-            label={t('admin.roles.stats.totalRoles')}
-            value={sortedRoles.length}
-            icon={<ShieldIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.roles.stats.active')}
-            value={sortedRoles.filter((r) => r.is_active).length}
-            icon={<CheckCircleIcon className="h-5 w-5" />}
-            tone="accent"
-          />
-          <StatCard
-            label={t('admin.roles.stats.system')}
-            value={sortedRoles.filter((r) => r.is_system).length}
-            icon={<CogIcon className="h-5 w-5" />}
-            tone="warning"
-          />
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{sortedRoles.length}</div>
+            <div className="text-xs text-apple-mute">{t('admin.roles.stats.totalRoles')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {sortedRoles.filter((r) => r.is_active).length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.roles.stats.active')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-amber">
+              {sortedRoles.filter((r) => r.is_system).length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.roles.stats.system')}</div>
+          </div>
         </div>
       )}
 

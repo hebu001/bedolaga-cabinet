@@ -1,13 +1,13 @@
-import { useParams, useNavigate } from 'react-router';
+import { CheckIcon,ServerIcon,UsersIcon,XIcon } from '@/components/admin/legacyIcons';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminRemnawaveApi, type SquadWithLocalInfo } from '../api/adminRemnawave';
+import { useNavigate,useParams } from 'react-router';
+import { adminRemnawaveApi,type SquadWithLocalInfo } from '../api/adminRemnawave';
 import { AdminBackButton } from '../components/admin';
-import { ServerIcon, UsersIcon, CheckIcon, XIcon, BanknotesIcon } from '../components/icons';
-import { StatCard } from '@/components/stats';
+
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 import Twemoji from 'react-twemoji';
 import { getFlagEmoji } from '../utils/subscriptionHelpers';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 // Country flag helper. Алгоритмический ISO 3166-1 alpha-2 → regional indicator,
 // чтобы не плодить хардкод-словари (исторически у каждого экрана был свой
@@ -128,33 +128,43 @@ export default function AdminRemnawaveSquadDetail() {
           {t('admin.remnawave.squads.statsTitle', 'Statistics')}
         </h3>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard
-            label={t('admin.remnawave.squads.members', 'Members')}
-            value={squad.members_count}
-            icon={<UsersIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.remnawave.squads.inbounds', 'Inbounds')}
-            value={squad.inbounds_count}
-            icon={<ServerIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
+          <div className="rounded-xl bg-apple-elevated p-4">
+            <div className="flex items-center gap-2 text-apple-mute">
+              <UsersIcon className="h-4 w-4" />
+              <span className="text-sm">{t('admin.remnawave.squads.members', 'Members')}</span>
+            </div>
+            <p className="mt-1 text-2xl font-bold text-apple-ink">{squad.members_count}</p>
+          </div>
+          <div className="rounded-xl bg-apple-elevated p-4">
+            <div className="flex items-center gap-2 text-apple-mute">
+              <ServerIcon className="h-4 w-4" />
+              <span className="text-sm">{t('admin.remnawave.squads.inbounds', 'Inbounds')}</span>
+            </div>
+            <p className="mt-1 text-2xl font-bold text-apple-ink">{squad.inbounds_count}</p>
+          </div>
           {squad.is_synced && (
             <>
-              <StatCard
-                label={t('admin.remnawave.squads.users', 'Users')}
-                value={squad.current_users ?? 0}
-                icon={<UsersIcon className="h-5 w-5" />}
-                tone="neutral"
-                subValue={`/ ${squad.max_users ?? '∞'}`}
-              />
-              <StatCard
-                label={t('admin.remnawave.squads.price', 'Price')}
-                value={`${((squad.price_kopeks ?? 0) / 100).toFixed(0)}\u00A0₽`}
-                icon={<BanknotesIcon className="h-5 w-5" />}
-                tone="neutral"
-              />
+              <div className="rounded-xl bg-apple-elevated p-4">
+                <div className="flex items-center gap-2 text-apple-mute">
+                  <UsersIcon className="h-4 w-4" />
+                  <span className="text-sm">{t('admin.remnawave.squads.users', 'Users')}</span>
+                </div>
+                <p className="mt-1 text-2xl font-bold text-apple-ink">
+                  {squad.current_users ?? 0}
+                  <span className="text-sm font-normal text-apple-mute">
+                    {' '}
+                    / {squad.max_users ?? '∞'}
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-xl bg-apple-elevated p-4">
+                <div className="flex items-center gap-2 text-apple-mute">
+                  <span className="text-sm">{t('admin.remnawave.squads.price', 'Price')}</span>
+                </div>
+                <p className="mt-1 text-2xl font-bold text-apple-ink">
+                  {((squad.price_kopeks ?? 0) / 100).toFixed(0)} ₽
+                </p>
+              </div>
             </>
           )}
         </div>

@@ -1,6 +1,7 @@
 /* Source: codex/cabinet-ux-performance-20260906, tailwind.config.js apple palette.
    These route tokens reproduce that branch; no new design system is introduced. */
-.legacy-apple {
+.legacy-apple,
+.legacy-admin {
   --color-apple-bg: 0, 0, 0;
   /* Old generatePalette lightness ladder, using the old default theme colors. */
   --color-accent-300: 138, 180, 250;
@@ -29,7 +30,8 @@
   --color-apple-amber: 255, 159, 10;
 }
 /* Old fixed rgba hairline; the new Tailwind helper otherwise makes it opaque. */
-.legacy-apple .border-apple-hairline {
+.legacy-apple .border-apple-hairline,
+.legacy-admin .border-apple-hairline {
   border-color: rgba(255, 255, 255, 0.08);
   --tw-border-opacity: 0.08;
 }

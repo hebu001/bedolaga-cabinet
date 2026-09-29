@@ -1,47 +1,47 @@
-import { PiListChecks as CallbackIcon } from 'react-icons/pi';
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  type DragEndEvent,
+ArrowDownIcon,
+ArrowUpIcon,
+GripIcon,
+LinkIcon,
+PlusIcon,
+TrashIcon,
+} from '@/components/admin/legacyPageIcons/MenuEditorTab';
+import {
+closestCenter,
+DndContext,
+KeyboardSensor,
+PointerSensor,
+useSensor,
+useSensors,
+type DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
+arrayMove,
+SortableContext,
+sortableKeyboardCoordinates,
+useSortable,
+verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { PiCaretDown } from 'react-icons/pi';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { PiListChecks as CallbackIcon,PiCaretDown } from 'react-icons/pi';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import {
-  GripIcon,
-  TrashIcon,
-  PlusIcon,
-  LinkIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-} from '@/components/icons';
-import {
-  menuLayoutApi,
-  type MenuConfig,
-  type MenuRowConfig,
-  type MenuButtonConfig,
-  BUILTIN_SECTIONS,
-  BOT_LOCALES,
-  STYLE_OPTIONS,
+BOT_LOCALES,
+BUILTIN_SECTIONS,
+menuLayoutApi,
+STYLE_OPTIONS,
+type MenuButtonConfig,
+type MenuConfig,
+type MenuRowConfig,
 } from '../../api/menuLayout';
-import { Toggle } from './Toggle';
-import { useNotify } from '../../platform/hooks/useNotify';
 import { useNativeDialog } from '../../platform/hooks/useNativeDialog';
+import { useNotify } from '../../platform/hooks/useNotify';
 import { getApiErrorMessage } from '../../utils/api-error';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { Toggle } from './Toggle';
 
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
   <PiCaretDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />

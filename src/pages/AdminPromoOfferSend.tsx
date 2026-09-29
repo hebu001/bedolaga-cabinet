@@ -1,34 +1,34 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { XIcon } from '@/components/admin/legacyIcons';
 import {
-  promoOffersApi,
-  type PromoOfferBroadcastRequest,
-  TARGET_SEGMENTS,
-  type TargetSegment,
-  OFFER_TYPE_CONFIG,
-  type OfferType,
-} from '../api/promoOffers';
+CheckIcon,
+CloseIcon,
+SearchIcon,
+SendIcon,
+UserIcon,
+UsersIcon,
+} from '@/components/admin/legacyPageIcons/AdminPromoOfferSend';
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useEffect,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { adminBroadcastsApi } from '../api/adminBroadcasts';
-import { adminUsersApi, type UserListItem } from '../api/adminUsers';
+import { adminUsersApi,type UserListItem } from '../api/adminUsers';
+import {
+OFFER_TYPE_CONFIG,
+promoOffersApi,
+TARGET_SEGMENTS,
+type OfferType,
+type PromoOfferBroadcastRequest,
+type TargetSegment,
+} from '../api/promoOffers';
 import { AdminBackButton } from '../components/admin';
 import {
-  BroadcastDeliveryStats,
-  BroadcastStatusBadge,
+BroadcastDeliveryStats,
+BroadcastStatusBadge,
 } from '../components/broadcasts/BroadcastDeliveryStats';
-import { broadcastPollInterval } from '../utils/broadcastStatus';
 import { getApiErrorMessage } from '../utils/api-error';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
-import {
-  SendIcon,
-  CheckIcon,
-  UsersIcon,
-  UserIcon,
-  SearchIcon,
-  CloseIcon,
-  XIcon,
-} from '@/components/icons';
+import { broadcastPollInterval } from '../utils/broadcastStatus';
 
 const getOfferTypeIcon = (offerType: string): string => {
   return OFFER_TYPE_CONFIG[offerType as OfferType]?.icon || '🎁';

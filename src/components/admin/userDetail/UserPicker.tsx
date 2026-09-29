@@ -1,10 +1,11 @@
-import { type ReactNode, useEffect, useId, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { adminUsersApi, type UserListItem } from '@/api/adminUsers';
+import { adminUsersApi,type UserListItem } from '@/api/adminUsers';
+import { SearchIcon } from '@/components/admin/legacyIcons';
 import { UserAvatar } from '@/components/admin/users';
-import { SearchIcon } from '@/components/icons';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/primitives';
+import { useQuery } from '@tanstack/react-query';
+import { type ReactNode,useEffect,useId,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { Popover,PopoverContent,PopoverTrigger } from '@/components/primitives';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 import { classifySearch } from '@/pages/adminUsers/usersListState';

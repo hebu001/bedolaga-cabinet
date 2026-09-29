@@ -1,6 +1,7 @@
-import { useTranslation } from 'react-i18next';
 import type { Probes } from '@/api/reachability';
-import { CheckIcon } from '@/components/icons';
+import { CheckIcon } from '@/components/admin/legacyIcons';
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '@/lib/utils';
 
 interface ProbesRowProps {

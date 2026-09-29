@@ -1,55 +1,53 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  type DragEndEvent,
+closestCenter,
+DndContext,
+KeyboardSensor,
+PointerSensor,
+useSensor,
+useSensors,
+type DragEndEvent,
 } from '@dnd-kit/core';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useEffect,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { adminWheelApi, type WheelPrizeAdmin, type CreateWheelPrizeData } from '../api/wheel';
-import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
-import { useDestructiveConfirm } from '@/platform';
-import { useNotify } from '@/platform/hooks/useNotify';
-import FortuneWheel from '../components/wheel/FortuneWheel';
 import { ColorPicker } from '@/components/ColorPicker';
 import {
-  AdjustmentsIcon,
-  BackIcon,
-  ChartIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CogIcon,
-  GiftIcon,
-  GripVerticalIcon,
-  PlusIcon,
-  StarIcon,
-  TicketIcon,
-  TrashIcon,
-  WalletIcon,
-  WheelIcon,
-  XMarkIcon,
-} from '@/components/icons';
-import { StatCard } from '@/components/stats';
+AdjustmentsIcon,
+BackIcon,
+ChartIcon,
+CheckIcon,
+ChevronDownIcon,
+ChevronUpIcon,
+CogIcon,
+GiftIcon,
+GripVerticalIcon,
+PlusIcon,
+StarIcon,
+TicketIcon,
+TrashIcon,
+XMarkIcon,
+} from '@/components/admin/legacyPageIcons/AdminWheel';
+import { useDestructiveConfirm } from '@/platform';
+import { useNotify } from '@/platform/hooks/useNotify';
+import {
+arrayMove,
+SortableContext,
+sortableKeyboardCoordinates,
+useSortable,
+verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
+import { adminWheelApi,type CreateWheelPrizeData,type WheelPrizeAdmin } from '../api/wheel';
+import FortuneWheel from '../components/wheel/FortuneWheel';
+
 import { BreakdownList } from '@/components/sales-stats/BreakdownList';
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/hooks/useCurrency';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { toNumber } from '../utils/inputHelpers';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 const PRIZE_TYPE_KEYS = [
   { value: 'subscription_days', key: 'subscription_days', emoji: '📅' },
@@ -897,31 +895,40 @@ export default function AdminWheel() {
       {activeTab === 'statistics' && stats && stats.total_spins > 0 && (
         <div className="space-y-4">
           {/* Headline metrics — shared StatCard, like the rest of the admin stats */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard
-              label={t('admin.wheel.statistics.totalSpins')}
-              value={stats.total_spins}
-              icon={<WheelIcon className="h-5 w-5" />}
-              tone="accent"
-            />
-            <StatCard
-              label={t('admin.wheel.statistics.revenue')}
-              value={formatWithCurrency(stats.total_revenue_kopeks / 100, 0)}
-              icon={<WalletIcon className="h-5 w-5" />}
-              tone="success"
-            />
-            <StatCard
-              label={t('admin.wheel.statistics.payouts')}
-              value={formatWithCurrency(stats.total_payout_kopeks / 100, 0)}
-              icon={<GiftIcon className="h-5 w-5" />}
-              tone="warning"
-            />
-            <StatCard
-              label={`${t('admin.wheel.statistics.actualRtp')} · ${t('admin.wheel.statistics.targetRtp')} ${stats.configured_rtp_percent}%`}
-              value={`${stats.actual_rtp_percent.toFixed(1)}%`}
-              icon={<ChartIcon className="h-5 w-5" />}
-              tone={stats.actual_rtp_percent <= stats.configured_rtp_percent ? 'success' : 'error'}
-            />
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+              <div className="text-3xl font-bold text-[#F97315]">{stats.total_spins}</div>
+              <div className="text-sm text-apple-mute">
+                {t('admin.wheel.statistics.totalSpins')}
+              </div>
+            </div>
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+              <div className="text-3xl font-bold text-apple-green">
+                {(stats.total_revenue_kopeks / 100).toFixed(0)}₽
+              </div>
+              <div className="text-sm text-apple-mute">{t('admin.wheel.statistics.revenue')}</div>
+            </div>
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+              <div className="text-3xl font-bold text-apple-amber">
+                {(stats.total_payout_kopeks / 100).toFixed(0)}₽
+              </div>
+              <div className="text-sm text-apple-mute">{t('admin.wheel.statistics.payouts')}</div>
+            </div>
+            <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+              <div
+                className={`text-3xl font-bold ${
+                  stats.actual_rtp_percent <= stats.configured_rtp_percent
+                    ? 'text-apple-green'
+                    : 'text-apple-red'
+                }`}
+              >
+                {stats.actual_rtp_percent.toFixed(1)}%
+              </div>
+              <div className="text-sm text-apple-mute">
+                {t('admin.wheel.statistics.actualRtp')} ({t('admin.wheel.statistics.targetRtp')}:{' '}
+                {stats.configured_rtp_percent}%)
+              </div>
+            </div>
           </div>
 
           {/* Prize distribution — shared BreakdownList (ranked bars + share %) */}

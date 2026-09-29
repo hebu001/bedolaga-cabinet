@@ -1,27 +1,23 @@
+import {
+BackIcon,
+ChartIcon,
+CheckIcon,
+CopyIcon,
+EditIcon,
+PlusIcon,
+TrashIcon,
+} from '@/components/admin/legacyPageIcons/AdminPromocodes';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { promocodesApi,type PromoCode,type PromoCodeType } from '../api/promocodes';
 import { useCurrency } from '../hooks/useCurrency';
 import i18n from '../i18n';
-import { promocodesApi, type PromoCode, type PromoCodeType } from '../api/promocodes';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { copyToClipboard } from '../utils/clipboard';
-import {
-  BackIcon,
-  PlusIcon,
-  EditIcon,
-  TrashIcon,
-  CheckIcon,
-  CopyIcon,
-  ChartIcon,
-  ChartBarIcon,
-  CheckCircleIcon,
-  TagIcon,
-  TicketIcon,
-} from '@/components/icons';
-import { StatCard } from '../components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 // Helper functions
 const getTypeLabel = (type: PromoCodeType): string => {
@@ -123,30 +119,30 @@ export default function AdminPromocodes() {
       {/* Stats Overview */}
       {promocodes.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard
-            label={t('admin.promocodes.stats.totalPromocodes')}
-            value={promocodes.length}
-            icon={<TagIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.promocodes.stats.activeCount')}
-            value={promocodes.filter((p) => p.is_active && p.is_valid).length}
-            icon={<CheckCircleIcon className="h-5 w-5" />}
-            tone="success"
-          />
-          <StatCard
-            label={t('admin.promocodes.stats.usagesCount')}
-            value={promocodes.reduce((sum, p) => sum + p.current_uses, 0)}
-            icon={<ChartBarIcon className="h-5 w-5" />}
-            tone="accent"
-          />
-          <StatCard
-            label={t('admin.promocodes.stats.exhausted')}
-            value={promocodes.filter((p) => p.uses_left === 0 && p.max_uses > 0).length}
-            icon={<TicketIcon className="h-5 w-5" />}
-            tone="warning"
-          />
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{promocodes.length}</div>
+            <div className="text-xs text-apple-mute">
+              {t('admin.promocodes.stats.totalPromocodes')}
+            </div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-green">
+              {promocodes.filter((p) => p.is_active && p.is_valid).length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.promocodes.stats.activeCount')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {promocodes.reduce((sum, p) => sum + p.current_uses, 0)}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.promocodes.stats.usagesCount')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-amber">
+              {promocodes.filter((p) => p.uses_left === 0 && p.max_uses > 0).length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.promocodes.stats.exhausted')}</div>
+          </div>
         </div>
       )}
 

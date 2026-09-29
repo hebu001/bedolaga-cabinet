@@ -1,4 +1,5 @@
-import { ChevronDownIcon } from '@/components/icons';
+import { ChevronDownIcon } from '@/components/admin/legacyIcons';
+
 import { cn } from '@/lib/utils';
 
 // ──────────────────────────────────────────────────────────────────

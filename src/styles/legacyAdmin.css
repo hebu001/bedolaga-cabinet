@@ -1,0 +1,37 @@
+/* Existing page/form styles from codex/cabinet-ux-performance-20260906,
+   applied to controls added after that branch. */
+.legacy-admin-new .card {
+  background: rgb(var(--color-apple-card));
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: none;
+}
+.legacy-admin-new .btn-primary {
+  background: #f97315;
+  color: #fff;
+  border-radius: 9999px;
+}
+.legacy-admin-new .btn-secondary {
+  background: rgb(var(--color-apple-elevated));
+  color: rgb(var(--color-apple-ink));
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.legacy-admin-new .input {
+  background: rgb(var(--color-apple-elevated));
+  color: rgb(var(--color-apple-ink));
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.legacy-admin [role="dialog"][class~="bg-dark-900"] {
+  background: rgb(var(--color-apple-card));
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.legacy-admin [class~="bg-dark-950/60"] {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+.legacy-admin [class~="bg-dark-950/70"] {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+.legacy-admin [class~="bg-dark-950"] {
+  background-color: #000;
+}

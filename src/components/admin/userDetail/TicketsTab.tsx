@@ -1,11 +1,13 @@
-import { useAdminTicketDetail } from './useAdminTicketDetail';
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { adminApi, type AdminTicketDetail } from '@/api/admin';
+import { adminApi,type AdminTicketDetail } from '@/api/admin';
+import { BackIcon } from '@/components/admin/legacyIcons';
 import { dayTimeLabel } from '@/components/admin/users';
-import { BackIcon, SendIcon } from '@/components/icons';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { SendIcon } from '@/components/icons';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAdminTicketDetail } from './useAdminTicketDetail';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 import { linkifyText } from '@/utils/linkify';

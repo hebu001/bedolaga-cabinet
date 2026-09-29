@@ -1,9 +1,10 @@
+import { CloseIcon } from '@/components/admin/legacyIcons';
 import { useTranslation } from 'react-i18next';
-import { CloseIcon } from '@/components/icons';
+
 import { cn } from '@/lib/utils';
 import { RecheckButtons } from './RecheckButtons';
-import type { TooltipModel, TooltipRow } from './geoMapTooltipModel';
-import { TONE_DOT, verdictTone } from './geoVerdicts';
+import type { TooltipModel,TooltipRow } from './geoMapTooltipModel';
+import { TONE_DOT,verdictTone } from './geoVerdicts';
 
 export interface GeoMapTooltipProps extends TooltipModel {
   /** Положение в пикселях относительно контейнера карты и его размер — чтобы не вылезать за край. */

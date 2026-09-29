@@ -1,47 +1,48 @@
-import { visibleSelectionState, toggleVisibleSubscriptions } from '../utils/adminSelection';
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router';
-import { useTranslation } from 'react-i18next';
+import {
+BackIcon,
+CheckIcon,
+ChevronLeftIcon,
+ChevronRightIcon,
+RefreshIcon,
+SearchIcon,
+} from '@/components/admin/legacyPageIcons/AdminBulkActions';
+import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  type ColumnDef,
-  type RowSelectionState,
+flexRender,
+getCoreRowModel,
+useReactTable,
+type ColumnDef,
+type RowSelectionState,
 } from '@tanstack/react-table';
-import { adminUsersApi, type UserListItem, type UserListItemSubscription } from '../api/adminUsers';
-import { tariffsApi, type TariffListItem } from '../api/tariffs';
-import { promocodesApi, type PromoGroup } from '../api/promocodes';
-import { campaignsApi, type CampaignListItem } from '../api/campaigns';
-import { partnerApi, type AdminPartnerItem } from '../api/partners';
-import {
-  adminBulkActionsApi,
-  type BulkActionType,
-  type BulkActionParams,
-} from '../api/adminBulkActions';
+import React,{ useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { PiCaretDown } from 'react-icons/pi';
-import { usePlatform } from '../platform/hooks/usePlatform';
+import { useNavigate } from 'react-router';
+import {
+adminBulkActionsApi,
+type BulkActionParams,
+type BulkActionType,
+} from '../api/adminBulkActions';
+import { adminUsersApi,type UserListItem,type UserListItemSubscription } from '../api/adminUsers';
+import { campaignsApi,type CampaignListItem } from '../api/campaigns';
+import { partnerApi,type AdminPartnerItem } from '../api/partners';
+import { promocodesApi,type PromoGroup } from '../api/promocodes';
+import { tariffsApi,type TariffListItem } from '../api/tariffs';
 import { useCurrency } from '../hooks/useCurrency';
-import { cn } from '@/lib/utils';
-import {
-  BackIcon,
-  CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  RefreshIcon,
-  SearchIcon,
-} from '@/components/icons';
-import { ActionModal, type ModalState } from '@/components/admin/bulkActions/ActionModal';
-import { DropdownSelect, type DropdownOption } from '@/components/admin/bulkActions/DropdownSelect';
-import { FloatingActionBar } from '@/components/admin/bulkActions/FloatingActionBar';
+import { usePlatform } from '../platform/hooks/usePlatform';
+import { toggleVisibleSubscriptions,visibleSelectionState } from '../utils/adminSelection';
+
+import { ActionModal,type ModalState } from '@/components/admin/bulkActions/ActionModal';
 import { isSubscriptionLevelAction } from '@/components/admin/bulkActions/actionTargets';
+import { DropdownSelect,type DropdownOption } from '@/components/admin/bulkActions/DropdownSelect';
+import { FloatingActionBar } from '@/components/admin/bulkActions/FloatingActionBar';
 import {
-  MultiSelectDropdown,
-  type MultiSelectOption,
+MultiSelectDropdown,
+type MultiSelectOption,
 } from '@/components/admin/bulkActions/MultiSelectDropdown';
-import { SubscriptionSubRow, StatusBadge } from '@/components/admin/bulkActions/SubscriptionSubRow';
+import { StatusBadge,SubscriptionSubRow } from '@/components/admin/bulkActions/SubscriptionSubRow';
 
 // ============ Types ============
 

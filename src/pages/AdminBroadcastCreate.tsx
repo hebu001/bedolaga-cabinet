@@ -1,29 +1,29 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
-  adminBroadcastsApi,
-  emailUserTarget,
-  type BroadcastFilter,
-  type TariffFilter,
-  type CombinedBroadcastCreateRequest,
-  type CustomBroadcastButton,
+BroadcastIcon,
+ChevronDownIcon,
+DocumentIcon,
+EmailIcon,
+PhotoIcon,
+RefreshIcon,
+TelegramIcon,
+UsersIcon,
+VideoIcon,
+XIcon,
+} from '@/components/admin/legacyPageIcons/AdminBroadcastCreate';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation,useNavigate,useSearchParams } from 'react-router';
+import {
+adminBroadcastsApi,
+emailUserTarget,
+type BroadcastFilter,
+type CombinedBroadcastCreateRequest,
+type CustomBroadcastButton,
+type TariffFilter,
 } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
-import { TelegramPreview, EmailPreview } from '../components/broadcasts/BroadcastPreview';
-import {
-  BroadcastIcon,
-  ChevronDownIcon,
-  DocumentIcon,
-  EmailIcon,
-  PhotoIcon,
-  RefreshIcon,
-  TelegramIcon,
-  UsersIcon,
-  VideoIcon,
-  XIcon,
-} from '@/components/icons';
+import { EmailPreview,TelegramPreview } from '../components/broadcasts/BroadcastPreview';
 
 // Filter labels
 const FILTER_GROUP_LABEL_KEYS: Record<string, string> = {

@@ -1,69 +1,72 @@
-import { integrationCapabilities } from '@/config/integrationCapabilities';
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
-  adminRemnawaveApi,
-  type NodeInfo,
-  type NodeRealtimeStats,
-  type SquadWithLocalInfo,
-  type SystemStatsResponse,
-  type AutoSyncStatus,
-  type RecapResponse,
-  type DevicesStatsResponse,
-  type TopConsumersResponse,
-  type HealthResponse,
-  type SubscriptionRequestStatsResponse,
+ArrowPathIcon,
+ChartIcon,
+ChevronRightIcon,
+ClockIcon,
+DownloadIcon,
+GlobeIcon,
+PlayIcon,
+RefreshIcon,
+RemnawaveIcon,
+ServerIcon,
+StopIcon,
+SubscriptionIcon,
+SyncIcon,
+UploadIcon,
+UsersIcon,
+} from '@/components/admin/legacyIcons';
+import { BackIcon } from '@/components/admin/legacyPageIcons/AdminRemnawave';
+import { integrationCapabilities } from '@/config/integrationCapabilities';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useMemo,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import Twemoji from 'react-twemoji';
+import {
+adminRemnawaveApi,
+type AutoSyncStatus,
+type DevicesStatsResponse,
+type HealthResponse,
+type NodeInfo,
+type NodeRealtimeStats,
+type RecapResponse,
+type SquadWithLocalInfo,
+type SubscriptionRequestStatsResponse,
+type SystemStatsResponse,
+type TopConsumersResponse,
 } from '../api/adminRemnawave';
+import {
+BanIcon,
+CalendarBlankIcon,
+CalendarIcon,
+CalendarStarIcon,
+ChartDonutIcon,
+ChartPieIcon,
+CheckCircleIcon,
+CpuIcon,
+DevicesIcon,
+GeoCheckIcon,
+HeartbeatIcon,
+MemoryIcon,
+PowerIcon,
+PulseIcon,
+RadarIcon,
+StatUptimeIcon,
+TrafficIcon,
+WarningCircleIcon,
+XrayIcon,
+} from '../components/icons';
+import { StatCard } from '../components/stats';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { formatUptime } from '../utils/format';
 import { getFlagEmoji } from '../utils/subscriptionHelpers';
-import Twemoji from 'react-twemoji';
-import { StatCard } from '../components/stats';
-import {
-  ServerIcon,
-  ChartIcon,
-  GlobeIcon,
-  HeartbeatIcon,
-  PowerIcon,
-  WarningCircleIcon,
-  CalendarIcon,
-  CalendarBlankIcon,
-  CalendarStarIcon,
-  ChartPieIcon,
-  ChartDonutIcon,
-  CpuIcon,
-  MemoryIcon,
-  PulseIcon,
-  DevicesIcon,
-  StatUptimeIcon,
-  UsersIcon,
-  CheckCircleIcon,
-  BanIcon,
-  TrafficIcon,
-  ClockIcon,
-  SyncIcon,
-  RefreshIcon,
-  PlayIcon,
-  StopIcon,
-  ArrowPathIcon,
-  RemnawaveIcon,
-  XrayIcon,
-  DownloadIcon,
-  UploadIcon,
-  SubscriptionIcon,
-  BackIcon,
-  ChevronRightIcon,
-  GeoCheckIcon,
-  RadarIcon,
-} from '../components/icons';
-import { GeoCheckModal } from '../components/admin/remnawave/GeoCheckModal';
+
 import { buildReachabilityLink } from '../components/admin/reachability/deepLink';
 import { useReachabilityAvailable } from '../components/admin/reachability/useReachabilityStatus';
+import { GeoCheckModal } from '../components/admin/remnawave/GeoCheckModal';
+import { Skeleton,SkeletonGroup } from '../components/ui/skeleton';
 import { usePermissionStore } from '../store/permissions';
 import { supportsGeoCheck } from '../utils/nodeVersion';
-import { Skeleton, SkeletonGroup } from '../components/ui/skeleton';
 
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 B';

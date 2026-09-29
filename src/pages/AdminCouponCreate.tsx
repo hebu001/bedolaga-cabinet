@@ -1,14 +1,14 @@
+import { BackIcon,CheckIcon,CopyIcon,DownloadIcon } from '@/components/admin/legacyIcons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { createNumberInputHandler } from '../utils/inputHelpers';
-import { couponsApi, type CouponBatchCreated } from '../api/coupons';
+import { useNavigate } from 'react-router';
+import { couponsApi,type CouponBatchCreated } from '../api/coupons';
 import { tariffsApi } from '../api/tariffs';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import { copyToClipboard } from '../utils/clipboard';
 import { getApiErrorMessage } from '../utils/api-error';
-import { BackIcon, CheckIcon, CopyIcon, DownloadIcon } from '@/components/icons';
+import { copyToClipboard } from '../utils/clipboard';
+import { createNumberInputHandler } from '../utils/inputHelpers';
 
 const downloadLinksFile = (batch: CouponBatchCreated | { id: number; links: string[] }) => {
   const blob = new Blob([batch.links.join('\n') + '\n'], { type: 'text/plain;charset=utf-8' });

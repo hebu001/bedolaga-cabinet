@@ -1,20 +1,17 @@
-import { useParams, useNavigate } from 'react-router';
+import {
+ClockIcon,
+EditIcon,
+UserIcon,
+} from '@/components/admin/legacyPageIcons/AdminPromocodeStats';
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useCurrency } from '../hooks/useCurrency';
-import i18n from '../i18n';
-import { promocodesApi, type PromoCodeType } from '../api/promocodes';
+import { useNavigate,useParams } from 'react-router';
+import { promocodesApi,type PromoCodeType } from '../api/promocodes';
 import { AdminBackButton } from '../components/admin';
 import { StatCard } from '../components/stats';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
-import {
-  EditIcon,
-  ClockIcon,
-  UserIcon,
-  ChartBarIcon,
-  SparklesIcon,
-  TicketIcon,
-} from '@/components/icons';
+import { useCurrency } from '../hooks/useCurrency';
+import i18n from '../i18n';
 
 // Helper functions
 const getTypeLabel = (type: PromoCodeType): string => {
@@ -143,25 +140,21 @@ export default function AdminPromocodeStats() {
 
       <div className="space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <StatCard
-            label={t('admin.promocodes.stats.totalUses')}
-            value={promocode.total_uses}
-            icon={<ChartBarIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.promocodes.stats.today')}
-            value={promocode.today_uses}
-            icon={<SparklesIcon className="h-5 w-5" />}
-            tone="success"
-          />
-          <StatCard
-            label={t('admin.promocodes.stats.remaining')}
-            value={promocode.max_uses === 0 ? '∞' : promocode.uses_left}
-            icon={<TicketIcon className="h-5 w-5" />}
-            tone="accent"
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="mb-1 text-3xl font-bold text-apple-ink">{promocode.total_uses}</div>
+            <div className="text-sm text-apple-mute">{t('admin.promocodes.stats.totalUses')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="mb-1 text-3xl font-bold text-apple-green">{promocode.today_uses}</div>
+            <div className="text-sm text-apple-mute">{t('admin.promocodes.stats.today')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4 text-center">
+            <div className="mb-1 text-3xl font-bold" style={{ color: '#F97315' }}>
+              {promocode.max_uses === 0 ? '∞' : promocode.uses_left}
+            </div>
+            <div className="text-sm text-apple-mute">{t('admin.promocodes.stats.remaining')}</div>
+          </div>
         </div>
 
         {/* Details */}

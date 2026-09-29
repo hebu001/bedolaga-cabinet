@@ -1,27 +1,28 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router';
-import { useTranslation } from 'react-i18next';
 import type {
-  PanelSyncStatusResponse,
-  UserAvailableTariff,
-  UserDetailResponse,
-  UserNodeUsageResponse,
-  UserPanelInfo,
-  UserSubscriptionInfo,
+PanelSyncStatusResponse,
+UserAvailableTariff,
+UserDetailResponse,
+UserNodeUsageResponse,
+UserPanelInfo,
+UserSubscriptionInfo,
 } from '@/api/adminUsers';
-import { GraceAccessChip, SubscriptionStateChip, useTrafficLabel } from '@/components/admin/users';
-import { BackIcon, ChevronRightIcon } from '@/components/icons';
-import { formatShortDate } from '@/utils/format';
+import { BackIcon,ChevronRightIcon } from '@/components/admin/legacyIcons';
+import { GraceAccessChip,SubscriptionStateChip,useTrafficLabel } from '@/components/admin/users';
+import { useEffect,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router';
+
 import type { SalesMode } from '@/pages/adminUserDetail/salesMode';
+import { formatShortDate } from '@/utils/format';
 import { CreateSubscriptionForm } from './CreateSubscriptionForm';
 import { DangerZone } from './DangerZone';
-import { type DeviceRow, DevicesCard } from './DevicesCard';
+import { type DeviceRow,DevicesCard } from './DevicesCard';
 import { NodeUsageCard } from './NodeUsageCard';
 import { PanelSyncCard } from './PanelSyncCard';
 import {
-  SubscriptionCard,
-  type SubscriptionCardActions,
-  type SubscriptionPanel,
+SubscriptionCard,
+type SubscriptionCardActions,
+type SubscriptionPanel,
 } from './SubscriptionCard';
 import { SupportDetails } from './SupportDetails';
 

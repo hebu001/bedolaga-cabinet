@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { CheckIcon } from '@/components/admin/legacyIcons';
 import { cn } from '@/lib/utils';
-import { CheckIcon } from '@/components/icons';
+import { useEffect,useMemo,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { ChevronDownIcon } from './DropdownSelect';
 
 // ──────────────────────────────────────────────────────────────────

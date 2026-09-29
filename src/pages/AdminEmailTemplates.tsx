@@ -1,20 +1,28 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { EditIcon } from '@/components/admin/legacyIcons';
 import {
-  adminEmailTemplatesApi,
-  type EmailTemplateType,
-  type EmailTemplateDetail,
-  type EmailTemplateLanguageData,
-} from '../api/adminEmailTemplates';
-import { AdminBackButton, BackIcon } from '../components/admin';
-import { Toggle } from '../components/admin/Toggle';
-import { EmailQueueCard } from '../components/admin/EmailQueueCard';
-import { useNativeDialog } from '../platform/hooks/useNativeDialog';
+EyeIcon,
+MailIcon,
+ResetIcon,
+SaveIcon,
+SendIcon,
+} from '@/components/admin/legacyPageIcons/AdminEmailTemplates';
 import { useNotify } from '@/platform';
 import { getApiErrorMessage } from '@/utils/api-error';
-import { MailIcon, SaveIcon, EyeIcon, SendIcon, ResetIcon, EditIcon } from '@/components/icons';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useEffect,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+adminEmailTemplatesApi,
+type EmailTemplateDetail,
+type EmailTemplateLanguageData,
+type EmailTemplateType,
+} from '../api/adminEmailTemplates';
+import { AdminBackButton,BackIcon } from '../components/admin';
+import { EmailQueueCard } from '../components/admin/EmailQueueCard';
+import { Toggle } from '../components/admin/Toggle';
+import { useNativeDialog } from '../platform/hooks/useNativeDialog';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 const LANG_LABELS: Record<string, string> = {
   ru: 'RU',

@@ -1,22 +1,22 @@
-import { useState, useCallback, memo } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ListRowSkeleton } from '@/components/admin/ListRowSkeleton';
+import {
+NewsIcon,
+PencilIcon,
+PlusIcon,
+RefreshIcon,
+StarIcon,
+TrashIcon,
+} from '@/components/admin/legacyPageIcons/AdminNews';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { memo,useCallback,useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { newsApi } from '../api/news';
 import { AdminBackButton } from '../components/admin';
 import { Toggle } from '../components/admin/Toggle';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import type { NewsListItem } from '../types/news';
-import { ListRowSkeleton } from '@/components/admin/ListRowSkeleton';
-import {
-  PlusIcon,
-  RefreshIcon,
-  PencilIcon,
-  TrashIcon,
-  StarIcon,
-  NewsIcon,
-} from '@/components/icons';
 
 // --- Security: hex color validation to prevent CSS injection ---
 const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;

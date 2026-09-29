@@ -1,10 +1,12 @@
 import type { PanelIdentity } from '@/api/adminPanelIdentity';
-import { useState } from 'react';
-import { Link } from 'react-router';
-import { useTranslation } from 'react-i18next';
+import { adminUsersApi,type UserPanelInfo } from '@/api/adminUsers';
+import { ChevronDownIcon,CopyIcon } from '@/components/admin/legacyIcons';
+import { RadarIcon } from '@/components/icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { adminUsersApi, type UserPanelInfo } from '@/api/adminUsers';
-import { ChevronDownIcon, CopyIcon, RadarIcon } from '@/components/icons';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
+
 import { Spinner } from '@/components/ui/Spinner';
 import { useNotify } from '@/platform/hooks/useNotify';
 import { copyToClipboard } from '@/utils/clipboard';

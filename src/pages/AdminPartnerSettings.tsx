@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SettingsIcon } from '@/components/admin/legacyPageIcons/AdminPartnerSettings';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useEffect,useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation,useNavigate } from 'react-router';
 import { partnerApi } from '../api/partners';
-import { AdminBackButton, backTo } from '../components/admin';
+import { AdminBackButton,backTo } from '../components/admin';
 import { toNumber } from '../utils/inputHelpers';
-import { SettingsIcon } from '@/components/icons';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+
 import { EnvLockedBadge } from '@/components/admin/EnvLockedBadge';
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 
 type NumberOrEmpty = number | '';
 

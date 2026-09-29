@@ -1,10 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { adminEmailQueueApi, type EmailQueueItem } from '../../api/adminEmailQueue';
-import { useNativeDialog } from '../../platform/hooks/useNativeDialog';
+import { ClockIcon,TrashIcon } from '@/components/admin/legacyIcons';
+import { WarningIcon } from '@/components/icons';
 import { useNotify } from '@/platform';
 import { getApiErrorMessage } from '@/utils/api-error';
-import { ClockIcon, TrashIcon, WarningIcon } from '@/components/icons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { adminEmailQueueApi,type EmailQueueItem } from '../../api/adminEmailQueue';
+import { useNativeDialog } from '../../platform/hooks/useNativeDialog';
+
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**

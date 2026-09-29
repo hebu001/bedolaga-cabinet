@@ -1,17 +1,24 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useParams, useNavigate, Link } from 'react-router';
+import { ChevronDownIcon } from '@/components/admin/legacyIcons';
+import {
+ChartIcon,
+CopyIcon,
+LinkIcon,
+UsersIcon,
+} from '@/components/admin/legacyPageIcons/AdminCampaignStats';
 import { useQuery } from '@tanstack/react-query';
+import { useCallback,useEffect,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { campaignsApi, type CampaignBonusType } from '../api/campaigns';
+import { Link,useLocation,useNavigate,useParams } from 'react-router';
 import type { AdminCampaignChartData } from '../api/campaigns';
-import { AdminBackButton, backTo } from '../components/admin';
-import { DailyChart, PeriodComparison, StatCard } from '../components/stats';
+import { campaignsApi,type CampaignBonusType } from '../api/campaigns';
+import { AdminBackButton,backTo } from '../components/admin';
+import { DailyChart,PeriodComparison,StatCard } from '../components/stats';
 import { PARTNER_STATS } from '../constants/partner';
 import { useCurrency } from '../hooks/useCurrency';
-import { copyToClipboard } from '../utils/clipboard';
 import { useHaptic } from '../platform';
-import { ChartIcon, ChevronDownIcon, CopyIcon, LinkIcon, UsersIcon } from '@/components/icons';
-import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { copyToClipboard } from '../utils/clipboard';
+
+import { PageSkeleton,Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 
 // Bonus type config
 const bonusTypeConfig: Record<

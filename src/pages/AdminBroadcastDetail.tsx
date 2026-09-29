@@ -1,23 +1,23 @@
-import { useParams, useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+DocumentIcon,
+EmailIcon,
+PhotoIcon,
+RefreshIcon,
+StopIcon,
+TelegramIcon,
+VideoIcon,
+} from '@/components/admin/legacyPageIcons/AdminBroadcastDetail';
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminBroadcastsApi, type BroadcastChannel } from '../api/adminBroadcasts';
+import { useNavigate,useParams } from 'react-router';
+import { adminBroadcastsApi,type BroadcastChannel } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
 import {
-  BroadcastDeliveryStats,
-  BroadcastStatusBadge,
+BroadcastDeliveryStats,
+BroadcastStatusBadge,
 } from '../components/broadcasts/BroadcastDeliveryStats';
-import { broadcastPollInterval, isBroadcastInFlight } from '../utils/broadcastStatus';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
-import {
-  DocumentIcon,
-  EmailIcon,
-  PhotoIcon,
-  RefreshIcon,
-  StopIcon,
-  TelegramIcon,
-  VideoIcon,
-} from '@/components/icons';
+import { broadcastPollInterval,isBroadcastInFlight } from '../utils/broadcastStatus';
 
 // Channel badge component
 function ChannelBadge({ channel }: { channel?: BroadcastChannel }) {

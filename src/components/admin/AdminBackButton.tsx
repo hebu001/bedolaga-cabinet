@@ -1,7 +1,8 @@
-import { Link, useLocation } from 'react-router';
+import { BackIcon as CurrentBackIcon } from '@/components/icons';
 import { usePlatform } from '@/platform';
-import { BackIcon } from './icons';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation } from 'react-router';
+import { BackIcon } from './icons';
 
 interface AdminBackButtonProps {
   to?: string;
@@ -75,10 +76,16 @@ export function AdminBackButton({ to = '/admin', replace, className }: AdminBack
       aria-label={t('common.back')}
       className={
         className ||
-        'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-apple-hairline bg-apple-card transition-colors hover:border-apple-hairline'
+        (/^\/admin\/(?:(?:users|sales-stats)\/?$|tariffs(?:\/|$))/.test(location.pathname)
+          ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-apple-hairline bg-apple-card transition-colors hover:border-apple-hairline'
+          : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-apple-elevated text-apple-ink transition-colors hover:opacity-90')
       }
     >
-      <BackIcon />
+      {/^\/admin\/(?:(?:users|sales-stats)\/?$|tariffs(?:\/|$))/.test(location.pathname) ? (
+        <CurrentBackIcon />
+      ) : (
+        <BackIcon />
+      )}
     </Link>
   );
 }

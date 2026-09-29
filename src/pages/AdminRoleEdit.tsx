@@ -1,16 +1,19 @@
-import { useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import {
-  rbacApi,
-  type PermissionSection,
-  type CreateRolePayload,
-  type UpdateRolePayload,
+rbacApi,
+type CreateRolePayload,
+type PermissionSection,
+type UpdateRolePayload,
 } from '@/api/rbac';
 import { AdminBackButton } from '@/components/admin';
-import { CheckIcon, ChevronDownIcon, MinusIcon } from '@/components/icons';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { CheckIcon } from '@/components/admin/legacyIcons';
+import { ChevronDownIcon } from '@/components/admin/legacyPageIcons/AdminRoleEdit';
+import { MinusIcon } from '@/components/icons';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate,useParams } from 'react-router';
+
+import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
 
 // === Constants ===
 

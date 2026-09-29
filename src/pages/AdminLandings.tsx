@@ -1,40 +1,41 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { adminLandingsApi, type LandingListItem, resolveLocaleDisplay } from '../api/landings';
+import {
+CheckIcon,
+CopyIcon,
+EditIcon,
+GiftIcon,
+SaveIcon,
+StatsChartIcon,
+XIcon,
+} from '@/components/admin/legacyPageIcons/AdminLandings';
 import { useNotify } from '@/platform';
-import { copyToClipboard } from '../utils/clipboard';
-import { getApiErrorMessage } from '../utils/api-error';
-import { usePlatform } from '../platform/hooks/usePlatform';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useCallback,useEffect,useRef,useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { adminLandingsApi,resolveLocaleDisplay,type LandingListItem } from '../api/landings';
+import { BackIcon,GripIcon,PlusIcon,TrashIcon } from '../components/icons/LandingIcons';
 import { cn } from '../lib/utils';
-import { BackIcon, PlusIcon, TrashIcon, GripIcon } from '../components/icons/LandingIcons';
+import { usePlatform } from '../platform/hooks/usePlatform';
+import { getApiErrorMessage } from '../utils/api-error';
+import { copyToClipboard } from '../utils/clipboard';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import {
-  EditIcon,
-  CheckIcon,
-  XIcon,
-  GiftIcon,
-  SaveIcon,
-  CopyIcon,
-  StatsChartIcon,
-} from '@/components/icons';
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
+DndContext,
+KeyboardSensor,
+PointerSensor,
+useSensor,
+useSensors,
+type DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
+arrayMove,
+SortableContext,
+sortableKeyboardCoordinates,
+useSortable,
+verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 // ============ Sortable Landing Card ============
 

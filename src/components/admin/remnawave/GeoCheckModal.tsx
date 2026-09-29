@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import type { NodeInfo } from '@/api/adminRemnawave';
+import { PlayIcon } from '@/components/admin/legacyIcons';
+import { GeoCheckIcon,WarningIcon,XCloseIcon } from '@/components/icons';
+import { useEffect,useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import type { NodeInfo } from '@/api/adminRemnawave';
-import { GeoCheckIcon, PlayIcon, WarningIcon, XCloseIcon } from '@/components/icons';
+
 import { Spinner } from '@/components/ui/Spinner';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { useIsTelegram } from '@/platform/hooks/usePlatform';
 import { cn } from '@/lib/utils';
+import { useIsTelegram } from '@/platform/hooks/usePlatform';
 import { GeoCheckReport } from './GeoCheckReport';
-import { buildGeoCheckRequest, isRouteReady, type GeoCheckRouteMode } from './geoCheckRoute';
+import { buildGeoCheckRequest,isRouteReady,type GeoCheckRouteMode } from './geoCheckRoute';
 import { GeoCheckSetup } from './GeoCheckSetup';
 import { useGeoCheckJob } from './useGeoCheckJob';
 

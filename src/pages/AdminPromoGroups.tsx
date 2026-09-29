@@ -1,24 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { useCurrency } from '../hooks/useCurrency';
-import { promocodesApi, type PromoGroup } from '../api/promocodes';
-import { usePlatform } from '../platform/hooks/usePlatform';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { usePermissionStore } from '@/store/permissions';
+import { RefreshIcon } from '@/components/admin/legacyIcons';
 import {
-  BackIcon,
-  PlusIcon,
-  EditIcon,
-  TrashIcon,
-  UsersIcon,
-  TagIcon,
-  BoltIcon,
-  RefreshIcon,
-} from '@/components/icons';
-import { StatCard } from '@/components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+BackIcon,
+EditIcon,
+PlusIcon,
+TrashIcon,
+UsersIcon,
+} from '@/components/admin/legacyPageIcons/AdminPromoGroups';
+import { usePermissionStore } from '@/store/permissions';
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { promocodesApi,type PromoGroup } from '../api/promocodes';
+import { useCurrency } from '../hooks/useCurrency';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { usePlatform } from '../platform/hooks/usePlatform';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/Spinner';
 import { useRecalculation } from './adminPromoGroups/useRecalculation';
 
@@ -110,24 +108,22 @@ export default function AdminPromoGroups() {
       {/* Stats */}
       {groups.length > 0 && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <StatCard
-            label={t('admin.promoGroups.stats.total')}
-            value={groups.length}
-            icon={<TagIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.promoGroups.stats.members')}
-            value={groups.reduce((sum, g) => sum + g.members_count, 0)}
-            icon={<UsersIcon className="h-5 w-5" />}
-            tone="accent"
-          />
-          <StatCard
-            label={t('admin.promoGroups.stats.autoAssign')}
-            value={groups.filter((g) => g.auto_assign_total_spent_kopeks).length}
-            icon={<BoltIcon className="h-5 w-5" />}
-            tone="warning"
-          />
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{groups.length}</div>
+            <div className="text-xs text-apple-mute">{t('admin.promoGroups.stats.total')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold" style={{ color: '#F97315' }}>
+              {groups.reduce((sum, g) => sum + g.members_count, 0)}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.promoGroups.stats.members')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-amber">
+              {groups.filter((g) => g.auto_assign_total_spent_kopeks).length}
+            </div>
+            <div className="text-xs text-apple-mute">{t('admin.promoGroups.stats.autoAssign')}</div>
+          </div>
         </div>
       )}
 

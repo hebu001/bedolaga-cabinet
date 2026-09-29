@@ -1,21 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { BackIcon,PlusIcon } from '@/components/admin/legacyIcons';
+import { ChartBarIcon,CheckCircleIcon,TagIcon,TicketIcon } from '@/components/icons';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { couponsApi,type CouponBatch } from '../api/coupons';
 import i18n from '../i18n';
-import { couponsApi, type CouponBatch } from '../api/coupons';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import { formatPrice, formatShortDate } from '../utils/format';
-import {
-  BackIcon,
-  PlusIcon,
-  CheckCircleIcon,
-  ChartBarIcon,
-  TagIcon,
-  TicketIcon,
-} from '@/components/icons';
+import { formatPrice,formatShortDate } from '../utils/format';
+
+import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
 import { StatCard } from '../components/stats';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 const PAGE_SIZE = 50;
 

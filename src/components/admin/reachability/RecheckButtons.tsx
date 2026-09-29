@@ -1,8 +1,10 @@
-import { useTranslation } from 'react-i18next';
 import type { Job } from '@/api/reachability';
-import { RefreshIcon, ShuffleIcon } from '@/components/icons';
+import { RefreshIcon } from '@/components/admin/legacyIcons';
+import { ShuffleIcon } from '@/components/icons';
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '@/lib/utils';
-import { type RecheckState, recheckButtons } from './geoRecheck';
+import { type RecheckState,recheckButtons } from './geoRecheck';
 import type { GeoRow } from './geoRowsView';
 
 const ICONS = { refresh: RefreshIcon, shuffle: ShuffleIcon } as const;

@@ -1,6 +1,7 @@
-import { useTranslation } from 'react-i18next';
 import type { Purpose } from '@/api/reachability';
-import { PencilIcon } from '@/components/icons';
+import { PencilIcon } from '@/components/admin/legacyIcons';
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '@/lib/utils';
 
 const CLASS: Record<Purpose, string> = {

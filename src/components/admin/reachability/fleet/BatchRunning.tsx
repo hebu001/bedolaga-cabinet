@@ -1,11 +1,12 @@
-import { useTranslation } from 'react-i18next';
 import type { Batch } from '@/api/reachability';
-import { StopIcon } from '@/components/icons';
+import { StopIcon } from '@/components/admin/legacyIcons';
+import { useTranslation } from 'react-i18next';
+
 import { Button } from '@/components/primitives';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 import { formatCredits } from '../money';
-import { type TargetProgress, batchEtaMinutes, batchTargets, spentSoFar } from './batchProgress';
+import { type TargetProgress,batchEtaMinutes,batchTargets,spentSoFar } from './batchProgress';
 import type { FleetRow } from './fleet';
 
 interface BatchRunningProps {

@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { ArrowRightIcon } from '@/components/admin/legacyIcons';
 import { Card } from '@/components/data-display';
-import { ArrowRightIcon } from '@/components/icons';
+import type { ReactNode } from 'react';
+
 import { cn } from '@/lib/utils';
 
 interface SectionProps {

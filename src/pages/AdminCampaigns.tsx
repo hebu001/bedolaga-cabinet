@@ -1,26 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import i18n from '../i18n';
-import { campaignsApi, type CampaignListItem, type CampaignBonusType } from '../api/campaigns';
 import {
-  PlusIcon,
-  EditIcon,
-  TrashIcon,
-  CheckIcon,
-  XIcon,
-  ChartIcon,
-  BackIcon,
-  CampaignIcon,
-  BoltIcon,
-  UserPlusIcon,
-  BanknotesIcon,
-} from '../components/icons';
-import { StatCard } from '../components/stats';
-import { usePlatform } from '../platform/hooks/usePlatform';
+ChartIcon,
+CheckIcon,
+EditIcon,
+PlusIcon,
+TrashIcon,
+XIcon,
+} from '@/components/admin/legacyIcons';
+import { BackIcon } from '@/components/admin/legacyPageIcons/AdminCampaigns';
+import { useInfiniteQuery,useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { campaignsApi,type CampaignBonusType,type CampaignListItem } from '../api/campaigns';
+import i18n from '../i18n';
+
+import { Skeleton,SkeletonGroup } from '../components/ui/skeleton';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-import { Skeleton, SkeletonGroup } from '../components/ui/skeleton';
+import { usePlatform } from '../platform/hooks/usePlatform';
 
 const PAGE_SIZE = 50;
 
@@ -147,30 +143,30 @@ export default function AdminCampaigns() {
       {/* Overview */}
       {overview && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard
-            label={t('admin.campaigns.overview.totalCampaigns')}
-            value={overview.total}
-            icon={<CampaignIcon className="h-5 w-5" />}
-            tone="neutral"
-          />
-          <StatCard
-            label={t('admin.campaigns.overview.active')}
-            value={overview.active}
-            icon={<BoltIcon className="h-5 w-5" />}
-            tone="success"
-          />
-          <StatCard
-            label={t('admin.campaigns.overview.registrations')}
-            value={overview.total_registrations}
-            icon={<UserPlusIcon className="h-5 w-5" />}
-            tone="accent"
-          />
-          <StatCard
-            label={t('admin.campaigns.overview.bonusesIssued')}
-            value={formatRubles(overview.total_balance_issued_kopeks)}
-            icon={<BanknotesIcon className="h-5 w-5" />}
-            tone="success"
-          />
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-ink">{overview.total}</div>
+            <div className="text-sm text-apple-mute">
+              {t('admin.campaigns.overview.totalCampaigns')}
+            </div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-green">{overview.active}</div>
+            <div className="text-sm text-apple-mute">{t('admin.campaigns.overview.active')}</div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-[#F97315]">{overview.total_registrations}</div>
+            <div className="text-sm text-apple-mute">
+              {t('admin.campaigns.overview.registrations')}
+            </div>
+          </div>
+          <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+            <div className="text-2xl font-bold text-apple-green">
+              {formatRubles(overview.total_balance_issued_kopeks)}
+            </div>
+            <div className="text-sm text-apple-mute">
+              {t('admin.campaigns.overview.bonusesIssued')}
+            </div>
+          </div>
         </div>
       )}
 

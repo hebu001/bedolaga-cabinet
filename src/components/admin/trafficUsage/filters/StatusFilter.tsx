@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { CheckIcon } from '@/components/admin/legacyIcons';
+import { useEffect,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckIcon } from '@/components/icons';
-import { ChevronDownIcon, StatusIcon } from '../TrafficIcons';
+
+import { ChevronDownIcon,StatusIcon } from '../TrafficIcons';
 
 // Status colour pills shared with the StatusFilter dropdown.
 export const STATUS_COLORS: Record<string, string> = {
