@@ -256,7 +256,7 @@ export default function Balance() {
 
   return (
     <motion.div
-      className="apple-balance space-y-5 font-sans text-apple-ink"
+      className="space-y-5 font-sans text-apple-ink"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
@@ -300,14 +300,14 @@ export default function Balance() {
             <button
               type="button"
               onClick={() => setShowTopUp(true)}
-              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-white transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-[0.97]"
+              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
             >
               {t('balance.topUp', 'Пополнить')}
             </button>
             <button
               type="button"
               onClick={() => setShowPromo(true)}
-              className="flex-1 rounded-full bg-white py-3.5 text-[15px] font-semibold text-black transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-[0.97]"
+              className="flex-1 rounded-full bg-white py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90"
             >
               {t('balance.promocode.title', 'Промокод')}
             </button>
@@ -420,7 +420,7 @@ export default function Balance() {
                             </div>
                             {/* Почта, ник, номер счёта — без пробелов, переносятся где угодно. */}
                             {tx.description && (
-                              <div className="mt-2 text-sm text-dark-400 [overflow-wrap:anywhere]">
+                              <div className="mt-2 text-sm text-apple-mute [overflow-wrap:anywhere]">
                                 {tx.description}
                               </div>
                             )}
@@ -496,7 +496,7 @@ export default function Balance() {
       {showTopUp &&
         createPortal(
           <div
-            className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
+            className="legacy-apple apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.5)' }}
             onClick={() => !topUpPending && setShowTopUp(false)}
           >
@@ -506,7 +506,7 @@ export default function Balance() {
               aria-modal="true"
               aria-label={showTopUp ? t('balance.topUpBalance') : t('balance.promocode.title')}
               tabIndex={-1}
-              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-apple-bg"
+              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -528,7 +528,7 @@ export default function Balance() {
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
-              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-apple-ink">
+              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
                 {t('balance.topUpBalance', 'Пополнение баланса')}
               </div>
               <div className="flex-1 overflow-y-auto">
@@ -566,7 +566,7 @@ export default function Balance() {
       {showPromo &&
         createPortal(
           <div
-            className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
+            className="legacy-apple apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.5)' }}
             onClick={() => setShowPromo(false)}
           >
@@ -576,7 +576,7 @@ export default function Balance() {
               aria-modal="true"
               aria-label={showTopUp ? t('balance.topUpBalance') : t('balance.promocode.title')}
               tabIndex={-1}
-              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-apple-bg"
+              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -597,7 +597,7 @@ export default function Balance() {
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
-              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-apple-ink">
+              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
                 {t('balance.promocode.title', 'Промокод')}
               </div>
               <div className="flex flex-col overflow-y-auto px-7 pb-7 pt-1">

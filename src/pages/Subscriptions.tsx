@@ -7,7 +7,7 @@ import { ClipboardIcon, PlusIcon } from '@/components/icons';
 import { subscriptionApi } from '../api/subscription';
 import { balanceApi } from '../api/balance';
 import { useTheme } from '../hooks/useTheme';
-import { getApplePageColors } from '../utils/glassTheme';
+import { getLegacyGlassColors } from '../utils/glassTheme';
 import { useAuthStore } from '../store/auth';
 import { getApiErrorMessage } from '../utils/api-error';
 import SubscriptionListCard from '../components/subscription/SubscriptionListCard';
@@ -17,7 +17,7 @@ import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 function EmptyState({ onBuy }: { onBuy: () => void }) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const g = getApplePageColors(isDark);
+  const g = getLegacyGlassColors(isDark);
 
   return (
     <div
@@ -38,7 +38,7 @@ function EmptyState({ onBuy }: { onBuy: () => void }) {
       </p>
       <button
         onClick={onBuy}
-        className="rounded-full bg-apple-blue px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        className="rounded-full bg-accent-500 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-600"
       >
         {t('subscriptions.buy', 'Купить подписку')}
       </button>
@@ -50,7 +50,7 @@ export default function Subscriptions() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const g = getApplePageColors(isDark);
+  const g = getLegacyGlassColors(isDark);
   const queryClient = useQueryClient();
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const [trialError, setTrialError] = useState<string | null>(null);
@@ -119,21 +119,21 @@ export default function Subscriptions() {
   }
 
   return (
-    <div className="apple-subscriptions space-y-5">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="min-w-0 text-[28px] font-bold tracking-tight" style={{ color: g.text }}>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold" style={{ color: g.text }}>
           {t('subscriptions.title', 'Мои подписки')}
         </h1>
         {/* «+ Купить ещё» — только если уже есть платная активная подписка */}
         {!isLoading && !hasLegacy && hasActivePaid && (
           <button
             onClick={() => navigate('/subscription/purchase')}
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-colors"
+            className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-colors"
             style={{
-              background: 'rgba(var(--color-apple-blue), 0.12)',
-              color: 'rgb(var(--color-apple-accent-text))',
-              border: '1px solid rgba(var(--color-apple-blue), 0.2)',
+              background: 'rgba(var(--color-accent-400), 0.1)',
+              color: 'rgb(var(--color-accent-400))',
+              border: '1px solid rgba(var(--color-accent-400), 0.2)',
             }}
           >
             <PlusIcon className="h-4 w-4" />
@@ -159,7 +159,7 @@ export default function Subscriptions() {
       {!isLoading && subscriptions.length > 0 && !hasActivePaid && !hasLegacy && (
         <button
           onClick={() => navigate('/subscription/purchase')}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-accent-500 p-3.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-600"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#F97315] p-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           <PlusIcon className="h-5 w-5" />
           {t('subscriptions.browsePlans', 'Посмотреть тарифы и купить подписку')}
@@ -202,12 +202,12 @@ export default function Subscriptions() {
 
       {/* Subscription grid */}
       {subscriptions.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {subscriptions.map((sub) => (
             <SubscriptionListCard
               key={sub.id}
               subscription={sub}
-              appearance="apple"
+              legacyAppearance
               onClick={() => navigate(`/subscriptions/${sub.id}`)}
             />
           ))}

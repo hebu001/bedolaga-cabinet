@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useTheme } from '../../hooks/useTheme';
-import { getGlassColors, getApplePageColors } from '../../utils/glassTheme';
+import { getGlassColors, getLegacyGlassColors } from '../../utils/glassTheme';
 import { useHaptic } from '../../platform';
 import {
   CalendarIcon,
@@ -32,10 +32,12 @@ function formatDate(iso: string | null, locale?: string): string {
 function StatusBadge({
   status,
   isTrial,
+  legacyAppearance,
   t,
 }: {
   status: string;
   isTrial: boolean;
+  legacyAppearance: boolean;
   t: (key: string, fallback: string) => string;
 }) {
   const isActive = status === 'active' || status === 'trial';
@@ -56,9 +58,13 @@ function StatusBadge({
   // подложка из того же 400 темнела вместе с текстом: контраст надписи падал до
   // 4.2. Шейд 500 в ремап не входит, поэтому плашка остаётся светлой подкраской.
   const color = isActive
-    ? 'bg-success-500/15 text-success-400 border-success-500/20'
+    ? legacyAppearance
+      ? 'bg-emerald-400/15 text-emerald-400 border-emerald-400/20'
+      : 'bg-success-500/15 text-success-400 border-success-500/20'
     : isLimited
-      ? 'bg-warning-500/15 text-warning-400 border-warning-500/20'
+      ? legacyAppearance
+        ? 'bg-amber-400/15 text-amber-400 border-amber-400/20'
+        : 'bg-warning-500/15 text-warning-400 border-warning-500/20'
       : 'bg-error-500/15 text-error-400 border-error-500/20';
 
   const label = isActive
@@ -82,10 +88,10 @@ export default function SubscriptionListCard({
   subscription,
   onClick,
   connect,
-  appearance = 'glass',
+  legacyAppearance = false,
 }: {
   subscription: SubscriptionListItem;
-  appearance?: 'glass' | 'apple';
+  legacyAppearance?: boolean;
   onClick: () => void;
   /**
    * Подключение устройства прямо из карточки. Задаётся только на главной:
@@ -100,7 +106,7 @@ export default function SubscriptionListCard({
 }) {
   const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
-  const g = appearance === 'apple' ? getApplePageColors(isDark) : getGlassColors(isDark);
+  const g = legacyAppearance ? getLegacyGlassColors(isDark) : getGlassColors(isDark);
   const { impact } = useHaptic();
 
   const handleClick = () => {
@@ -162,7 +168,7 @@ export default function SubscriptionListCard({
   // вложенные кнопки невалидны и ведут себя в браузерах непредсказуемо.
   return (
     <div
-      className={`overflow-hidden rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] ${appearance === 'apple' ? 'apple-subscription-card' : ''}`}
+      className="overflow-hidden rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
       style={{ background: bgColor, borderColor }}
     >
       <button onClick={handleClick} className="w-full p-4 text-left">
@@ -172,7 +178,12 @@ export default function SubscriptionListCard({
             <span className="truncate text-base font-semibold" style={{ color: g.text }}>
               {subscription.tariff_name || t('subscription.defaultName', 'Подписка')}
             </span>
-            <StatusBadge status={subscription.status} isTrial={isTrial} t={t} />
+            <StatusBadge
+              status={subscription.status}
+              isTrial={isTrial}
+              legacyAppearance={legacyAppearance}
+              t={t}
+            />
           </div>
           <ChevronRightIcon className="h-4 w-4 shrink-0 opacity-30" />
         </div>
@@ -208,12 +219,38 @@ export default function SubscriptionListCard({
         >
           {footer.kind === 'hidden' && (
             <span className="flex items-center gap-1">
-              <DevicesIcon className="h-3.5 w-3.5 opacity-50" />
+              {legacyAppearance ? (
+                <svg
+                  className="h-3.5 w-3.5 opacity-50"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <rect x="5" y="2" width="14" height="20" rx="2" />
+                  <path d="M12 18h.01" />
+                </svg>
+              ) : (
+                <DevicesIcon className="h-3.5 w-3.5 opacity-50" />
+              )}
               {subscription.device_limit}
             </span>
           )}
           <span className="flex items-center gap-1">
-            <CalendarIcon className="h-3.5 w-3.5 opacity-50" />
+            {legacyAppearance ? (
+              <svg
+                className="h-3.5 w-3.5 opacity-50"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            ) : (
+              <CalendarIcon className="h-3.5 w-3.5 opacity-50" />
+            )}
             {formatDate(subscription.end_date, i18n.language)}
           </span>
           {/* Старая подписка (куплена в классике, тарифа нет): автоплатёж ей
@@ -230,9 +267,27 @@ export default function SubscriptionListCard({
                 : t('subscription.autopay', 'Автопродление');
               return (
                 <span
-                  className={`flex items-center gap-1 ${enabled ? 'text-success-400' : 'text-error-400'}`}
+                  className={`flex items-center gap-1 ${legacyAppearance ? (enabled ? 'text-emerald-400/70' : 'text-red-400/50') : enabled ? 'text-success-400' : 'text-error-400'}`}
                 >
-                  {enabled ? <CheckIcon className="h-3 w-3" /> : <XIcon className="h-3 w-3" />}
+                  {legacyAppearance ? (
+                    <svg
+                      className="h-3 w-3"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d={enabled ? 'M4.5 12.75l6 6 9-13.5' : 'M6 18L18 6M6 6l12 12'}
+                      />
+                    </svg>
+                  ) : enabled ? (
+                    <CheckIcon className="h-3 w-3" />
+                  ) : (
+                    <XIcon className="h-3 w-3" />
+                  )}
                   {label}
                 </span>
               );
@@ -247,7 +302,7 @@ export default function SubscriptionListCard({
         <Link
           to={tariffSelectionPath(subscription.id)}
           onClick={() => impact('light')}
-          className="btn-primary mx-4 mb-4 flex items-center justify-center gap-2 py-2.5 text-sm"
+          className={`mx-4 mb-4 flex items-center justify-center gap-2 py-2.5 text-sm ${legacyAppearance ? 'rounded-full bg-[#F97315] font-medium text-white transition-opacity hover:opacity-90' : 'btn-primary'}`}
         >
           {t('subscription.cta.moveToTariff')}
           <ChevronRightIcon className="h-4 w-4" />

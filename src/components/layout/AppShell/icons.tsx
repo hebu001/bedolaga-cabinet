@@ -1,10 +1,8 @@
+export { HomeIcon, WalletIcon, UsersIcon, ChatIcon } from './legacyIcons';
+
 // Re-export from centralized icons
 export {
-  HomeIcon,
   SubscriptionIcon,
-  WalletIcon,
-  UsersIcon,
-  ChatIcon,
   UserIcon,
   LogoutIcon,
   SunIcon,

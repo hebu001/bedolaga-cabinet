@@ -1,4 +1,4 @@
-import '@/styles/applePages.css';
+import '@/styles/legacyApple.css';
 import { PromptDialogHost } from '@/components/PromptDialogHost';
 import { resetVirtualKeyboard, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 import { useEffect, useState } from 'react';
@@ -22,7 +22,6 @@ import { useDockItems } from './useDockItems';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AppHeader } from './AppHeader';
 import { BackgroundRenderer } from '@/components/backgrounds/BackgroundRenderer';
-import { CommandPalette } from '@/components/navigation/CommandPalette/CommandPalette';
 
 const LogoutIcon = ({ className }: { className?: string }) => (
   <svg
@@ -63,7 +62,6 @@ export function AppShell({ children }: AppShellProps) {
   const isMobileFullscreen = isFullscreen && isMobile;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const isKeyboardOpen = useVirtualKeyboard();
 
   // Reset keyboard state on route change — prevents bottom nav staying hidden after navigation
@@ -108,19 +106,16 @@ export function AppShell({ children }: AppShellProps) {
   const isAppleDarkPage =
     isBalance || isSubscription || isProfile || isSupport || isAdminPage || isGift;
 
-  const restoredApplePage =
-    location.pathname === '/admin' ||
-    location.pathname === '/admin/' ||
-    isSubscription ||
-    location.pathname === '/balance' ||
-    location.pathname === '/balance/';
-
   return (
     <div
       className={cn(
         'app-shell min-h-[100dvh]',
-        isAppleDarkPage && 'bg-apple-bg',
-        restoredApplePage && 'apple-restored',
+        isAppleDarkPage && 'bg-black',
+        (isSubscription ||
+          isBalance ||
+          location.pathname === '/admin' ||
+          location.pathname === '/admin/') &&
+          'legacy-apple',
       )}
     >
       {/* Animated background renders via portal on document.body at z-index: -1 */}
@@ -146,10 +141,10 @@ export function AppShell({ children }: AppShellProps) {
                 to={item.path}
                 onClick={handleNavClick}
                 className={cn(
-                  'desktop-sidebar-link flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apple-blue',
+                  'desktop-sidebar-link flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
                   isActive(item.path)
-                    ? 'bg-apple-blue text-white'
-                    : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
+                    ? 'bg-[#F97315] text-white'
+                    : 'text-[#98989d] hover:bg-white/5 hover:text-white',
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -165,7 +160,7 @@ export function AppShell({ children }: AppShellProps) {
                 haptic.impact('light');
                 logout();
               }}
-              className="flex w-full items-center gap-3 rounded-xl py-2 text-sm text-apple-mute transition-colors hover:text-apple-ink"
+              className="flex w-full items-center gap-3 rounded-xl py-2 text-sm text-[#98989d] transition-colors hover:text-white"
               title={t('nav.logout')}
             >
               <LogoutIcon className="h-5 w-5" />
@@ -180,7 +175,7 @@ export function AppShell({ children }: AppShellProps) {
         <AppHeader
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
-          onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
+          onCommandPaletteOpen={() => {}}
           headerHeight={headerHeight}
           isFullscreen={isMobileFullscreen}
           safeAreaInset={safeAreaInset}
@@ -213,14 +208,6 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav isKeyboardOpen={isKeyboardOpen} wheelEnabled={wheelEnabled} />
-      <CommandPalette
-        open={commandPaletteOpen}
-        onOpenChange={setCommandPaletteOpen}
-        wheelEnabled={wheelEnabled}
-        referralEnabled={referralEnabled}
-        hasContests={hasContests}
-        hasPolls={hasPolls}
-      />
     </div>
   );
 }

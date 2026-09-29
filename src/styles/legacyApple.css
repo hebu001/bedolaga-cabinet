@@ -1,0 +1,35 @@
+/* Source: codex/cabinet-ux-performance-20260906, tailwind.config.js apple palette.
+   These route tokens reproduce that branch; no new design system is introduced. */
+.legacy-apple {
+  --color-apple-bg: 0, 0, 0;
+  /* Old generatePalette lightness ladder, using the old default theme colors. */
+  --color-accent-300: 138, 180, 250;
+  --color-accent-400: 79, 143, 247;
+  --color-accent-500: 11, 100, 244;
+  --color-success-300: 151, 237, 182;
+  --color-success-400: 98, 228, 146;
+  --color-success-500: 38, 217, 104;
+  --color-warning-300: 250, 208, 137;
+  --color-warning-400: 248, 185, 79;
+  --color-warning-500: 245, 158, 10;
+  --color-error-300: 245, 142, 142;
+  --color-error-400: 241, 86, 86;
+  --color-error-500: 235, 20, 20;
+  --color-apple-card: 28, 28, 30;
+  --color-apple-elevated: 44, 44, 46;
+  --color-apple-ink: 245, 245, 247;
+  --color-apple-mute: 152, 152, 157;
+  --color-apple-faint: 147, 147, 151;
+  --color-apple-hairline: 255, 255, 255;
+  --opacity-apple-hairline: 0.08;
+  --color-apple-blue: 249, 115, 21;
+  --color-apple-accent-text: 249, 115, 21;
+  --color-apple-green: 48, 209, 88;
+  --color-apple-red: 255, 69, 58;
+  --color-apple-amber: 255, 159, 10;
+}
+/* Old fixed rgba hairline; the new Tailwind helper otherwise makes it opaque. */
+.legacy-apple .border-apple-hairline {
+  border-color: rgba(255, 255, 255, 0.08);
+  --tw-border-opacity: 0.08;
+}

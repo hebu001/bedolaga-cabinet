@@ -80,7 +80,7 @@ function view(options: { ready?: boolean; balance?: number } = {}) {
 
 async function openLongPeriod() {
   fireEvent.click(screen.getByRole('button', { name: /90 дней/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Оплатить' }));
+  fireEvent.click(screen.getByRole('button', { name: /^Оплатить(?:\s|$)/ }));
   await screen.findByTestId('top-up-amount');
 }
 
@@ -126,7 +126,7 @@ describe('custom purchase flow after upstream decomposition', () => {
 
   it('stale pricing cannot purchase or open a provider invoice', () => {
     view({ ready: false });
-    const pay = screen.getByRole('button', { name: 'Оплатить' }) as HTMLButtonElement;
+    const pay = screen.getByRole('button', { name: /^Оплатить(?:\s|$)/ }) as HTMLButtonElement;
     expect(pay.disabled).toBe(true);
     fireEvent.click(pay);
     expect(state.purchase).not.toHaveBeenCalled();
@@ -135,9 +135,9 @@ describe('custom purchase flow after upstream decomposition', () => {
 
   it('an unknown balance cannot authorize a purchase', () => {
     view({ balance: undefined });
-    expect((screen.getByRole('button', { name: 'Оплатить' }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    expect(
+      (screen.getByRole('button', { name: /^Оплатить(?:\s|$)/ }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     expect(state.purchase).not.toHaveBeenCalled();
   });
 
@@ -152,7 +152,7 @@ describe('custom purchase flow after upstream decomposition', () => {
   it('a changed session cannot purchase directly from an already mounted form', () => {
     view();
     state.currentSession = false;
-    fireEvent.click(screen.getByRole('button', { name: 'Оплатить' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Оплатить(?:\s|$)/ }));
     expect(state.purchase).not.toHaveBeenCalled();
     expect(state.topup).toBeNull();
   });
@@ -167,7 +167,7 @@ describe('custom purchase flow after upstream decomposition', () => {
     );
     const { client } = view();
     const invalidate = vi.spyOn(client, 'invalidateQueries');
-    fireEvent.click(screen.getByRole('button', { name: 'Оплатить' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Оплатить(?:\s|$)/ }));
     await waitFor(() => expect(state.purchase).toHaveBeenCalledOnce());
     state.currentSession = false;
     await act(async () => {

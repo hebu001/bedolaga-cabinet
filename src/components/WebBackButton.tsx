@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { usePlatform } from '../platform';
-import { BackIcon } from './icons';
+import { BackIcon } from './layout/AppShell/legacyIcons';
 import { useTranslation } from 'react-i18next';
 
 interface WebBackButtonProps {

@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { integrationCapabilities } from '../config/integrationCapabilities';
 import './SubscriptionPurchase.css';
@@ -6,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
-import { getApplePageColors } from '../utils/glassTheme';
+import { getLegacyGlassColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
 import type { Tariff, ClassicPurchaseOptions } from '../types';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
@@ -27,7 +29,7 @@ export default function SubscriptionPurchase() {
     ? parseInt(searchParams.get('subscriptionId')!, 10)
     : undefined;
   const { isDark } = useTheme();
-  const g = getApplePageColors(isDark);
+  const g = getLegacyGlassColors(isDark);
   // Витрина тарифов в двух видах. Обработчики и данные общие, различается
   // только подача; что делает нажатие — решает tariffAction() внутри обеих.
   const { lite } = useLiteMode();
@@ -91,6 +93,10 @@ export default function SubscriptionPurchase() {
   // (tariffPurchaseRef moved into <TariffPurchaseForm>; switch-modal ref
   //  moved into <SwitchTariffSheet>)
 
+  const [showTariffListModal, setShowTariffListModal] = useState(false);
+  const tariffListRef = useRef<HTMLDivElement>(null);
+  useModalFocus(showTariffListModal, tariffListRef, () => setShowTariffListModal(false));
+
   // Tariff switch
   const [switchTariffId, setSwitchTariffId] = useState<number | null>(null);
 
@@ -116,6 +122,7 @@ export default function SubscriptionPurchase() {
   const handleCloseAllModals = () => {
     // setShowPurchaseForm moved into <ClassicPurchaseWizard>'s own useCloseOnSuccessNotification
     setShowTariffPurchase(false);
+    setShowTariffListModal(false);
     setSwitchTariffId(null);
 
     setSelectedTariff(null);
@@ -142,10 +149,8 @@ export default function SubscriptionPurchase() {
 
   if (optionsError || (!purchaseOptions && !optionsLoading)) {
     return (
-      <div className="apple-purchase space-y-5">
-        <h1 className="text-[28px] font-bold tracking-tight text-apple-ink sm:text-3xl">
-          {t('subscription.extend')}
-        </h1>
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('subscription.extend')}</h1>
         <div
           className="rounded-3xl p-6 text-center"
           style={{
@@ -168,30 +173,20 @@ export default function SubscriptionPurchase() {
   }
 
   return (
-    <div className="apple-purchase space-y-5">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
         <WebBackButton
           to={subscriptionId ? `/subscriptions/${subscriptionId}` : '/subscriptions'}
         />
-        <h1 className="text-[28px] font-bold tracking-tight text-apple-ink sm:text-3xl">
-          {needsTariff(subscription)
-            ? t('subscription.cta.moveToTariff')
-            : renewIntent && subscription && !subscription.is_trial
-              ? t('subscription.extend')
-              : isMultiTariff && !subscriptionId
-                ? t('subscription.newTariff', 'Новый тариф')
-                : !isMultiTariff && subscription?.is_daily && !subscription?.is_trial
-                  ? t('subscription.switchTariff.title')
-                  : subscription && !subscription.is_trial
-                    ? t('subscription.extend')
-                    : t('subscription.getSubscription')}
+        <h1 className="text-2xl font-bold tracking-tight text-apple-ink sm:text-3xl">
+          {t('subscription.purchaseTitle', 'Покупка подписки')}
         </h1>
       </div>
 
       {/* Tariffs Section */}
       {isTariffsMode && tariffs.length > 0 && (
-        <div className="apple-purchase-content space-y-4">
+        <div className="space-y-3">
           {/* Trial upgrade prompt — hidden when expired banner is active */}
           {subscription?.is_trial &&
             !(
@@ -201,19 +196,17 @@ export default function SubscriptionPurchase() {
               purchaseOptions.subscription_is_expired
             ) && (
               <div
-                className="mb-6 rounded-[14px] p-4"
+                className="apple-card-grad rounded-2xl bg-apple-card p-4"
                 style={{
-                  background:
-                    'linear-gradient(135deg, rgba(255,184,0,0.08), rgba(249,115,21,0.06))',
-                  border: '1px solid rgba(255,184,0,0.15)',
+                  border: '1px solid rgba(255,159,10,0.15)',
                 }}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
                     style={{
-                      background: 'rgba(255,184,0,0.12)',
-                      color: 'rgb(var(--color-urgent-400))',
+                      background: 'rgba(255,159,10,0.12)',
+                      color: 'rgb(var(--color-apple-amber))',
                     }}
                   >
                     <SparklesIcon className="h-4 w-4" />
@@ -221,11 +214,11 @@ export default function SubscriptionPurchase() {
                   <div>
                     <div
                       className="text-sm font-semibold"
-                      style={{ color: 'rgb(var(--color-urgent-400))' }}
+                      style={{ color: 'rgb(var(--color-apple-amber))' }}
                     >
                       {t('subscription.trialUpgrade.title')}
                     </div>
-                    <div className="mt-1 text-[12px] text-dark-400">
+                    <div className="mt-1 text-[13px] text-apple-mute">
                       {t('subscription.trialUpgrade.description')}
                     </div>
                   </div>
@@ -239,18 +232,17 @@ export default function SubscriptionPurchase() {
             'subscription_is_expired' in purchaseOptions &&
             purchaseOptions.subscription_is_expired && (
               <div
-                className="mb-6 rounded-[14px] p-4"
+                className="apple-card-grad rounded-2xl bg-apple-card p-4"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,59,92,0.08), rgba(255,184,0,0.06))',
-                  border: '1px solid rgba(255,59,92,0.15)',
+                  border: '1px solid rgba(255,69,58,0.15)',
                 }}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px]"
                     style={{
-                      background: 'rgba(255,59,92,0.12)',
-                      color: 'rgb(var(--color-critical-500))',
+                      background: 'rgba(255,69,58,0.12)',
+                      color: 'rgb(var(--color-apple-red))',
                     }}
                   >
                     <ExclamationIcon className="h-4 w-4" />
@@ -258,11 +250,11 @@ export default function SubscriptionPurchase() {
                   <div>
                     <div
                       className="text-sm font-semibold"
-                      style={{ color: 'rgb(var(--color-critical-500))' }}
+                      style={{ color: 'rgb(var(--color-apple-red))' }}
                     >
                       {t('subscription.expiredBanner.title')}
                     </div>
-                    <div className="mt-1 text-[12px] text-dark-400">
+                    <div className="mt-1 text-[13px] text-apple-mute">
                       {t('subscription.expiredBanner.selectTariff')}
                     </div>
                   </div>
@@ -338,15 +330,74 @@ export default function SubscriptionPurchase() {
                   'lava_recurrent_enabled' in purchaseOptions &&
                   purchaseOptions.lava_recurrent_enabled === true
                 }
-                onBack={() => {
-                  setShowTariffPurchase(false);
-                  setSelectedTariff(null);
-                }}
+                onBack={() => setShowTariffListModal(true)}
               />
             )
           )}
         </div>
       )}
+
+      {showTariffListModal &&
+        createPortal(
+          <div
+            className="legacy-apple tariff-picker-overlay apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setShowTariffListModal(false)}
+          >
+            <div
+              ref={tariffListRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('subscription.purchaseTitle')}
+              tabIndex={-1}
+              className="tariff-picker-dialog apple-card-grad apple-sheet-panel relative m-2.5 w-full max-w-md rounded-[32px] bg-black"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="tariff-picker-header">
+                <h2 className="min-w-0 text-[22px] font-semibold leading-tight text-white">
+                  {t('subscription.purchaseTitle', 'Покупка подписки')}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowTariffListModal(false)}
+                  aria-label={t('common.close', 'Закрыть')}
+                  className="tariff-picker-close flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-apple-mute transition-colors hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97315]"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <path d="M6 6l12 12M18 6 6 18" />
+                  </svg>
+                </button>
+              </div>
+              <div className="tariff-picker-body">
+                <TariffPicker
+                  tariffs={tariffs}
+                  subscription={subscription}
+                  purchaseOptions={purchaseOptions}
+                  isTariffsMode={isTariffsMode}
+                  isMultiTariff={isMultiTariff}
+                  onSelectTariff={(tariff) => {
+                    setSelectedTariff(tariff);
+                    setShowTariffPurchase(true);
+                    setShowTariffListModal(false);
+                  }}
+                  onSwitchTariff={(id) => {
+                    setSwitchTariffId(id);
+                    setShowTariffListModal(false);
+                  }}
+                />
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
 
       {/* Purchase/Extend Section - Classic Mode */}
       {classicOptions && classicOptions.periods.length > 0 && (

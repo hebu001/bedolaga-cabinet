@@ -75,7 +75,7 @@ export function PurchaseTopUpSheet({
 
   return createPortal(
     <div
-      className="apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center bg-black/60"
+      className="legacy-apple apple-sheet-backdrop fixed inset-0 z-[100] flex items-end justify-center bg-black/60"
       onClick={close}
     >
       <div
@@ -84,7 +84,7 @@ export function PurchaseTopUpSheet({
         aria-modal="true"
         aria-label={t('balance.topUpBalance')}
         tabIndex={-1}
-        className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-apple-card p-5 text-apple-ink"
+        className="apple-card-grad apple-sheet-panel relative m-2.5 max-h-[92vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black p-5 text-apple-ink"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between gap-3">

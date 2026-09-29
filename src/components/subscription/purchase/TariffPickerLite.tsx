@@ -35,7 +35,7 @@ export function TariffPickerLite({
   const formatPrice = (kopeks: number) =>
     kopeks === 0
       ? t('subscription.free', 'Бесплатно')
-      : `${formatAmount(kopeks / 100)} ${currencySymbol}`;
+      : `${formatAmount(kopeks / 100).replace(/[.,]00$/, '')} ${currencySymbol}`;
 
   /** Цена строкой: посуточная, «от» за первый период либо гибкая оплата. */
   const priceOf = (tariff: Tariff) => {
@@ -66,7 +66,7 @@ export function TariffPickerLite({
   };
 
   return (
-    <div className="divide-y divide-dark-700/40">
+    <div className="apple-card-grad divide-y divide-white/[0.08] rounded-2xl bg-apple-card px-4">
       {tariffs.map((tariff) => {
         const action = tariffAction({
           tariff,
@@ -82,31 +82,33 @@ export function TariffPickerLite({
           <>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2">
-                <span className="truncate text-[16px] font-semibold text-dark-50">
+                <span className="truncate text-[16px] font-semibold text-apple-ink">
                   {tariff.name}
                 </span>
                 {isCurrent && (
-                  <span className="shrink-0 text-[13px] text-dark-400">
+                  <span className="shrink-0 text-[13px] text-apple-mute">
                     {t('lite.tariff.current', 'сейчас')}
                   </span>
                 )}
               </span>
-              <span className="mt-1 block truncate text-[14px] text-dark-400">
+              <span className="mt-1 block truncate text-[14px] text-apple-mute">
                 {details(tariff)}
               </span>
             </span>
             <span className="flex shrink-0 items-center gap-2">
               <span className="text-right">
-                <span className="block text-[15px] font-medium tabular-nums text-accent-400">
+                <span className="block text-[15px] font-medium tabular-nums text-apple-ink">
                   {price.text}
                 </span>
                 {price.was && (
-                  <span className="block text-[13px] tabular-nums text-dark-400 line-through">
+                  <span className="block text-[13px] tabular-nums text-apple-mute line-through">
                     {price.was}
                   </span>
                 )}
               </span>
-              {action !== 'current-daily' && <ChevronRightIcon className="h-4 w-4 text-dark-500" />}
+              {action !== 'current-daily' && (
+                <ChevronRightIcon className="h-4 w-4 text-apple-ink0" />
+              )}
             </span>
           </>
         );
@@ -128,7 +130,7 @@ export function TariffPickerLite({
             onClick={() =>
               action === 'switch' ? onSwitchTariff(tariff.id) : onSelectTariff(tariff)
             }
-            className="flex w-full items-center justify-between gap-4 py-4 text-left transition-colors hover:text-dark-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400"
+            className="flex w-full items-center justify-between gap-4 py-4 text-left transition-colors hover:text-apple-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apple-blue"
           >
             {body}
           </button>

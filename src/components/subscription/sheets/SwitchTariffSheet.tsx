@@ -81,7 +81,7 @@ export function SwitchTariffSheet({
   const formatPrice = (kopeks: number) =>
     kopeks === 0
       ? t('subscription.free', 'Бесплатно')
-      : `${formatAmount(kopeks / 100)}\u00A0${currencySymbol}`;
+      : `${formatAmount(kopeks / 100).replace(/[.,]00$/, '')} ${currencySymbol}`;
 
   const {
     data: switchPreview,
@@ -136,18 +136,23 @@ export function SwitchTariffSheet({
   if (!open || !tariffId) return null;
 
   return (
-    <div ref={ref} className="mb-6 space-y-4 rounded-xl bg-dark-800/50 p-5">
+    <div ref={ref} className="apple-card-grad space-y-4 rounded-2xl bg-apple-card p-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-dark-100">{t('subscription.switchTariff.title')}</h3>
+        <h3 className="font-semibold text-apple-ink">{t('subscription.switchTariff.title')}</h3>
         <button
           onClick={onClose}
-          className="text-sm text-dark-400 hover:text-dark-200"
+          className="text-sm text-apple-mute hover:text-apple-ink"
           aria-label={t('common.close', 'Close')}
         >
           ✕
         </button>
       </div>
 
+      {switchPreviewError && (
+        <p role="alert" className="text-sm text-apple-red">
+          {t('common.error')}
+        </p>
+      )}
       {switchPreviewLoading ? (
         <SkeletonGroup className="space-y-3">
           <Skeleton variant="card" count={3} className="h-16" />
@@ -166,19 +171,19 @@ export function SwitchTariffSheet({
           return (
             <>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between gap-2 text-dark-300">
+                <div className="flex justify-between gap-2 text-apple-mute">
                   <span className="shrink-0">{t('subscription.switchTariff.currentTariff')}</span>
-                  <span className="min-w-0 truncate font-medium text-dark-100">
+                  <span className="min-w-0 truncate font-semibold text-apple-ink">
                     {switchPreview.current_tariff_name || '-'}
                   </span>
                 </div>
-                <div className="flex justify-between gap-2 text-dark-300">
+                <div className="flex justify-between gap-2 text-apple-mute">
                   <span className="shrink-0">{t('subscription.switchTariff.newTariff')}</span>
                   <span className="min-w-0 truncate font-medium text-apple-ink">
                     {switchPreview.new_tariff_name}
                   </span>
                 </div>
-                <div className="flex justify-between text-dark-300">
+                <div className="flex justify-between text-apple-mute">
                   <span>{t('subscription.switchTariff.remainingDays')}</span>
                   <span>{switchPreview.remaining_days}</span>
                 </div>
@@ -186,11 +191,11 @@ export function SwitchTariffSheet({
 
               {isDailyTariff && (
                 <div className="rounded-lg border border-apple-blue/30 bg-apple-blue/10 p-3 text-center">
-                  <div className="text-sm text-dark-300">
+                  <div className="text-sm text-apple-mute">
                     {t('subscription.switchTariff.dailyPayment')}
                   </div>
                   <div className="text-lg font-bold text-apple-ink">{formatPrice(dailyPrice)}</div>
-                  <div className="mt-1 text-xs text-dark-400">
+                  <div className="mt-1 text-xs text-apple-mute">
                     {t('subscription.switchTariff.dailyChargeDescription')}
                   </div>
                 </div>
@@ -198,13 +203,13 @@ export function SwitchTariffSheet({
 
               {/* Цены — столбиком справа и целиком, без отрыва «₽»; подпись и
                   скидка — слева в остатке строки. */}
-              <div className="flex items-start justify-between gap-3 border-t border-dark-700/50 pt-3">
+              <div className="flex items-start justify-between gap-3 border-t border-apple-hairline pt-3">
                 <div className="min-w-0">
-                  <span className="font-medium text-dark-100">
+                  <span className="font-semibold text-apple-ink">
                     {t('subscription.switchTariff.upgradeCost')}
                   </span>
                   {switchPreview.discount_percent != null && switchPreview.discount_percent > 0 && (
-                    <span className="ml-2 inline-block rounded-full bg-success-500/20 px-2 py-0.5 text-xs font-medium text-success-400">
+                    <span className="ml-2 inline-block rounded-full bg-apple-green/10 px-2 py-0.5 text-xs font-medium text-apple-green">
                       -{switchPreview.discount_percent}%
                     </span>
                   )}
@@ -214,12 +219,12 @@ export function SwitchTariffSheet({
                     switchPreview.discount_percent > 0 &&
                     switchPreview.base_upgrade_cost_kopeks &&
                     switchPreview.base_upgrade_cost_kopeks > 0 && (
-                      <span className="whitespace-nowrap text-sm text-dark-500 line-through">
+                      <span className="whitespace-nowrap text-sm text-apple-faint line-through">
                         {formatPrice(switchPreview.base_upgrade_cost_kopeks)}
                       </span>
                     )}
                   <span
-                    className={`whitespace-nowrap text-lg font-bold ${switchPreview.upgrade_cost_kopeks === 0 ? 'text-success-400' : 'text-apple-ink'}`}
+                    className={`whitespace-nowrap text-lg font-bold ${switchPreview.upgrade_cost_kopeks === 0 ? 'text-apple-green' : 'text-apple-ink'}`}
                   >
                     {/* Свой формат, как у зачёркнутой цены рядом: подпись бота
                         приходит как «1234567.89 ₽». */}
@@ -240,7 +245,7 @@ export function SwitchTariffSheet({
               <button
                 onClick={() => switchMutation.mutate(tariffId)}
                 disabled={switchMutation.isPending || !switchPreview.can_switch}
-                className="btn-primary w-full py-2.5"
+                className="w-full rounded-full bg-[#F97315] py-3 font-medium text-white transition-opacity disabled:opacity-50"
               >
                 {switchMutation.isPending ? (
                   <span className="flex items-center justify-center gap-2">
@@ -260,7 +265,7 @@ export function SwitchTariffSheet({
                     return null;
                   }
                   return (
-                    <div className="mt-3 text-center text-sm text-error-400">
+                    <div className="mt-3 text-center text-sm text-apple-red">
                       {getErrorMessage(switchMutation.error)}
                     </div>
                   );

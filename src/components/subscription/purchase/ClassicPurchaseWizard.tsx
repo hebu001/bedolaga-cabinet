@@ -8,7 +8,7 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useCurrency } from '../../../hooks/useCurrency';
 import { usePromoDiscount } from '../../../hooks/usePromoDiscount';
 import { useCloseOnSuccessNotification } from '../../../store/successNotification';
-import { getGlassColors } from '../../../utils/glassTheme';
+import { getLegacyGlassColors } from '../../../utils/glassTheme';
 import { getErrorMessage, type PurchaseStep } from '../../../utils/subscriptionHelpers';
 import { CheckIcon } from '../../icons';
 import InsufficientBalancePrompt from '../../InsufficientBalancePrompt';
@@ -57,7 +57,7 @@ export function ClassicPurchaseWizard({
   const queryClient = useQueryClient();
   const sessionGeneration = useRef(getSessionGeneration()).current;
   const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const g = getLegacyGlassColors(isDark);
   const { formatAmount, currencySymbol } = useCurrency();
   const { activeDiscount, applyPromoDiscount } = usePromoDiscount();
 
