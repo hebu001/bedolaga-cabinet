@@ -206,7 +206,7 @@ export default function TvQuickConnect({ subscriptionUrl, isLight }: Props) {
           className={`${actionBtnClass} disabled:opacity-50`}
         >
           {sending ? (
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-500/30 border-t-accent-500" />
+            <div className="h-5 w-5 animate-spin border-[#F97315] border-t-transparent rounded-full border-2  " />
           ) : (
             t('subscription.tvQuickConnect.sendBtn')
           )}

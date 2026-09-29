@@ -19,7 +19,7 @@ import { DeviceReductionSheet } from '@/components/subscription/sheets/DeviceRed
 import { DeviceTopupSheet } from '@/components/subscription/sheets/DeviceTopupSheet';
 import { ServerManagementSheet } from '@/components/subscription/sheets/ServerManagementSheet';
 import { TrafficTopupSheet } from '@/components/subscription/sheets/TrafficTopupSheet';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useTheme } from '@/hooks/useTheme';
 import { getGlassColors } from '@/utils/glassTheme';
 import { showsAddonOptions } from '@/utils/legacySubscription';
@@ -108,18 +108,7 @@ export default function SubscriptionLite() {
     );
   }
 
-  if (isLoading || !subscription) {
-    return (
-      <div className="mx-auto w-full max-w-lg">
-        <SkeletonGroup className="pb-7 pt-8">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="mt-3 h-5 w-32" />
-          <Skeleton className="mt-7 h-1.5 w-full rounded-full" />
-        </SkeletonGroup>
-        <Skeleton className="h-14 w-full rounded-2xl" />
-      </div>
-    );
-  }
+  if (isLoading || !subscription) return <PageLoadingIndicator />;
 
   const showsAddons = showsAddonOptions(subscription);
   // Пока режим продаж неизвестен, строку «Серверы» не рисуем вовсе: иначе она

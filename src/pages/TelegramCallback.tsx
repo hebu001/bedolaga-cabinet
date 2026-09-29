@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -102,7 +103,7 @@ export default function TelegramCallback() {
   return (
     <div className="min-h-viewport flex items-center justify-center bg-dark-950">
       <div className="text-center">
-        <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-accent-500 border-t-transparent"></div>
+        <PageLoadingIndicator />
         <h2 className="text-lg font-semibold text-dark-50">{t('auth.authenticating')}</h2>
         <p className="mt-2 text-sm text-dark-400">{t('common.loading')}</p>
       </div>

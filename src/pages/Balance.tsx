@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useState, useEffect, useRef, type CSSProperties } from 'react';
 import '@/styles/balanceTypography.css';
 import { createPortal } from 'react-dom';
@@ -358,7 +359,7 @@ export default function Balance() {
                   )}
                   {isLoading ? (
                     <div className="flex items-center justify-center py-12">
-                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
+                      <PageLoadingIndicator />
                     </div>
                   ) : transactions?.items && transactions.items.length > 0 ? (
                     <motion.div

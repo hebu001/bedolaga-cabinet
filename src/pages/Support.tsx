@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { uiLocale } from '@/utils/uiLocale';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -293,7 +294,7 @@ export default function Support() {
   if (configLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner />
+        <PageLoadingIndicator />
       </div>
     );
   }
@@ -466,7 +467,7 @@ export default function Support() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Spinner />
+              <PageLoadingIndicator />
             </div>
           ) : tickets?.items && tickets.items.length > 0 ? (
             <div className="space-y-2">
@@ -648,7 +649,7 @@ export default function Support() {
               {/* Messages */}
               {detailLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Spinner />
+                  <PageLoadingIndicator />
                 </div>
               ) : ticketDetail?.messages ? (
                 <div className="scrollbar-hide mb-6 max-h-96 flex-1 space-y-4 overflow-y-auto">

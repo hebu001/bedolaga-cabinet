@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -167,7 +168,7 @@ export default function Connection() {
   if (isLoading || isConnectionLinkLoading) {
     return (
       <div className="flex flex-1 items-center justify-center py-20">
-        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-accent-500/30 border-t-accent-500" />
+        <PageLoadingIndicator />
       </div>
     );
   }

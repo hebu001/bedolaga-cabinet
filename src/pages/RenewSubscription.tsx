@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import {
   BEST_VALUE_BORDER,
   BestValueBadge,
@@ -147,7 +148,7 @@ export default function RenewSubscription() {
   if (isLoading || isSubscriptionLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
-        <div className="h-9 w-9 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+        <PageLoadingIndicator />
       </div>
     );
   }

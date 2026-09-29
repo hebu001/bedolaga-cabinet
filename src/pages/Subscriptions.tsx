@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useState } from 'react';
 import { hasLegacySubscription } from '../utils/legacySubscription';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -165,18 +166,7 @@ export default function Subscriptions() {
         </button>
       )}
 
-      {/* Loading */}
-      {isLoading && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-36 animate-pulse rounded-2xl"
-              style={{ background: g.innerBg }}
-            />
-          ))}
-        </div>
-      )}
+      {isLoading && <PageLoadingIndicator />}
 
       {/* Empty state: показываем триал, если доступен; иначе — обычный empty */}
       {hasNoSubscriptions && !trialLoading && trialInfo?.is_available && (

@@ -93,7 +93,7 @@ export function ReferralNetwork() {
         {hasScope && isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center">
             <div className="text-center">
-              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-dark-600 border-t-accent-400" />
+              <div className="mx-auto mb-3 h-8 w-8 animate-spin border-[#F97315] border-t-transparent rounded-full border-2  " />
               <p className="text-sm text-dark-400">{t('admin.referralNetwork.loading')}</p>
             </div>
           </div>

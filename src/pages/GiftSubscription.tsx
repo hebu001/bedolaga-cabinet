@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { uiLocale } from '@/utils/uiLocale';
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -95,7 +96,7 @@ function LoadingSkeleton() {
   return (
     <div className="flex min-h-dvh items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-hairline border-t-apple-blue" />
+        <PageLoadingIndicator />
       </div>
     </div>
   );
@@ -1241,7 +1242,7 @@ function MyGiftsTabContent() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-hairline border-t-apple-blue" />
+        <PageLoadingIndicator />
       </div>
     );
   }

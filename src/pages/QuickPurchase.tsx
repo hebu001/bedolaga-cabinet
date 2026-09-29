@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router';
@@ -70,7 +71,7 @@ function LoadingSkeleton() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-dark-950">
       <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-dark-600 border-t-accent-500" />
+        <PageLoadingIndicator />
       </div>
     </div>
   );

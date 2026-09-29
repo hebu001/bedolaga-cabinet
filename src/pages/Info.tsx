@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { uiLocale } from '@/utils/uiLocale';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -443,7 +444,7 @@ export default function Info() {
     if (infoPageLoading) {
       return (
         <div className="flex justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <PageLoadingIndicator />
         </div>
       );
     }
@@ -480,7 +481,7 @@ export default function Info() {
     if (!replacementsLoaded) {
       return (
         <div className="flex justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          <PageLoadingIndicator />
         </div>
       );
     }
@@ -494,7 +495,7 @@ export default function Info() {
       if (faqLoading) {
         return (
           <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <PageLoadingIndicator />
           </div>
         );
       }
@@ -529,7 +530,7 @@ export default function Info() {
       if (rulesLoading) {
         return (
           <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <PageLoadingIndicator />
           </div>
         );
       }
@@ -557,7 +558,7 @@ export default function Info() {
       if (privacyLoading) {
         return (
           <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <PageLoadingIndicator />
           </div>
         );
       }
@@ -585,7 +586,7 @@ export default function Info() {
       if (offerLoading) {
         return (
           <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <PageLoadingIndicator />
           </div>
         );
       }
@@ -613,7 +614,7 @@ export default function Info() {
       if (loyaltyLoading) {
         return (
           <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <PageLoadingIndicator />
           </div>
         );
       }

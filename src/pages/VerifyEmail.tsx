@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -68,7 +69,7 @@ export default function VerifyEmail() {
       <div className="w-full max-w-md text-center">
         {status === 'loading' && (
           <div>
-            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-2 border-accent-500 border-t-transparent"></div>
+            <PageLoadingIndicator />
             <h2 className="text-lg font-semibold text-dark-50 sm:text-xl">
               {t('emailVerification.verifying')}
             </h2>
@@ -88,7 +89,7 @@ export default function VerifyEmail() {
               {t('emailVerification.redirecting', 'Redirecting to dashboard...')}
             </p>
             <div className="mt-4">
-              <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent"></div>
+              <div className="mx-auto h-6 w-6 animate-spin border-[#F97315] border-t-transparent rounded-full border-2  "></div>
             </div>
           </div>
         )}

@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -63,7 +64,7 @@ export default function AutoLogin() {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-dark-600 border-t-accent-500" />
+            <PageLoadingIndicator />
             <p className="text-sm text-dark-300">{t('landing.autoLoginProcessing')}</p>
           </div>
         )}

@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import {
   clearTelegramAuthRecoveryAttempt,
   isInvalidTelegramInitDataError,
@@ -179,7 +180,7 @@ export default function TelegramRedirect() {
         {/* Loading State */}
         {status === 'loading' && (
           <div className="mt-8">
-            <div className="border-3 mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-accent-500 border-t-transparent" />
+            <PageLoadingIndicator />
             <p className="text-dark-400">{t('auth.authenticating')}</p>
             <p className="mt-2 text-sm text-dark-500">{t('common.loading')}</p>
           </div>

@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { copyToClipboard } from '@/utils/clipboard';
 import { useTariffRequiredRecovery } from '../hooks/useTariffRequiredRecovery';
 import { safeLocal } from '../utils/safeStorage';
@@ -866,7 +867,7 @@ export default function Subscription() {
   if (isLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
+        <PageLoadingIndicator />
       </div>
     );
   }

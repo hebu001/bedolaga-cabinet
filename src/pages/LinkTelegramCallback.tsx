@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { safeSession } from '../utils/safeStorage';
 import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -88,7 +89,7 @@ export default function LinkTelegramCallback() {
     <div className="min-h-viewport flex items-center justify-center">
       <div className="fixed inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950" />
       <div className="relative text-center">
-        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        <PageLoadingIndicator />
         <h2 className="text-lg font-semibold text-dark-50">
           {t('profile.accounts.linkingTelegram')}
         </h2>

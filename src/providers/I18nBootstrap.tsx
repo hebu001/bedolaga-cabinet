@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '../components/common/PageLoadingIndicator';
 import { useEffect, useState, type ReactNode } from 'react';
 import i18n, { areAdminTranslationsLoaded, loadAdminTranslations, prepareI18n } from '../i18n';
 
@@ -63,7 +64,7 @@ function TranslationGate({
           </button>
         </div>
       ) : (
-        <p role="status">{copy.loading}</p>
+        <PageLoadingIndicator />
       )}
     </div>
   );

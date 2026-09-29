@@ -225,7 +225,7 @@ export function DeviceReductionSheet({
         </div>
       ) : (
         <div className="flex items-center justify-center py-4">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-accent-400/30 border-t-accent-400" />
+          <span className="h-5 w-5 animate-spin border-[#F97315] border-t-transparent rounded-full border-2  " />
         </div>
       )}
     </div>

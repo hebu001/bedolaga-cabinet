@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useDashboardSubscriptionActions } from '../hooks/useDashboardSubscriptionActions';
 import { getApiErrorMessage } from '../utils/api-error';
 import { needsTariff, tariffSelectionPath } from '../utils/legacySubscription';
@@ -570,16 +571,7 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Loading skeleton */}
-        {subLoading && (
-          <div className="flex items-center justify-between py-4">
-            <div>
-              <div className="skeleton mb-2 h-5 w-40" />
-              <div className="skeleton h-4 w-24" />
-            </div>
-            <div className="skeleton h-8 w-28 rounded-full" />
-          </div>
-        )}
+        {subLoading && <PageLoadingIndicator />}
 
         {/* Trial Activation */}
         {hasNoSubscription && !trialLoading && trialInfo?.is_available && (

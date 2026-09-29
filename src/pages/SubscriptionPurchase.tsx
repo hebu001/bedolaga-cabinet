@@ -1,3 +1,4 @@
+import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { createPortal } from 'react-dom';
 import { useModalFocus } from '../hooks/useModalFocus';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -140,7 +141,7 @@ export default function SubscriptionPurchase() {
   if (isLoading || optionsLoading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+        <PageLoadingIndicator />
       </div>
     );
   }

@@ -44,7 +44,7 @@ export function BackgroundPreview({
       <Suspense
         fallback={
           <div className="flex h-full items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+            <div className="h-6 w-6 animate-spin border-[#F97315] border-t-transparent rounded-full border-2  " />
           </div>
         }
       >
