@@ -20,12 +20,12 @@
   box-shadow: none;
 }
 
-/* Choice cards, tabs and the restored gift page retain their original shapes. */
+/* Navigation, choice cards, tabs and gifts retain their original shapes. */
 :is(button, a):is(
   [class~="bg-apple-blue"],
   [class~="bg-[#F97315]"],
   [class~="bg-[#C2410C]"],
   .btn-primary
-):not([role="switch"], [role="tab"], [role="radio"], [aria-pressed], .legacy-gift *) {
+):not([role="switch"], [role="tab"], [role="radio"], [aria-pressed], .desktop-sidebar-link, .legacy-gift *) {
   border-radius: 9999px;
 }
