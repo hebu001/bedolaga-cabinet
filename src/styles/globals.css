@@ -131,11 +131,11 @@
 
 /* Ultima Design Tokens (id.ultm.in) */
 :root {
-  --figma-green: #c2410c;
-  --figma-green-rgb: 194, 65, 12;
-  --figma-green-50: rgba(194, 65, 12, 0.5);
-  --figma-green-70: rgba(194, 65, 12, 0.7);
-  --figma-green-dim: rgba(194, 65, 12, 0.12);
+  --figma-green: #f97316;
+  --figma-green-rgb: 249, 115, 22;
+  --figma-green-50: rgba(249, 115, 22, 0.5);
+  --figma-green-70: rgba(249, 115, 22, 0.7);
+  --figma-green-dim: rgba(249, 115, 22, 0.12);
   --figma-card-bg: rgba(255, 255, 255, 0.05);
   --figma-text-muted: rgba(255, 255, 255, 0.4);
 }
@@ -293,9 +293,9 @@
     --color-apple-faint: 174, 174, 180;
     --color-apple-hairline: 255, 255, 255;
     --opacity-apple-hairline: 0.08;
-    /* #c2410c keeps the orange identity and gives white text AA contrast. */
-    --color-apple-blue: 194, 65, 12;
-    --color-apple-accent-text: 251, 146, 60;
+    /* Original apple.blue from codex/cabinet-ux-performance-20260906. */
+    --color-apple-blue: 249, 115, 21;
+    --color-apple-accent-text: 249, 115, 21;
     --color-apple-green: 48, 209, 88;
     --color-apple-red: 255, 69, 58;
     --color-apple-amber: 255, 159, 10;
@@ -385,13 +385,13 @@
     --color-apple-faint: var(--color-champagne-600);
     --color-apple-hairline: var(--color-champagne-950);
     --opacity-apple-hairline: 0.14;
-    --color-apple-accent-text: 154, 52, 18;
+    --color-apple-accent-text: 249, 115, 21;
     --color-apple-green: 22, 101, 52;
     --color-apple-red: 185, 28, 28;
     --color-apple-amber: 146, 64, 14;
   }
 
-  /* Legacy arbitrary orange utilities share the accessible semantic fill. */
+  /* Legacy orange text and fills retain the original fork color. */
   .bg-\[\#F97315\] {
     background-color: rgb(var(--color-apple-blue)) !important;
   }

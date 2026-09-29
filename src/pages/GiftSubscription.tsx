@@ -30,20 +30,18 @@ import { buildGiftClaimArtifacts } from '../utils/giftShare';
 import { getApiErrorMessage } from '../utils/api-error';
 import { formatPrice } from '../utils/format';
 import { pickBestValue } from '../utils/bestValue';
-import { BestValueBadge, bestValueFrame } from '../components/subscription/BestValueBadge';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
 import { openPaymentUrl } from '../utils/openPaymentUrl';
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import {
-  SparklesIcon,
   GiftIcon,
   CheckIcon,
+  ShareIcon,
   CheckCircleIcon,
   KeyIcon,
   InboxIcon,
-  ExportIcon,
-} from '@/components/icons';
+} from '@/components/gift/legacyIcons';
 
 function formatPeriodLabel(
   days: number,
@@ -94,13 +92,7 @@ function formatGiftDate(dateStr: string | null): string {
 type TabId = 'buy' | 'activate' | 'myGifts';
 
 function LoadingSkeleton() {
-  return (
-    <div className="flex min-h-dvh items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-hairline border-t-apple-blue" />
-      </div>
-    </div>
-  );
+  return <SkeletonGroup />;
 }
 
 function ErrorState({ message }: { message: string }) {
@@ -165,6 +157,21 @@ function DisabledState() {
   );
 }
 
+// The new recommendation flag uses the old period discount badge styling.
+function GiftBestValueBadge({ selected = false }: { selected?: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={cn(
+        'inline-flex rounded-md px-2 py-0.5 text-xs font-bold',
+        selected ? 'bg-white/20 text-white' : 'bg-apple-blue/15 text-apple-blue',
+      )}
+    >
+      {t('subscription.bestValue')}
+    </span>
+  );
+}
+
 function TariffCard({
   tariff,
   isSelected,
@@ -183,59 +190,53 @@ function TariffCard({
       aria-checked={isSelected}
       onClick={onSelect}
       className={cn(
-        'block w-full rounded-2xl p-4 text-start transition-all duration-200',
-        tariff.is_highlighted
-          ? cn(bestValueFrame(isSelected), isSelected ? 'bg-accent-500/5' : 'bg-dark-900/50')
-          : isSelected
-            ? 'border border-accent-500/50 bg-accent-500/5'
-            : 'border border-dark-800/50 bg-dark-900/50 hover:border-dark-700/50',
+        'flex w-full items-center gap-4 rounded-2xl border p-4 text-start transition-all duration-200',
+        isSelected
+          ? 'border-apple-blue bg-apple-elevated'
+          : 'border-apple-hairline bg-apple-card hover:border-apple-hairline',
       )}
     >
-      {/* Отметка оператора первой строкой, как в покупке и продлении: этот тариф
-          выбран сразу — подпись объясняет почему. */}
-      {tariff.is_highlighted && <BestValueBadge className="mb-3" />}
-      <div className="flex items-center gap-4">
-        {/* Gift circle icon */}
-        <div
+      {/* Gift circle icon */}
+      <div
+        className={cn(
+          'flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors',
+          isSelected ? 'bg-apple-blue/15' : 'bg-apple-elevated',
+        )}
+      >
+        <GiftIcon
           className={cn(
-            'flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors',
-            isSelected ? 'bg-accent-500/20' : 'bg-dark-800/50',
+            'h-6 w-6 transition-colors',
+            isSelected ? 'text-apple-blue' : 'text-apple-mute',
+          )}
+        />
+      </div>
+
+      {/* Info */}
+      <div className="min-w-0 flex-1">
+        <p className="text-base font-bold text-apple-ink">{tariff.name}</p>
+        {tariff.is_highlighted && <GiftBestValueBadge />}
+        <p
+          className={cn(
+            'text-xs font-medium uppercase tracking-wider transition-colors',
+            isSelected ? 'text-apple-blue' : 'text-apple-mute',
           )}
         >
-          <GiftIcon
-            className={cn(
-              'h-6 w-6 transition-colors',
-              isSelected ? 'text-accent-400' : 'text-dark-400',
-            )}
-          />
-        </div>
+          {tariff.traffic_limit_gb > 0
+            ? `${tariff.traffic_limit_gb} ${t('gift.gbShort')}`
+            : t('gift.unlimitedTraffic')}
+          {' \u2022 '}
+          {t('gift.deviceCount', { count: tariff.device_limit })}
+        </p>
+      </div>
 
-        {/* Info */}
-        <div className="min-w-0 flex-1">
-          <p className="text-base font-bold text-dark-50">{tariff.name}</p>
-          <p
-            className={cn(
-              'text-xs font-medium uppercase tracking-wider transition-colors',
-              isSelected ? 'text-accent-400' : 'text-dark-400',
-            )}
-          >
-            {tariff.traffic_limit_gb > 0
-              ? `${tariff.traffic_limit_gb} ${t('gift.gbShort')}`
-              : t('gift.unlimitedTraffic')}
-            {' \u2022 '}
-            {t('gift.deviceCount', { count: tariff.device_limit })}
-          </p>
-        </div>
-
-        {/* Checkmark circle */}
-        <div
-          className={cn(
-            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-            isSelected ? 'border-accent-500 bg-accent-500' : 'border-dark-600',
-          )}
-        >
-          {isSelected && <CheckIcon className="h-3.5 w-3.5 text-white" />}
-        </div>
+      {/* Checkmark circle */}
+      <div
+        className={cn(
+          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+          isSelected ? 'border-apple-blue bg-apple-blue' : 'border-apple-hairline',
+        )}
+      >
+        {isSelected && <CheckIcon className="h-3.5 w-3.5 text-white" />}
       </div>
     </button>
   );
@@ -259,44 +260,42 @@ function PeriodCard({
       type="button"
       onClick={onSelect}
       aria-pressed={isSelected}
-      // Выбор — подсветкой и голубой рамкой, как в покупке и продлении. Сплошная
-      // голубая заливка выбранного съедала золотую плашку «Выгодно».
       className={cn(
-        'block w-full rounded-2xl p-4 text-start transition-all duration-200',
-        period.is_highlighted
-          ? cn(bestValueFrame(isSelected), isSelected ? 'bg-accent-500/10' : 'bg-dark-800/50')
-          : isSelected
-            ? 'border border-accent-500 bg-accent-500/10'
-            : 'border border-transparent bg-dark-800/50 hover:bg-dark-700/50',
+        'flex w-full items-center justify-between gap-3 rounded-2xl p-4 transition-all duration-200',
+        isSelected ? 'bg-apple-blue text-white' : 'bg-apple-elevated hover:bg-apple-elevated',
       )}
     >
-      {/* Отметка оператора первой строкой: этот период выбран сразу — подпись
-          объясняет почему. */}
-      {period.is_highlighted && <BestValueBadge className="mb-2" />}
-      <div className="flex items-center justify-between gap-3">
-        {/* Left: period + discount */}
-        <div className="flex min-w-0 flex-col items-start gap-1">
-          <span className="text-lg font-bold text-dark-50">
-            {formatPeriodLabel(period.days, t)}
+      {/* Left: period + discount */}
+      <div className="flex min-w-0 flex-col items-start gap-1">
+        {period.is_highlighted && <GiftBestValueBadge selected={isSelected} />}
+        <span className="text-lg font-bold">{formatPeriodLabel(period.days, t)}</span>
+        {hasDiscount && period.discount_percent != null && (
+          <span
+            className={cn(
+              'rounded-md px-2 py-0.5 text-xs font-bold',
+              isSelected ? 'bg-white/20 text-white' : 'bg-apple-blue/15 text-apple-blue',
+            )}
+          >
+            -{period.discount_percent}%
           </span>
-          {hasDiscount && period.discount_percent != null && (
-            <span className="rounded-md bg-accent-500/20 px-2 py-0.5 text-xs font-bold text-accent-400">
-              -{period.discount_percent}%
-            </span>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Right: prices */}
-        <div className="flex shrink-0 flex-col items-end gap-0.5">
-          <span className="whitespace-nowrap text-lg font-bold text-accent-400">
-            {formatPrice(period.price_kopeks)}
+      {/* Right: prices */}
+      <div className="flex shrink-0 flex-col items-end gap-0.5 whitespace-nowrap">
+        <span className={cn('text-lg font-bold', isSelected ? 'text-white' : 'text-apple-blue')}>
+          {formatPrice(period.price_kopeks)}
+        </span>
+        {hasDiscount && period.original_price_kopeks != null && (
+          <span
+            className={cn(
+              'text-xs line-through',
+              isSelected ? 'text-white/50' : 'text-apple-faint',
+            )}
+          >
+            {formatPrice(period.original_price_kopeks)}
           </span>
-          {hasDiscount && period.original_price_kopeks != null && (
-            <span className="whitespace-nowrap text-xs text-dark-500 line-through">
-              {formatPrice(period.original_price_kopeks)}
-            </span>
-          )}
-        </div>
+        )}
       </div>
     </button>
   );
@@ -610,22 +609,22 @@ function BuyTabContent({
 
       {/* Selected tariff description */}
       {selectedTariff?.description && (
-        <div className="rounded-xl border border-dark-800/30 bg-dark-800/20 px-4 py-3">
-          <p className="text-sm text-dark-300">{selectedTariff.description}</p>
+        <div className="rounded-xl border border-apple-hairline bg-apple-card px-4 py-3">
+          <p className="text-sm text-apple-mute">{selectedTariff.description}</p>
         </div>
       )}
 
       {/* Promo group banner */}
       {config.promo_group_name && (
-        <div className="flex items-center gap-3 rounded-xl border border-success-500/30 bg-success-500/10 p-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success-500/20">
-            <SparklesIcon className="h-4 w-4 text-success-400" />
+        <div className="flex items-center gap-3 rounded-xl bg-apple-card p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-green/15">
+            <GiftIcon className="h-4 w-4 text-apple-green" />
           </div>
           <div>
-            <div className="text-sm font-medium text-success-400">
+            <div className="text-sm font-medium text-apple-green">
               {t('subscription.promoGroup.yourGroup', { name: config.promo_group_name })}
             </div>
-            <div className="text-xs text-dark-400">
+            <div className="text-xs text-apple-mute">
               {t('subscription.promoGroup.personalDiscountsApplied')}
             </div>
           </div>
@@ -634,11 +633,11 @@ function BuyTabContent({
 
       {/* Active discount banner */}
       {config.active_discount_percent != null && config.active_discount_percent > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-warning-500/30 bg-warning-500/10 p-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warning-500/20">
-            <SparklesIcon className="h-4 w-4 text-warning-400" />
+        <div className="flex items-center gap-3 rounded-xl bg-apple-card p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-apple-blue/15">
+            <GiftIcon className="h-4 w-4 text-apple-blue" />
           </div>
-          <div className="text-sm font-medium text-warning-400">
+          <div className="text-sm font-medium text-apple-blue">
             {t('promo.discountApplied')} -{config.active_discount_percent}%
           </div>
         </div>
@@ -940,7 +939,7 @@ function ActivateTabContent({ initialCode }: { initialCode?: string | null }) {
           type="button"
           onClick={handleScan}
           disabled={scanning}
-          className="mt-3 w-full rounded-2xl border border-dark-700/50 px-6 py-3 text-sm font-medium text-dark-200 transition-colors hover:bg-dark-800/50 disabled:opacity-50"
+          className="mt-3 w-full rounded-full bg-apple-elevated px-6 py-3 text-sm font-medium text-apple-ink transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {scanning ? t('gift.scanInProgress') : t('gift.scanButton')}
         </button>
@@ -954,7 +953,7 @@ function ActivateTabContent({ initialCode }: { initialCode?: string | null }) {
           <button
             type="button"
             onClick={stopScan}
-            className="mt-2 w-full rounded-2xl border border-dark-700/50 px-6 py-2 text-xs text-dark-400 transition-colors hover:bg-dark-800/50"
+            className="mt-2 w-full rounded-2xl border border-dark-700/50 px-6 py-2 text-xs text-apple-mute transition-colors hover:bg-dark-800/50"
           >
             {t('gift.scanCancel')}
           </button>
@@ -1118,7 +1117,7 @@ function SentGiftCard({ gift }: { gift: SentGift }) {
             onClick={handleShare}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-apple-blue px-4 py-3 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-apple-blue active:scale-[0.98]"
           >
-            <ExportIcon className="h-4 w-4" />
+            <ShareIcon className="h-4 w-4" />
             {t('gift.shareGift')}
           </button>
         </>

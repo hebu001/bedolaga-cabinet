@@ -603,7 +603,7 @@ export default function TopUpPanel({
                     {s.key === selectedKey && (
                       <span
                         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: '#C2410C' }}
+                        style={{ background: '#F97315' }}
                       >
                         <svg
                           width="14"

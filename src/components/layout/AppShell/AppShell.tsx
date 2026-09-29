@@ -118,25 +118,32 @@ export function AppShell({ children }: AppShellProps) {
 
   // Portals attach to body; keep the same palette as their admin route.
   useEffect(() => {
-    if (!isAdminPage && !isProfile) return;
-    const paletteClass = isProfile
-      ? 'legacy-apple'
-      : keepCurrentAdminStyle
-        ? 'current-admin'
-        : 'legacy-admin';
+    if (!isAdminPage && !isProfile && !isGift) return;
+    const paletteClass =
+      isProfile || isGift
+        ? 'legacy-apple'
+        : keepCurrentAdminStyle
+          ? 'current-admin'
+          : 'legacy-admin';
     document.body.classList.add(paletteClass);
+    if (isGift) document.body.classList.add('legacy-gift');
     if (isNewAdminPage) document.body.classList.add('legacy-admin-new');
-    return () => document.body.classList.remove(paletteClass, 'legacy-admin-new');
-  }, [isAdminPage, isProfile, keepCurrentAdminStyle, isNewAdminPage]);
+    return () => document.body.classList.remove(paletteClass, 'legacy-admin-new', 'legacy-gift');
+  }, [isAdminPage, isProfile, isGift, keepCurrentAdminStyle, isNewAdminPage]);
 
   return (
     <div
       className={cn(
         'app-shell min-h-[100dvh]',
         isAppleDarkPage && 'bg-black',
-        (isSubscription || isBalance || isProfile || (isAdminPage && !keepCurrentAdminStyle)) &&
+        (isSubscription ||
+          isBalance ||
+          isProfile ||
+          isGift ||
+          (isAdminPage && !keepCurrentAdminStyle)) &&
           'legacy-apple',
         keepCurrentAdminStyle && 'current-admin',
+        isGift && 'legacy-gift',
         isNewAdminPage && 'legacy-admin-new',
       )}
     >

@@ -1028,7 +1028,7 @@ export default function Profile() {
                             type="button"
                             onClick={() => copyLink(botReferralLink, 'bot')}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
-                            style={{ background: copiedLink === 'bot' ? '#166534' : '#C2410C' }}
+                            style={{ background: copiedLink === 'bot' ? '#166534' : '#F97315' }}
                           >
                             {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
                             <span>
@@ -1071,7 +1071,7 @@ export default function Profile() {
                             onClick={() => copyLink(referralLink, 'cabinet')}
                             disabled={!referralLink}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                            style={{ background: copiedLink === 'cabinet' ? '#166534' : '#C2410C' }}
+                            style={{ background: copiedLink === 'cabinet' ? '#166534' : '#F97315' }}
                           >
                             {copiedLink === 'cabinet' ? <CheckIcon /> : <CopyIcon />}
                             <span>

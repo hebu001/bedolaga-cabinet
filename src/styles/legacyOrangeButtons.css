@@ -9,7 +9,6 @@
 ):not([role="switch"]) {
   background-color: #f97315 !important;
   color: #fff;
-  border-radius: 9999px;
 }
 
 :is(button, a):is(
@@ -19,4 +18,14 @@
   .btn-primary
 ):not([role="switch"]):not(:focus-visible) {
   box-shadow: none;
+}
+
+/* Choice cards, tabs and the restored gift page retain their original shapes. */
+:is(button, a):is(
+  [class~="bg-apple-blue"],
+  [class~="bg-[#F97315]"],
+  [class~="bg-[#C2410C]"],
+  .btn-primary
+):not([role="switch"], [role="tab"], [role="radio"], [aria-pressed], .legacy-gift *) {
+  border-radius: 9999px;
 }

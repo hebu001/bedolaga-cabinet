@@ -40,7 +40,7 @@ export function UserAvatar({
         'relative flex shrink-0 items-center justify-center rounded-full font-bold',
         muted
           ? 'bg-apple-elevated text-apple-mute'
-          : 'bg-gradient-to-br from-apple-blue to-[#C2410C] text-white',
+          : 'bg-gradient-to-br from-apple-blue to-[#F97315] text-white',
         SIZE[size],
         className,
       )}
