@@ -35,3 +35,68 @@
   border-color: rgba(255, 255, 255, 0.08);
   --tw-border-opacity: 0.08;
 }
+
+/* Original placeholders from 55a4038f globals.css, only on restored user pages. */
+.legacy-user .skeleton {
+  @apply animate-pulse bg-dark-800;
+}
+
+.legacy-user .skeleton:not([class*='rounded-'], [class~='rounded']) {
+  @apply rounded-lg;
+}
+
+.light .legacy-user .skeleton {
+  @apply bg-champagne-300;
+}
+
+.legacy-user .border-apple-hairline.border-t-apple-blue {
+  border-top-color: rgb(var(--color-apple-blue));
+}
+
+/* Exact default status palette computed by the old fork useThemeColors. */
+.legacy-user {
+  --color-accent-100: 230, 237, 249;
+  --color-accent-200: 187, 212, 252;
+  --color-accent-300: 138, 181, 249;
+  --color-accent-400: 80, 144, 247;
+  --color-accent-50: 242, 246, 252;
+  --color-accent-500: 11, 100, 244;
+  --color-accent-600: 10, 84, 205;
+  --color-accent-700: 8, 68, 166;
+  --color-accent-800: 6, 52, 127;
+  --color-accent-900: 12, 38, 79;
+  --color-accent-950: 7, 21, 44;
+  --color-error-100: 249, 231, 231;
+  --color-error-200: 249, 189, 189;
+  --color-error-300: 245, 142, 142;
+  --color-error-400: 240, 86, 86;
+  --color-error-50: 252, 243, 243;
+  --color-error-500: 235, 20, 20;
+  --color-error-600: 197, 17, 17;
+  --color-error-700: 160, 14, 14;
+  --color-error-800: 122, 11, 11;
+  --color-error-900: 77, 15, 15;
+  --color-error-950: 43, 8, 8;
+  --color-success-100: 232, 247, 238;
+  --color-success-200: 194, 245, 213;
+  --color-success-300: 150, 237, 182;
+  --color-success-400: 98, 228, 146;
+  --color-success-50: 244, 251, 246;
+  --color-success-500: 37, 218, 103;
+  --color-success-600: 31, 183, 87;
+  --color-success-700: 25, 148, 70;
+  --color-success-800: 19, 113, 54;
+  --color-success-900: 20, 72, 39;
+  --color-success-950: 11, 40, 22;
+  --color-warning-100: 250, 242, 230;
+  --color-warning-200: 252, 228, 186;
+  --color-warning-300: 250, 209, 137;
+  --color-warning-400: 248, 186, 79;
+  --color-warning-50: 252, 249, 242;
+  --color-warning-500: 245, 159, 10;
+  --color-warning-600: 206, 133, 9;
+  --color-warning-700: 166, 108, 7;
+  --color-warning-800: 127, 83, 5;
+  --color-warning-900: 80, 55, 12;
+  --color-warning-950: 44, 31, 7;
+}

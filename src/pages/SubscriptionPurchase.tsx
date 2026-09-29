@@ -20,7 +20,6 @@ import { TariffPickerLite } from '../components/subscription/purchase/TariffPick
 import { useLiteMode } from '../hooks/useLiteMode';
 import { ClassicPurchaseWizard } from '../components/subscription/purchase/ClassicPurchaseWizard';
 import { ExclamationIcon, SparklesIcon } from '@/components/icons';
-import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 export default function SubscriptionPurchase() {
   const { t } = useTranslation();
@@ -140,10 +139,9 @@ export default function SubscriptionPurchase() {
 
   if (isLoading || optionsLoading) {
     return (
-      <PageSkeleton leading={1} titleWidth="w-56">
-        <Skeleton variant="card" className="h-32" />
-        <Skeleton variant="card" count={2} className="h-40" />
-      </PageSkeleton>
+      <div className="flex min-h-64 items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+      </div>
     );
   }
 

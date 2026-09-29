@@ -2,18 +2,73 @@ import { uiLocale } from '@/utils/uiLocale';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { PiCaretDown } from 'react-icons/pi';
 import DOMPurify from 'dompurify';
 import { infoApi, type FaqPage, type InfoVisibility } from '../api/info';
 import { formatContent } from '../utils/legalContent';
 import { infoPagesApi } from '../api/infoPages';
 import { promoApi, type LoyaltyTierInfo } from '../api/promo';
 import type { FaqItem, ReplacesTab } from '../api/infoPages';
-import { DocumentIcon, InfoIcon, QuestionIcon, ShieldIcon, StarIcon } from '@/components/icons';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+
+const InfoIcon = () => (
+  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+    />
+  </svg>
+);
+
+const QuestionIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+    />
+  </svg>
+);
+
+const DocumentIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+    />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+    />
+  </svg>
+);
+
+const StarIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+    />
+  </svg>
+);
 
 const ChevronIcon = ({ expanded }: { expanded: boolean }) => (
-  <PiCaretDown className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+  <svg
+    className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+  </svg>
 );
 
 const BUILTIN_TABS = new Set<string>(['faq', 'rules', 'privacy', 'offer', 'loyalty']);
@@ -387,9 +442,9 @@ export default function Info() {
   const renderInfoPageContent = () => {
     if (infoPageLoading) {
       return (
-        <SkeletonGroup className="space-y-3">
-          <Skeleton variant="card" count={3} className="h-16" />
-        </SkeletonGroup>
+        <div className="flex justify-center py-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        </div>
       );
     }
 
@@ -424,9 +479,9 @@ export default function Info() {
     // Show spinner while tab replacements are loading (prevents flash of wrong content)
     if (!replacementsLoaded) {
       return (
-        <SkeletonGroup className="space-y-3">
-          <Skeleton variant="card" count={3} className="h-16" />
-        </SkeletonGroup>
+        <div className="flex justify-center py-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+        </div>
       );
     }
 
@@ -438,9 +493,9 @@ export default function Info() {
     if (activeTab === 'faq') {
       if (faqLoading) {
         return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
+          <div className="flex justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          </div>
         );
       }
 
@@ -473,9 +528,9 @@ export default function Info() {
     if (activeTab === 'rules') {
       if (rulesLoading) {
         return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
+          <div className="flex justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          </div>
         );
       }
 
@@ -501,9 +556,9 @@ export default function Info() {
     if (activeTab === 'privacy') {
       if (privacyLoading) {
         return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
+          <div className="flex justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          </div>
         );
       }
 
@@ -529,9 +584,9 @@ export default function Info() {
     if (activeTab === 'offer') {
       if (offerLoading) {
         return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
+          <div className="flex justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          </div>
         );
       }
 
@@ -557,9 +612,9 @@ export default function Info() {
     if (activeTab === 'loyalty') {
       if (loyaltyLoading) {
         return (
-          <SkeletonGroup className="space-y-3">
-            <Skeleton variant="card" count={3} className="h-16" />
-          </SkeletonGroup>
+          <div className="flex justify-center py-8">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-500 border-t-transparent" />
+          </div>
         );
       }
 
@@ -748,7 +803,7 @@ export default function Info() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <InfoIcon className="h-6 w-6" />
+        <InfoIcon />
         <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('info.title')}</h1>
       </div>
 
@@ -760,7 +815,7 @@ export default function Info() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex min-h-[44px] shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? 'bg-accent-500 text-on-accent'
+                ? 'bg-accent-500 text-white'
                 : 'bg-dark-800 text-dark-300 hover:bg-dark-700'
             }`}
           >

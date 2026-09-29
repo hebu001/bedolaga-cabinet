@@ -28,7 +28,7 @@ import { useCurrency } from '../hooks/useCurrency';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
 import PurchaseCTAButton from '../components/subscription/PurchaseCTAButton';
-import { CopyIcon, CheckIcon } from '../components/icons';
+import { CopyIcon, CheckIcon } from '../components/icons/legacySubscription';
 import { useModalFocus } from '../hooks/useModalFocus';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useNotify } from '../platform/hooks/useNotify';

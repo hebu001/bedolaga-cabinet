@@ -19,4 +19,8 @@
   .balance-summary {
     --balance-amount-max: 2.875rem;
   }
+  .balance-amount {
+    line-height: 1;
+    font-variant-numeric: normal;
+  }
 }

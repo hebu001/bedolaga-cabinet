@@ -1,7 +1,7 @@
 import { useDashboardSubscriptionActions } from '../hooks/useDashboardSubscriptionActions';
 import { getApiErrorMessage } from '../utils/api-error';
 import { needsTariff, tariffSelectionPath } from '../utils/legacySubscription';
-import { Skeleton } from '../components/ui/skeleton';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -572,17 +572,12 @@ export default function Dashboard() {
 
         {/* Loading skeleton */}
         {subLoading && (
-          <div
-            role="status"
-            aria-busy="true"
-            aria-label={t('common.loading')}
-            className="flex min-w-0 items-center justify-between gap-3 py-4"
-          >
-            <div className="min-w-0">
-              <Skeleton className="mb-2 h-5 w-40" />
-              <Skeleton className="h-4 w-24" />
+          <div className="flex items-center justify-between py-4">
+            <div>
+              <div className="skeleton mb-2 h-5 w-40" />
+              <div className="skeleton h-4 w-24" />
             </div>
-            <Skeleton className="h-8 w-28 rounded-full" />
+            <div className="skeleton h-8 w-28 rounded-full" />
           </div>
         )}
 

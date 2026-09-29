@@ -46,7 +46,9 @@ function StatusBadge({
 
   if (isTrial) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-warning-400/25 bg-warning-400/10 px-2 py-0.5 text-[10px] font-semibold text-warning-400">
+      <span
+        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${legacyAppearance ? 'border-amber-400/25 bg-amber-400/10 text-amber-400' : 'border-warning-400/25 bg-warning-400/10 text-warning-400'}`}
+      >
         <StarIcon filled className="h-2.5 w-2.5" />
         {t('subscription.statusTrial', 'Тестовая')}
       </span>
@@ -65,7 +67,9 @@ function StatusBadge({
       ? legacyAppearance
         ? 'bg-amber-400/15 text-amber-400 border-amber-400/20'
         : 'bg-warning-500/15 text-warning-400 border-warning-500/20'
-      : 'bg-error-500/15 text-error-400 border-error-500/20';
+      : legacyAppearance
+        ? 'bg-red-400/15 text-red-400 border-red-400/20'
+        : 'bg-error-500/15 text-error-400 border-error-500/20';
 
   const label = isActive
     ? t('subscription.statusActive', 'Активна')
@@ -128,8 +132,13 @@ export default function SubscriptionListCard({
     : trafficLimit > 0
       ? Math.min(100, (trafficUsed / trafficLimit) * 100)
       : 0;
-  const trafficColor =
-    trafficPercent >= 90
+  const trafficColor = legacyAppearance
+    ? trafficPercent >= 90
+      ? 'bg-red-400'
+      : trafficPercent >= 70
+        ? 'bg-amber-400'
+        : 'bg-emerald-400'
+    : trafficPercent >= 90
       ? 'bg-error-400'
       : trafficPercent >= 70
         ? 'bg-warning-400'
@@ -185,7 +194,19 @@ export default function SubscriptionListCard({
               t={t}
             />
           </div>
-          <ChevronRightIcon className="h-4 w-4 shrink-0 opacity-30" />
+          {legacyAppearance ? (
+            <svg
+              className="h-4 w-4 shrink-0 opacity-30"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          ) : (
+            <ChevronRightIcon className="h-4 w-4 shrink-0 opacity-30" />
+          )}
         </div>
 
         {/* Traffic mini progress bar */}

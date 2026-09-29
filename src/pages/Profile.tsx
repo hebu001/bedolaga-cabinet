@@ -390,7 +390,7 @@ export default function Profile() {
     if (!referralTerms) return null;
     if (referralTerms.scheme === 'levels') {
       return (
-        <Suspense fallback={<div role="status">{t('common.loading')}</div>}>
+        <Suspense fallback={null}>
           <ProgrammeTerms terms={referralTerms} appearance="apple" />
         </Suspense>
       );
@@ -941,7 +941,7 @@ export default function Profile() {
           onToggle={() => toggleSection('referral')}
         >
           {integrationCapabilities.referralLevels ? (
-            <Suspense fallback={<div role="status">{t('common.loading')}</div>}>
+            <Suspense fallback={null}>
               <UpdatedReferral />
             </Suspense>
           ) : (

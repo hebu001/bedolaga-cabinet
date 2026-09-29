@@ -16,7 +16,6 @@ import { Card } from '@/components/data-display/Card';
 import { Button } from '@/components/primitives/Button';
 import { BackIcon } from '@/components/icons';
 import { staggerContainer, staggerItem } from '@/components/motion/transitions';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 function formatCardDate(dateStr: string): string {
   try {
@@ -199,23 +198,23 @@ export default function SavedCards() {
       {isLoading && (
         <motion.div variants={staggerItem}>
           <Card>
-            <SkeletonGroup className="space-y-3">
+            <div className="space-y-3">
               {[1, 2].map((i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between rounded-linear border border-dark-700/30 bg-dark-800/30 p-4"
                 >
                   <div className="flex items-center gap-3">
-                    <Skeleton className="h-6 w-6 shrink-0" />
+                    <div className="h-6 w-6 animate-pulse rounded bg-dark-700" />
                     <div className="space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-24" />
+                      <div className="h-4 w-32 animate-pulse rounded bg-dark-700" />
+                      <div className="h-3 w-24 animate-pulse rounded bg-dark-700" />
                     </div>
                   </div>
-                  <Skeleton className="h-8 w-20 shrink-0" />
+                  <div className="h-8 w-20 animate-pulse rounded bg-dark-700" />
                 </div>
               ))}
-            </SkeletonGroup>
+            </div>
           </Card>
         </motion.div>
       )}

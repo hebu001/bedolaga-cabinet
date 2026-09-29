@@ -1,4 +1,5 @@
 import { PromptDialogHost } from '@/components/PromptDialogHost';
+import { LegacyVisualContext } from '@/components/common/LegacyVisualContext';
 import { resetVirtualKeyboard, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 import '@/styles/legacyAdmin.css';
 import '@/styles/legacyApple.css';
@@ -116,32 +117,33 @@ export function AppShell({ children }: AppShellProps) {
   const isAppleDarkPage =
     isBalance || isSubscription || isProfile || isSupport || isAdminPage || isGift;
 
-  // Portals attach to body; keep the same palette as their admin route.
+  // Portals attach to body; keep the same palette as their route.
   useEffect(() => {
-    if (!isAdminPage && !isProfile && !isGift) return;
-    const paletteClass =
-      isProfile || isGift
-        ? 'legacy-apple'
-        : keepCurrentAdminStyle
-          ? 'current-admin'
-          : 'legacy-admin';
+    const paletteClass = !isAdminPage
+      ? 'legacy-apple'
+      : keepCurrentAdminStyle
+        ? 'current-admin'
+        : 'legacy-admin';
     document.body.classList.add(paletteClass);
+    if (!isAdminPage) document.body.classList.add('legacy-user');
     if (isGift) document.body.classList.add('legacy-gift');
     if (isNewAdminPage) document.body.classList.add('legacy-admin-new');
-    return () => document.body.classList.remove(paletteClass, 'legacy-admin-new', 'legacy-gift');
-  }, [isAdminPage, isProfile, isGift, keepCurrentAdminStyle, isNewAdminPage]);
+    return () =>
+      document.body.classList.remove(
+        paletteClass,
+        'legacy-admin-new',
+        'legacy-gift',
+        'legacy-user',
+      );
+  }, [isAdminPage, isGift, keepCurrentAdminStyle, isNewAdminPage]);
 
   return (
     <div
       className={cn(
         'app-shell min-h-[100dvh]',
         isAppleDarkPage && 'bg-black',
-        (isSubscription ||
-          isBalance ||
-          isProfile ||
-          isGift ||
-          (isAdminPage && !keepCurrentAdminStyle)) &&
-          'legacy-apple',
+        (!isAdminPage || !keepCurrentAdminStyle) && 'legacy-apple',
+        !isAdminPage && 'legacy-user',
         keepCurrentAdminStyle && 'current-admin',
         isGift && 'legacy-gift',
         isNewAdminPage && 'legacy-admin-new',
@@ -231,7 +233,9 @@ export function AppShell({ children }: AppShellProps) {
               : 'px-4 py-6 pb-28 lg:pb-8',
           )}
         >
-          {children}
+          <LegacyVisualContext.Provider value={!isAdminPage}>
+            {children}
+          </LegacyVisualContext.Provider>
         </main>
       </div>
 

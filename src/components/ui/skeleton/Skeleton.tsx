@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { type SkeletonVariant, skeletonClass } from './skeletonStyles';
+import { useLegacyVisuals } from '@/components/common/LegacyVisualContext';
 
 export interface SkeletonProps {
   variant?: SkeletonVariant;
@@ -28,6 +29,8 @@ export function Skeleton({
   className,
   style,
 }: SkeletonProps) {
+  const legacyVisuals = useLegacyVisuals();
+  if (legacyVisuals) return null;
   if (variant === 'card') return <SkeletonGroup />;
 
   const cls = skeletonClass({ variant, circle, animate, className });
@@ -57,7 +60,9 @@ export function SkeletonGroup({
   'aria-label'?: string;
 }) {
   const { t } = useTranslation();
+  const legacyVisuals = useLegacyVisuals();
   const loading = t('common.loading');
+  if (legacyVisuals) return null;
 
   return (
     <div

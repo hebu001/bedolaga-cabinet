@@ -1,4 +1,3 @@
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { useState, useEffect, useRef, type CSSProperties } from 'react';
 import '@/styles/balanceTypography.css';
 import { createPortal } from 'react-dom';
@@ -267,18 +266,15 @@ export default function Balance() {
       animate="animate"
     >
       <motion.div variants={staggerItem}>
-        <h1 className="px-1 text-[24px] font-bold leading-tight tracking-tight text-apple-ink sm:text-[28px]">
+        <h1 className="px-1 text-[24px] font-bold leading-tight tracking-tight text-apple-ink sm:text-[28px] sm:leading-normal">
           {t('balance.title')}
         </h1>
       </motion.div>
 
-      {/* Balance Card — flat surface; the giant numeric carries the
-          weight. The previous accent gradient + glow leaked accent into
-          decoration (DESIGN.md Tunable-but-Scarce Rule) and read as the
-          SaaS hero-metric template. */}
+      {/* Original balance card, with the requested mobile type sizing. */}
       <motion.div variants={staggerItem}>
         <div className={`${cardCls} balance-summary p-5 text-center sm:p-6`}>
-          <div className="text-[14px] leading-5 text-apple-mute sm:text-[15px]">
+          <div className="text-[14px] leading-5 text-apple-mute sm:text-[15px] sm:leading-normal">
             {t('balance.available', 'Доступно')}
           </div>
           <div
@@ -308,14 +304,14 @@ export default function Balance() {
             <button
               type="button"
               onClick={() => setShowTopUp(true)}
-              className="min-h-12 min-w-0 flex-1 rounded-full bg-apple-blue px-3 py-3 text-[14px] font-semibold leading-5 text-white transition-opacity hover:opacity-90 sm:text-[15px]"
+              className="min-h-12 min-w-0 flex-1 rounded-full bg-apple-blue px-3 py-3 text-[14px] font-semibold leading-5 text-white transition-opacity hover:opacity-90 sm:px-0 sm:py-3.5 sm:text-[15px] sm:leading-normal"
             >
               {t('balance.topUp', 'Пополнить')}
             </button>
             <button
               type="button"
               onClick={() => setShowPromo(true)}
-              className="min-h-12 min-w-0 flex-1 rounded-full bg-white px-3 py-3 text-[14px] font-semibold leading-5 text-black transition-opacity hover:opacity-90 sm:text-[15px]"
+              className="min-h-12 min-w-0 flex-1 rounded-full bg-white px-3 py-3 text-[14px] font-semibold leading-5 text-black transition-opacity hover:opacity-90 sm:px-0 sm:py-3.5 sm:text-[15px] sm:leading-normal"
             >
               {t('balance.promocode.title', 'Промокод')}
             </button>
@@ -330,7 +326,7 @@ export default function Balance() {
             onClick={() => setIsHistoryOpen(!isHistoryOpen)}
             className="flex w-full items-center justify-between text-left"
           >
-            <h2 className="text-[16px] font-semibold leading-snug text-apple-ink sm:text-[17px]">
+            <h2 className="text-[16px] font-semibold leading-snug text-apple-ink sm:text-[17px] sm:leading-normal">
               {t('balance.transactionHistory')}
             </h2>
             <ChevronDownIcon
@@ -361,9 +357,9 @@ export default function Balance() {
                     </div>
                   )}
                   {isLoading ? (
-                    <SkeletonGroup className="space-y-3">
-                      <Skeleton variant="card" count={3} className="h-16" />
-                    </SkeletonGroup>
+                    <div className="flex items-center justify-center py-12">
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-blue border-t-transparent" />
+                    </div>
                   ) : transactions?.items && transactions.items.length > 0 ? (
                     <motion.div
                       className="space-y-2"

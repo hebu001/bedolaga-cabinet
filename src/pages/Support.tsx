@@ -16,7 +16,6 @@ import { staggerContainer, staggerItem } from '@/components/motion/transitions';
 import { usePlatform } from '@/platform';
 import { linkifyText } from '../utils/linkify';
 import { resolveSupportContact } from '../utils/supportContact';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 const log = logger.createLogger('Support');
 
@@ -293,9 +292,9 @@ export default function Support() {
   // Show loading while checking configuration
   if (configLoading) {
     return (
-      <SkeletonGroup className="space-y-3">
-        <Skeleton variant="card" count={3} className="h-16" />
-      </SkeletonGroup>
+      <div className="flex items-center justify-center py-24">
+        <Spinner />
+      </div>
     );
   }
 
@@ -466,9 +465,9 @@ export default function Support() {
           </h2>
 
           {isLoading ? (
-            <SkeletonGroup className="space-y-3">
-              <Skeleton variant="card" count={3} className="h-16" />
-            </SkeletonGroup>
+            <div className="flex items-center justify-center py-12">
+              <Spinner />
+            </div>
           ) : tickets?.items && tickets.items.length > 0 ? (
             <div className="space-y-2">
               {tickets.items.map((ticket) => (
@@ -648,9 +647,9 @@ export default function Support() {
 
               {/* Messages */}
               {detailLoading ? (
-                <SkeletonGroup className="space-y-3">
-                  <Skeleton variant="card" count={3} className="h-16" />
-                </SkeletonGroup>
+                <div className="flex items-center justify-center py-12">
+                  <Spinner />
+                </div>
               ) : ticketDetail?.messages ? (
                 <div className="scrollbar-hide mb-6 max-h-96 flex-1 space-y-4 overflow-y-auto">
                   {ticketDetail.messages.map((msg) => (

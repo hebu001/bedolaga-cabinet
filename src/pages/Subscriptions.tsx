@@ -12,7 +12,6 @@ import { useAuthStore } from '../store/auth';
 import { getApiErrorMessage } from '../utils/api-error';
 import SubscriptionListCard from '../components/subscription/SubscriptionListCard';
 import TrialOfferCard from '../components/dashboard/TrialOfferCard';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 function EmptyState({ onBuy }: { onBuy: () => void }) {
   const { t } = useTranslation();
@@ -168,17 +167,15 @@ export default function Subscriptions() {
 
       {/* Loading */}
       {isLoading && (
-        <SkeletonGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[1, 2].map((i) => (
-            <Skeleton
+            <div
               key={i}
-              variant="card"
-              // Фон и рамку задаёт стеклянная тема, поэтому вариантную заливку гасим.
-              className="h-36 border-0 bg-transparent"
+              className="h-36 animate-pulse rounded-2xl"
               style={{ background: g.innerBg }}
             />
           ))}
-        </SkeletonGroup>
+        </div>
       )}
 
       {/* Empty state: показываем триал, если доступен; иначе — обычный empty */}

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router';
 
-import { PageSkeleton } from '@/components/ui/skeleton';
+import PageLoader from '@/components/common/PageLoader';
 import { useLiteMode } from '@/hooks/useLiteMode';
 
 const SubscriptionFull = lazy(() => import('./Subscription'));
@@ -24,7 +24,7 @@ export default function SubscriptionScreen() {
   const forceFull = searchParams.get('full') === '1';
 
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<PageLoader />}>
       {lite && !forceFull ? <SubscriptionLite /> : <SubscriptionFull />}
     </Suspense>
   );

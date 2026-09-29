@@ -13,7 +13,6 @@ import { useCurrency } from '../hooks/useCurrency';
 import { useHaptic } from '../platform';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { WebBackButton } from '../components/WebBackButton';
-import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
 import { needsTariff, tariffSelectionPath } from '../utils/legacySubscription';
 
 export default function RenewSubscription() {
@@ -147,12 +146,9 @@ export default function RenewSubscription() {
 
   if (isLoading || isSubscriptionLoading) {
     return (
-      <PageSkeleton leading={1} titleWidth="w-56" className="space-y-5">
-        <Skeleton variant="card" className="h-16" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Skeleton variant="card" count={4} className="h-20" />
-        </div>
-      </PageSkeleton>
+      <div className="flex min-h-64 items-center justify-center">
+        <div className="h-9 w-9 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+      </div>
     );
   }
 

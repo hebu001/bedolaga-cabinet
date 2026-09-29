@@ -33,7 +33,7 @@ import { pickBestValue } from '../utils/bestValue';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform, useHaptic } from '@/platform';
 import { openPaymentUrl } from '../utils/openPaymentUrl';
-import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+
 import {
   GiftIcon,
   CheckIcon,
@@ -92,7 +92,13 @@ function formatGiftDate(dateStr: string | null): string {
 type TabId = 'buy' | 'activate' | 'myGifts';
 
 function LoadingSkeleton() {
-  return <SkeletonGroup />;
+  return (
+    <div className="flex min-h-dvh items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-hairline border-t-apple-blue" />
+      </div>
+    </div>
+  );
 }
 
 function ErrorState({ message }: { message: string }) {
@@ -1234,9 +1240,9 @@ function MyGiftsTabContent() {
 
   if (isLoading) {
     return (
-      <SkeletonGroup className="space-y-3">
-        <Skeleton variant="card" count={3} className="h-24" />
-      </SkeletonGroup>
+      <div className="flex items-center justify-center py-16">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-apple-hairline border-t-apple-blue" />
+      </div>
     );
   }
 
@@ -1385,7 +1391,7 @@ export default function GiftSubscription() {
                 // Равные вкладки, узкие поля и шрифт на телефоне: «Мои подарки»
                 // переносилась в две строки, и пилюля была выше соседних.
                 className={cn(
-                  'min-w-0 flex-1 basis-0 whitespace-nowrap rounded-xl px-1.5 py-2.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 sm:px-3 sm:text-sm',
+                  'flex-1 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                   activeTab === tab.id
                     ? 'bg-apple-blue text-white shadow-sm'
                     : 'text-apple-mute hover:text-apple-ink',

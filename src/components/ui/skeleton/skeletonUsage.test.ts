@@ -7,6 +7,14 @@ import { describe, expect, it } from 'vitest';
 const SRC_ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', '..');
 const SKELETON_DIR = join(SRC_ROOT, 'components', 'ui', 'skeleton') + sep;
 const GLOBALS_CSS = join(SRC_ROOT, 'styles', 'globals.css');
+// Explicitly restored from 55a4038f at the user's request. Other routes retain
+// the guard against introducing new inline placeholder layouts.
+const LEGACY_INLINE = new Set(['pages/MergeAccounts.tsx', 'pages/SavedCards.tsx']);
+const LEGACY_CSS = new Set([
+  'pages/Dashboard.tsx',
+  'pages/InfoPageView.tsx',
+  'pages/NewsArticle.tsx',
+]);
 
 function walk(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -55,7 +63,8 @@ describe('скелетоны загрузки', () => {
     const offenders = walk(SRC_ROOT)
       .filter((file) => !file.startsWith(SKELETON_DIR))
       .filter((file) => hasInlineSkeleton(readFileSync(file, 'utf8')))
-      .map((file) => relative(SRC_ROOT, file));
+      .map((file) => relative(SRC_ROOT, file))
+      .filter((file) => !LEGACY_INLINE.has(file));
 
     expect(offenders).toEqual([]);
   });
@@ -77,7 +86,8 @@ describe('скелетоны загрузки', () => {
     const offenders = walk(SRC_ROOT)
       .filter((file) => !file.startsWith(SKELETON_DIR))
       .filter((file) => usesSkeletonCssClass(readFileSync(file, 'utf8')))
-      .map((file) => relative(SRC_ROOT, file));
+      .map((file) => relative(SRC_ROOT, file))
+      .filter((file) => !LEGACY_CSS.has(file));
 
     expect(offenders).toEqual([]);
   });
