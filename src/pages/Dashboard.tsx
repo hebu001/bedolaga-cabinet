@@ -1,7 +1,7 @@
 import { useDashboardSubscriptionActions } from '../hooks/useDashboardSubscriptionActions';
 import { getApiErrorMessage } from '../utils/api-error';
 import { needsTariff, tariffSelectionPath } from '../utils/legacySubscription';
-import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
+import { Skeleton } from '../components/ui/skeleton';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -278,14 +278,6 @@ export default function Dashboard() {
     const rubles = Math.round(minKopeks / 100);
     return t('dashboard.fromPrice', { price: `${rubles}\u00A0₽` });
   }, [purchaseOptions, t]);
-
-  if (subLoading && !subscription)
-    return (
-      <PageSkeleton titleWidth="w-40">
-        <Skeleton variant="card" className="h-56" />
-        <Skeleton variant="card" className="h-14" />
-      </PageSkeleton>
-    );
 
   // ── Expired / Disabled / Limited ──
   if (
