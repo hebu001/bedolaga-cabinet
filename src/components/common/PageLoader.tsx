@@ -1,15 +1,13 @@
+import { SkeletonGroup } from '@/components/ui/skeleton';
+
 interface PageLoaderProps {
   variant?: 'dark' | 'light';
 }
 
-export default function PageLoader({ variant = 'dark' }: PageLoaderProps) {
-  const spinnerColor = variant === 'dark' ? 'border-accent-500' : 'border-accent-500';
-
+export default function PageLoader(_props: PageLoaderProps) {
   return (
-    <div className="min-h-viewport flex items-center justify-center">
-      <div
-        className={`h-10 w-10 border-[3px] ${spinnerColor} animate-spin rounded-full border-t-transparent`}
-      />
+    <div className="flex min-h-40 min-w-0 items-center justify-center">
+      <SkeletonGroup />
     </div>
   );
 }

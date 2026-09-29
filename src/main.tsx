@@ -1,3 +1,4 @@
+import './styles/legacyOrangeButtons.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { SessionQueryProvider } from './providers/SessionQueryProvider';

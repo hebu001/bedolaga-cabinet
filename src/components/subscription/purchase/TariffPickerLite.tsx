@@ -35,7 +35,7 @@ export function TariffPickerLite({
   const formatPrice = (kopeks: number) =>
     kopeks === 0
       ? t('subscription.free', 'Бесплатно')
-      : `${formatAmount(kopeks / 100).replace(/[.,]00$/, '')} ${currencySymbol}`;
+      : `${formatAmount(kopeks / 100).replace(/[.,]00$/, '')}\u00A0${currencySymbol}`;
 
   /** Цена строкой: посуточная, «от» за первый период либо гибкая оплата. */
   const priceOf = (tariff: Tariff) => {

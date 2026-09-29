@@ -1,0 +1,22 @@
+/* Filled primary actions use the existing orange pill from
+   codex/cabinet-ux-performance-20260906 (#F97315, white text, no glow).
+   These selectors also apply to controls rendered in body portals. */
+:is(button, a):is(
+  [class~="bg-apple-blue"],
+  [class~="bg-[#F97315]"],
+  [class~="bg-[#C2410C]"],
+  .btn-primary
+):not([role="switch"]) {
+  background-color: #f97315 !important;
+  color: #fff;
+  border-radius: 9999px;
+}
+
+:is(button, a):is(
+  [class~="bg-apple-blue"],
+  [class~="bg-[#F97315]"],
+  [class~="bg-[#C2410C]"],
+  .btn-primary
+):not([role="switch"]):not(:focus-visible) {
+  box-shadow: none;
+}

@@ -1,0 +1,27 @@
+/* The retained 1.79 pages keep their layout and palette. Neutral borders are
+   separators, not opaque white frames; the same rules cover body portals. */
+.current-admin
+:is(
+  [class~="border-apple-hairline"],
+  [class*="border-apple-hairline/"],
+  [class~="hover:border-apple-hairline"]
+) {
+  border-color: rgba(var(--color-apple-hairline), var(--opacity-apple-hairline));
+}
+
+/* Surfaces already distinguish cards and controls. Keep their border space
+   to avoid shifting the layout when the frame disappears. */
+.current-admin [class~="border"][class~="border-apple-hairline"]:not(:focus-visible) {
+  border-color: transparent;
+}
+
+.current-admin [class~="border-2"][class~="border-apple-hairline"] {
+  border-width: 1px;
+}
+
+/* Selection still has its fill and text colour. Keyboard focus retains its
+   visible ring; decorative rings are removed without clearing drop shadows. */
+.current-admin [class*="ring-"]:not(:focus-visible) {
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+}

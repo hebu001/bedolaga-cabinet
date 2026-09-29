@@ -2,6 +2,7 @@ import { PromptDialogHost } from '@/components/PromptDialogHost';
 import { resetVirtualKeyboard, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 import '@/styles/legacyAdmin.css';
 import '@/styles/legacyApple.css';
+import '@/styles/currentAdmin.css';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
@@ -117,18 +118,25 @@ export function AppShell({ children }: AppShellProps) {
 
   // Portals attach to body; keep the same palette as their admin route.
   useEffect(() => {
-    if (!isAdminPage || keepCurrentAdminStyle) return;
-    document.body.classList.add('legacy-admin');
+    if (!isAdminPage && !isProfile) return;
+    const paletteClass = isProfile
+      ? 'legacy-apple'
+      : keepCurrentAdminStyle
+        ? 'current-admin'
+        : 'legacy-admin';
+    document.body.classList.add(paletteClass);
     if (isNewAdminPage) document.body.classList.add('legacy-admin-new');
-    return () => document.body.classList.remove('legacy-admin', 'legacy-admin-new');
-  }, [isAdminPage, keepCurrentAdminStyle, isNewAdminPage]);
+    return () => document.body.classList.remove(paletteClass, 'legacy-admin-new');
+  }, [isAdminPage, isProfile, keepCurrentAdminStyle, isNewAdminPage]);
 
   return (
     <div
       className={cn(
         'app-shell min-h-[100dvh]',
         isAppleDarkPage && 'bg-black',
-        (isSubscription || isBalance || (isAdminPage && !keepCurrentAdminStyle)) && 'legacy-apple',
+        (isSubscription || isBalance || isProfile || (isAdminPage && !keepCurrentAdminStyle)) &&
+          'legacy-apple',
+        keepCurrentAdminStyle && 'current-admin',
         isNewAdminPage && 'legacy-admin-new',
       )}
     >

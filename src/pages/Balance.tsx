@@ -1,5 +1,6 @@
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type CSSProperties } from 'react';
+import '@/styles/balanceTypography.css';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -254,6 +255,10 @@ export default function Balance() {
     }
   };
 
+  const balanceLabel = balanceData
+    ? `${currencySymbol}\u00a0${formatAmount(balanceData.balance_rubles)}`
+    : '—';
+
   return (
     <motion.div
       className="space-y-5 font-sans text-apple-ink"
@@ -262,7 +267,7 @@ export default function Balance() {
       animate="animate"
     >
       <motion.div variants={staggerItem}>
-        <h1 className="px-1 text-[28px] font-bold tracking-tight text-apple-ink">
+        <h1 className="px-1 text-[24px] font-bold leading-tight tracking-tight text-apple-ink sm:text-[28px]">
           {t('balance.title')}
         </h1>
       </motion.div>
@@ -272,14 +277,17 @@ export default function Balance() {
           decoration (DESIGN.md Tunable-but-Scarce Rule) and read as the
           SaaS hero-metric template. */}
       <motion.div variants={staggerItem}>
-        <div className={`${cardCls} p-6 text-center`}>
-          <div className="text-[15px] text-apple-mute">{t('balance.available', 'Доступно')}</div>
+        <div className={`${cardCls} balance-summary p-5 text-center sm:p-6`}>
+          <div className="text-[14px] leading-5 text-apple-mute sm:text-[15px]">
+            {t('balance.available', 'Доступно')}
+          </div>
           <div
             aria-busy={balanceLoading}
             aria-label={balanceLoading ? t('common.loading') : undefined}
-            className="mt-1.5 text-[46px] font-bold leading-none tracking-tight text-apple-ink"
+            className="balance-amount mt-1.5 font-bold tabular-nums tracking-tight text-apple-ink"
+            style={{ '--balance-amount-characters': balanceLabel.length } as CSSProperties}
           >
-            {balanceData ? `${currencySymbol} ${formatAmount(balanceData.balance_rubles)}` : '—'}
+            {balanceLabel}
           </div>
           {balanceError && (
             <div role="alert" className="mt-3 text-[13px] text-apple-mute">
@@ -300,14 +308,14 @@ export default function Balance() {
             <button
               type="button"
               onClick={() => setShowTopUp(true)}
-              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
+              className="min-h-12 min-w-0 flex-1 rounded-full bg-apple-blue px-3 py-3 text-[14px] font-semibold leading-5 text-white transition-opacity hover:opacity-90 sm:text-[15px]"
             >
               {t('balance.topUp', 'Пополнить')}
             </button>
             <button
               type="button"
               onClick={() => setShowPromo(true)}
-              className="flex-1 rounded-full bg-white py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90"
+              className="min-h-12 min-w-0 flex-1 rounded-full bg-white px-3 py-3 text-[14px] font-semibold leading-5 text-black transition-opacity hover:opacity-90 sm:text-[15px]"
             >
               {t('balance.promocode.title', 'Промокод')}
             </button>
@@ -322,7 +330,7 @@ export default function Balance() {
             onClick={() => setIsHistoryOpen(!isHistoryOpen)}
             className="flex w-full items-center justify-between text-left"
           >
-            <h2 className="text-[17px] font-semibold text-apple-ink">
+            <h2 className="text-[16px] font-semibold leading-snug text-apple-ink sm:text-[17px]">
               {t('balance.transactionHistory')}
             </h2>
             <ChevronDownIcon
@@ -379,51 +387,47 @@ export default function Balance() {
                           <motion.div
                             key={tx.id}
                             variants={staggerItem}
-                            className="flex items-center justify-between rounded-xl bg-apple-elevated p-3.5"
+                            className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 rounded-xl bg-apple-elevated p-3.5"
                           >
-                            <div className="min-w-0 flex-1">
-                              <div className="mb-1 flex items-center gap-2.5">
+                            <div className="col-span-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                              <span
+                                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium leading-4"
+                                style={{ color: typeStyle.fg, background: typeStyle.bg }}
+                              >
                                 <span
-                                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide"
-                                  style={{ color: typeStyle.fg, background: typeStyle.bg }}
-                                >
-                                  <span
-                                    className="h-1.5 w-1.5 rounded-full bg-current"
-                                    aria-hidden="true"
-                                  />
-                                  {getTypeLabel(tx.type)}
-                                </span>
-                                <span className="text-xs font-bold text-apple-ink">
-                                  {new Date(tx.created_at).toLocaleString(
-                                    i18n.resolvedLanguage ?? i18n.language,
-                                    {
-                                      day: '2-digit',
-                                      month: '2-digit',
-                                      year: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                      hourCycle: 'h23',
-                                      timeZone: 'Europe/Moscow',
-                                    },
-                                  )}
-                                </span>
-                              </div>
-                              {tx.description && (
-                                <div className="text-sm text-apple-ink">{tx.description}</div>
-                              )}
+                                  className="h-1.5 w-1.5 rounded-full bg-current"
+                                  aria-hidden="true"
+                                />
+                                {getTypeLabel(tx.type)}
+                              </span>
+                              <span className="text-xs font-medium leading-4 text-apple-mute">
+                                {new Date(tx.created_at).toLocaleString(
+                                  i18n.resolvedLanguage ?? i18n.language,
+                                  {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hourCycle: 'h23',
+                                    timeZone: 'Europe/Moscow',
+                                  },
+                                )}
+                              </span>
                             </div>
-                            <div className={`text-[17px] font-semibold tabular-nums ${colorClass}`}>
+                            {tx.description && (
+                              <div className="min-w-0 text-sm leading-relaxed text-apple-ink [overflow-wrap:anywhere]">
+                                {tx.description}
+                              </div>
+                            )}
+                            <div
+                              className={`col-start-2 whitespace-nowrap text-[15px] font-semibold leading-relaxed tabular-nums sm:text-[17px] ${colorClass}`}
+                            >
                               {sign}
                               {formatAmount(displayAmount)}
                               {'\u00A0'}
                               {currencySymbol}
                             </div>
-                            {/* Почта, ник, номер счёта — без пробелов, переносятся где угодно. */}
-                            {tx.description && (
-                              <div className="mt-2 text-sm text-apple-mute [overflow-wrap:anywhere]">
-                                {tx.description}
-                              </div>
-                            )}
                           </motion.div>
                         );
                       })}
@@ -528,7 +532,7 @@ export default function Balance() {
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
-              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+              <div className="px-7 pb-3 pr-16 pt-5 text-[20px] font-semibold leading-[26px] text-white sm:text-[22px]">
                 {t('balance.topUpBalance', 'Пополнение баланса')}
               </div>
               <div className="flex-1 overflow-y-auto">
@@ -597,7 +601,7 @@ export default function Balance() {
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
-              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+              <div className="px-7 pb-3 pr-16 pt-5 text-[20px] font-semibold leading-[26px] text-white sm:text-[22px]">
                 {t('balance.promocode.title', 'Промокод')}
               </div>
               <div className="flex flex-col overflow-y-auto px-7 pb-7 pt-1">
@@ -611,7 +615,7 @@ export default function Balance() {
                     onChange={(e) => setPromocode(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handlePromocodeActivate()}
                     placeholder={t('balance.promocode.placeholder')}
-                    className="flex-1 rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60 disabled:opacity-50"
+                    className="flex-1 rounded-xl bg-apple-elevated px-4 py-3 text-[16px] text-apple-ink outline-none sm:text-[15px] transition-shadow placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/60 disabled:opacity-50"
                     disabled={promocodeLoading}
                     autoFocus
                   />

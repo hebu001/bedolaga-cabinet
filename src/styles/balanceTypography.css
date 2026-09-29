@@ -1,0 +1,22 @@
+.balance-summary {
+  container-type: inline-size;
+  --balance-amount-max: 2.5rem;
+}
+
+/* Keep the whole monetary value visible, including grouping and currency,
+   instead of clipping it or wrapping the currency onto another line. */
+.balance-amount {
+  font-size: clamp(
+    1rem,
+    calc(150cqi / var(--balance-amount-characters)),
+    var(--balance-amount-max)
+  );
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .balance-summary {
+    --balance-amount-max: 2.875rem;
+  }
+}

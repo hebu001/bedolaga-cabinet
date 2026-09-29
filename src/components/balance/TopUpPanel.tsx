@@ -570,7 +570,7 @@ export default function TopUpPanel({
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
-              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+              <div className="px-7 pb-3 pr-16 pt-5 text-[20px] font-semibold leading-[26px] text-white sm:text-[22px]">
                 {t('balance.changePaymentMethod', 'Изменить способ оплаты')}
               </div>
               <div className="flex flex-col gap-2 overflow-y-auto px-7 pb-7 pt-1">

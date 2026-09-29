@@ -18,21 +18,20 @@ function only(container: HTMLElement): HTMLElement {
 }
 
 describe('Skeleton', () => {
-  it('по умолчанию рисует span с заливкой line и радиусом lg', () => {
+  it('по умолчанию рисует span с заливкой line и радиусом lg, без пульсации', () => {
     const { container } = render(<Skeleton />);
     const el = only(container);
     expect(el.tagName).toBe('SPAN');
     expect(el.className).toContain('bg-dark-500/40');
     expect(el.className).toContain('rounded-lg');
-    expect(el.className).toContain('animate-pulse');
+    expect(el.className).not.toContain('animate-pulse');
   });
 
-  it('вариант card даёт рамку и свою заливку', () => {
-    const { container } = render(<Skeleton variant="card" />);
-    const el = only(container);
-    expect(el.className).toContain('bg-dark-500/25');
-    expect(el.className).toContain('border-dark-500/40');
-    expect(el.className).toContain('rounded-2xl');
+  it('card renders one compact state, even for a tall card list', () => {
+    const { container } = render(<Skeleton variant="card" count={6} className="h-96" />);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(container.querySelector('.h-96')).toBeNull();
+    expect(container.querySelectorAll('.animate-spin')).toHaveLength(1);
   });
 
   it('circle делает плейсхолдер круглым', () => {
@@ -56,7 +55,7 @@ describe('Skeleton', () => {
     expect(cls).toContain('h-4');
     expect(cls).toContain('w-32');
     expect(cls).not.toContain('h-[1em]');
-    expect(cls).not.toContain('w-full');
+    expect(cls.split(' ')).not.toContain('w-full');
   });
 
   it('пробрасывает style — для рантайм-фона стеклянных тем', () => {
@@ -85,7 +84,8 @@ describe('SkeletonGroup', () => {
     expect(group).toHaveProperty('tagName', 'DIV');
     expect(group.getAttribute('aria-busy')).toBe('true');
     expect(group.getAttribute('aria-label')).toBe('common.loading');
-    expect(group.className).toBe('space-y-2');
+    expect(group.className).toContain('space-y-2');
+    expect(group.querySelectorAll('.animate-spin')).toHaveLength(1);
   });
 
   it('на десять плейсхолдеров приходится одно объявление, а не десять', () => {
@@ -99,57 +99,32 @@ describe('SkeletonGroup', () => {
 });
 
 describe('PageSkeleton', () => {
-  const leadingBoxes = (container: HTMLElement) =>
-    Array.from(container.querySelectorAll('[role="status"] > div > span')).slice(0, -1);
+  it.each(['user', 'admin'] as const)(
+    'uses one compact state for %s, without mock cards',
+    (variant) => {
+      const { container } = render(
+        <PageSkeleton variant={variant} leading={2} titleWidth="w-56">
+          <div data-testid="mock-card" className="h-96" />
+        </PageSkeleton>,
+      );
+      expect(screen.getAllByRole('status')).toHaveLength(1);
+      expect(screen.getByRole('status').getAttribute('aria-busy')).toBe('true');
+      expect(container.querySelector('[data-testid="mock-card"]')).toBeNull();
+      expect(container.querySelector('.w-56')).toBeNull();
+    },
+  );
 
-  it('юзер-вариант: заголовок h-8, без квадратов слева', () => {
-    const { container } = render(<PageSkeleton />);
-    const spans = container.querySelectorAll('[role="status"] > div > span');
-    expect(spans).toHaveLength(1);
-    expect((spans[0] as HTMLElement).className).toContain('h-8');
-  });
-
-  it('админский вариант: заголовок h-7 по канону (text-xl без скачков)', () => {
-    const { container } = render(<PageSkeleton variant="admin" />);
-    const spans = container.querySelectorAll('[role="status"] > div > span');
-    expect((spans[spans.length - 1] as HTMLElement).className).toContain('h-7');
-  });
-
-  it('leading числом рисует квадраты размера по варианту', () => {
-    const { container } = render(<PageSkeleton variant="admin" leading={2} />);
-    const boxes = leadingBoxes(container);
-    expect(boxes).toHaveLength(2);
-    for (const b of boxes) {
-      expect((b as HTMLElement).className).toContain('h-10 w-10 rounded-xl');
+  it('does not mount children with side effects', () => {
+    const mounted = vi.fn();
+    function MockCard() {
+      mounted();
+      return <div />;
     }
-  });
-
-  it('leading массивом рисует разнородные квадраты — кнопка 40 и аватар 48', () => {
-    const { container } = render(
-      <PageSkeleton variant="admin" leading={['h-10 w-10 rounded-xl', 'h-12 w-12 rounded-full']} />,
-    );
-    const boxes = leadingBoxes(container) as HTMLElement[];
-    expect(boxes).toHaveLength(2);
-    expect(boxes[0].className).toContain('h-10 w-10 rounded-xl');
-    expect(boxes[1].className).toContain('h-12 w-12 rounded-full');
-  });
-
-  it('юзер-вариант ставит слева иконку 24, а не кнопку 40', () => {
-    const { container } = render(<PageSkeleton leading={1} />);
-    expect((leadingBoxes(container)[0] as HTMLElement).className).toContain('h-6 w-6 rounded-lg');
-  });
-
-  it('тело страницы рендерится внутри группы', () => {
     render(
       <PageSkeleton>
-        <div data-testid="body" />
+        <MockCard />
       </PageSkeleton>,
     );
-    expect(screen.getByRole('status').querySelector('[data-testid="body"]')).not.toBeNull();
-  });
-
-  it('ритм страницы настраивается', () => {
-    render(<PageSkeleton className="space-y-5" />);
-    expect(screen.getByRole('status').className).toBe('space-y-5');
+    expect(mounted).not.toHaveBeenCalled();
   });
 });

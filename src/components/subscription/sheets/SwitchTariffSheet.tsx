@@ -81,7 +81,7 @@ export function SwitchTariffSheet({
   const formatPrice = (kopeks: number) =>
     kopeks === 0
       ? t('subscription.free', 'Бесплатно')
-      : `${formatAmount(kopeks / 100).replace(/[.,]00$/, '')} ${currencySymbol}`;
+      : `${formatAmount(kopeks / 100).replace(/[.,]00$/, '')}\u00A0${currencySymbol}`;
 
   const {
     data: switchPreview,

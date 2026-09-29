@@ -572,8 +572,13 @@ export default function Dashboard() {
 
         {/* Loading skeleton */}
         {subLoading && (
-          <div className="flex items-center justify-between py-4">
-            <div>
+          <div
+            role="status"
+            aria-busy="true"
+            aria-label={t('common.loading')}
+            className="flex min-w-0 items-center justify-between gap-3 py-4"
+          >
+            <div className="min-w-0">
               <Skeleton className="mb-2 h-5 w-40" />
               <Skeleton className="h-4 w-24" />
             </div>

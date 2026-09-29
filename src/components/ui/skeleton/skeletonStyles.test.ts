@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { skeletonClass } from './skeletonStyles';
 
 describe('skeletonClass', () => {
-  it('по умолчанию даёт вариант line: заливка dark-500/40, радиус lg, пульс', () => {
+  it('по умолчанию даёт вариант line: заливка dark-500/40, радиус lg, без пульсации', () => {
     const cls = skeletonClass();
     expect(cls).toContain('bg-dark-500/40');
     expect(cls).toContain('rounded-lg');
-    expect(cls).toContain('animate-pulse');
+    expect(cls).not.toContain('animate-pulse');
   });
 
   // shrink-0 ломал бы сжатие в узких flex-рядах — он опционален, не дефолтен.
@@ -25,7 +25,7 @@ describe('skeletonClass', () => {
     expect(cls).toContain('h-4');
     expect(cls).toContain('w-32');
     expect(cls).not.toContain('h-[1em]');
-    expect(cls).not.toContain('w-full');
+    expect(cls.split(' ')).not.toContain('w-full');
   });
 
   it('вариант card даёт рамку, свою заливку и радиус 2xl вместо line-стилей', () => {

@@ -34,7 +34,7 @@ import {
   BellIcon,
   InfoIcon,
   LogoutIcon,
-} from '@/components/icons';
+} from '@/components/admin/legacyIcons';
 import ConnectedAccountsPanel from '@/components/profile/ConnectedAccountsPanel';
 import InfoPanel from '@/components/profile/InfoPanel';
 import { ReferralReward } from '@/components/profile/ReferralReward';
@@ -99,7 +99,7 @@ function AppleToggle({
       aria-label={label}
       onClick={() => onChange(!checked)}
       className="relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors duration-200"
-      style={{ background: checked ? '#C2410C' : 'rgba(120,120,128,0.32)' }}
+      style={{ background: checked ? '#F97315' : 'rgba(120,120,128,0.32)' }}
     >
       <span
         className="absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow transition-transform duration-200 ease-out"

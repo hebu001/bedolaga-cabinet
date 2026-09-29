@@ -3,34 +3,34 @@ import { AdminDashboardStatCard } from '@/components/admin/LegacyPageStatCards';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation,useNavigate } from 'react-router';
-import { statsApi,type NodeStatus } from '../api/admin';
+import { useLocation, useNavigate } from 'react-router';
+import { statsApi, type NodeStatus } from '../api/admin';
 import { METHOD_LABELS } from '../constants/paymentMethods';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import { formatUptime,parseCalendarDate } from '../utils/format';
+import { formatUptime, parseCalendarDate } from '../utils/format';
 
 const CABINET_VERSION = __APP_VERSION__;
 
 import {
-BackIcon,
-BanknotesIcon,
-ChartBarIcon,
-ChevronDownIcon,
-ExclamationIcon,
-MegaphoneIcon,
-PowerIcon,
-RefreshIcon,
-RestartIcon,
-ServerIcon,
-SparklesIcon,
-TagIcon,
-UsersIcon,
-UsersOnlineIcon,
-WalletIcon,
+  BackIcon,
+  BanknotesIcon,
+  ChartBarIcon,
+  ChevronDownIcon,
+  ExclamationIcon,
+  MegaphoneIcon,
+  PowerIcon,
+  RefreshIcon,
+  RestartIcon,
+  ServerIcon,
+  SparklesIcon,
+  TagIcon,
+  UsersIcon,
+  UsersOnlineIcon,
+  WalletIcon,
 } from '@/components/admin/legacyPageIcons/AdminDashboard';
 import { StatCard } from '@/components/stats';
-import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 interface NodeCardProps {
   node: NodeStatus;
@@ -437,7 +437,9 @@ export default function AdminDashboard() {
                 {t('adminDashboard.stats.incomeTotal')}
               </div>
               <div className="text-xl font-bold text-apple-ink">
-                {formatAmount(stats?.financial.income_total_rubles || 0)} {currencySymbol}
+                {formatAmount(stats?.financial.income_total_rubles || 0)}
+                {'\u00A0'}
+                {currencySymbol}
               </div>
             </div>
             <div>
@@ -445,7 +447,9 @@ export default function AdminDashboard() {
                 {t('adminDashboard.stats.subscriptionIncome')}
               </div>
               <div className="text-xl font-bold" style={{ color: '#F97315' }}>
-                {formatAmount(stats?.financial.subscription_income_rubles || 0)} {currencySymbol}
+                {formatAmount(stats?.financial.subscription_income_rubles || 0)}
+                {'\u00A0'}
+                {currencySymbol}
               </div>
             </div>
           </div>
@@ -699,7 +703,9 @@ export default function AdminDashboard() {
                       {referrersTab === 'earnings' ? (
                         <>
                           <div className="text-xs font-semibold text-apple-green sm:text-sm">
-                            {formatAmount(ref.earnings_total_kopeks / 100)} {currencySymbol}
+                            {formatAmount(ref.earnings_total_kopeks / 100)}
+                            {'\u00A0'}
+                            {currencySymbol}
                           </div>
                           <div className="text-[10px] text-apple-faint sm:text-xs">
                             {ref.invited_count} {t('adminDashboard.topReferrers.invites')}
@@ -714,7 +720,9 @@ export default function AdminDashboard() {
                             {ref.invited_count} {t('adminDashboard.topReferrers.people')}
                           </div>
                           <div className="text-[10px] text-apple-faint sm:text-xs">
-                            {formatAmount(ref.earnings_total_kopeks / 100)} {currencySymbol}
+                            {formatAmount(ref.earnings_total_kopeks / 100)}
+                            {'\u00A0'}
+                            {currencySymbol}
                           </div>
                         </>
                       )}
@@ -810,7 +818,9 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <div className="text-xs font-semibold text-apple-amber sm:text-sm">
-                      {formatAmount(campaign.total_revenue_kopeks / 100)} {currencySymbol}
+                      {formatAmount(campaign.total_revenue_kopeks / 100)}
+                      {'\u00A0'}
+                      {currencySymbol}
                     </div>
                     <div className="text-[10px] text-apple-faint sm:text-xs">
                       {campaign.registrations} · {campaign.conversion_rate.toFixed(0)}%
@@ -826,7 +836,9 @@ export default function AdminDashboard() {
                   {t('adminDashboard.topCampaigns.total')}
                 </span>
                 <span className="text-sm font-bold text-apple-amber sm:text-base">
-                  {formatAmount(campaigns.total_revenue_kopeks / 100)} {currencySymbol}
+                  {formatAmount(campaigns.total_revenue_kopeks / 100)}
+                  {'\u00A0'}
+                  {currencySymbol}
                 </span>
               </div>
             </div>

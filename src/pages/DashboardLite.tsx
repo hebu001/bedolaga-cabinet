@@ -168,7 +168,6 @@ export default function DashboardLite() {
           <Skeleton className="mt-7 h-1.5 w-full rounded-full" />
           <Skeleton className="mt-3 h-4 w-32" />
         </SkeletonGroup>
-        <Skeleton className="h-14 w-full rounded-2xl" />
       </div>
     );
   }

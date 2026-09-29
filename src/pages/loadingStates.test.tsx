@@ -15,7 +15,7 @@ import { PlatformProvider } from '@/platform/PlatformProvider';
  *
  * Все запросы держатся в состоянии загрузки одним моком react-query, поэтому
  * страница обязана уйти в свою loading-ветку. Утверждение одинаковое для всех:
- * должен быть `role="status"` с плейсхолдерами примитива и без спиннера.
+ * должен быть `role="status"` с компактным индикатором загрузки.
  */
 
 vi.mock('react-i18next', () => ({
@@ -242,7 +242,7 @@ const PAGES: PageCase[] = [
 
 describe('состояния загрузки страниц', () => {
   for (const { name, load, path, entry } of PAGES) {
-    it(`${name} рисует скелетон, а не спиннер и не пустоту`, async () => {
+    it(`${name} показывает доступное компактное состояние загрузки`, async () => {
       const { default: Page } = await load();
       const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -274,9 +274,9 @@ describe('состояния загрузки страниц', () => {
       // поэтому проверяем сам факт плейсхолдеров.
       expect(groups[0].querySelectorAll('span').length).toBeGreaterThan(0);
 
-      // Внутри области загрузки спиннера быть не должно. Снаружи — можно:
-      // кнопка «обновить» имеет право крутиться во время рефетча.
-      expect(groups[0].querySelectorAll('.animate-spin')).toHaveLength(0);
+      // One compact loading state; large mock cards must not be mounted.
+      expect(groups[0].querySelectorAll('.animate-spin').length).toBeLessThanOrEqual(1);
+      expect(groups[0].querySelector('.h-96, .h-64, .h-40')).toBeNull();
     });
   }
 });
