@@ -300,14 +300,14 @@ export default function Balance() {
             <button
               type="button"
               onClick={() => setShowTopUp(true)}
-              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
+              className="flex-1 rounded-full bg-apple-blue py-3.5 text-[15px] font-semibold text-white transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-[0.97]"
             >
               {t('balance.topUp', 'Пополнить')}
             </button>
             <button
               type="button"
               onClick={() => setShowPromo(true)}
-              className="flex-1 rounded-full bg-white py-3.5 text-[15px] font-semibold text-black transition-opacity hover:opacity-90"
+              className="flex-1 rounded-full bg-white py-3.5 text-[15px] font-semibold text-black transition-[transform,opacity] duration-150 hover:opacity-90 active:scale-[0.97]"
             >
               {t('balance.promocode.title', 'Промокод')}
             </button>
@@ -506,7 +506,7 @@ export default function Balance() {
               aria-modal="true"
               aria-label={showTopUp ? t('balance.topUpBalance') : t('balance.promocode.title')}
               tabIndex={-1}
-              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black"
+              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-apple-bg"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -576,7 +576,7 @@ export default function Balance() {
               aria-modal="true"
               aria-label={showTopUp ? t('balance.topUpBalance') : t('balance.promocode.title')}
               tabIndex={-1}
-              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black"
+              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-apple-bg"
               onClick={(e) => e.stopPropagation()}
             >
               <button

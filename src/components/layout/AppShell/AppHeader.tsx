@@ -232,7 +232,8 @@ export function AppHeader({
                     onCommandPaletteOpen();
                   }}
                   className="btn-icon hidden sm:flex"
-                  title="Search (⌘K)"
+                  aria-label={t('common.search')}
+                  title={`${t('common.search')} (⌘K)`}
                 >
                   <SearchIcon className="h-5 w-5" />
                 </button>

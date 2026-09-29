@@ -131,11 +131,11 @@
 
 /* Ultima Design Tokens (id.ultm.in) */
 :root {
-  --figma-green: #f97316;
-  --figma-green-rgb: 249, 115, 22;
-  --figma-green-50: rgba(249, 115, 22, 0.5);
-  --figma-green-70: rgba(249, 115, 22, 0.7);
-  --figma-green-dim: rgba(249, 115, 22, 0.12);
+  --figma-green: #c2410c;
+  --figma-green-rgb: 194, 65, 12;
+  --figma-green-50: rgba(194, 65, 12, 0.5);
+  --figma-green-70: rgba(194, 65, 12, 0.7);
+  --figma-green-dim: rgba(194, 65, 12, 0.12);
   --figma-card-bg: rgba(255, 255, 255, 0.05);
   --figma-text-muted: rgba(255, 255, 255, 0.4);
 }
@@ -283,6 +283,22 @@
     --color-light-surface: #fef9f0;
     --color-light-text: #1f1a12;
     --color-light-text-secondary: #7d6b48;
+
+    /* Apple-inspired components use one semantic palette in both themes. */
+    --color-apple-bg: 0, 0, 0;
+    --color-apple-card: 28, 28, 30;
+    --color-apple-elevated: 44, 44, 46;
+    --color-apple-ink: 245, 245, 247;
+    --color-apple-mute: 174, 174, 180;
+    --color-apple-faint: 174, 174, 180;
+    --color-apple-hairline: 255, 255, 255;
+    --opacity-apple-hairline: 0.08;
+    /* #c2410c keeps the orange identity and gives white text AA contrast. */
+    --color-apple-blue: 194, 65, 12;
+    --color-apple-accent-text: 251, 146, 60;
+    --color-apple-green: 48, 209, 88;
+    --color-apple-red: 255, 69, 58;
+    --color-apple-amber: 255, 159, 10;
   }
 
   html {
@@ -358,6 +374,31 @@
   }
   .light {
     color-scheme: light;
+  }
+
+  .light {
+    --color-apple-bg: var(--color-champagne-200);
+    --color-apple-card: var(--color-champagne-50);
+    --color-apple-elevated: var(--color-champagne-100);
+    --color-apple-ink: var(--color-champagne-950);
+    --color-apple-mute: var(--color-champagne-700);
+    --color-apple-faint: var(--color-champagne-600);
+    --color-apple-hairline: var(--color-champagne-950);
+    --opacity-apple-hairline: 0.14;
+    --color-apple-accent-text: 154, 52, 18;
+    --color-apple-green: 22, 101, 52;
+    --color-apple-red: 185, 28, 28;
+    --color-apple-amber: 146, 64, 14;
+  }
+
+  /* Legacy arbitrary orange utilities share the accessible semantic fill. */
+  .bg-\[\#F97315\] {
+    background-color: rgb(var(--color-apple-blue)) !important;
+  }
+
+  .text-apple-blue,
+  .text-\[\#F97315\] {
+    color: rgb(var(--color-apple-accent-text)) !important;
   }
 
   /* Dark theme (default) */
@@ -536,7 +577,7 @@ img.twemoji {
     /* Glass Border - Inset Highlight */
     box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
     /* Stagger animation support */
-    animation: bentoFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: bentoFadeIn 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
     animation-delay: calc(var(--stagger, 0) * 50ms);
     position: relative;
     overflow: hidden;
@@ -558,19 +599,10 @@ img.twemoji {
   .bento-card-hover {
     @apply bento-card cursor-pointer;
     transition:
-      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .bento-card-hover:hover {
-    @apply border-dark-600/50 bg-dark-800/60 shadow-lg;
-    transform: translateY(-2px) translateZ(0);
-    /* Intensify Glass Border & Add Top Spotlight */
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-      0 10px 40px -10px rgba(0, 0, 0, 0.5);
+      border-color 0.18s ease,
+      background-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   /* CSS Spotlight Effect via pseudo-element */
@@ -585,10 +617,6 @@ img.twemoji {
     z-index: 10;
   }
 
-  .bento-card-hover:hover::after {
-    opacity: 1;
-  }
-
   .bento-card-hover:active {
     transform: scale(0.98) translateZ(0);
     transition-duration: 0.15s;
@@ -597,14 +625,28 @@ img.twemoji {
   .bento-card-glow {
     @apply bento-card cursor-pointer;
     transition:
-      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  .bento-card-glow:hover {
-    @apply border-accent-500/30 shadow-glow;
-    transform: translateY(-2px) translateZ(0);
+  @media (hover: hover) and (pointer: fine) {
+    .bento-card-hover:hover {
+      @apply border-dark-600/50 bg-dark-800/60 shadow-lg;
+      transform: translateY(-2px) translateZ(0);
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+        0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .bento-card-hover:hover::after {
+      opacity: 1;
+    }
+
+    .bento-card-glow:hover {
+      @apply border-accent-500/30 shadow-glow;
+      transform: translateY(-2px) translateZ(0);
+    }
   }
 
   .bento-card-glow:active {
@@ -643,23 +685,34 @@ img.twemoji {
     }
   }
 
-  .light .bento-card-hover:hover {
-    @apply border-champagne-400/50 bg-champagne-50 shadow-md;
-    transform: translateY(-2px) translateZ(0);
-    /* Intensify Light Theme Glass Border */
-    box-shadow:
-      inset 0 1px 0 0 rgba(0, 0, 0, 0.06),
-      0 10px 40px -10px rgba(160, 139, 94, 0.15);
-  }
-
   /* Adjust spotlight for light theme to be a warm glow */
   .light .bento-card-hover::after {
     background: radial-gradient(circle at top, rgba(255, 253, 249, 0.8), transparent 70%);
   }
 
-  .light .bento-card-glow:hover {
-    @apply border-accent-400/40 shadow-lg;
-    transform: translateY(-2px) translateZ(0);
+  @media (hover: hover) and (pointer: fine) {
+    .light .bento-card-hover:hover {
+      @apply border-champagne-400/50 bg-champagne-50 shadow-md;
+      transform: translateY(-2px) translateZ(0);
+      box-shadow:
+        inset 0 1px 0 0 rgba(0, 0, 0, 0.06),
+        0 10px 40px -10px rgba(160, 139, 94, 0.15);
+    }
+
+    .light .bento-card-glow:hover {
+      @apply border-accent-400/40 shadow-lg;
+      transform: translateY(-2px) translateZ(0);
+    }
+  }
+
+  .admin-role-color-swatch:active {
+    transform: scale(0.96);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .admin-role-color-swatch:hover {
+      transform: scale(1.1);
+    }
   }
 
   /* ========== DARK THEME COMPONENTS (default) ========== */

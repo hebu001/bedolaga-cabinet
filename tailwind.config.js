@@ -10,6 +10,11 @@ const withOpacity = (variableName, fallback) => {
   };
 };
 
+const withDefaultOpacity = (variableName, defaultOpacityName) => {
+  return ({ opacityValue }) =>
+    `rgba(var(${variableName}), ${opacityValue ?? `var(${defaultOpacityName})`})`;
+};
+
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
@@ -107,19 +112,21 @@ export default {
           900: withOpacity('--color-error-900'),
           950: withOpacity('--color-error-950'),
         },
-        // Apple dark mode palette (static — iOS dark mode tokens)
+        // Apple-inspired semantic palette. CSS variables switch with the active
+        // theme, so an apple-* component never combines light text with a dark
+        // hardcoded surface.
         apple: {
-          bg: '#000000',
-          card: '#1c1c1e',
-          elevated: '#2c2c2e',
-          ink: '#f5f5f7',
-          mute: '#98989d',
-          faint: '#939397',
-          hairline: 'rgba(255,255,255,0.08)',
-          blue: '#F97315',
-          green: '#30d158',
-          red: '#ff453a',
-          amber: '#ff9f0a',
+          bg: withOpacity('--color-apple-bg'),
+          card: withOpacity('--color-apple-card'),
+          elevated: withOpacity('--color-apple-elevated'),
+          ink: withOpacity('--color-apple-ink'),
+          mute: withOpacity('--color-apple-mute'),
+          faint: withOpacity('--color-apple-faint'),
+          hairline: withDefaultOpacity('--color-apple-hairline', '--opacity-apple-hairline'),
+          blue: withOpacity('--color-apple-blue'),
+          green: withOpacity('--color-apple-green'),
+          red: withOpacity('--color-apple-red'),
+          amber: withOpacity('--color-apple-amber'),
         },
       },
       fontFamily: {

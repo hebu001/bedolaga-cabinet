@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { usePlatform } from '@/platform';
 import { BackIcon } from './icons';
+import { useTranslation } from 'react-i18next';
 
 interface AdminBackButtonProps {
   to?: string;
@@ -60,6 +61,7 @@ export function backTo(from: { pathname: string; search?: string }): {
 export function AdminBackButton({ to = '/admin', replace, className }: AdminBackButtonProps) {
   const { platform } = usePlatform();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // In Telegram Mini App, we use native back button
   if (platform === 'telegram') {
@@ -70,6 +72,7 @@ export function AdminBackButton({ to = '/admin', replace, className }: AdminBack
     <Link
       to={resolveAdminBackTarget(location.state, to)}
       replace={replace}
+      aria-label={t('common.back')}
       className={
         className ||
         'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-apple-hairline bg-apple-card transition-colors hover:border-apple-hairline'

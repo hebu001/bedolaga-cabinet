@@ -47,10 +47,12 @@ export function TrafficBar({
   barClassName,
   label = true,
 }: TrafficBarProps) {
+  const { t } = useTranslation();
   const trafficLabel = useTrafficLabel();
   const percent = trafficPercent(usedGb, limitGb);
   const unlimited = limitGb <= 0;
   const fillWidth = usedGb > 0 ? Math.max(percent, MIN_FILL_PERCENT) : 0;
+  const readableValue = trafficLabel(usedGb, limitGb);
 
   return (
     <div className={cn('flex min-w-0 items-center gap-2.5', className)}>
@@ -59,6 +61,8 @@ export function TrafficBar({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={unlimited ? undefined : percent}
+        aria-label={t('admin.users.traffic', 'Использованный трафик')}
+        aria-valuetext={readableValue}
         className={cn(
           'h-1.5 overflow-hidden rounded-full bg-apple-elevated/60',
           barClassName ?? 'min-w-[48px] flex-1',
@@ -73,7 +77,7 @@ export function TrafficBar({
       </div>
       {label && (
         <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-apple-mute">
-          {trafficLabel(usedGb, limitGb)}
+          {readableValue}
         </span>
       )}
     </div>

@@ -450,7 +450,7 @@ export default function AdminRoleEdit() {
                     key={color}
                     type="button"
                     onClick={() => setFormData((prev) => ({ ...prev, color }))}
-                    className={`h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 ${
+                    className={`admin-role-color-swatch h-7 w-7 rounded-full border-2 transition-transform ${
                       formData.color === color ? 'scale-110 border-white' : 'border-transparent'
                     }`}
                     style={{ backgroundColor: color }}

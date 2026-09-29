@@ -397,6 +397,7 @@ export default function AdminPromoOfferSend() {
             {sendMode === 'segment' ? (
               <>
                 <select
+                  aria-label={t('admin.promoOffers.send.target')}
                   value={selectedTarget}
                   onChange={(e) => setSelectedTarget(e.target.value as TargetSegment)}
                   className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
@@ -441,6 +442,7 @@ export default function AdminPromoOfferSend() {
                       </div>
                     </div>
                     <button
+                      aria-label={t('common.clear')}
                       onClick={handleClearUser}
                       className="rounded-lg p-1.5 text-apple-mute transition-colors hover:bg-apple-elevated hover:text-apple-ink"
                     >
@@ -455,6 +457,7 @@ export default function AdminPromoOfferSend() {
                         <SearchIcon className="h-4 w-4" />
                       </div>
                       <input
+                        aria-label={t('admin.promoOffers.send.searchUserPlaceholder')}
                         type="text"
                         value={searchQuery}
                         onChange={(e) => {

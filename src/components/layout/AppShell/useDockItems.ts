@@ -20,7 +20,12 @@ export function useDockItems(wheelEnabled?: boolean) {
     ? { path: '/admin', label: t('nav.admin', 'Админка'), icon: AdminNavIcon }
     : wheelEnabled
       ? { path: '/wheel', label: t('nav.wheel'), icon: WheelIcon }
-      : { path: '/support', label: t('nav.support'), icon: ChatIcon };
+      : {
+          path: '/support',
+          label: t('nav.support'),
+          shortLabel: t('nav.supportShort', 'Помощь'),
+          icon: ChatIcon,
+        };
 
   return [
     { path: '/', label: t('nav.dashboard'), icon: HomeIcon },

@@ -373,6 +373,12 @@ export default function MergeAccounts() {
     const startTime = Date.now();
     const totalSeconds = data.expires_in_seconds;
 
+    if (totalSeconds <= 0) {
+      setExpiresIn(0);
+      setIsExpired(true);
+      return;
+    }
+
     const tick = () => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       const remaining = totalSeconds - elapsed;

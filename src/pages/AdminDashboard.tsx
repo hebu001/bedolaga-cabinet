@@ -304,6 +304,7 @@ export default function AdminDashboard() {
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
+              aria-label={t('common.back')}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <BackIcon />

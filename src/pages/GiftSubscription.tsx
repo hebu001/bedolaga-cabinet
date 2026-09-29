@@ -1370,7 +1370,7 @@ export default function GiftSubscription() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05 }}
+          transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
           className="mb-6 rounded-2xl bg-apple-card p-1"
         >
           <div className="flex" role="tablist" aria-label={t('gift.pageTitle')}>
@@ -1386,7 +1386,7 @@ export default function GiftSubscription() {
                 // Равные вкладки, узкие поля и шрифт на телефоне: «Мои подарки»
                 // переносилась в две строки, и пилюля была выше соседних.
                 className={cn(
-                  'min-w-0 flex-1 basis-0 whitespace-nowrap rounded-xl px-1.5 py-2.5 text-[13px] font-medium transition-all duration-200 sm:px-3 sm:text-sm',
+                  'min-w-0 flex-1 basis-0 whitespace-nowrap rounded-xl px-1.5 py-2.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 sm:px-3 sm:text-sm',
                   activeTab === tab.id
                     ? 'bg-apple-blue text-white shadow-sm'
                     : 'text-apple-mute hover:text-apple-ink',

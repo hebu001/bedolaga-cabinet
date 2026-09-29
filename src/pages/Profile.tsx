@@ -85,22 +85,25 @@ const PencilIcon = () => (
 function AppleToggle({
   checked,
   onChange,
+  label,
 }: {
   checked: boolean;
   onChange: (value: boolean) => void;
+  label: string;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={label}
       onClick={() => onChange(!checked)}
       className="relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors duration-200"
-      style={{ background: checked ? '#F97315' : 'rgba(120,120,128,0.32)' }}
+      style={{ background: checked ? '#C2410C' : 'rgba(120,120,128,0.32)' }}
     >
       <span
-        className="absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow transition-all duration-200"
-        style={{ left: checked ? '22px' : '2px' }}
+        className="absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow transition-transform duration-200 ease-out"
+        style={{ transform: checked ? 'translateX(20px)' : 'translateX(0)' }}
       />
     </button>
   );
@@ -1017,6 +1020,7 @@ export default function Profile() {
                           <input
                             type="text"
                             readOnly
+                            aria-label={t('referral.botLink')}
                             value={botReferralLink}
                             className={`${inputCls} flex-1 text-sm`}
                           />
@@ -1024,7 +1028,7 @@ export default function Profile() {
                             type="button"
                             onClick={() => copyLink(botReferralLink, 'bot')}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
-                            style={{ background: copiedLink === 'bot' ? '#30d158' : '#F97315' }}
+                            style={{ background: copiedLink === 'bot' ? '#166534' : '#C2410C' }}
                           >
                             {copiedLink === 'bot' ? <CheckIcon /> : <CopyIcon />}
                             <span>
@@ -1057,6 +1061,7 @@ export default function Profile() {
                         <input
                           type="text"
                           readOnly
+                          aria-label={t('referral.cabinetLink')}
                           value={referralLink}
                           className={`${inputCls} flex-1 text-sm`}
                         />
@@ -1066,7 +1071,7 @@ export default function Profile() {
                             onClick={() => copyLink(referralLink, 'cabinet')}
                             disabled={!referralLink}
                             className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                            style={{ background: copiedLink === 'cabinet' ? '#30d158' : '#F97315' }}
+                            style={{ background: copiedLink === 'cabinet' ? '#166534' : '#C2410C' }}
                           >
                             {copiedLink === 'cabinet' ? <CheckIcon /> : <CopyIcon />}
                             <span>
@@ -1455,6 +1460,7 @@ export default function Profile() {
                 </div>
                 <AppleToggle
                   checked={notificationSettings.subscription_expiry_enabled}
+                  label={t('profile.notifications.subscriptionExpiry')}
                   onChange={(checked) =>
                     handleNotificationToggle('subscription_expiry_enabled', checked)
                   }
@@ -1466,6 +1472,7 @@ export default function Profile() {
                     {t('profile.notifications.daysBeforeExpiry')}
                   </span>
                   <select
+                    aria-label={t('profile.notifications.daysBeforeExpiry')}
                     value={notificationSettings.subscription_expiry_days}
                     onChange={(e) =>
                       handleNotificationValue('subscription_expiry_days', Number(e.target.value))
@@ -1495,6 +1502,7 @@ export default function Profile() {
                 </div>
                 <AppleToggle
                   checked={notificationSettings.traffic_warning_enabled}
+                  label={t('profile.notifications.trafficWarning')}
                   onChange={(checked) =>
                     handleNotificationToggle('traffic_warning_enabled', checked)
                   }
@@ -1520,6 +1528,7 @@ export default function Profile() {
                 </div>
                 <AppleToggle
                   checked={notificationSettings.balance_low_enabled}
+                  label={t('profile.notifications.balanceLow')}
                   onChange={(checked) => handleNotificationToggle('balance_low_enabled', checked)}
                 />
               </div>
@@ -1530,6 +1539,7 @@ export default function Profile() {
                   </span>
                   <input
                     type="number"
+                    aria-label={t('profile.notifications.threshold')}
                     value={notificationSettings.balance_low_threshold}
                     onChange={(e) =>
                       handleNotificationValue('balance_low_threshold', Number(e.target.value))
@@ -1549,6 +1559,7 @@ export default function Profile() {
               </div>
               <AppleToggle
                 checked={notificationSettings.news_enabled}
+                label={t('profile.notifications.news')}
                 onChange={(checked) => handleNotificationToggle('news_enabled', checked)}
               />
             </div>
@@ -1565,6 +1576,7 @@ export default function Profile() {
               </div>
               <AppleToggle
                 checked={notificationSettings.promo_offers_enabled}
+                label={t('profile.notifications.promoOffers')}
                 onChange={(checked) => handleNotificationToggle('promo_offers_enabled', checked)}
               />
             </div>

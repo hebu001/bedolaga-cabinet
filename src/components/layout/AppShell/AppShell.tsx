@@ -21,6 +21,7 @@ import { useDockItems } from './useDockItems';
 import { MobileBottomNav } from './MobileBottomNav';
 import { AppHeader } from './AppHeader';
 import { BackgroundRenderer } from '@/components/backgrounds/BackgroundRenderer';
+import { CommandPalette } from '@/components/navigation/CommandPalette/CommandPalette';
 
 const LogoutIcon = ({ className }: { className?: string }) => (
   <svg
@@ -61,6 +62,7 @@ export function AppShell({ children }: AppShellProps) {
   const isMobileFullscreen = isFullscreen && isMobile;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const isKeyboardOpen = useVirtualKeyboard();
 
   // Reset keyboard state on route change — prevents bottom nav staying hidden after navigation
@@ -106,7 +108,7 @@ export function AppShell({ children }: AppShellProps) {
     isBalance || isSubscription || isProfile || isSupport || isAdminPage || isGift;
 
   return (
-    <div className={cn('app-shell min-h-[100dvh]', isAppleDarkPage && 'bg-black')}>
+    <div className={cn('app-shell min-h-[100dvh]', isAppleDarkPage && 'bg-apple-bg')}>
       {/* Animated background renders via portal on document.body at z-index: -1 */}
       {!isAppleDarkPage && <BackgroundRenderer />}
 
@@ -130,10 +132,10 @@ export function AppShell({ children }: AppShellProps) {
                 to={item.path}
                 onClick={handleNavClick}
                 className={cn(
-                  'desktop-sidebar-link flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                  'desktop-sidebar-link flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apple-blue',
                   isActive(item.path)
-                    ? 'bg-[#F97315] text-white'
-                    : 'text-[#98989d] hover:bg-white/5 hover:text-white',
+                    ? 'bg-apple-blue text-white'
+                    : 'text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -149,7 +151,7 @@ export function AppShell({ children }: AppShellProps) {
                 haptic.impact('light');
                 logout();
               }}
-              className="flex w-full items-center gap-3 rounded-xl py-2 text-sm text-[#98989d] transition-colors hover:text-white"
+              className="flex w-full items-center gap-3 rounded-xl py-2 text-sm text-apple-mute transition-colors hover:text-apple-ink"
               title={t('nav.logout')}
             >
               <LogoutIcon className="h-5 w-5" />
@@ -164,7 +166,7 @@ export function AppShell({ children }: AppShellProps) {
         <AppHeader
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
-          onCommandPaletteOpen={() => {}}
+          onCommandPaletteOpen={() => setCommandPaletteOpen(true)}
           headerHeight={headerHeight}
           isFullscreen={isMobileFullscreen}
           safeAreaInset={safeAreaInset}
@@ -197,6 +199,14 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav isKeyboardOpen={isKeyboardOpen} wheelEnabled={wheelEnabled} />
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        wheelEnabled={wheelEnabled}
+        referralEnabled={referralEnabled}
+        hasContests={hasContests}
+        hasPolls={hasPolls}
+      />
     </div>
   );
 }

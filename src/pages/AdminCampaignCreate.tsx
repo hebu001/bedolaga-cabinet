@@ -390,7 +390,11 @@ export default function AdminCampaignCreate() {
             {t('admin.campaigns.form.balanceBonus')}
           </h2>
           <div className="flex items-center gap-3">
+            <label htmlFor="campaign-balance-bonus" className="sr-only">
+              {t('admin.campaigns.form.balanceBonus')}
+            </label>
             <input
+              id="campaign-balance-bonus"
               type="number"
               value={balanceBonusRubles}
               onChange={createNumberInputHandler(setBalanceBonusRubles, 0)}

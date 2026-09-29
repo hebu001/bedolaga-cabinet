@@ -150,10 +150,14 @@ function OverpayCertificateSection() {
       ) : null}
 
       <div>
-        <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+        <label
+          htmlFor="overpay-certificate"
+          className="mb-2 block text-[13px] font-medium text-apple-mute"
+        >
           {t('admin.paymentMethods.overpayCertFile')}
         </label>
         <input
+          id="overpay-certificate"
           ref={fileInputRef}
           type="file"
           accept=".p12,.pfx"
@@ -170,10 +174,14 @@ function OverpayCertificateSection() {
       </div>
 
       <div>
-        <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+        <label
+          htmlFor="overpay-passphrase"
+          className="mb-2 block text-[13px] font-medium text-apple-mute"
+        >
           {t('admin.paymentMethods.overpayCertPassphrase')}
         </label>
         <input
+          id="overpay-passphrase"
           type="password"
           autoComplete="off"
           value={passphrase}
@@ -377,6 +385,7 @@ export default function AdminPaymentMethodEdit() {
           {/* Show back button only on web, not in Telegram Mini App */}
           {!capabilities.hasBackButton && (
             <button
+              aria-label={t('common.back')}
               onClick={() => navigate('/admin/payment-methods')}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
@@ -400,6 +409,7 @@ export default function AdminPaymentMethodEdit() {
         {/* Show back button only on web, not in Telegram Mini App */}
         {!capabilities.hasBackButton && (
           <button
+            aria-label={t('common.back')}
             onClick={() => navigate('/admin/payment-methods')}
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
           >
@@ -479,10 +489,14 @@ export default function AdminPaymentMethodEdit() {
 
         {/* Display name */}
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="payment-display-name"
+            className="mb-2 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.paymentMethods.displayName')}
           </label>
           <input
+            id="payment-display-name"
             type="text"
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
@@ -496,10 +510,14 @@ export default function AdminPaymentMethodEdit() {
 
         {/* Description */}
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="payment-description"
+            className="mb-2 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.paymentMethods.description')}
           </label>
           <textarea
+            id="payment-description"
             value={customDesc}
             onChange={(e) => setCustomDesc(e.target.value)}
             rows={2}
@@ -513,7 +531,10 @@ export default function AdminPaymentMethodEdit() {
         {/* Sub-options */}
         {config.available_sub_options && config.available_sub_options.length > 0 && (
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="payment-min-amount"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.paymentMethods.subOptions')}
             </label>
             <div className="space-y-2">
@@ -549,10 +570,14 @@ export default function AdminPaymentMethodEdit() {
         {/* Min/Max amounts */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="payment-min-amount"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.paymentMethods.minAmount')}
             </label>
             <input
+              id="payment-min-amount"
               type="number"
               value={minAmount}
               onChange={createNumberInputHandler(setMinAmount, 0)}
@@ -561,10 +586,14 @@ export default function AdminPaymentMethodEdit() {
             />
           </div>
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+            <label
+              htmlFor="payment-max-amount"
+              className="mb-2 block text-[13px] font-medium text-apple-mute"
+            >
               {t('admin.paymentMethods.maxAmount')}
             </label>
             <input
+              id="payment-max-amount"
               type="number"
               value={maxAmount}
               onChange={createNumberInputHandler(setMaxAmount, 0)}
@@ -599,6 +628,7 @@ export default function AdminPaymentMethodEdit() {
           )}
           <div className="flex gap-2">
             <input
+              aria-label={t('admin.paymentMethods.quickAmounts')}
               type="number"
               min="1"
               value={quickAmountInput}
@@ -647,7 +677,11 @@ export default function AdminPaymentMethodEdit() {
                       ? 'bg-[#F97315]/20 ring-1 ring-[#F97315]/40'
                       : 'bg-apple-elevated text-apple-mute'
                   }`}
-                  style={userTypeFilter === val ? { color: '#F97315' } : undefined}
+                  style={
+                    userTypeFilter === val
+                      ? { color: 'rgb(var(--color-apple-accent-text))' }
+                      : undefined
+                  }
                 >
                   {val === 'all'
                     ? t('admin.paymentMethods.userTypeAll')
@@ -674,7 +708,11 @@ export default function AdminPaymentMethodEdit() {
                       ? 'bg-[#F97315]/20 ring-1 ring-[#F97315]/40'
                       : 'bg-apple-elevated text-apple-mute'
                   }`}
-                  style={firstTopupFilter === val ? { color: '#F97315' } : undefined}
+                  style={
+                    firstTopupFilter === val
+                      ? { color: 'rgb(var(--color-apple-accent-text))' }
+                      : undefined
+                  }
                 >
                   {val === 'any'
                     ? t('admin.paymentMethods.firstTopupAny')
@@ -701,7 +739,11 @@ export default function AdminPaymentMethodEdit() {
                       ? 'bg-[#F97315]/20 ring-1 ring-[#F97315]/40'
                       : 'bg-apple-elevated text-apple-mute'
                   }`}
-                  style={promoGroupFilterMode === val ? { color: '#F97315' } : undefined}
+                  style={
+                    promoGroupFilterMode === val
+                      ? { color: 'rgb(var(--color-apple-accent-text))' }
+                      : undefined
+                  }
                 >
                   {val === 'all'
                     ? t('admin.paymentMethods.promoGroupAll')
@@ -726,7 +768,9 @@ export default function AdminPaymentMethodEdit() {
                         className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-all ${
                           selected ? 'bg-[#F97315]/15' : 'text-apple-mute hover:bg-apple-card'
                         }`}
-                        style={selected ? { color: '#F97315' } : undefined}
+                        style={
+                          selected ? { color: 'rgb(var(--color-apple-accent-text))' } : undefined
+                        }
                       >
                         <span>{group.name}</span>
                         <div

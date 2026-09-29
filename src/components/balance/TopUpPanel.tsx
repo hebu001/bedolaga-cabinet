@@ -549,7 +549,7 @@ export default function TopUpPanel({
               aria-modal="true"
               aria-label={t('balance.changePaymentMethod', 'Изменить способ оплаты')}
               tabIndex={-1}
-              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+              className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-apple-bg text-apple-ink"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -603,7 +603,7 @@ export default function TopUpPanel({
                     {s.key === selectedKey && (
                       <span
                         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: '#F97315' }}
+                        style={{ background: '#C2410C' }}
                       >
                         <svg
                           width="14"

@@ -185,6 +185,7 @@ export default function SavedCards() {
       <motion.div variants={staggerItem} className="flex items-center gap-3">
         <button
           onClick={() => navigate('/balance')}
+          aria-label={t('common.back')}
           className="flex h-10 w-10 items-center justify-center rounded-linear border border-dark-700/30 bg-dark-800/50 text-dark-300 transition-colors hover:bg-dark-700/50 hover:text-dark-100"
         >
           <BackIcon className="h-5 w-5" />

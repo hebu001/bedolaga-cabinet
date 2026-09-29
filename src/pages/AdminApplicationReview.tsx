@@ -19,7 +19,12 @@ export default function AdminApplicationReview() {
   const passedApp = (location.state as { application?: AdminPartnerApplicationItem } | null)
     ?.application;
 
-  const { data: fetchedApps } = useQuery({
+  const {
+    data: fetchedApps,
+    isLoading: applicationsLoading,
+    isError: applicationsError,
+    refetch: refetchApplications,
+  } = useQuery({
     queryKey: ['admin-partner-applications'],
     queryFn: () => partnerApi.getApplications({ status: 'pending' }),
     enabled: !passedApp && !!id,
@@ -48,7 +53,7 @@ export default function AdminApplicationReview() {
     },
   });
 
-  if (!app) {
+  if (!passedApp && applicationsLoading) {
     return (
       <div className="animate-fade-in">
         <div className="mb-6 flex items-center gap-3">
@@ -59,6 +64,35 @@ export default function AdminApplicationReview() {
         </div>
         <div className="flex items-center justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!app) {
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-6 flex items-center gap-3">
+          <AdminBackButton to="/admin/partners" />
+          <h1 className="text-xl font-semibold text-apple-ink">
+            {t('admin.partners.approveDialog.title')}
+          </h1>
+        </div>
+        <div role="alert" className="apple-card-grad rounded-2xl bg-apple-card p-6 text-center">
+          <p className="text-apple-ink">
+            {applicationsError
+              ? t('common.loadError')
+              : t('admin.partners.applicationUnavailable', 'Заявка не найдена или уже обработана.')}
+          </p>
+          {applicationsError && (
+            <button
+              type="button"
+              onClick={() => void refetchApplications()}
+              className="mt-4 rounded-full bg-apple-blue px-5 py-2.5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
+            >
+              {t('common.retry')}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -162,10 +196,14 @@ export default function AdminApplicationReview() {
           <p className="mb-4 text-sm text-apple-mute">
             {t('admin.partners.approveDialog.description', { name: displayName })}
           </p>
-          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="partner-commission"
+            className="mb-1 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.partners.approveDialog.commissionLabel')}
           </label>
           <input
+            id="partner-commission"
             type="number"
             min="1"
             max="100"
@@ -187,7 +225,7 @@ export default function AdminApplicationReview() {
               Number(commission) < 1 ||
               Number(commission) > 100
             }
-            className="w-full rounded-full bg-apple-green px-4 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-full bg-success-700 px-4 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {approveMutation.isPending ? t('common.saving') : t('admin.partners.actions.approve')}
           </button>
@@ -207,10 +245,14 @@ export default function AdminApplicationReview() {
           <p className="mb-4 text-sm text-apple-mute">
             {t('admin.partners.rejectDialog.description', { name: displayName })}
           </p>
-          <label className="mb-1 block text-[13px] font-medium text-apple-mute">
+          <label
+            htmlFor="partner-reject-comment"
+            className="mb-1 block text-[13px] font-medium text-apple-mute"
+          >
             {t('admin.partners.rejectDialog.commentLabel')}
           </label>
           <textarea
+            id="partner-reject-comment"
             value={rejectComment}
             onChange={(e) => setRejectComment(e.target.value)}
             className="mb-4 w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
@@ -225,7 +267,7 @@ export default function AdminApplicationReview() {
               })
             }
             disabled={rejectMutation.isPending}
-            className="w-full rounded-full bg-apple-red px-4 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-full bg-error-700 px-4 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {rejectMutation.isPending ? t('common.saving') : t('admin.partners.actions.reject')}
           </button>

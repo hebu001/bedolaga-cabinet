@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 export function AnimatedCheckmark({ className }: { className?: string }) {
   return (
     <motion.div
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
       className={cn(
         'flex h-20 w-20 items-center justify-center rounded-full bg-success-500/10',

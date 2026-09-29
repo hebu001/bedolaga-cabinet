@@ -1196,7 +1196,7 @@ export default function Subscription() {
                           aria-modal="true"
                           aria-label={t('subscription.devicesTitle')}
                           tabIndex={-1}
-                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
+                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-apple-bg"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Close */}
@@ -1411,7 +1411,7 @@ export default function Subscription() {
                           aria-modal="true"
                           aria-label={t('subscription.additionalOptions.buyTrafficTitle')}
                           tabIndex={-1}
-                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-black"
+                          className="apple-sheet-panel relative m-2.5 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[32px] bg-apple-bg"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Close */}
@@ -1571,7 +1571,7 @@ export default function Subscription() {
                           aria-modal="true"
                           aria-label={t('balance.topUp')}
                           tabIndex={-1}
-                          className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-black text-white"
+                          className="apple-card-grad apple-sheet-panel relative m-2.5 flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[32px] bg-apple-bg text-apple-ink"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex shrink-0 items-center justify-between px-7 pb-3 pt-5">
@@ -2039,6 +2039,10 @@ export default function Subscription() {
                 </div>
                 <div className="flex gap-2">
                   <button
+                    type="button"
+                    role="switch"
+                    aria-checked={subscription.autopay_enabled}
+                    aria-label={t('subscription.autoRenewal')}
                     onClick={async () => {
                       setDeleteLoading(true);
                       try {
@@ -2578,15 +2582,17 @@ export default function Subscription() {
                       autopayMutation.mutate(!subscription.autopay_enabled);
                     }}
                     disabled={autopayMutation.isPending}
-                    className="relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors duration-300 disabled:opacity-50"
+                    className="relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors duration-200 disabled:opacity-50"
                     style={{
                       background: subscription.autopay_enabled ? '#30d158' : '#39393d',
                     }}
                   >
                     <span
-                      className="absolute top-[3px] h-[24px] w-[24px] rounded-full bg-white transition-[left] duration-300"
+                      className="absolute left-[3px] top-[3px] h-[24px] w-[24px] rounded-full bg-white transition-transform duration-200 ease-out"
                       style={{
-                        left: subscription.autopay_enabled ? '23px' : '3px',
+                        transform: subscription.autopay_enabled
+                          ? 'translateX(20px)'
+                          : 'translateX(0)',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                       }}
                     />
