@@ -3,7 +3,8 @@ interface PageLoaderProps {
 }
 
 export default function PageLoader({ variant = 'dark' }: PageLoaderProps) {
-  const spinnerColor = variant === 'dark' ? 'border-accent-500' : 'border-blue-500';
+  // The old theme's generated accent-500, before route styles are loaded.
+  const spinnerColor = variant === 'dark' ? 'border-[#0b64f4]' : 'border-blue-500';
 
   return (
     <div className="flex min-h-screen items-center justify-center">
