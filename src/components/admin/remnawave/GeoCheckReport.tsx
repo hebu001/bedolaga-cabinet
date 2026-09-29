@@ -1,10 +1,17 @@
-import type { GeoCheckResult } from '@/api/adminRemnawave';
-import { CheckIcon,CopyIcon,DownloadIcon,RefreshIcon } from '@/components/admin/legacyIcons';
-import { CodeIcon,CollapseIcon,ExpandIcon,EyeIcon } from '@/components/icons';
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useMemo,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
+import type { GeoCheckResult } from '@/api/adminRemnawave';
+import {
+  CheckIcon,
+  CodeIcon,
+  CollapseIcon,
+  CopyIcon,
+  DownloadIcon,
+  ExpandIcon,
+  EyeIcon,
+  RefreshIcon,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { copyToClipboard } from '@/utils/clipboard';
 import { GeoCheckImageViewer } from './GeoCheckImageViewer';

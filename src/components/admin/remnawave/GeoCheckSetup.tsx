@@ -1,14 +1,12 @@
-import type { NodeInfo } from '@/api/adminRemnawave';
-import { GlobeIcon } from '@/components/admin/legacyIcons';
-import { NetworkIcon,SparklesIcon } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
-
+import type { NodeInfo } from '@/api/adminRemnawave';
+import { GlobeIcon, NetworkIcon, SparklesIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import {
-isRouteReady,
-suggestedInterfaces,
-suggestedIps,
-type GeoCheckRouteMode,
+  isRouteReady,
+  suggestedInterfaces,
+  suggestedIps,
+  type GeoCheckRouteMode,
 } from './geoCheckRoute';
 
 interface GeoCheckSetupProps {

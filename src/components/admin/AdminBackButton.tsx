@@ -76,12 +76,16 @@ export function AdminBackButton({ to = '/admin', replace, className }: AdminBack
       aria-label={t('common.back')}
       className={
         className ||
-        (/^\/admin\/(?:(?:users|sales-stats)\/?$|tariffs(?:\/|$))/.test(location.pathname)
+        (/^\/admin\/(?:(?:users|sales-stats)\/?$|(?:tariffs|remnawave)(?:\/|$))/.test(
+          location.pathname,
+        )
           ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-apple-hairline bg-apple-card transition-colors hover:border-apple-hairline'
           : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-apple-elevated text-apple-ink transition-colors hover:opacity-90')
       }
     >
-      {/^\/admin\/(?:(?:users|sales-stats)\/?$|tariffs(?:\/|$))/.test(location.pathname) ? (
+      {/^\/admin\/(?:(?:users|sales-stats)\/?$|(?:tariffs|remnawave)(?:\/|$))/.test(
+        location.pathname,
+      ) ? (
         <CurrentBackIcon />
       ) : (
         <BackIcon />
