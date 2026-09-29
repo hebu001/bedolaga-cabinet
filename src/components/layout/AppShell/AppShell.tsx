@@ -92,7 +92,9 @@ export function AppShell({ children }: AppShellProps) {
   const isSupport = location.pathname.startsWith('/support');
   const isAdminPage = location.pathname.startsWith('/admin');
   const keepCurrentAdminStyle =
-    /^\/admin\/(?:(?:users|sales-stats)\/?$|(?:tariffs|remnawave)(?:\/|$))/.test(location.pathname);
+    /^\/admin\/(?:(?:users|sales-stats)\/?$|(?:tariffs|remnawave|settings)(?:\/|$))/.test(
+      location.pathname,
+    );
   const isGift = location.pathname.startsWith('/gift');
   const isNewAdminPage =
     /^\/admin\/(?:grace-access|reachability|coupons|partners\/referral-levels|reminders|legal-pages|system-errors)(?:\/|$)/.test(

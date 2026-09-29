@@ -1,11 +1,10 @@
-import { GlobeIcon } from '@/components/admin/legacyIcons';
-import { TranslateIcon,TrendUpIcon } from '@/components/icons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { brandingApi } from '../../api/branding';
 import { getApiErrorMessage } from '../../utils/api-error';
-import { CheckIcon,CloseIcon,PencilIcon } from './icons';
+import { CheckIcon, CloseIcon, PencilIcon } from './icons';
+import { GlobeIcon, TranslateIcon, TrendUpIcon } from '@/components/icons';
 
 export function AnalyticsTab() {
   const { t } = useTranslation();

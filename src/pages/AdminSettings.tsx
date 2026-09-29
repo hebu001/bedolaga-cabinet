@@ -1,30 +1,30 @@
-import { BackIcon,ChevronRightIcon } from '@/components/admin/legacyPageIcons/AdminSettings';
+import { getPageScrollTarget } from '../utils/pageScroll';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback,useEffect,useMemo,useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useSearchParams } from 'react-router';
-import { adminSettingsApi,type SettingDefinition } from '../api/adminSettings';
+import { adminSettingsApi, type SettingDefinition } from '../api/adminSettings';
 import { themeColorsApi } from '../api/themeColors';
+import { useFavoriteSettings } from '../hooks/useFavoriteSettings';
 import {
-OTHER_CATEGORIES,
-SETTINGS_TREE,
-findSettingsSection,
-findTreeLocation,
-formatSettingKey,
-getMappedCategoryKeys,
+  OTHER_CATEGORIES,
+  SETTINGS_TREE,
+  findTreeLocation,
+  formatSettingKey,
+  findSettingsSection,
+  getMappedCategoryKeys,
 } from '../components/admin';
+import { usePlatform } from '../platform/hooks/usePlatform';
 import { AnalyticsTab } from '../components/admin/AnalyticsTab';
 import { BrandingTab } from '../components/admin/BrandingTab';
-import { FavoritesTab } from '../components/admin/FavoritesTab';
 import { MenuEditorTab } from '../components/admin/MenuEditorTab';
-import { SettingsMobileTabs } from '../components/admin/SettingsMobileTabs';
-import { SettingsSearchMobile,SettingsSearchResults } from '../components/admin/SettingsSearch';
+import { ThemeTab } from '../components/admin/ThemeTab';
+import { FavoritesTab } from '../components/admin/FavoritesTab';
 import { SettingsTab } from '../components/admin/SettingsTab';
 import { SettingsTreeSidebar } from '../components/admin/SettingsTreeSidebar';
-import { ThemeTab } from '../components/admin/ThemeTab';
-import { useFavoriteSettings } from '../hooks/useFavoriteSettings';
-import { usePlatform } from '../platform/hooks/usePlatform';
-import { getPageScrollTarget } from '../utils/pageScroll';
+import { SettingsMobileTabs } from '../components/admin/SettingsMobileTabs';
+import { SettingsSearchMobile, SettingsSearchResults } from '../components/admin/SettingsSearch';
+import { BackIcon, ChevronRightIcon } from '@/components/icons';
 
 // Settings that require SALES_MODE=tariffs to be visible
 const TARIFF_MODE_SETTINGS = ['MULTI_TARIFF_ENABLED', 'MAX_ACTIVE_SUBSCRIPTIONS'];
