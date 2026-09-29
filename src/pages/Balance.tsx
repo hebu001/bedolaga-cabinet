@@ -256,7 +256,7 @@ export default function Balance() {
 
   return (
     <motion.div
-      className="space-y-5 font-sans text-apple-ink"
+      className="apple-balance space-y-5 font-sans text-apple-ink"
       variants={staggerContainer}
       initial="initial"
       animate="animate"
@@ -528,7 +528,7 @@ export default function Balance() {
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
-              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-apple-ink">
                 {t('balance.topUpBalance', 'Пополнение баланса')}
               </div>
               <div className="flex-1 overflow-y-auto">
@@ -597,7 +597,7 @@ export default function Balance() {
                   <path d="M6 6l12 12M18 6 6 18" />
                 </svg>
               </button>
-              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-white">
+              <div className="px-7 pb-3 pr-16 pt-5 text-[22px] font-semibold leading-[26px] text-apple-ink">
                 {t('balance.promocode.title', 'Промокод')}
               </div>
               <div className="flex flex-col overflow-y-auto px-7 pb-7 pt-1">

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { subscriptionApi } from '../api/subscription';
 import { WebBackButton } from '../components/WebBackButton';
-import { getGlassColors } from '../utils/glassTheme';
+import { getApplePageColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
 import type { Tariff, ClassicPurchaseOptions } from '../types';
 import { useCloseOnSuccessNotification } from '../store/successNotification';
@@ -27,7 +27,7 @@ export default function SubscriptionPurchase() {
     ? parseInt(searchParams.get('subscriptionId')!, 10)
     : undefined;
   const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const g = getApplePageColors(isDark);
   // Витрина тарифов в двух видах. Обработчики и данные общие, различается
   // только подача; что делает нажатие — решает tariffAction() внутри обеих.
   const { lite } = useLiteMode();
@@ -142,8 +142,10 @@ export default function SubscriptionPurchase() {
 
   if (optionsError || (!purchaseOptions && !optionsLoading)) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">{t('subscription.extend')}</h1>
+      <div className="apple-purchase space-y-5">
+        <h1 className="text-[28px] font-bold tracking-tight text-apple-ink sm:text-3xl">
+          {t('subscription.extend')}
+        </h1>
         <div
           className="rounded-3xl p-6 text-center"
           style={{
@@ -166,36 +168,30 @@ export default function SubscriptionPurchase() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="apple-purchase space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
         <WebBackButton
           to={subscriptionId ? `/subscriptions/${subscriptionId}` : '/subscriptions'}
         />
-        <h1 className="text-2xl font-bold text-dark-50 sm:text-3xl">
+        <h1 className="text-[28px] font-bold tracking-tight text-apple-ink sm:text-3xl">
           {needsTariff(subscription)
             ? t('subscription.cta.moveToTariff')
-            : isMultiTariff && !subscriptionId
-              ? t('subscription.newTariff', 'Новый тариф')
-              : !isMultiTariff && subscription?.is_daily && !subscription?.is_trial
-                ? t('subscription.switchTariff.title')
-                : subscription && !subscription.is_trial
-                  ? t('subscription.extend')
-                  : t('subscription.getSubscription')}
+            : renewIntent && subscription && !subscription.is_trial
+              ? t('subscription.extend')
+              : isMultiTariff && !subscriptionId
+                ? t('subscription.newTariff', 'Новый тариф')
+                : !isMultiTariff && subscription?.is_daily && !subscription?.is_trial
+                  ? t('subscription.switchTariff.title')
+                  : subscription && !subscription.is_trial
+                    ? t('subscription.extend')
+                    : t('subscription.getSubscription')}
         </h1>
       </div>
 
       {/* Tariffs Section */}
       {isTariffsMode && tariffs.length > 0 && (
-        <div
-          className="relative overflow-hidden rounded-3xl"
-          style={{
-            background: g.cardBg,
-            border: `1px solid ${g.cardBorder}`,
-            boxShadow: g.shadow,
-            padding: '24px 28px',
-          }}
-        >
+        <div className="apple-purchase-content space-y-4">
           {/* Trial upgrade prompt — hidden when expired banner is active */}
           {subscription?.is_trial &&
             !(

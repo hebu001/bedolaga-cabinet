@@ -1,3 +1,4 @@
+import '@/styles/applePages.css';
 import { PromptDialogHost } from '@/components/PromptDialogHost';
 import { resetVirtualKeyboard, useVirtualKeyboard } from '@/hooks/useVirtualKeyboard';
 import { useEffect, useState } from 'react';
@@ -107,8 +108,21 @@ export function AppShell({ children }: AppShellProps) {
   const isAppleDarkPage =
     isBalance || isSubscription || isProfile || isSupport || isAdminPage || isGift;
 
+  const restoredApplePage =
+    location.pathname === '/admin' ||
+    location.pathname === '/admin/' ||
+    isSubscription ||
+    location.pathname === '/balance' ||
+    location.pathname === '/balance/';
+
   return (
-    <div className={cn('app-shell min-h-[100dvh]', isAppleDarkPage && 'bg-apple-bg')}>
+    <div
+      className={cn(
+        'app-shell min-h-[100dvh]',
+        isAppleDarkPage && 'bg-apple-bg',
+        restoredApplePage && 'apple-restored',
+      )}
+    >
       {/* Animated background renders via portal on document.body at z-index: -1 */}
       {!isAppleDarkPage && <BackgroundRenderer />}
 

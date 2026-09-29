@@ -569,12 +569,12 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
   if (visibleItems.length === 0) return null;
 
   return (
-    <div className="group/card relative overflow-hidden rounded-2xl border border-apple-hairline/50 bg-apple-card/30 backdrop-blur-xl transition-colors duration-200 hover:border-apple-hairline/80 light:border-champagne-300/50 light:bg-champagne-100/40 light:hover:border-champagne-400/60">
+    <div className="admin-section group/card relative overflow-hidden rounded-2xl border border-apple-hairline/50 bg-apple-card/30 backdrop-blur-xl transition-colors duration-200 hover:border-apple-hairline/80 light:border-champagne-300/50 light:bg-champagne-100/40 light:hover:border-champagne-400/60">
       {/* Header */}
-      <div className="flex items-center gap-2.5 border-b border-apple-hairline/30 px-3.5 py-2.5 light:border-champagne-300/30">
+      <div className="admin-section-heading flex items-center gap-2.5 border-b border-apple-hairline/30 px-3.5 py-2.5 light:border-champagne-300/30">
         <div
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-          style={{ background: section.gradient }}
+          style={{ background: section.accent }}
         >
           <span className="text-xs font-bold text-dark-50" aria-hidden="true">
             {visibleItems.length}
@@ -592,7 +592,7 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
             key={item.to}
             to={item.to}
             className={cn(
-              'group/item flex items-center gap-2.5 rounded-xl border border-transparent px-2 py-1.5 transition-colors duration-150',
+              'admin-nav-row group/item flex items-center gap-2.5 rounded-xl border border-transparent px-2 py-1.5 transition-colors duration-150',
               hoveredItem === i
                 ? 'border-apple-hairline/50 bg-apple-elevated/30 light:border-champagne-400/40 light:bg-champagne-200/50'
                 : 'hover:border-apple-hairline/50 hover:bg-apple-elevated/30 light:hover:border-champagne-400/40 light:hover:bg-champagne-200/50',
@@ -688,9 +688,9 @@ export default function AdminPanel() {
   }, [search, t]);
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col bg-apple-bg font-sans">
+    <div className="apple-admin relative flex min-h-0 flex-1 flex-col bg-apple-bg font-sans">
       <div
-        className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-3 overflow-hidden px-4 sm:px-6"
+        className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-5 px-1 sm:px-2"
         style={{
           paddingTop: safeTop > 0 ? `${safeTop}px` : 'env(safe-area-inset-top, 0px)',
           paddingBottom: safeBottom > 0 ? `${safeBottom}px` : 'env(safe-area-inset-bottom, 0px)',
@@ -759,7 +759,7 @@ export default function AdminPanel() {
 
         {/* Hero */}
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <h1 className="text-lg font-bold tracking-tight text-dark-50 light:text-champagne-900 sm:text-xl">
+          <h1 className="text-[28px] font-bold tracking-tight text-apple-ink sm:text-3xl">
             {t('admin.panel.title')}
           </h1>
           <div className="flex items-center gap-1.5 text-xs text-apple-mute">
@@ -783,7 +783,7 @@ export default function AdminPanel() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('admin.panel.searchPlaceholder')}
             aria-label={t('admin.panel.searchPlaceholder')}
-            className="w-full rounded-xl bg-apple-card py-2 pl-8 pr-16 font-sans text-xs text-apple-ink outline-none transition-all placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
+            className="admin-search w-full rounded-2xl bg-apple-card py-3.5 pl-10 pr-20 font-sans text-base text-apple-ink outline-none transition-all placeholder:text-apple-faint focus:ring-2 focus:ring-apple-blue/50"
           />
           {search && (
             <button
@@ -803,7 +803,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Grid */}
-        <div className="scrollbar-hide min-h-0 flex-1 overflow-auto pb-4">
+        <div className="min-h-0 flex-1 pb-6">
           {visibleSectionIds === null || visibleSectionIds.size > 0 ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {sections

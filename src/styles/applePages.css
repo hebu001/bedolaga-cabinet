@@ -1,0 +1,140 @@
+/* Restore the old fork's neutral Apple canvas on the requested routes.
+   Semantic status colours and light-mode branding keep their existing contract. */
+.apple-restored {
+  --color-apple-blue: 249, 115, 21;
+}
+:root:not(.light) .apple-restored {
+  --color-dark-50: 245, 245, 247;
+  --color-dark-100: 245, 245, 247;
+  --color-dark-200: 229, 229, 234;
+  --color-dark-300: 209, 209, 214;
+  --color-dark-400: 174, 174, 180;
+  --color-dark-500: 158, 158, 166;
+  --color-dark-600: 72, 72, 74;
+  --color-dark-700: 58, 58, 60;
+  --color-dark-800: 44, 44, 46;
+  --color-dark-900: 28, 28, 30;
+  --color-apple-bg: 0, 0, 0;
+  --color-apple-card: 28, 28, 30;
+  --color-apple-elevated: 44, 44, 46;
+  --color-apple-ink: 245, 245, 247;
+  --color-apple-mute: 174, 174, 180;
+  --color-apple-faint: 158, 158, 166;
+  --color-apple-hairline: 255, 255, 255;
+  --opacity-apple-hairline: 0.08;
+}
+.apple-restored h1 {
+  line-height: 1.2;
+}
+.apple-restored :is(button, a, input):focus-visible {
+  outline: 2px solid rgb(var(--color-apple-blue));
+  outline-offset: 3px;
+}
+.apple-subscription-card > button {
+  padding: 22px;
+}
+.apple-subscription-card > button > div:first-child {
+  flex-wrap: wrap;
+}
+.apple-subscription-card > button > div:last-child {
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+.apple-tariff-card {
+  min-width: 0;
+  box-shadow: none;
+}
+.apple-tariff-card h3,
+.apple-tariff-card .text-lg {
+  overflow-wrap: anywhere;
+}
+.apple-tariff-card .btn-primary {
+  border-radius: 999px;
+  min-height: 48px;
+}
+.apple-tariff-card .btn-secondary {
+  border-radius: 999px;
+  min-height: 48px;
+}
+.apple-period {
+  min-height: 110px;
+  background: rgb(var(--color-apple-elevated));
+}
+.apple-period[aria-pressed="true"] {
+  background: rgba(var(--color-apple-blue), 0.14);
+  border-color: rgb(var(--color-apple-blue));
+  box-shadow: inset 0 0 0 1px rgb(var(--color-apple-blue));
+}
+.apple-admin .admin-section {
+  background: rgb(var(--color-apple-card));
+  border-color: rgba(var(--color-apple-hairline), var(--opacity-apple-hairline));
+  backdrop-filter: none;
+}
+.apple-admin .admin-section-heading {
+  padding: 16px 18px 10px;
+  border-bottom: 0;
+}
+.apple-admin .admin-section-heading h2 {
+  font-size: 15px;
+}
+.apple-admin .admin-nav-row {
+  min-height: 54px;
+  padding: 2px 12px;
+}
+.apple-admin .admin-nav-row > div:last-child {
+  border-color: rgba(var(--color-apple-hairline), var(--opacity-apple-hairline));
+}
+.apple-admin .admin-nav-row:hover {
+  background: rgb(var(--color-apple-elevated));
+}
+.apple-admin .admin-search {
+  border: 1px solid rgba(var(--color-apple-hairline), var(--opacity-apple-hairline));
+}
+.apple-admin mark {
+  background: rgba(var(--color-apple-blue), 0.25);
+}
+.apple-admin [class*="font-mono"] {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 420px) {
+  .apple-purchase-form {
+    padding: 18px;
+  }
+  .apple-subscription-card > button {
+    padding: 18px;
+  }
+  .apple-period {
+    padding: 14px;
+  }
+  .apple-balance [class*="text-[46px]"] {
+    font-size: 40px;
+  }
+}
+
+.apple-restored :is(button, a).bg-apple-blue,
+.apple-tariff-card .btn-primary {
+  background-color: rgb(var(--color-apple-blue));
+  color: #171717;
+}
+
+.apple-restored .border-apple-hairline,
+.apple-admin [class*="border-apple-hairline"] {
+  border-color: rgba(var(--color-apple-hairline), var(--opacity-apple-hairline));
+}
+.apple-restored nav a[aria-current="page"] {
+  color: #171717;
+}
+.apple-tariff-card .btn-primary {
+  box-shadow: none;
+}
+
+.apple-admin .admin-nav-row {
+  border-color: transparent;
+}
+
+.light .apple-restored {
+  --color-apple-mute: var(--color-champagne-800);
+  --color-apple-faint: var(--color-champagne-800);
+  --color-dark-500: var(--color-champagne-800);
+}

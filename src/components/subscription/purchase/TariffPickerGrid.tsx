@@ -5,7 +5,7 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useCurrency } from '../../../hooks/useCurrency';
 import { usePromoDiscount } from '../../../hooks/usePromoDiscount';
 import { dailyPriceQuote } from './dailyPrice';
-import { getGlassColors } from '../../../utils/glassTheme';
+import { getApplePageColors } from '../../../utils/glassTheme';
 import { ArrowDownIcon, DevicesIcon, GiftIcon, RestartIcon } from '@/components/icons';
 import type { Tariff, Subscription, PurchaseOptions } from '../../../types';
 import { tariffAction, type TariffActionKind } from './tariffAction';
@@ -54,7 +54,7 @@ export function TariffPickerGrid({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const g = getApplePageColors(isDark);
   const { formatAmount, currencySymbol } = useCurrency();
   const { applyPromoDiscount } = usePromoDiscount();
 
@@ -111,7 +111,7 @@ export function TariffPickerGrid({
             </button>
           </div>
         )}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="apple-tariff-grid grid grid-cols-1 gap-4 sm:grid-cols-2">
         {[...tariffs]
           .filter((tariff) => {
             // In multi-tariff mode: hide already purchased tariffs
@@ -144,7 +144,7 @@ export function TariffPickerGrid({
             return (
               <div
                 key={tariff.id}
-                className={`bento-card-hover p-5 text-left transition-all ${
+                className={`apple-tariff-card flex flex-col rounded-2xl border border-apple-hairline bg-apple-card p-5 text-left transition-colors ${
                   isCurrentTariff
                     ? 'border-apple-blue'
                     : tariff.is_highlighted
@@ -155,7 +155,7 @@ export function TariffPickerGrid({
                 }`}
               >
                 {tariff.is_highlighted && !isCurrentTariff && <BestValueBadge className="mb-2" />}
-                <div className="mb-3 flex items-start justify-between">
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="text-lg font-semibold text-dark-100">{tariff.name}</div>
                     {tariff.description && (
@@ -260,7 +260,7 @@ export function TariffPickerGrid({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-4 flex gap-2">
+                <div className="mt-auto flex gap-2 pt-5">
                   {action === 'current-daily' ? (
                     <div className="flex-1 py-2 text-center text-sm text-dark-500">
                       {t('subscription.currentTariff')}

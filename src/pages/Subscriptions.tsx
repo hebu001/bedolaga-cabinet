@@ -7,7 +7,7 @@ import { ClipboardIcon, PlusIcon } from '@/components/icons';
 import { subscriptionApi } from '../api/subscription';
 import { balanceApi } from '../api/balance';
 import { useTheme } from '../hooks/useTheme';
-import { getGlassColors } from '../utils/glassTheme';
+import { getApplePageColors } from '../utils/glassTheme';
 import { useAuthStore } from '../store/auth';
 import { getApiErrorMessage } from '../utils/api-error';
 import SubscriptionListCard from '../components/subscription/SubscriptionListCard';
@@ -17,7 +17,7 @@ import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 function EmptyState({ onBuy }: { onBuy: () => void }) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const g = getApplePageColors(isDark);
 
   return (
     <div
@@ -38,7 +38,7 @@ function EmptyState({ onBuy }: { onBuy: () => void }) {
       </p>
       <button
         onClick={onBuy}
-        className="rounded-full bg-accent-500 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-600"
+        className="rounded-full bg-apple-blue px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
       >
         {t('subscriptions.buy', 'Купить подписку')}
       </button>
@@ -50,7 +50,7 @@ export default function Subscriptions() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const g = getApplePageColors(isDark);
   const queryClient = useQueryClient();
   const refreshUser = useAuthStore((state) => state.refreshUser);
   const [trialError, setTrialError] = useState<string | null>(null);
@@ -119,10 +119,10 @@ export default function Subscriptions() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="apple-subscriptions space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
-        <h1 className="truncate text-xl font-bold" style={{ color: g.text }}>
+        <h1 className="min-w-0 text-[28px] font-bold tracking-tight" style={{ color: g.text }}>
           {t('subscriptions.title', 'Мои подписки')}
         </h1>
         {/* «+ Купить ещё» — только если уже есть платная активная подписка */}
@@ -131,9 +131,9 @@ export default function Subscriptions() {
             onClick={() => navigate('/subscription/purchase')}
             className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-colors"
             style={{
-              background: 'rgba(var(--color-accent-400), 0.1)',
-              color: 'rgb(var(--color-accent-400))',
-              border: '1px solid rgba(var(--color-accent-400), 0.2)',
+              background: 'rgba(var(--color-apple-blue), 0.12)',
+              color: 'rgb(var(--color-apple-accent-text))',
+              border: '1px solid rgba(var(--color-apple-blue), 0.2)',
             }}
           >
             <PlusIcon className="h-4 w-4" />
@@ -207,6 +207,7 @@ export default function Subscriptions() {
             <SubscriptionListCard
               key={sub.id}
               subscription={sub}
+              appearance="apple"
               onClick={() => navigate(`/subscriptions/${sub.id}`)}
             />
           ))}

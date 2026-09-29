@@ -52,3 +52,16 @@ export function getGlassColors(isDark: boolean) {
     shadow: isDark ? 'none' : '0 2px 16px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03)',
   };
 }
+
+/** Flat surfaces used by the restored subscription pages. */
+export function getApplePageColors(isDark: boolean) {
+  return {
+    ...getGlassColors(isDark),
+    cardBg: 'rgb(var(--color-apple-card))',
+    innerBg: 'rgb(var(--color-apple-elevated))',
+    text: 'rgb(var(--color-apple-ink))',
+    textSecondary: 'rgb(var(--color-apple-mute))',
+    textMuted: 'rgb(var(--color-apple-faint))',
+    shadow: 'none',
+  };
+}

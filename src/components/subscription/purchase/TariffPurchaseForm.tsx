@@ -280,16 +280,22 @@ export function TariffPurchaseForm({
   }, []);
 
   return (
-    <div ref={ref} className="space-y-6 text-apple-ink">
+    <div
+      ref={ref}
+      className="apple-purchase-form space-y-5 rounded-2xl bg-apple-card p-5 text-apple-ink sm:p-6"
+    >
       <div className="flex items-center justify-between gap-2">
         <h3 className="min-w-0 truncate text-lg font-medium text-dark-100">{tariff.name}</h3>
-        <button onClick={onBack} className="shrink-0 text-dark-400 hover:text-dark-200">
+        <button
+          onClick={onBack}
+          className="min-h-11 shrink-0 rounded-full bg-apple-elevated px-4 text-sm text-apple-ink transition-opacity hover:opacity-80"
+        >
           ← {t('common.back')}
         </button>
       </div>
 
       {/* Tariff Info */}
-      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+      <div className="rounded-2xl bg-apple-elevated p-4">
         <div className="flex flex-wrap gap-4 text-sm">
           <div>
             <span className="text-dark-500">{t('subscription.traffic')}:</span>
@@ -440,7 +446,8 @@ export function TariffPurchaseForm({
                         setSelectedTariffPeriod(period);
                         setUseCustomDays(false);
                       }}
-                      className={`relative rounded-xl p-4 text-left transition-all ${
+                      aria-pressed={isSelectedPeriod}
+                      className={`apple-period relative rounded-2xl p-4 text-left transition-colors ${
                         period.is_highlighted
                           ? `${bestValueFrame(isSelectedPeriod)} ${isSelectedPeriod ? 'bg-apple-blue/10' : 'bg-dark-800/50'}`
                           : isSelectedPeriod
@@ -694,7 +701,7 @@ export function TariffPurchaseForm({
 
           {/* Summary & Purchase */}
           {(selectedTariffPeriod || useCustomDays) && (
-            <div className="rounded-xl bg-dark-800/50 p-5">
+            <div className="apple-purchase-summary rounded-2xl bg-apple-elevated p-5">
               {(() => {
                 const basePeriodPrice = useCustomDays
                   ? customDays * (tariff.price_per_day_kopeks ?? 0)

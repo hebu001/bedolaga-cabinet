@@ -21,7 +21,7 @@ import { DEVICE_ALIAS_MAX_LENGTH } from '../constants/devices';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform';
 import { formatTraffic } from '../utils/formatTraffic';
-import { getGlassColors } from '../utils/glassTheme';
+import { getApplePageColors } from '../utils/glassTheme';
 import { useTheme } from '../hooks/useTheme';
 import InsufficientBalancePrompt from '../components/InsufficientBalancePrompt';
 import { useCurrency } from '../hooks/useCurrency';
@@ -308,7 +308,7 @@ export default function Subscription() {
   const { subscriptionId: subIdParam } = useParams<{ subscriptionId?: string }>();
   const subscriptionId = subIdParam ? parseInt(subIdParam, 10) : undefined;
   const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const g = getApplePageColors(isDark);
   const haptic = useHapticFeedback();
   const notify = useNotify();
   const [copied, setCopied] = useState(false);
@@ -933,10 +933,16 @@ export default function Subscription() {
           const isAtDeviceLimit =
             subscription.device_limit > 0 && connectedDevices >= subscription.device_limit;
           const statusHex = subscription.is_active
-            ? '#30d158'
+            ? isDark
+              ? '#30d158'
+              : '#166534'
             : subscription.is_limited
-              ? '#ff9f0a'
-              : '#ff453a';
+              ? isDark
+                ? '#ff9f0a'
+                : '#92400e'
+              : isDark
+                ? '#ff453a'
+                : '#b91c1c';
           const renewLink = needsTariff(subscription)
             ? tariffSelectionPath(subscription.id)
             : subscription.is_trial
@@ -1126,7 +1132,7 @@ export default function Subscription() {
                                 setShowServerManagement(false);
                                 setShowTrafficTopup(true);
                               }}
-                              className="rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-80"
+                              className="rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-apple-ink transition-opacity hover:opacity-80"
                             >
                               Докупить
                             </button>
@@ -1176,7 +1182,7 @@ export default function Subscription() {
                             setShowServerManagement(false);
                             setShowDeviceManage((v) => !v);
                           }}
-                          className="shrink-0 rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-white transition-opacity hover:opacity-80"
+                          className="shrink-0 rounded-full bg-apple-elevated px-3.5 py-1.5 text-[13px] font-medium text-apple-ink transition-opacity hover:opacity-80"
                         >
                           Изменить
                         </button>
@@ -2582,6 +2588,9 @@ export default function Subscription() {
                       autopayMutation.mutate(!subscription.autopay_enabled);
                     }}
                     disabled={autopayMutation.isPending}
+                    role="switch"
+                    aria-checked={subscription.autopay_enabled}
+                    aria-label={t('subscription.autopay', 'Автопродление')}
                     className="relative h-[30px] w-[50px] shrink-0 rounded-full transition-colors duration-200 disabled:opacity-50"
                     style={{
                       background: subscription.autopay_enabled ? '#30d158' : '#39393d',

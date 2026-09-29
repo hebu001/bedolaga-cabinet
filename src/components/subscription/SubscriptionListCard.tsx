@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useTheme } from '../../hooks/useTheme';
-import { getGlassColors } from '../../utils/glassTheme';
+import { getGlassColors, getApplePageColors } from '../../utils/glassTheme';
 import { useHaptic } from '../../platform';
 import {
   CalendarIcon,
@@ -82,8 +82,10 @@ export default function SubscriptionListCard({
   subscription,
   onClick,
   connect,
+  appearance = 'glass',
 }: {
   subscription: SubscriptionListItem;
+  appearance?: 'glass' | 'apple';
   onClick: () => void;
   /**
    * Подключение устройства прямо из карточки. Задаётся только на главной:
@@ -98,7 +100,7 @@ export default function SubscriptionListCard({
 }) {
   const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
-  const g = getGlassColors(isDark);
+  const g = appearance === 'apple' ? getApplePageColors(isDark) : getGlassColors(isDark);
   const { impact } = useHaptic();
 
   const handleClick = () => {
@@ -160,7 +162,7 @@ export default function SubscriptionListCard({
   // вложенные кнопки невалидны и ведут себя в браузерах непредсказуемо.
   return (
     <div
-      className="overflow-hidden rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+      className={`overflow-hidden rounded-2xl border transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] ${appearance === 'apple' ? 'apple-subscription-card' : ''}`}
       style={{ background: bgColor, borderColor }}
     >
       <button onClick={handleClick} className="w-full p-4 text-left">
