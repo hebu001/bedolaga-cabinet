@@ -1,9 +1,9 @@
-import { CheckIcon,EditIcon,XIcon } from '@/components/admin/legacyIcons';
+import { CheckIcon, EditIcon, XIcon } from '@/components/admin/legacyIcons';
 import { DevicesIcon } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { useDestructiveConfirm } from '@/platform/hooks/useNativeDialog';
 import { formatShortDate } from '@/utils/format';
 import { DEVICE_ALIAS_MAX_LENGTH } from '../../../constants/devices';
@@ -20,14 +20,17 @@ export interface DeviceRow {
 /** Имя устройства для человека: своё название, иначе модель, иначе платформа. */
 export function deviceDisplayName(device: DeviceRow): string {
   return (
-    device.local_name?.trim() || device.platform || device.device_model || device.hwid.slice(0, 12)
+    device.local_name?.trim() ||
+    device.device_model?.trim() ||
+    device.platform?.trim() ||
+    device.hwid.slice(0, 12)
   );
 }
 
 /** «Айфон (iPhone 15 Pro)» — своё название и модель, если они разные. */
 export function deviceLongName(device: DeviceRow): string {
   const name = deviceDisplayName(device);
-  const model = device.device_model;
+  const model = device.device_model?.trim();
   return device.local_name?.trim() && model && model !== name ? `${name} (${model})` : name;
 }
 
