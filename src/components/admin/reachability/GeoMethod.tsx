@@ -27,7 +27,7 @@ export function GeoMethod(props: GeoMethodProps) {
   const tcp = props.value.probeMode === 'tcp';
   const heavyOn = props.value.heavy && !tcp && props.heavyAllowed;
   return (
-    <section aria-labelledby="reachability-geo-method" className="space-y-3">
+    <section aria-labelledby="reachability-geo-method" className="reachability-card space-y-4">
       <SectionHeading
         id="reachability-geo-method"
         title={t('admin.reachability.geo.method.title')}

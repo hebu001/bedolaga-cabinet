@@ -73,8 +73,8 @@ export function FleetList({
   const allState = selectionState(allRefs, picked);
 
   return (
-    <div className="divide-y divide-dark-700/40 overflow-hidden rounded-2xl border border-apple-hairline/60">
-      <div className="flex items-center gap-3 bg-apple-card/40 py-1 pe-3 ps-1 text-xs text-apple-mute">
+    <div className="reachability-table divide-y divide-dark-700/40 overflow-hidden rounded-2xl border border-apple-hairline/60">
+      <div className="reachability-table-header flex items-center gap-3 py-2 pe-3 ps-1 text-xs text-apple-mute">
         <button
           type="button"
           role="checkbox"
@@ -95,7 +95,7 @@ export function FleetList({
             onChange={(event) => onQuery(event.target.value)}
             aria-label={t(`${base}.search`)}
             placeholder={t(`${base}.search`)}
-            className="h-8 w-full rounded-lg border border-apple-hairline/50 bg-apple-card/50 pe-2 ps-8 text-xs text-apple-ink placeholder:text-apple-faint focus:border-[#F97315]/50 focus:outline-none focus:ring-2 focus:ring-accent-500/20"
+            className="h-10 w-full rounded-xl border border-apple-hairline/50 bg-apple-card/50 pe-2 ps-8 text-xs text-apple-ink placeholder:text-apple-faint focus:border-[#F97315]/50 focus:outline-none focus:ring-2 focus:ring-accent-500/20"
           />
         </label>
         <span className="hidden flex-1 md:block" />

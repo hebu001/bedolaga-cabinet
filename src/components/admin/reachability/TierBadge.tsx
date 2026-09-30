@@ -5,8 +5,8 @@ const TIER_CLASS: Record<string, string> = {
   free: 'border-apple-hairline bg-apple-card/40 text-apple-mute',
   bronze: 'border-warning-500/40 bg-warning-500/10 text-warning-500',
   silver: 'border-dark-400/50 bg-apple-elevated/40 text-apple-ink',
-  gold: 'border-urgent-400/50 bg-urgent-400/10 text-urgent-400',
-  platinum: 'border-accent-400/50 bg-[#F97315]/10 text-accent-300',
+  gold: 'border-apple-amber/20 bg-apple-amber/10 text-apple-amber',
+  platinum: 'border-[#F97315]/20 bg-[#F97315]/10 text-[#F97315]',
 };
 
 interface TierBadgeProps {

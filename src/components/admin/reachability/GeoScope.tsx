@@ -102,7 +102,7 @@ export function GeoScope({ value, onChange }: GeoScopeProps) {
   const everyIsp = value.isp === ALL_ISPS;
 
   return (
-    <section aria-labelledby="reachability-geo-scope" className="space-y-4">
+    <section aria-labelledby="reachability-geo-scope" className="reachability-card space-y-4">
       <SectionHeading
         id="reachability-geo-scope"
         title={t(`${KEY}.scope.title`)}

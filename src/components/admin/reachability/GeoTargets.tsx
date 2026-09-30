@@ -173,7 +173,7 @@ export function GeoTargets(props: GeoTargetsProps) {
   const base = 'admin.reachability.geo.targets';
 
   return (
-    <section aria-labelledby="reachability-targets" className="space-y-4">
+    <section aria-labelledby="reachability-targets" className="reachability-card space-y-4">
       <SectionHeading
         id="reachability-targets"
         title={t('admin.reachability.sections.targets')}

@@ -34,7 +34,7 @@ export function ModeSwitch({ value, onChange, modes = TAB_KEYS }: ModeSwitchProp
     <div
       role="tablist"
       aria-label={t('admin.reachability.switch.label')}
-      className="grid gap-0.5 rounded-xl bg-apple-card/50 p-1 sm:gap-1"
+      className="grid gap-1 rounded-2xl bg-apple-card p-1.5 sm:gap-1.5"
       style={{ gridTemplateColumns: `repeat(${modes.length}, minmax(0, 1fr))` }}
     >
       {modes.map((mode) => {
@@ -48,13 +48,13 @@ export function ModeSwitch({ value, onChange, modes = TAB_KEYS }: ModeSwitchProp
             aria-selected={active}
             onClick={() => onChange(mode)}
             className={cn(
-              'flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-1.5 text-[11px] font-medium leading-tight transition-all sm:flex-row sm:gap-1.5 sm:px-2 sm:py-2 sm:text-sm',
+              'flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1.5 text-[11px] font-medium leading-tight transition-all sm:flex-row sm:gap-1.5 sm:px-2 sm:py-2 sm:text-sm',
               active
-                ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-accent-500/30'
-                : 'text-apple-mute hover:text-apple-ink',
+                ? 'bg-apple-elevated text-apple-ink shadow-sm'
+                : 'text-apple-mute hover:bg-apple-elevated/50 hover:text-apple-ink',
             )}
           >
-            <Icon className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4" />
+            <Icon className={cn('h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4', active && 'text-[#F97315]')} />
             {/* На телефоне подпись в две строки: в одну шесть вкладок налезали друг
                 на друга («IP / доменСкан CIDRVPN-тест»). */}
             <span className="text-center sm:whitespace-nowrap">

@@ -42,10 +42,10 @@ export function ChoiceChips<T extends string>({
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              'shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+              'shrink-0 whitespace-nowrap min-h-[36px] rounded-full px-3 py-2 text-xs font-medium transition-all',
               active
-                ? 'bg-[#F97315]/15 text-[#F97315] ring-1 ring-accent-500/30'
-                : 'bg-apple-card/50 text-apple-mute hover:bg-apple-elevated/50 hover:text-apple-mute',
+                ? 'bg-[#F97315]/10 text-[#F97315]'
+                : 'bg-apple-elevated/50 text-apple-mute hover:bg-apple-elevated hover:text-apple-ink',
             )}
           >
             {option.label}

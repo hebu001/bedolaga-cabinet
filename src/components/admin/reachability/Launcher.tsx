@@ -300,9 +300,9 @@ export function Launcher({ status, link, runningJobId, onRunning }: LauncherProp
   return (
     <div
       id="reachability-launcher"
-      className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8"
+      className="lg:grid lg:grid-cols-[minmax(0,1fr)_296px] lg:items-start lg:gap-5"
     >
-      <div className="space-y-8">
+      <div className="min-w-0 space-y-4">
         {mode === 'ip' && <AddressTargets value={addresses} onChange={setAddresses} />}
         {mode === 'vless' && (
           <SubscriptionTargets

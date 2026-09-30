@@ -15,7 +15,7 @@ export function CheckGlyph({ on, mixed = false }: { on: boolean; mixed?: boolean
         'flex h-4 w-4 shrink-0 items-center justify-center rounded border text-xs font-bold',
         on || mixed
           ? 'border-[#F97315] bg-[#F97315] text-white'
-          : 'border-apple-hairline text-transparent',
+          : 'border-apple-ink/25 text-transparent',
       )}
     >
       {mixed ? '–' : '✓'}

@@ -30,12 +30,12 @@ interface OperatorPickerProps {
 
 const TOGGLE =
   'flex min-h-[36px] items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50';
-const TOGGLE_ON = 'border-[#F97315]/50 bg-[#F97315]/10 text-dark-50';
+const TOGGLE_ON = 'border-[#F97315]/30 bg-[#F97315]/10 text-dark-50';
 const TOGGLE_OFF =
   'border-apple-hairline/50 bg-apple-card/30 text-apple-ink hover:border-apple-hairline';
 const CHIP =
   'flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40';
-const CHIP_ON = 'border-[#F97315] bg-[#F97315]/15 text-dark-50 ring-1 ring-accent-500/60';
+const CHIP_ON = 'border-[#F97315]/30 bg-[#F97315]/10 text-apple-ink';
 const CHIP_OFF = 'border-apple-hairline/50 bg-apple-card/30 text-apple-ink hover:border-dark-500';
 
 /** Точка режима: зелёная — симка с Белым списком, янтарная — без него. Одна и та же в чипах и в легенде. */
@@ -88,7 +88,7 @@ export function OperatorPicker({ kind, units, selected, onChange, loading }: Ope
   }
   if (alive.length === 0) {
     return (
-      <section className="space-y-3">
+      <section className="reachability-card space-y-4">
         <SectionHeading title={t(`${base}.title`)} />
         <p className="text-sm text-apple-mute">{t(`${base}.empty`)}</p>
       </section>
@@ -96,7 +96,7 @@ export function OperatorPicker({ kind, units, selected, onChange, loading }: Ope
   }
 
   return (
-    <section aria-labelledby="reachability-operators" className="space-y-3">
+    <section aria-labelledby="reachability-operators" className="reachability-card space-y-4">
       <SectionHeading
         id="reachability-operators"
         title={t(`${base}.title`)}

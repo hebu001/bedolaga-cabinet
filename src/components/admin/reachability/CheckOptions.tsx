@@ -29,7 +29,7 @@ export function CheckOptions(props: CheckOptionsProps) {
   const { t } = useTranslation();
   const base = 'admin.reachability';
   return (
-    <section className="space-y-5">
+    <section className="reachability-card space-y-5">
       {props.probes && props.onProbesChange && (
         <div className="space-y-3">
           <SectionHeading title={t(`${base}.probes.title`)} />

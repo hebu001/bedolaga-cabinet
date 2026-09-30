@@ -12,7 +12,7 @@ export function AddressTargets({ value, onChange }: AddressTargetsProps) {
   const { t } = useTranslation();
   const parsed = parseTargets(value);
   return (
-    <section aria-labelledby="reachability-targets" className="space-y-3">
+    <section aria-labelledby="reachability-targets" className="reachability-card space-y-4">
       <SectionHeading
         id="reachability-targets"
         title={t('admin.reachability.sections.targets')}

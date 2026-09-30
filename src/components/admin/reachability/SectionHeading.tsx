@@ -15,8 +15,8 @@ interface SectionHeadingProps {
  */
 export function SectionHeading({ id, title, hint, aside }: SectionHeadingProps) {
   return (
-    <div className="space-y-0.5">
-      <div className="flex items-baseline justify-between gap-x-4">
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 id={id} className="min-w-0 text-lg font-semibold text-apple-ink">
           {title}
         </h2>

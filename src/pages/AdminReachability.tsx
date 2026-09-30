@@ -1,8 +1,9 @@
 import { RadarIcon } from '@/components/icons';
+import '@/styles/reachability.css';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link,useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
 import { Launcher } from '../components/admin/reachability/Launcher';
 import { ModeSwitch } from '../components/admin/reachability/ModeSwitch';
@@ -10,9 +11,9 @@ import { RecentJobs } from '../components/admin/reachability/RecentJobs';
 import { SetupGuide } from '../components/admin/reachability/SetupGuide';
 import { TierBadge } from '../components/admin/reachability/TierBadge';
 import {
-type PageTab,
-REACHABILITY_SETTINGS_PATH,
-parseReachabilityDeepLink,
+  type PageTab,
+  REACHABILITY_SETTINGS_PATH,
+  parseReachabilityDeepLink,
 } from '../components/admin/reachability/deepLink';
 import { FleetCheck } from '../components/admin/reachability/fleet/FleetCheck';
 import { formatCredits } from '../components/admin/reachability/money';
@@ -44,26 +45,30 @@ export default function AdminReachability() {
     patchParams({ running: jobId === null ? null : String(jobId), repeat: null });
 
   return (
-    <div className="space-y-6 pb-28 lg:pb-0">
-      <header className="flex flex-wrap items-center gap-3">
+    <div className="reachability-page space-y-5 pb-28 lg:pb-0">
+      <header className="flex flex-wrap items-center gap-3 pb-1 sm:gap-4">
         <AdminBackButton />
         <div
           aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F97315]/10 text-[#F97315]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F97315]/10 text-[#F97315]"
         >
           <RadarIcon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-apple-ink">{t('admin.reachability.title')}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-apple-ink">
+              {t('admin.reachability.title')}
+            </h1>
             {status?.tier && ready && <TierBadge tier={status.tier} />}
           </div>
-          <p className="text-xs text-apple-mute">{t('admin.reachability.subtitle')}</p>
+          <p className="mt-1 text-xs text-apple-mute sm:text-sm">
+            {t('admin.reachability.subtitle')}
+          </p>
         </div>
         <div className="ms-auto flex items-center gap-4">
           {isLoading && <Skeleton className="h-6 w-28" />}
           {status && ready && (
-            <span className="text-sm font-semibold tabular-nums text-apple-ink">
+            <span className="rounded-2xl bg-apple-card px-4 py-3 text-sm font-semibold tabular-nums text-apple-ink">
               {formatCredits(status.balance_kopeks)}
             </span>
           )}

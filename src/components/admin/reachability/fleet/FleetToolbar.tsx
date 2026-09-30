@@ -43,7 +43,7 @@ export function FleetToolbar({ counts, filter, onFilter }: FleetToolbarProps) {
       onChange={onFilter}
       options={options}
       label={t(`${base}.targets`)}
-      className="-mx-4 flex-nowrap overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
+      className="flex-nowrap overflow-x-auto [scrollbar-width:none] md:flex-wrap md:overflow-visible"
     />
   );
 }

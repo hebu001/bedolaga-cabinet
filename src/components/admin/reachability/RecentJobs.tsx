@@ -199,7 +199,7 @@ export function RecentJobs({ initialJobId, targetKey = null, onClearTarget }: Re
     : null;
 
   return (
-    <section aria-labelledby="reachability-recent" className="space-y-4">
+    <section aria-labelledby="reachability-recent" className="reachability-card space-y-4">
       <SectionHeading
         id="reachability-recent"
         title={t(`${base}.recent.title`)}
@@ -270,7 +270,7 @@ export function RecentJobs({ initialJobId, targetKey = null, onClearTarget }: Re
       )}
 
       {jobs.data && entries.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-apple-hairline/60">
+        <div className="reachability-table overflow-hidden rounded-2xl border border-apple-hairline/60">
           <div className={cn('hidden px-3 py-2 text-xs text-apple-mute', GRID)}>
             <span />
             <span>{t(`${base}.recent.columns.target`)}</span>

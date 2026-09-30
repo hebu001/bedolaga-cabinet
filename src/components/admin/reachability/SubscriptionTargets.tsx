@@ -52,7 +52,7 @@ export function SubscriptionTargets(props: SubscriptionTargetsProps) {
     <section
       aria-labelledby={props.embedded ? undefined : 'reachability-targets'}
       aria-label={props.embedded?.title}
-      className="space-y-4"
+      className={props.embedded ? 'space-y-4' : 'reachability-card space-y-4'}
     >
       {props.embedded ? (
         <div>

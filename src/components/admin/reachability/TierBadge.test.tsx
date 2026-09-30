@@ -12,7 +12,7 @@ describe('TierBadge', () => {
     render(<TierBadge tier="Gold" />);
     const badge = screen.getByText('gold');
     expect(badge.className).toContain('uppercase');
-    expect(badge.className).toContain('urgent-400');
+    expect(badge.className).toContain('text-apple-amber');
     expect(badge.textContent).toBe('◆gold');
   });
 

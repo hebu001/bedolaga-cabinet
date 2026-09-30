@@ -222,9 +222,9 @@ export function FleetCheck({ status, link, patchParams }: FleetCheckProps) {
   return (
     <div
       id="reachability-launcher"
-      className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8"
+      className="lg:grid lg:grid-cols-[minmax(0,1fr)_296px] lg:items-start lg:gap-5"
     >
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-4">
         {isActive && batch ? (
           <BatchRunning
             batch={batch}
@@ -240,7 +240,7 @@ export function FleetCheck({ status, link, patchParams }: FleetCheckProps) {
           />
         )}
 
-        <section className="space-y-3" aria-label={t(`${base}.fleet.targets`)}>
+        <section className="reachability-card space-y-4" aria-label={t(`${base}.fleet.targets`)}>
           <FleetToolbar counts={counts} filter={filter} onFilter={setFilter} />
           {fleet.isLoading ? (
             <ListRowSkeleton count={5} />

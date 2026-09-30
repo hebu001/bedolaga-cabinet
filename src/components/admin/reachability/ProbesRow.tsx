@@ -38,8 +38,8 @@ export function ProbesRow({ probes, onChange, locked = [] }: ProbesRowProps) {
             className={cn(
               'min-h-[44px] rounded-xl border px-3 py-1.5 text-left transition-colors disabled:opacity-60',
               on
-                ? 'border-[#F97315]/70 bg-[#F97315]/20 text-accent-300 ring-1 ring-accent-500/40'
-                : 'border-apple-hairline/60 bg-apple-card/40 text-apple-mute hover:border-apple-hairline hover:text-apple-ink',
+                ? 'border-[#F97315]/30 bg-[#F97315]/10 text-[#F97315]'
+                : 'border-transparent bg-apple-elevated/50 text-apple-mute hover:border-apple-hairline hover:text-apple-ink',
             )}
           >
             <span className="flex items-center gap-1.5 text-sm font-medium leading-tight">

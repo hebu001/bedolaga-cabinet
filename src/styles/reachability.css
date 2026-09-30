@@ -1,0 +1,112 @@
+/* BSCHEKER uses the cabinet's Apple Dark surfaces and orange accent.
+   Loaded with this page; all rules stay within the page, including inline results. */
+.reachability-page {
+  --color-accent-300: 253, 186, 116;
+  --color-accent-400: 251, 146, 60;
+  --color-accent-500: 249, 115, 21;
+  --color-accent-600: 234, 88, 12;
+  --color-accent-700: 194, 65, 12;
+  --color-on-accent: 255, 255, 255;
+  --color-dark-950: 0, 0, 0;
+  --color-dark-900: 28, 28, 30;
+  --color-dark-800: 44, 44, 46;
+  --color-dark-700: 58, 58, 60;
+  --color-dark-600: 72, 72, 74;
+  min-width: 0;
+  color: rgb(var(--color-apple-ink));
+}
+
+.reachability-page .reachability-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  background: rgb(var(--color-apple-card));
+  box-shadow: none;
+}
+
+/* The upstream /40 and /60 hairlines were 40–60% white. They are separators. */
+.reachability-page :is([class~="border-apple-hairline"], [class*="border-apple-hairline/"]) {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.reachability-page [class*="divide-dark-"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.reachability-page :is(input:not([type="checkbox"]), textarea, select, .input) {
+  border-color: transparent;
+  border-radius: 12px;
+  background-color: rgb(var(--color-apple-elevated));
+  color: rgb(var(--color-apple-ink));
+}
+
+.reachability-page :is(input, textarea, select):focus-visible {
+  outline: 2px solid rgba(249, 115, 21, 0.75);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.reachability-page [aria-invalid="true"] {
+  border-color: rgb(var(--color-apple-red));
+}
+
+.reachability-page :is(button, a):focus-visible {
+  outline: 2px solid #f97315;
+  outline-offset: 3px;
+}
+
+.reachability-page :is(button, a)[class~="bg-accent-500"] {
+  min-height: 44px;
+  border-radius: 9999px;
+  background: #f97315;
+  color: #fff;
+  box-shadow: none;
+}
+
+.reachability-page :is(button, a)[class~="bg-accent-500"]:hover:not(:disabled) {
+  background: #fb923c;
+}
+
+.reachability-page :is(.btn-secondary, button[class~="bg-dark-800/80"]) {
+  border-color: transparent;
+  border-radius: 12px;
+  background: rgb(var(--color-apple-elevated));
+  color: rgb(var(--color-apple-ink));
+  box-shadow: none;
+}
+
+.reachability-page :is([aria-pressed="true"], [aria-selected="true"]):not(:focus-visible) {
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+}
+
+.reachability-page .reachability-table {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: transparent;
+  border-radius: 16px;
+}
+
+.reachability-page .reachability-table-header {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.reachability-page #reachability-launcher > .hidden {
+  position: sticky;
+  top: 20px;
+}
+
+.reachability-page .reachability-launch-card[class*="border-[#F97315]"] {
+  border-color: rgba(249, 115, 21, 0.3);
+}
+
+@media (max-width: 639px) {
+  .reachability-page .reachability-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .reachability-page :is(input:not([type="checkbox"]), textarea, select) {
+    font-size: 16px;
+  }
+}

@@ -28,7 +28,7 @@ export function ScanTargets({ cidr, onChange }: ScanTargetsProps) {
   const invalid = cidr.trim() !== '' && subnet === null;
 
   return (
-    <section aria-labelledby="reachability-targets" className="space-y-3">
+    <section aria-labelledby="reachability-targets" className="reachability-card space-y-4">
       <SectionHeading
         id="reachability-targets"
         title={t('admin.reachability.sections.targets')}

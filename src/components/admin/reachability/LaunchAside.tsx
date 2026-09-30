@@ -177,7 +177,7 @@ export function LaunchAside({ launch, hint, onApplyCityLimit }: LaunchProps) {
     <aside
       aria-labelledby="reachability-launch-title"
       className={cn(
-        'rounded-2xl border bg-apple-card/60 p-4 transition-colors lg:sticky lg:top-4',
+        'reachability-card reachability-launch-card transition-colors',
         launch.confirming ? 'border-[#F97315]/40' : 'border-apple-hairline/60',
       )}
     >

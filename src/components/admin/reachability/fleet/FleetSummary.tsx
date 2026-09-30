@@ -62,8 +62,8 @@ export function FleetSummary({ counts, checkedAt, unitsLine }: FleetSummaryProps
     : unitsLine;
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-2xl font-semibold tracking-tight text-dark-50 md:text-3xl">
+    <section className="reachability-card space-y-4">
+      <h2 className="text-2xl font-semibold tracking-tight text-apple-ink sm:text-[28px]">
         {statement}
       </h2>
       {counts.total > 0 && (
