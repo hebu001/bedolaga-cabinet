@@ -5,8 +5,9 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, expect, it, vi } from 'vitest';
 import App from './App';
 
-const { pendingApi } = vi.hoisted(() => ({
+const { pendingApi, access } = vi.hoisted(() => ({
   pendingApi: vi.fn(() => <div>Pending API called</div>),
+  access: { reachability: true },
 }));
 vi.mock('./store/auth', () => ({
   useAuthStore: (select: (state: object) => unknown) =>
@@ -17,8 +18,13 @@ vi.mock('./hooks/useDoneKey', () => ({ useDoneKey: () => {} }));
 vi.mock('./hooks/useAnalyticsCounters', () => ({ useAnalyticsCounters: () => {} }));
 vi.mock('./hooks/useSiteVerification', () => ({ useSiteVerification: () => {} }));
 vi.mock('./utils/token', () => ({ saveReturnUrl: () => {} }));
-vi.mock('./components/auth/PermissionRoute', () => ({
-  PermissionRoute: ({ children }: { children: ReactNode }) => children,
+vi.mock('./store/permissions', () => ({
+  usePermissionStore: (select: (state: object) => unknown) =>
+    select({
+      isLoaded: true,
+      hasPermission: (permission: string) =>
+        permission !== 'reachability:read' || access.reachability,
+    }),
 }));
 vi.mock('./providers/I18nBootstrap', () => ({
   AdminTranslationsGate: ({ children }: { children: ReactNode }) => children,
@@ -41,9 +47,8 @@ vi.mock('./pages/CouponStatus', () => ({ default: pendingApi }));
 vi.mock('./pages/AdminReferralLevels', () => ({ default: pendingApi }));
 vi.mock('./pages/AdminLegalPages', () => ({ default: pendingApi }));
 vi.mock('./pages/PublicLegal', () => ({ default: pendingApi }));
-vi.mock('./pages/AdminReachability', () => ({ default: pendingApi }));
-vi.mock('./pages/AdminReachabilityHistory', () => ({ default: pendingApi }));
-vi.mock('./pages/AdminReachabilityOther', () => ({ default: pendingApi }));
+vi.mock('./pages/AdminPanel', () => ({ default: () => <div>Admin landing</div> }));
+vi.mock('./pages/AdminReachability', () => ({ default: () => <div>BSCHEKER page</div> }));
 vi.mock('./pages/AdminReminders', () => ({ default: pendingApi }));
 vi.mock('./pages/AdminReminderEdit', () => ({ default: pendingApi }));
 vi.mock('./pages/AdminSystemErrors', () => ({ default: pendingApi }));
@@ -52,6 +57,7 @@ vi.mock('./pages/AdminGraceAccess', () => ({ default: pendingApi }));
 afterEach(() => {
   cleanup();
   pendingApi.mockClear();
+  access.reachability = true;
 });
 
 it.each([
@@ -64,9 +70,6 @@ it.each([
   '/offer',
   '/privacy',
   '/recurrent-payments',
-  '/admin/reachability',
-  '/admin/reachability/history',
-  '/admin/reachability/other',
   '/admin/reminders',
   '/admin/reminders/1',
   '/admin/reminders/1/edit',
@@ -84,3 +87,33 @@ it.each([
     expect(pendingApi).not.toHaveBeenCalled();
   },
 );
+
+const reachabilityRoutes = [
+  '/admin/reachability',
+  '/admin/reachability/history',
+  '/admin/reachability/other',
+];
+
+it.each(reachabilityRoutes)(
+  'opens verified BSCHEKER route %s with read permission',
+  async (url) => {
+    render(
+      <MemoryRouter initialEntries={[url]}>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText('BSCHEKER page')).toBeTruthy();
+    expect(screen.queryByText('Current dashboard')).toBeNull();
+  },
+);
+
+it.each(reachabilityRoutes)('denies BSCHEKER route %s without read permission', async (url) => {
+  access.reachability = false;
+  render(
+    <MemoryRouter initialEntries={[url]}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(await screen.findByText('Admin landing')).toBeTruthy();
+  expect(screen.queryByText('BSCHEKER page')).toBeNull();
+});

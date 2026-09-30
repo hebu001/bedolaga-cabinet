@@ -1,10 +1,8 @@
 // @vitest-environment jsdom
-vi.mock('@/config/integrationCapabilities', () => ({
-  integrationCapabilities: { reachability: true },
-}));
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Batch, HostTarget, ReachabilityStatus, Summary, Unit } from '@/api/reachability';
+import { reachabilityStatus } from '@/test/fixtures/reachabilityBotContract';
 
 /**
  * Страница флота: сводка словами, список группами, карточка сервера по клику (в адресе ?server=),
@@ -37,6 +35,7 @@ import { reachabilityApi } from '@/api/reachability';
 import {
   installMatchMedia,
   renderWithProviders,
+  resolveRu,
   unit,
 } from '../components/admin/reachability/testUtils';
 import AdminReachability from './AdminReachability';
@@ -45,21 +44,7 @@ installMatchMedia();
 afterEach(cleanup);
 
 const status: ReachabilityStatus = {
-  enabled: true,
-  configured: true,
-  healthy: true,
-  health_message: null,
-  balance_kopeks: 100_018,
-  bonus_kopeks: 0,
-  tier: 'gold',
-  tier_expires_at: null,
-  min_interval_sec: 1,
-  active_jobs: [],
-  reference: null,
-  cost_limit_kopeks: 0,
-  cores: {},
-  default_sni: 'ads.x5.ru',
-  active_batch: null,
+  ...reachabilityStatus,
 };
 const units: Unit[] = [
   { ...unit('mts|цфо|on', 'on', 'цфо'), name: 'МТС' },
@@ -154,6 +139,7 @@ const runningBatch: Batch = {
 };
 
 beforeEach(() => {
+  vi.clearAllMocks();
   vi.mocked(reachabilityApi.getStatus).mockResolvedValue(status);
   vi.mocked(reachabilityApi.getSummary).mockResolvedValue(summary);
   vi.mocked(reachabilityApi.getHosts).mockResolvedValue(hosts);
@@ -177,6 +163,25 @@ beforeEach(() => {
 });
 
 describe('AdminReachability (флот)', () => {
+  it.each([
+    { enabled: false, configured: true, title: 'titleDisabled' },
+    { enabled: true, configured: false, title: 'titleNotConfigured' },
+  ])(
+    'shows setup without loading the fleet when $title',
+    async ({ enabled, configured, title }) => {
+      vi.mocked(reachabilityApi.getStatus).mockResolvedValue({ ...status, enabled, configured });
+      renderWithProviders(<AdminReachability />);
+      expect(
+        await screen.findByRole('heading', {
+          name: resolveRu(`admin.reachability.setup.${title}`),
+        }),
+      ).toBeTruthy();
+      expect(screen.queryByRole('tab', { name: 'История' })).toBeNull();
+      expect(reachabilityApi.getSummary).not.toHaveBeenCalled();
+      expect(reachabilityApi.createBatch).not.toHaveBeenCalled();
+    },
+  );
+
   it('shows the fleet statement, groups and opens a server card from the list', async () => {
     renderWithProviders(<AdminReachability />);
     await waitFor(() =>

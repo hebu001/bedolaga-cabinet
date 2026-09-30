@@ -9,7 +9,8 @@ export const integrationCapabilities = Object.freeze({
   publicEmailResend: false,
   userAvatar: false,
   liteMode: false,
-  reachability: false,
+  // Verified against bot 70c8835b; runtime BSCHEK_ENABLED and RBAC still apply.
+  reachability: true,
   reminders: false,
   systemErrors: false,
   nodeGeoCheck: false,
