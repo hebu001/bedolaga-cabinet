@@ -1,22 +1,22 @@
 import { backTo } from '@/components/admin';
 import { RefreshIcon } from '@/components/admin/legacyIcons';
 import {
-BackIcon,
-CalendarIcon,
-SearchIcon,
+  BackIcon,
+  CalendarIcon,
+  SearchIcon,
 } from '@/components/admin/legacyPageIcons/AdminPayments';
 import { AdminPaymentsStatCard } from '@/components/admin/LegacyPageStatCards';
 import { CheckCircleIcon } from '@/components/icons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation,useNavigate } from 'react-router';
-import { adminPaymentsApi,type SearchStats } from '../api/adminPayments';
+import { useLocation, useNavigate } from 'react-router';
+import { adminPaymentsApi, type SearchStats } from '../api/adminPayments';
 import { DateField } from '../components/DateField';
 import { METHOD_LABELS } from '../constants/paymentMethods';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import type { PaginatedResponse,PendingPayment } from '../types';
+import type { PaginatedResponse, PendingPayment } from '../types';
 
 interface StatusBadgeProps {
   status: string;

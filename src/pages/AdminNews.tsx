@@ -1,14 +1,14 @@
 import { ListRowSkeleton } from '@/components/admin/ListRowSkeleton';
 import {
-NewsIcon,
-PencilIcon,
-PlusIcon,
-RefreshIcon,
-StarIcon,
-TrashIcon,
+  NewsIcon,
+  PencilIcon,
+  PlusIcon,
+  RefreshIcon,
+  StarIcon,
+  TrashIcon,
 } from '@/components/admin/legacyPageIcons/AdminNews';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { memo,useCallback,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { memo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { newsApi } from '../api/news';

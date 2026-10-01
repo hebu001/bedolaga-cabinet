@@ -180,7 +180,9 @@ describe('выделенный тариф в списке', () => {
 
     const card = tariffCard('Про');
     expect(card.querySelectorAll('.tariff-picker-current')).toHaveLength(1);
-    expect(card.querySelector('.tariff-picker-current')?.textContent).toContain(ru('subscription.currentTariff'));
+    expect(card.querySelector('.tariff-picker-current')?.textContent).toContain(
+      ru('subscription.currentTariff'),
+    );
     expect(card.textContent).toContain(ru('subscription.bestValue'));
   });
 });

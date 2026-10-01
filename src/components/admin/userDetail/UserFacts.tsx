@@ -1,18 +1,18 @@
-import type { UserDetailResponse,UserSubscriptionInfo } from '@/api/adminUsers';
+import type { UserDetailResponse, UserSubscriptionInfo } from '@/api/adminUsers';
 import { WalletIcon } from '@/components/admin/legacyIcons';
 import {
-type ChipTone,
-SUBSCRIPTION_STATE_TONE,
-useMoney,
-useTrafficLabel,
+  type ChipTone,
+  SUBSCRIPTION_STATE_TONE,
+  useMoney,
+  useTrafficLabel,
 } from '@/components/admin/users';
-import { CalendarIcon,DevicesIcon,ReceiptIcon,TrafficIcon } from '@/components/icons';
+import { CalendarIcon, DevicesIcon, ReceiptIcon, TrafficIcon } from '@/components/icons';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { StatCard } from '@/components/stats';
 import { cn } from '@/lib/utils';
-import { type SalesMode,isLiveSubscription } from '@/pages/adminUserDetail/salesMode';
+import { type SalesMode, isLiveSubscription } from '@/pages/adminUserDetail/salesMode';
 import { formatShortDate } from '@/utils/format';
 
 interface UserFactsProps {

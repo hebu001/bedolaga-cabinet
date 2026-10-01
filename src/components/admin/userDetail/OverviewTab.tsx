@@ -1,28 +1,28 @@
 import type { AdminTicket } from '@/api/admin';
 import type {
-AdminUserGiftsResponse,
-UpdateRestrictionsRequest,
-UserActivityItem,
-UserDetailResponse,
-UserPanelInfo,
+  AdminUserGiftsResponse,
+  UpdateRestrictionsRequest,
+  UserActivityItem,
+  UserDetailResponse,
+  UserPanelInfo,
 } from '@/api/adminUsers';
 import type { PromoGroup } from '@/api/promocodes';
 import { backTo } from '@/components/admin/AdminBackButton';
-import { CampaignIcon,ClockIcon,GlobeIcon } from '@/components/admin/legacyIcons';
-import { dayTimeLabel,relativeLabel } from '@/components/admin/users';
+import { CampaignIcon, ClockIcon, GlobeIcon } from '@/components/admin/legacyIcons';
+import { dayTimeLabel, relativeLabel } from '@/components/admin/users';
 import { ShieldIcon } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link,useLocation } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 import { cn } from '@/lib/utils';
 import { formatShortDate } from '@/utils/format';
 import { formatGb } from '@/utils/formatNumber';
-import { isConnectedNow,relativeTimeParts } from '@/utils/relativeTime';
+import { isConnectedNow, relativeTimeParts } from '@/utils/relativeTime';
 import { ActivityRows } from './ActivityRows';
-import { type DeviceRow,deviceLongName } from './DevicesCard';
-import { PromoGroupEditor,RestrictionsEditor } from './OverviewEditors';
-import { KeyValues,LinkAction,Section } from './sectionParts';
+import { type DeviceRow, deviceLongName } from './DevicesCard';
+import { PromoGroupEditor, RestrictionsEditor } from './OverviewEditors';
+import { KeyValues, LinkAction, Section } from './sectionParts';
 
 export type DetailTab = 'overview' | 'subscription' | 'balance' | 'referrals' | 'activity';
 

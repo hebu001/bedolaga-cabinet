@@ -1,24 +1,24 @@
 import {
-BackIcon,
-CheckIcon,
-SaveIcon,
+  BackIcon,
+  CheckIcon,
+  SaveIcon,
 } from '@/components/admin/legacyPageIcons/AdminPaymentMethodEdit';
 import { PermissionGate } from '@/components/auth/PermissionGate';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useRef,useState,type ChangeEvent } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
-import { adminOverpayCertificateApi,OVERPAY_CERT_MAX_SIZE } from '../api/adminOverpayCertificate';
+import { useNavigate, useParams } from 'react-router';
+import { adminOverpayCertificateApi, OVERPAY_CERT_MAX_SIZE } from '../api/adminOverpayCertificate';
 import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import { METHOD_LABELS } from '../constants/paymentMethods';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { useDestructiveConfirm } from '../platform/hooks/useNativeDialog';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import type { PromoGroupSimple } from '../types';
-import { createNumberInputHandler,toNumber } from '../utils/inputHelpers';
+import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import { localeMap } from '../utils/withdrawalUtils';
 
-import { PageSkeleton,Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 function extractErrorDetail(err: unknown): string | null {
   const error = err as { response?: { data?: { detail?: unknown } } };

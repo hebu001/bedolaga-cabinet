@@ -1,7 +1,7 @@
 import { CheckIcon } from '@/components/admin/legacyIcons';
-import { useEffect,useRef,useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDownIcon,ServerIcon } from '../TrafficIcons';
+import { ChevronDownIcon, ServerIcon } from '../TrafficIcons';
 
 import type { TrafficNodeInfo } from '../../../../api/adminTraffic';
 import { getFlagEmoji } from '../trafficUsageHelpers';

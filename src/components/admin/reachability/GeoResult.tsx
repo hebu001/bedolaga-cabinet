@@ -1,14 +1,14 @@
 import type { Job } from '@/api/reachability';
 import { CloseIcon } from '@/components/admin/legacyIcons';
 import { cn } from '@/lib/utils';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GeoMap } from './GeoMap';
 import { GeoRows } from './GeoRows';
 import { useGeoRecheck } from './useGeoRecheck';
 
-import { type MapPick,filterGeoRows,geoRowsOf,geoSummaryOf,sortGeoRows } from './geoRowsView';
-import { GEO_VERDICTS,TONE_DOT,isResultVerdict,verdictTone } from './geoVerdicts';
+import { type MapPick, filterGeoRows, geoRowsOf, geoSummaryOf, sortGeoRows } from './geoRowsView';
+import { GEO_VERDICTS, TONE_DOT, isResultVerdict, verdictTone } from './geoVerdicts';
 
 const KEY = 'admin.reachability.geo';
 

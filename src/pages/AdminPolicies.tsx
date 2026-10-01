@@ -1,21 +1,21 @@
-import { rbacApi,type AccessPolicy,type AdminRole } from '@/api/rbac';
+import { rbacApi, type AccessPolicy, type AdminRole } from '@/api/rbac';
 import {
-BackIcon,
-BoltIcon,
-CalendarIcon,
-ClockIcon,
-EditIcon,
-GlobeIcon,
-PlusIcon,
-ShieldIcon,
-TrashIcon,
+  BackIcon,
+  BoltIcon,
+  CalendarIcon,
+  ClockIcon,
+  EditIcon,
+  GlobeIcon,
+  PlusIcon,
+  ShieldIcon,
+  TrashIcon,
 } from '@/components/admin/legacyPageIcons/AdminPolicies';
 import { PermissionGate } from '@/components/auth/PermissionGate';
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { usePlatform } from '@/platform/hooks/usePlatform';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useMemo,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 

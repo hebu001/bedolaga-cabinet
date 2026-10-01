@@ -1,23 +1,23 @@
 import {
-BackIcon,
-ChartIcon,
-CheckIcon,
-CopyIcon,
-EditIcon,
-PlusIcon,
-TrashIcon,
+  BackIcon,
+  ChartIcon,
+  CheckIcon,
+  CopyIcon,
+  EditIcon,
+  PlusIcon,
+  TrashIcon,
 } from '@/components/admin/legacyPageIcons/AdminPromocodes';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { promocodesApi,type PromoCode,type PromoCodeType } from '../api/promocodes';
+import { promocodesApi, type PromoCode, type PromoCodeType } from '../api/promocodes';
 import { useCurrency } from '../hooks/useCurrency';
 import i18n from '../i18n';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { copyToClipboard } from '../utils/clipboard';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 // Helper functions
 const getTypeLabel = (type: PromoCodeType): string => {

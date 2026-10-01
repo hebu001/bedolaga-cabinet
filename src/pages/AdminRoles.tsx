@@ -1,21 +1,21 @@
 import { rbacApi } from '@/api/rbac';
 import {
-BackIcon,
-EditIcon,
-PlusIcon,
-ShieldIcon,
-TrashIcon,
+  BackIcon,
+  EditIcon,
+  PlusIcon,
+  ShieldIcon,
+  TrashIcon,
 } from '@/components/admin/legacyPageIcons/AdminRoles';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { usePlatform } from '@/platform/hooks/usePlatform';
 import { usePermissionStore } from '@/store/permissions';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useMemo,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 export default function AdminRoles() {
   const { t } = useTranslation();

@@ -95,12 +95,13 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function renderPage(options: {
-  methods?: PaymentMethod[];
-  onBeforeTopUp?: () => Promise<boolean | void>;
-} = {}) {
+function renderPage(
+  options: { methods?: PaymentMethod[]; onBeforeTopUp?: () => Promise<boolean | void> } = {},
+) {
   return render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
       <TopUpPanel
         methods={options.methods ?? [method]}
         fixedAmountKopeks={50000}
@@ -160,7 +161,9 @@ it('does not create a QR invoice when purchase preflight reports completion', as
 
 it('preflight errors do not create an invoice', async () => {
   renderPage({
-    onBeforeTopUp: async () => { throw new Error('quote changed'); },
+    onBeforeTopUp: async () => {
+      throw new Error('quote changed');
+    },
   });
   await submit();
   await screen.findByRole('alert');
@@ -170,13 +173,18 @@ it('preflight errors do not create an invoice', async () => {
 it('a delayed QR response from an old session cannot publish payment metadata or change the panel', async () => {
   let finish!: (value: unknown) => void;
   createTopUp.mockImplementation(
-    () => new Promise((resolve) => { finish = resolve; }),
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
   );
   renderPage();
   await submit();
   await waitFor(() => expect(createTopUp).toHaveBeenCalledOnce());
   state.currentSession = false;
-  await act(async () => { finish(qrPayment); });
+  await act(async () => {
+    finish(qrPayment);
+  });
   expect(screen.queryByTestId('topup-qr')).toBeNull();
   expect(loadTopUpPendingInfo(42)).toBeNull();
   expect(openLink).not.toHaveBeenCalled();

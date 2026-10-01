@@ -1,9 +1,9 @@
-import { BackIcon,CheckIcon,CopyIcon,DownloadIcon } from '@/components/admin/legacyIcons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { BackIcon, CheckIcon, CopyIcon, DownloadIcon } from '@/components/admin/legacyIcons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { couponsApi,type CouponBatchCreated } from '../api/coupons';
+import { couponsApi, type CouponBatchCreated } from '../api/coupons';
 import { tariffsApi } from '../api/tariffs';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { getApiErrorMessage } from '../utils/api-error';

@@ -41,7 +41,7 @@
   @apply animate-pulse bg-dark-800;
 }
 
-.legacy-user .skeleton:not([class*='rounded-'], [class~='rounded']) {
+.legacy-user .skeleton:not([class*="rounded-"], [class~="rounded"]) {
   @apply rounded-lg;
 }
 

@@ -1,19 +1,19 @@
-import { adminUsersApi,type UserDetailResponse } from '@/api/adminUsers';
+import { adminUsersApi, type UserDetailResponse } from '@/api/adminUsers';
 import { promocodesApi } from '@/api/promocodes';
 import { promoOffersApi } from '@/api/promoOffers';
-import { GiftIcon,WalletIcon } from '@/components/admin/legacyIcons';
+import { GiftIcon, WalletIcon } from '@/components/admin/legacyIcons';
 import { useMoney } from '@/components/admin/users';
 import { useQueryClient } from '@tanstack/react-query';
-import { useId,useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Segmented } from '@/components/admin/Segmented';
 import { cn } from '@/lib/utils';
 import { useDestructiveConfirm } from '@/platform/hooks/useNativeDialog';
 import { formatShortDate } from '@/utils/format';
-import { createNumberInputHandler,toNumber } from '@/utils/inputHelpers';
-import { OperationsFeed,operationsQueryKey } from './OperationsFeed';
-import { KeyValues,LinkAction,Section } from './sectionParts';
+import { createNumberInputHandler, toNumber } from '@/utils/inputHelpers';
+import { OperationsFeed, operationsQueryKey } from './OperationsFeed';
+import { KeyValues, LinkAction, Section } from './sectionParts';
 import { useAdminAction } from './useAdminAction';
 
 export interface BalanceTabProps {

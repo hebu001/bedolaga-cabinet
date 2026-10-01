@@ -1,28 +1,28 @@
 import { EditIcon } from '@/components/admin/legacyIcons';
 import {
-EyeIcon,
-MailIcon,
-ResetIcon,
-SaveIcon,
-SendIcon,
+  EyeIcon,
+  MailIcon,
+  ResetIcon,
+  SaveIcon,
+  SendIcon,
 } from '@/components/admin/legacyPageIcons/AdminEmailTemplates';
 import { useNotify } from '@/platform';
 import { getApiErrorMessage } from '@/utils/api-error';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useEffect,useRef,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-adminEmailTemplatesApi,
-type EmailTemplateDetail,
-type EmailTemplateLanguageData,
-type EmailTemplateType,
+  adminEmailTemplatesApi,
+  type EmailTemplateDetail,
+  type EmailTemplateLanguageData,
+  type EmailTemplateType,
 } from '../api/adminEmailTemplates';
-import { AdminBackButton,BackIcon } from '../components/admin';
+import { AdminBackButton, BackIcon } from '../components/admin';
 import { EmailQueueCard } from '../components/admin/EmailQueueCard';
 import { Toggle } from '../components/admin/Toggle';
 import { useNativeDialog } from '../platform/hooks/useNativeDialog';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 const LANG_LABELS: Record<string, string> = {
   ru: 'RU',

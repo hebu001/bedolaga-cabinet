@@ -310,8 +310,8 @@ export function TariffPurchaseForm({
     </>
   );
 
-  const casheraPurchaseButton =
-    integrationCapabilities.casheraRecurringPayments && casheraPurchaseEnabled && (
+  const casheraPurchaseButton = integrationCapabilities.casheraRecurringPayments &&
+    casheraPurchaseEnabled && (
       <>
         <button
           type="button"

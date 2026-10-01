@@ -1,13 +1,13 @@
 import type { Job } from '@/api/reachability';
 import { CopyIcon } from '@/components/admin/legacyIcons';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/primitives';
 import { useNotify } from '@/platform/hooks/useNotify';
 import { copyToClipboard } from '@/utils/clipboard';
 import { OperatorIcon } from './OperatorIcon';
-import { type ScanUnitProbe,scanSummary } from './resultShapes';
+import { type ScanUnitProbe, scanSummary } from './resultShapes';
 import { unitLabel } from './unitLabel';
 import { useUnits } from './useUnits';
 

@@ -1,20 +1,20 @@
 import {
-ChartIcon,
-CheckIcon,
-EditIcon,
-PlusIcon,
-TrashIcon,
-XIcon,
+  ChartIcon,
+  CheckIcon,
+  EditIcon,
+  PlusIcon,
+  TrashIcon,
+  XIcon,
 } from '@/components/admin/legacyIcons';
 import { BackIcon } from '@/components/admin/legacyPageIcons/AdminCampaigns';
-import { useInfiniteQuery,useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { campaignsApi,type CampaignBonusType,type CampaignListItem } from '../api/campaigns';
+import { campaignsApi, type CampaignBonusType, type CampaignListItem } from '../api/campaigns';
 import i18n from '../i18n';
 
-import { Skeleton,SkeletonGroup } from '../components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '../components/ui/skeleton';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { usePlatform } from '../platform/hooks/usePlatform';
 

@@ -1,5 +1,5 @@
 import { CheckIcon } from '@/components/admin/legacyIcons';
-import { ArchiveIcon,PhoneIcon } from '@/components/icons';
+import { ArchiveIcon, PhoneIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 

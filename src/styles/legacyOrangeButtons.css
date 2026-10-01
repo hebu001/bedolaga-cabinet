@@ -26,6 +26,14 @@
   [class~="bg-[#F97315]"],
   [class~="bg-[#C2410C]"],
   .btn-primary
-):not([role="switch"], [role="tab"], [role="radio"], [aria-pressed], .desktop-sidebar-link, .legacy-gift *, .legacy-user *) {
+):not(
+  [role="switch"],
+  [role="tab"],
+  [role="radio"],
+  [aria-pressed],
+  .desktop-sidebar-link,
+  .legacy-gift *,
+  .legacy-user *
+) {
   border-radius: 9999px;
 }

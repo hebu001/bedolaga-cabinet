@@ -1,16 +1,16 @@
-import { CheckIcon,ChevronDownIcon,XIcon } from '@/components/admin/legacyIcons';
+import { CheckIcon, ChevronDownIcon, XIcon } from '@/components/admin/legacyIcons';
 import { XCloseIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import { useEffect,useMemo,useRef,useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type {
-BulkActionParams,
-BulkActionResult,
-BulkActionType,
-BulkProgressEvent,
+  BulkActionParams,
+  BulkActionResult,
+  BulkActionType,
+  BulkProgressEvent,
 } from '../../../api/adminBulkActions';
 import type { UserListItem } from '../../../api/adminUsers';
 import type { PromoGroup } from '../../../api/promocodes';

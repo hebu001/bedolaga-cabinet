@@ -1,24 +1,24 @@
 import { LinkIcon } from '@/components/admin/legacyIcons';
 import {
-CampaignIcon,
-CheckIcon,
-RefreshIcon,
+  CampaignIcon,
+  CheckIcon,
+  RefreshIcon,
 } from '@/components/admin/legacyPageIcons/AdminCampaignCreate';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import Twemoji from '@/lib/twemoji';
 import {
-campaignsApi,
-type CampaignBonusType,
-type CampaignCreateRequest,
-type ServerSquadInfo,
-type TariffListItem,
+  campaignsApi,
+  type CampaignBonusType,
+  type CampaignCreateRequest,
+  type ServerSquadInfo,
+  type TariffListItem,
 } from '../api/campaigns';
 import { partnerApi } from '../api/partners';
 import { AdminBackButton } from '../components/admin';
-import { createNumberInputHandler,toNumber } from '../utils/inputHelpers';
+import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import { transliterate } from '../utils/transliterate';
 
 // Bonus type config

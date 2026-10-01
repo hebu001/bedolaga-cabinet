@@ -1,13 +1,13 @@
-import { ChevronDownIcon,ClockIcon,InfoIcon,XIcon } from '@/components/admin/legacyIcons';
+import { ChevronDownIcon, ClockIcon, InfoIcon, XIcon } from '@/components/admin/legacyIcons';
 import { PermissionGate } from '@/components/auth/PermissionGate';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-adminSystemErrorsApi,
-type DeliveryStatus,
-type SystemErrorListItem,
-UNDELIVERED_STATUSES,
+  adminSystemErrorsApi,
+  type DeliveryStatus,
+  type SystemErrorListItem,
+  UNDELIVERED_STATUSES,
 } from '../api/adminSystemErrors';
 import { AdminBackButton } from '../components/admin';
 import { getApiErrorMessage } from '../utils/api-error';

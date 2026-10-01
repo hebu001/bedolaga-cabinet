@@ -34,7 +34,11 @@ const readyData: Record<string, unknown> = {
     secondary: { id: 2, auth_methods: [], balance_kopeks: 0, subscription: null },
     expires_in_seconds: 300,
   },
-  news: { title: 'Loaded news fixture', content: '<p>Loaded article body</p>', category_color: null },
+  news: {
+    title: 'Loaded news fixture',
+    content: '<p>Loaded article body</p>',
+    category_color: null,
+  },
   'info-pages': {
     title: { ru: 'Loaded information fixture' },
     content: { ru: '<p>Loaded document body</p>' },
@@ -54,7 +58,9 @@ const silentContent: Record<string, string> = {
   NewsArticle: 'Loaded news fixture',
   InfoPageView: 'Loaded information fixture',
 };
-beforeEach(() => { queryState.ready = false; });
+beforeEach(() => {
+  queryState.ready = false;
+});
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -78,14 +84,17 @@ vi.mock('@tanstack/react-query', async () => {
   };
   return {
     ...actual,
-    useQuery: ({ queryKey }: { queryKey: string[] }) => queryState.ready ? {
-      ...pending,
-      data: readyData[queryKey[0]],
-      isLoading: false,
-      isPending: false,
-      isFetching: false,
-      isSuccess: true,
-    } : pending,
+    useQuery: ({ queryKey }: { queryKey: string[] }) =>
+      queryState.ready
+        ? {
+            ...pending,
+            data: readyData[queryKey[0]],
+            isLoading: false,
+            isPending: false,
+            isFetching: false,
+            isSuccess: true,
+          }
+        : pending,
     useInfiniteQuery: () => ({ ...pending, fetchNextPage: () => {}, hasNextPage: false }),
     useMutation: () => ({
       mutate: () => {},

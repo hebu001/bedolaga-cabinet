@@ -123,7 +123,10 @@ async function openNativeConfirmation(mode: 'once' | 'schedule' = 'once') {
   nativeDialog.platform = 'telegram';
   let resolve!: (approved: boolean) => void;
   nativeDialog.confirm.mockImplementation(
-    () => new Promise<boolean>((complete) => { resolve = complete; }),
+    () =>
+      new Promise<boolean>((complete) => {
+        resolve = complete;
+      }),
   );
   await pasteAndPick();
   if (mode === 'schedule') fireEvent.click(screen.getByRole('radio', { name: /По расписанию/ }));
@@ -181,11 +184,13 @@ it('native approval still launches its immutable request in the approving sessio
   const resolve = await openNativeConfirmation();
   await act(async () => resolve(true));
   await waitFor(() => expect(api.launchCheck).toHaveBeenCalledTimes(1));
-  expect(api.launchCheck).toHaveBeenCalledWith(expect.objectContaining({
-    check_type: 'ip',
-    pop_ids: [1],
-    targets: [{ value: 'google.com', name: 'google.com' }],
-  }));
+  expect(api.launchCheck).toHaveBeenCalledWith(
+    expect.objectContaining({
+      check_type: 'ip',
+      pop_ids: [1],
+      targets: [{ value: 'google.com', name: 'google.com' }],
+    }),
+  );
 });
 
 it('цена считается сервисом по рабочим точкам', async () => {

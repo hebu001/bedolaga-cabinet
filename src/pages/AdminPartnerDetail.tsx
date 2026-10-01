@@ -1,11 +1,11 @@
 import { XIcon } from '@/components/admin/legacyIcons';
 import { StatCard } from '@/components/stats';
-import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useLocation,useNavigate,useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { partnerApi } from '../api/partners';
-import { AdminBackButton,backTo } from '../components/admin';
+import { AdminBackButton, backTo } from '../components/admin';
 import { useCurrency } from '../hooks/useCurrency';
 
 // Status badge config — keys must match backend PartnerStatus enum values

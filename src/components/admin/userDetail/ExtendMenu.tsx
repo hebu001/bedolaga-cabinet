@@ -2,11 +2,11 @@ import { ChevronDownIcon } from '@/components/admin/legacyIcons';
 import { useTranslation } from 'react-i18next';
 
 import {
-DropdownMenu,
-DropdownMenuContent,
-DropdownMenuItem,
-DropdownMenuSeparator,
-DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/primitives';
 import { cn } from '@/lib/utils';
 

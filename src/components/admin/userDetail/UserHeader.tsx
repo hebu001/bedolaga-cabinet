@@ -1,7 +1,7 @@
-import type { UserDetailResponse,UserPanelInfo } from '@/api/adminUsers';
+import type { UserDetailResponse, UserPanelInfo } from '@/api/adminUsers';
 import { AdminBackButton } from '@/components/admin/AdminBackButton';
 import { CopyIcon } from '@/components/admin/legacyIcons';
-import { AccountStatusChip,UserAvatar } from '@/components/admin/users';
+import { AccountStatusChip, UserAvatar } from '@/components/admin/users';
 import { TelegramSmallIcon } from '@/components/icons';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

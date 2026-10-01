@@ -278,7 +278,10 @@ it.each(['probe', 'noisy'] as const)(
 it('Noisy stops before the next batch target if the approving session changes', async () => {
   let finishFirst!: (action: typeof ACTION) => void;
   api.launchNoisy.mockImplementation(
-    () => new Promise<typeof ACTION>((resolve) => { finishFirst = resolve; }),
+    () =>
+      new Promise<typeof ACTION>((resolve) => {
+        finishFirst = resolve;
+      }),
   );
   renderWithProviders(<NoisyTab />);
   fireEvent.change(screen.getByRole('textbox'), {

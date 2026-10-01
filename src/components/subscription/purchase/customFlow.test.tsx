@@ -210,7 +210,9 @@ describe('custom purchase flow after upstream decomposition', () => {
     });
     view();
     fireEvent.click(screen.getByRole('button', { name: /90 дней/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' }),
+    );
     await waitFor(() => expect(state.casheraPurchase).toHaveBeenCalledExactlyOnceWith(7));
     expect(state.purchase).not.toHaveBeenCalled();
     expect(state.openPayment).toHaveBeenCalled();
@@ -219,7 +221,9 @@ describe('custom purchase flow after upstream decomposition', () => {
   it('stale pricing cannot start Cashera recurring purchase', () => {
     state.casheraCapability = true;
     view({ ready: false });
-    const button = screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' });
+    const button = screen.getByRole('button', {
+      name: 'subscription.casheraRecurring.purchaseButton',
+    });
     expect((button as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(button);
     expect(state.casheraPurchase).not.toHaveBeenCalled();
@@ -229,11 +233,16 @@ describe('custom purchase flow after upstream decomposition', () => {
     let finish!: (value: unknown) => void;
     state.casheraCapability = true;
     state.casheraPurchase.mockImplementation(
-      () => new Promise((resolve) => { finish = resolve; }),
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
     );
     const { client } = view();
     const invalidate = vi.spyOn(client, 'invalidateQueries');
-    fireEvent.click(screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' }),
+    );
     await waitFor(() => expect(state.casheraPurchase).toHaveBeenCalledOnce());
     state.currentSession = false;
     await act(async () => {
@@ -242,5 +251,4 @@ describe('custom purchase flow after upstream decomposition', () => {
     expect(state.openPayment).not.toHaveBeenCalled();
     expect(invalidate).not.toHaveBeenCalled();
   });
-
 });

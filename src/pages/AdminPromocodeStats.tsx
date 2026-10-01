@@ -1,13 +1,13 @@
 import {
-ClockIcon,
-EditIcon,
-UserIcon,
+  ClockIcon,
+  EditIcon,
+  UserIcon,
 } from '@/components/admin/legacyPageIcons/AdminPromocodeStats';
-import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
-import { promocodesApi,type PromoCodeType } from '../api/promocodes';
+import { useNavigate, useParams } from 'react-router';
+import { promocodesApi, type PromoCodeType } from '../api/promocodes';
 import { AdminBackButton } from '../components/admin';
 import { StatCard } from '../components/stats';
 import { useCurrency } from '../hooks/useCurrency';

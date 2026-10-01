@@ -1,36 +1,36 @@
 import {
-DndContext,
-KeyboardSensor,
-PointerSensor,
-useSensor,
-useSensors,
-type DragEndEvent,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
 } from '@dnd-kit/core';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useEffect,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useNotify } from '../platform/hooks/useNotify';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 import {
-BackIcon,
-ChevronRightIcon,
-GripIcon,
-SaveIcon,
+  BackIcon,
+  ChevronRightIcon,
+  GripIcon,
+  SaveIcon,
 } from '@/components/admin/legacyPageIcons/AdminPaymentMethods';
 import {
-arrayMove,
-SortableContext,
-sortableKeyboardCoordinates,
-useSortable,
-verticalListSortingStrategy,
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { adminPaymentMethodsApi } from '../api/adminPaymentMethods';
 import type { PaymentMethodConfig } from '../types';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 interface SortableCardProps {
   config: PaymentMethodConfig;

@@ -1,14 +1,14 @@
 import { ChevronDownIcon } from '@/components/admin/legacyIcons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useEffect,useRef,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-BOT_LOCALES,
-BUTTON_SECTIONS,
-type ButtonSection,
-buttonStylesApi,
-type ButtonStylesConfig,
-DEFAULT_BUTTON_STYLES,
+  BOT_LOCALES,
+  BUTTON_SECTIONS,
+  type ButtonSection,
+  buttonStylesApi,
+  type ButtonStylesConfig,
+  DEFAULT_BUTTON_STYLES,
 } from '../../api/buttonStyles';
 
 import { useNativeDialog } from '../../platform/hooks/useNativeDialog';

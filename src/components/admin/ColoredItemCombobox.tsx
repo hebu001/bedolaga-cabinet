@@ -1,5 +1,5 @@
-import { CheckIcon,ChevronDownIcon,CloseIcon,PlusIcon } from '@/components/admin/legacyIcons';
-import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { CheckIcon, ChevronDownIcon, CloseIcon, PlusIcon } from '@/components/admin/legacyIcons';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '../../lib/utils';
@@ -364,4 +364,4 @@ export function ColoredItemCombobox({
   );
 }
 
-export type { ColoredItem,ColoredItemComboboxProps };
+export type { ColoredItem, ColoredItemComboboxProps };

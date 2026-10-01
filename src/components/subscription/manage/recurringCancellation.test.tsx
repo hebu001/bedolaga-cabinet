@@ -17,7 +17,9 @@ const state = vi.hoisted(() => ({
 vi.mock('@/config/integrationCapabilities', () => ({
   integrationCapabilities: {
     recurringPayments: false,
-    get casheraRecurringPayments() { return state.verified; },
+    get casheraRecurringPayments() {
+      return state.verified;
+    },
   },
 }));
 vi.mock('@/api/subscription', () => ({
@@ -47,7 +49,11 @@ beforeEach(() => {
   state.verified = true;
   state.currentSession = true;
   state.flag = false;
-  state.getStatus.mockResolvedValue({ status: 'ACTIVE', amount_kopeks: 10000, interval: 'monthly' });
+  state.getStatus.mockResolvedValue({
+    status: 'ACTIVE',
+    amount_kopeks: 10000,
+    interval: 'monthly',
+  });
   state.cancel.mockResolvedValue({ status: 'cancelled' });
   state.confirm.mockResolvedValue(true);
 });
@@ -72,37 +78,55 @@ it('an active cached binding remains cancellable after the provider flag changes
 
   state.flag = false;
   await act(async () => {
-    client.setQueryData(['purchase-options', 42], { sales_mode: 'tariffs', cashera_recurrent_enabled: false });
+    client.setQueryData(['purchase-options', 42], {
+      sales_mode: 'tariffs',
+      cashera_recurrent_enabled: false,
+    });
   });
   expect(await screen.findByText('subscription.casheraRecurring.disabledCancelHint')).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'subscription.casheraRecurring.connect' })).toBeNull();
+  expect(
+    screen.queryByRole('button', { name: 'subscription.casheraRecurring.connect' }),
+  ).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'subscription.casheraRecurring.cancel' }));
   await waitFor(() => expect(state.cancel).toHaveBeenCalledExactlyOnceWith(42));
   expect(state.getStatus).toHaveBeenCalledOnce();
   expect(state.enable).not.toHaveBeenCalled();
-  await waitFor(() => expect(client.getQueryData(['cashera-recurring', 42])).toEqual({ status: 'none' }));
+  await waitFor(() =>
+    expect(client.getQueryData(['cashera-recurring', 42])).toEqual({ status: 'none' }),
+  );
 });
 
 it('a cold disabled provider offers cancellation without status or enable probing', async () => {
   view();
-  const cancel = await screen.findByRole('button', { name: 'subscription.casheraRecurring.cancel' });
+  const cancel = await screen.findByRole('button', {
+    name: 'subscription.casheraRecurring.cancel',
+  });
   expect(state.getStatus).not.toHaveBeenCalled();
-  expect(screen.queryByRole('button', { name: 'subscription.casheraRecurring.connect' })).toBeNull();
+  expect(
+    screen.queryByRole('button', { name: 'subscription.casheraRecurring.connect' }),
+  ).toBeNull();
   fireEvent.click(cancel);
   await waitFor(() => expect(state.cancel).toHaveBeenCalledExactlyOnceWith(42));
   expect(state.enable).not.toHaveBeenCalled();
   expect(state.getStatus).not.toHaveBeenCalled();
 });
 
-it.each(['PENDING', 'PAST_DUE'])('disabled provider preserves cancellation of cached %s bindings without confirmation links', async (status) => {
-  view({ status, redirect_url: 'https://pay.cashera.cash/confirmation' });
-  const cancel = await screen.findByRole('button', { name: 'subscription.casheraRecurring.cancel' });
-  expect(screen.queryByRole('button', { name: 'subscription.casheraRecurring.confirm' })).toBeNull();
-  fireEvent.click(cancel);
-  await waitFor(() => expect(state.cancel).toHaveBeenCalledExactlyOnceWith(42));
-  expect(state.getStatus).not.toHaveBeenCalled();
-  expect(state.enable).not.toHaveBeenCalled();
-});
+it.each(['PENDING', 'PAST_DUE'])(
+  'disabled provider preserves cancellation of cached %s bindings without confirmation links',
+  async (status) => {
+    view({ status, redirect_url: 'https://pay.cashera.cash/confirmation' });
+    const cancel = await screen.findByRole('button', {
+      name: 'subscription.casheraRecurring.cancel',
+    });
+    expect(
+      screen.queryByRole('button', { name: 'subscription.casheraRecurring.confirm' }),
+    ).toBeNull();
+    fireEvent.click(cancel);
+    await waitFor(() => expect(state.cancel).toHaveBeenCalledExactlyOnceWith(42));
+    expect(state.getStatus).not.toHaveBeenCalled();
+    expect(state.enable).not.toHaveBeenCalled();
+  },
+);
 
 it('old backends without the flag remain hidden even when a status is cached', async () => {
   state.flag = undefined;
@@ -124,7 +148,9 @@ it('unverified contract and changed sessions cannot cancel a binding', async () 
 
   state.verified = true;
   view();
-  const cancel = await screen.findByRole('button', { name: 'subscription.casheraRecurring.cancel' });
+  const cancel = await screen.findByRole('button', {
+    name: 'subscription.casheraRecurring.cancel',
+  });
   state.currentSession = false;
   fireEvent.click(cancel);
   await waitFor(() => expect(state.confirm).toHaveBeenCalledOnce());

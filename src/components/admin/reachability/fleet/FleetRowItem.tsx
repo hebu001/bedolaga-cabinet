@@ -1,4 +1,4 @@
-import { ChevronDownIcon,ChevronRightIcon } from '@/components/admin/legacyIcons';
+import { ChevronDownIcon, ChevronRightIcon } from '@/components/admin/legacyIcons';
 import { useTranslation } from 'react-i18next';
 
 import { Spinner } from '@/components/ui/Spinner';
@@ -7,7 +7,7 @@ import { PurposeChip } from '../PurposeChip';
 import { CheckGlyph } from '../SelectableRow';
 import { relativeAge } from '../relativeAge';
 import type { TargetProgress } from './batchProgress';
-import type { FleetRow,FleetState } from './fleet';
+import type { FleetRow, FleetState } from './fleet';
 
 export const STATE_TEXT: Record<FleetState | 'checking', string> = {
   ok: 'text-apple-green',

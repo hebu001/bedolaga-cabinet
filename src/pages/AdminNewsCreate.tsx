@@ -1,33 +1,33 @@
 import {
-AlignCenterIcon,
-AlignLeftIcon,
-BoldIcon,
-CodeBlockIcon,
-HighlightIcon,
-ImageIcon,
-ItalicIcon,
-LinkIcon,
-ListBulletIcon,
-ListOrderedIcon,
-QuoteIcon,
-StrikeIcon,
-UnderlineIcon,
-UploadIcon,
+  AlignCenterIcon,
+  AlignLeftIcon,
+  BoldIcon,
+  CodeBlockIcon,
+  HighlightIcon,
+  ImageIcon,
+  ItalicIcon,
+  LinkIcon,
+  ListBulletIcon,
+  ListOrderedIcon,
+  QuoteIcon,
+  StrikeIcon,
+  UnderlineIcon,
+  UploadIcon,
 } from '@/components/admin/legacyPageIcons/AdminNewsCreate';
-import { H1Icon,H2Icon,H3Icon } from '@/components/icons';
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { H1Icon, H2Icon, H3Icon } from '@/components/icons';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import HighlightExtension from '@tiptap/extension-highlight';
 import ImageExtension from '@tiptap/extension-image';
 import LinkExtension from '@tiptap/extension-link';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import UnderlineExtension from '@tiptap/extension-underline';
-import { EditorContent,useEditor } from '@tiptap/react';
+import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { newsApi } from '../api/news';
 import { AdminBackButton } from '../components/admin';
 import { ColoredItemCombobox } from '../components/admin/ColoredItemCombobox';
@@ -36,9 +36,9 @@ import { VideoExtension } from '../lib/tiptap-video';
 import { cn } from '../lib/utils';
 import { useHapticFeedback } from '../platform/hooks/useHaptic';
 import { usePrompt } from '../store/promptDialog';
-import type { NewsCategory,NewsCreateRequest,NewsTag } from '../types/news';
+import type { NewsCategory, NewsCreateRequest, NewsTag } from '../types/news';
 import { getApiErrorMessage } from '../utils/api-error';
-import { NEWS_EXCERPT_LIMIT,NEWS_TAG_LIMIT,newsLengthError } from '../utils/newsValidation';
+import { NEWS_EXCERPT_LIMIT, NEWS_TAG_LIMIT, newsLengthError } from '../utils/newsValidation';
 import { transliterate } from '../utils/transliterate';
 
 // --- Toolbar Button ---

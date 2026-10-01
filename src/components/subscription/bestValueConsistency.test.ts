@@ -18,20 +18,25 @@ function tsxFiles(dir: string): string[] {
 const showcases = tsxFiles(SRC)
   .filter((path) => !path.endsWith('BestValueBadge.tsx'))
   .map((path) => ({ path: relative(SRC, path), code: readFileSync(path, 'utf8') }))
-  .filter(({ code }) => code.includes('<BestValueBadge') ||
-    (code.includes("t('subscription.bestValue')") && code.includes('is_highlighted')));
+  .filter(
+    ({ code }) =>
+      code.includes('<BestValueBadge') ||
+      (code.includes("t('subscription.bestValue')") && code.includes('is_highlighted')),
+  );
 
 const sharedBadges = showcases.filter(({ code }) => code.includes('<BestValueBadge'));
 
 describe('плашка «Выгодно» на витринах', () => {
   it('витрины найдены', () => {
-    expect(showcases.map(({ path }) => path)).toEqual(expect.arrayContaining([
-      'pages/RenewSubscription.tsx',
-      'pages/QuickPurchase.tsx',
-      'pages/GiftSubscription.tsx',
-      'components/subscription/purchase/TariffPurchaseForm.tsx',
-      'components/subscription/purchase/TariffPickerGrid.tsx',
-    ]));
+    expect(showcases.map(({ path }) => path)).toEqual(
+      expect.arrayContaining([
+        'pages/RenewSubscription.tsx',
+        'pages/QuickPurchase.tsx',
+        'pages/GiftSubscription.tsx',
+        'components/subscription/purchase/TariffPurchaseForm.tsx',
+        'components/subscription/purchase/TariffPickerGrid.tsx',
+      ]),
+    );
   });
 
   it.each(sharedBadges.map((s) => [s.path, s.code]))(

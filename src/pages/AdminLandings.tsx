@@ -1,39 +1,39 @@
 import {
-CheckIcon,
-CopyIcon,
-EditIcon,
-GiftIcon,
-SaveIcon,
-StatsChartIcon,
-XIcon,
+  CheckIcon,
+  CopyIcon,
+  EditIcon,
+  GiftIcon,
+  SaveIcon,
+  StatsChartIcon,
+  XIcon,
 } from '@/components/admin/legacyPageIcons/AdminLandings';
 import { useNotify } from '@/platform';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useEffect,useRef,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { adminLandingsApi,resolveLocaleDisplay,type LandingListItem } from '../api/landings';
-import { BackIcon,GripIcon,PlusIcon,TrashIcon } from '../components/icons/LandingIcons';
+import { adminLandingsApi, resolveLocaleDisplay, type LandingListItem } from '../api/landings';
+import { BackIcon, GripIcon, PlusIcon, TrashIcon } from '../components/icons/LandingIcons';
 import { cn } from '../lib/utils';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { getApiErrorMessage } from '../utils/api-error';
 import { copyToClipboard } from '../utils/clipboard';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import {
-DndContext,
-KeyboardSensor,
-PointerSensor,
-useSensor,
-useSensors,
-type DragEndEvent,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
 } from '@dnd-kit/core';
 import {
-arrayMove,
-SortableContext,
-sortableKeyboardCoordinates,
-useSortable,
-verticalListSortingStrategy,
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 

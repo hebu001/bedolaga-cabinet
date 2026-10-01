@@ -1,27 +1,27 @@
 import type {
-UserAvailableTariff,
-UserPanelInfo,
-UserSubscriptionInfo,
-UserTransactionItem,
+  UserAvailableTariff,
+  UserPanelInfo,
+  UserSubscriptionInfo,
+  UserTransactionItem,
 } from '@/api/adminUsers';
-import { SubscriptionIcon,XIcon } from '@/components/admin/legacyIcons';
+import { SubscriptionIcon, XIcon } from '@/components/admin/legacyIcons';
 import {
-SubscriptionStateChip,
-TrafficBar,
-useMoney,
-useTrafficLabel,
+  SubscriptionStateChip,
+  TrafficBar,
+  useMoney,
+  useTrafficLabel,
 } from '@/components/admin/users';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
-import { useDestructiveConfirm,useNativeDialog } from '@/platform/hooks/useNativeDialog';
+import { useDestructiveConfirm, useNativeDialog } from '@/platform/hooks/useNativeDialog';
 import { formatShortDate } from '@/utils/format';
 import { formatGb } from '@/utils/formatNumber';
 import { uiLocale } from '@/utils/uiLocale';
 import { usePaymentMethodLabel } from './ActivityRows';
 import { ExtendMenu } from './ExtendMenu';
-import { DaysForm,DeviceLimitForm,TariffForm,TrafficForm } from './SubscriptionForms';
-import { KeyValues,LinkAction,Section } from './sectionParts';
+import { DaysForm, DeviceLimitForm, TariffForm, TrafficForm } from './SubscriptionForms';
+import { KeyValues, LinkAction, Section } from './sectionParts';
 
 export type SubscriptionPanel = 'extend' | 'shorten' | 'tariff' | 'traffic' | 'devices';
 

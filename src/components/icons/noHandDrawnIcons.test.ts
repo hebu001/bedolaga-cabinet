@@ -19,7 +19,6 @@ const SRC = join(import.meta.dirname, '..', '..');
 // Brand logos, charts and decorations may keep their intentionally custom SVGs.
 // Historical fork icons are checked separately against the approved SVG baseline.
 const ALLOWED = new Set([
-
   'components/icons/index.tsx', // RemnawaveIcon — логотип панели
   'components/icons/LandingIcons.tsx',
   'components/OAuthProviderIcon.tsx',

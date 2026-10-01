@@ -1,7 +1,7 @@
 import type { UserAvailableTariff } from '@/api/adminUsers';
 import { DropdownSelect } from '@/components/admin/bulkActions/DropdownSelect';
 import { PlusIcon } from '@/components/admin/legacyIcons';
-import { useId,useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Section } from './sectionParts';

@@ -1,19 +1,19 @@
 import {
-rbacApi,
-type CreateRolePayload,
-type PermissionSection,
-type UpdateRolePayload,
+  rbacApi,
+  type CreateRolePayload,
+  type PermissionSection,
+  type UpdateRolePayload,
 } from '@/api/rbac';
 import { AdminBackButton } from '@/components/admin';
 import { CheckIcon } from '@/components/admin/legacyIcons';
 import { ChevronDownIcon } from '@/components/admin/legacyPageIcons/AdminRoleEdit';
 import { MinusIcon } from '@/components/icons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
-import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 // === Constants ===
 

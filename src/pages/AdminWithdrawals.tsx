@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { withdrawalApi,type AdminWithdrawalItem } from '../api/withdrawals';
+import { withdrawalApi, type AdminWithdrawalItem } from '../api/withdrawals';
 import { AdminBackButton } from '../components/admin';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { useCurrency } from '../hooks/useCurrency';
-import { formatDate,getRiskColor,getWithdrawalStatusBadge } from '../utils/withdrawalUtils';
+import { formatDate, getRiskColor, getWithdrawalStatusBadge } from '../utils/withdrawalUtils';
 
 // Status filter tabs
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled';

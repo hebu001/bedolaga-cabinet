@@ -1,21 +1,21 @@
-import { CampaignIcon,CheckIcon } from '@/components/admin/legacyIcons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useState } from 'react';
+import { CampaignIcon, CheckIcon } from '@/components/admin/legacyIcons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import {
-campaignsApi,
-type AvailablePartner,
-type CampaignBonusType,
-type CampaignUpdateRequest,
-type ServerSquadInfo,
-type TariffListItem,
+  campaignsApi,
+  type AvailablePartner,
+  type CampaignBonusType,
+  type CampaignUpdateRequest,
+  type ServerSquadInfo,
+  type TariffListItem,
 } from '../api/campaigns';
 import { AdminBackButton } from '../components/admin';
 
 import Twemoji from '@/lib/twemoji';
-import { PageSkeleton,Skeleton } from '../components/ui/skeleton';
-import { createNumberInputHandler,toNumber } from '../utils/inputHelpers';
+import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
+import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 
 // Bonus type config
 const bonusTypeConfig: Record<

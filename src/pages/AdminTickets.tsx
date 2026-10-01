@@ -2,13 +2,13 @@ import { backTo } from '@/components/admin';
 import { XIcon } from '@/components/admin/legacyIcons';
 import { BackIcon } from '@/components/admin/legacyPageIcons/AdminTickets';
 import { useAdminTicketDetail } from '@/components/admin/userDetail/useAdminTicketDetail';
-import { PaperclipIcon,SettingsIcon,TicketIcon } from '@/components/icons';
-import { getSessionGeneration,isCurrentSession } from '@/utils/session';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useRef,useState } from 'react';
+import { PaperclipIcon, SettingsIcon, TicketIcon } from '@/components/icons';
+import { getSessionGeneration, isCurrentSession } from '@/utils/session';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link,useLocation,useNavigate,useParams } from 'react-router';
-import { adminApi,type AdminTicket,type AdminTicketDetail } from '../api/admin';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { adminApi, type AdminTicket, type AdminTicketDetail } from '../api/admin';
 import { ticketsApi } from '../api/tickets';
 import { MessageMediaGrid } from '../components/tickets/MessageMediaGrid';
 import { usePlatform } from '../platform/hooks/usePlatform';
@@ -16,7 +16,7 @@ import { copyToClipboard as copyText } from '../utils/clipboard';
 import { linkifyText } from '../utils/linkify';
 import logger from '../utils/logger';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 interface MediaAttachment {
   id: string;

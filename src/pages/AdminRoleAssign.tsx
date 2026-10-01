@@ -1,19 +1,19 @@
-import { adminUsersApi,type UserListItem } from '@/api/adminUsers';
-import { rbacApi,type AdminRole,type AssignRolePayload } from '@/api/rbac';
+import { adminUsersApi, type UserListItem } from '@/api/adminUsers';
+import { rbacApi, type AdminRole, type AssignRolePayload } from '@/api/rbac';
 import {
-BackIcon,
-ChevronDownIcon,
-ChevronLeftIcon,
-ChevronRightIcon,
-SearchIcon,
-UserPlusIcon,
-XCircleIcon,
+  BackIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  SearchIcon,
+  UserPlusIcon,
+  XCircleIcon,
 } from '@/components/admin/legacyPageIcons/AdminRoleAssign';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { usePlatform } from '@/platform/hooks/usePlatform';
 import { usePermissionStore } from '@/store/permissions';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useMemo,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 

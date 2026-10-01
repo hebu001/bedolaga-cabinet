@@ -1,44 +1,44 @@
 import { StatCard } from '@/components/stats';
-import { PageSkeleton,Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback,useEffect,useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-banSystemApi,
-type BanAgentsListResponse,
-type BanHealthResponse,
-type BanNodesListResponse,
-type BanPunishmentsListResponse,
-type BanReportResponse,
-type BanSettingDefinition,
-type BanSettingsResponse,
-type BanSystemStats,
-type BanSystemStatus,
-type BanTrafficResponse,
-type BanTrafficViolationsResponse,
-type BanUserDetailResponse,
-type BanUsersListResponse,
+  banSystemApi,
+  type BanAgentsListResponse,
+  type BanHealthResponse,
+  type BanNodesListResponse,
+  type BanPunishmentsListResponse,
+  type BanReportResponse,
+  type BanSettingDefinition,
+  type BanSettingsResponse,
+  type BanSystemStats,
+  type BanSystemStatus,
+  type BanTrafficResponse,
+  type BanTrafficViolationsResponse,
+  type BanUserDetailResponse,
+  type BanUsersListResponse,
 } from '../api/banSystem';
 import { AdminBackButton } from '../components/admin/AdminBackButton';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
-import { BackIcon,ClockIcon,XIcon } from '@/components/admin/legacyIcons';
+import { BackIcon, ClockIcon, XIcon } from '@/components/admin/legacyIcons';
 import {
-AgentIcon,
-BanIcon,
-ChartIcon,
-HealthIcon,
-RefreshIcon,
-ReportIcon,
-SearchIcon,
-ServerIcon,
-SettingsIcon,
-ShieldIcon,
-TrafficIcon,
-UsersIcon,
-WarningIcon,
+  AgentIcon,
+  BanIcon,
+  ChartIcon,
+  HealthIcon,
+  RefreshIcon,
+  ReportIcon,
+  SearchIcon,
+  ServerIcon,
+  SettingsIcon,
+  ShieldIcon,
+  TrafficIcon,
+  UsersIcon,
+  WarningIcon,
 } from '@/components/admin/legacyPageIcons/AdminBanSystem';
-import { ExclamationIcon,StatusIcon } from '@/components/icons';
+import { ExclamationIcon, StatusIcon } from '@/components/icons';
 
 type TabType =
   | 'dashboard'

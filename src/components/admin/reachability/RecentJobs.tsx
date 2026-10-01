@@ -1,8 +1,8 @@
-import { type Job,type JobKind,type JobStatus,reachabilityApi } from '@/api/reachability';
+import { type Job, type JobKind, type JobStatus, reachabilityApi } from '@/api/reachability';
 import { ListRowSkeleton } from '@/components/admin/ListRowSkeleton';
-import { ChevronDownIcon,CloseIcon } from '@/components/admin/legacyIcons';
+import { ChevronDownIcon, CloseIcon } from '@/components/admin/legacyIcons';
 import { useQuery } from '@tanstack/react-query';
-import { type ReactNode,useEffect,useMemo,useRef,useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -12,19 +12,19 @@ import { ChoiceChips } from './ChoiceChips';
 import { JobResult } from './JobResult';
 import { SectionHeading } from './SectionHeading';
 import { buildReachabilityLink } from './deepLink';
-import { geoRowsOf,geoSummaryOf } from './geoRowsView';
+import { geoRowsOf, geoSummaryOf } from './geoRowsView';
 import {
-type HistoryEntry,
-batchHosts,
-batchSummary,
-groupHistory,
-mergeBatchJobs,
+  type HistoryEntry,
+  batchHosts,
+  batchSummary,
+  groupHistory,
+  mergeBatchJobs,
 } from './historyEntries';
-import { type Outcome,jobOutcome } from './jobOutcome';
-import { REACHABILITY_JOBS_KEY,jobsRefetchInterval } from './jobsRefetch';
+import { type Outcome, jobOutcome } from './jobOutcome';
+import { REACHABILITY_JOBS_KEY, jobsRefetchInterval } from './jobsRefetch';
 import { formatCredits } from './money';
 import { relativeAge } from './relativeAge';
-import { canRepeat,repeatFromJob } from './repeatFromJob';
+import { canRepeat, repeatFromJob } from './repeatFromJob';
 
 const KINDS: Array<JobKind | ''> = ['', 'probe', 'vless', 'scan', 'geo'];
 const STATUSES: Array<JobStatus | ''> = ['', 'running', 'done', 'failed', 'cancelled'];

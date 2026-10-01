@@ -40,7 +40,8 @@ export function LegacyBroadcastTargetPicker({
     const grouped: Record<string, Filter[]> = {};
     for (const filter of filters) {
       const group = 'group' in filter && filter.group ? filter.group : 'tariff';
-      (grouped[group] ??= []).push(filter);
+      grouped[group] ??= [];
+      grouped[group].push(filter);
     }
     return grouped;
   }, [filters]);

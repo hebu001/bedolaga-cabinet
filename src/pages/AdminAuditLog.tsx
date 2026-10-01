@@ -1,19 +1,19 @@
-import { rbacApi,type AuditLogEntry,type AuditLogFilters } from '@/api/rbac';
+import { rbacApi, type AuditLogEntry, type AuditLogFilters } from '@/api/rbac';
 import {
-BackIcon,
-ChevronDownIcon,
-DownloadIcon,
-FilterIcon,
-RefreshIcon,
-SearchIcon,
+  BackIcon,
+  ChevronDownIcon,
+  DownloadIcon,
+  FilterIcon,
+  RefreshIcon,
+  SearchIcon,
 } from '@/components/admin/legacyPageIcons/AdminAuditLog';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { DateField } from '@/components/DateField';
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { usePlatform } from '@/platform/hooks/usePlatform';
 import { useQuery } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
-import { useCallback,useMemo,useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 

@@ -1,14 +1,14 @@
 import { ServerIcon } from '@/components/admin/legacyIcons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
-import { serversApi,type ServerUpdateRequest } from '../api/servers';
+import { useNavigate, useParams } from 'react-router';
+import { serversApi, type ServerUpdateRequest } from '../api/servers';
 import { AdminBackButton } from '../components/admin';
 
 import Twemoji from '@/lib/twemoji';
-import { PageSkeleton,Skeleton } from '../components/ui/skeleton';
-import { createNumberInputHandler,toNumber } from '../utils/inputHelpers';
+import { PageSkeleton, Skeleton } from '../components/ui/skeleton';
+import { createNumberInputHandler, toNumber } from '../utils/inputHelpers';
 import { getFlagEmoji as getCountryFlag } from '../utils/subscriptionHelpers';
 
 export default function AdminServerEdit() {

@@ -1,22 +1,22 @@
-import { BackIcon,RefreshIcon } from '@/components/admin/legacyPageIcons/AdminPromocodeCreate';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useCallback,useState } from 'react';
+import { BackIcon, RefreshIcon } from '@/components/admin/legacyPageIcons/AdminPromocodeCreate';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import {
-promocodesApi,
-type PromoCodeCreateRequest,
-type PromoCodeDetail,
-type PromoCodeType,
-type PromoCodeUpdateRequest,
-type PromoGroup,
+  promocodesApi,
+  type PromoCodeCreateRequest,
+  type PromoCodeDetail,
+  type PromoCodeType,
+  type PromoCodeUpdateRequest,
+  type PromoGroup,
 } from '../api/promocodes';
 import { tariffsApi } from '../api/tariffs';
 import { DateField } from '../components/DateField';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import { createNumberInputHandler } from '../utils/inputHelpers';
 
-import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 
 // valid_until is created as end-of-day in the admin's LOCAL tz, then stored/returned
 // as a UTC instant. Reading the picker back must convert UTC -> local date, otherwise

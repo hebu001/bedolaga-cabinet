@@ -476,9 +476,7 @@
       "d0130e4b2b1029c5f660903a705d8016d180167822b075621d4bb54d522b2f3f",
       "05db1894aeb98cad81080a1da7423a6be3373d86682d812ad2ca92f3334a22ea"
     ],
-    "pages/Login.tsx": [
-      "ea4315aa8ee04077fbce5d56bb5d8e344bcd48093da41ef30553773808d20fcf"
-    ],
+    "pages/Login.tsx": ["ea4315aa8ee04077fbce5d56bb5d8e344bcd48093da41ef30553773808d20fcf"],
     "pages/MergeAccounts.tsx": [
       "ca44765726dfad96f2c66adf24348387221d9d4211ea392fbdb8eba246b70f08",
       "bd74f5b0f484efa97c41a2b40b194c55e42be5fd99b521efc37999ddcbb78add",
@@ -519,8 +517,6 @@
       "15bc913f16adddd17ee25af219de86182c5e794eb346a7ff86d3eef1c7680769",
       "bd522606440a3171888269f490105de3bac71680aac7836b61a586cf6c21c0b0"
     ],
-    "pages/TopUpResult.tsx": [
-      "28fc17ca8d86b1e89b2b4cc2f702bb4466d8e3c7faf6237c956d63172b96d25f"
-    ]
+    "pages/TopUpResult.tsx": ["28fc17ca8d86b1e89b2b4cc2f702bb4466d8e3c7faf6237c956d63172b96d25f"]
   }
 }

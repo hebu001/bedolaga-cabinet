@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { PiCaretDown } from 'react-icons/pi';
 import { cn } from '../../lib/utils';
 
-import type { AdminLandingPaymentMethod,EditableMethodField } from '../../api/landings';
+import type { AdminLandingPaymentMethod, EditableMethodField } from '../../api/landings';
 import type { PaymentMethodSubOptionInfo } from '../../types';
-import { GripIcon,TrashIcon } from '../icons/LandingIcons';
+import { GripIcon, TrashIcon } from '../icons/LandingIcons';
 
 export type MethodWithId = AdminLandingPaymentMethod & { _id: string };
 

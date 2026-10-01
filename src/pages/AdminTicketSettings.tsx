@@ -1,13 +1,13 @@
 import { SettingsIcon } from '@/components/admin/legacyPageIcons/AdminTicketSettings';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { adminApi } from '../api/admin';
 import { AdminBackButton } from '../components/admin';
 
 import { EnvLockedBadge } from '@/components/admin/EnvLockedBadge';
-import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { toNumber } from '../utils/inputHelpers';
 
 type NumberOrEmpty = number | '';

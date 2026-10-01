@@ -1,11 +1,11 @@
 import { BackIcon } from '@/components/admin/legacyIcons';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { adminAppsApi } from '../api/adminApps';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 export default function AdminApps() {
   const { t } = useTranslation();

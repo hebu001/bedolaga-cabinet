@@ -1,48 +1,48 @@
 import {
-BackIcon,
-CheckIcon,
-ChevronLeftIcon,
-ChevronRightIcon,
-RefreshIcon,
-SearchIcon,
+  BackIcon,
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  RefreshIcon,
+  SearchIcon,
 } from '@/components/admin/legacyPageIcons/AdminBulkActions';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
-flexRender,
-getCoreRowModel,
-useReactTable,
-type ColumnDef,
-type RowSelectionState,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  type ColumnDef,
+  type RowSelectionState,
 } from '@tanstack/react-table';
-import React,{ useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { PiCaretDown } from 'react-icons/pi';
 import { useNavigate } from 'react-router';
 import {
-adminBulkActionsApi,
-type BulkActionParams,
-type BulkActionType,
+  adminBulkActionsApi,
+  type BulkActionParams,
+  type BulkActionType,
 } from '../api/adminBulkActions';
-import { adminUsersApi,type UserListItem,type UserListItemSubscription } from '../api/adminUsers';
-import { campaignsApi,type CampaignListItem } from '../api/campaigns';
-import { partnerApi,type AdminPartnerItem } from '../api/partners';
-import { promocodesApi,type PromoGroup } from '../api/promocodes';
-import { tariffsApi,type TariffListItem } from '../api/tariffs';
+import { adminUsersApi, type UserListItem, type UserListItemSubscription } from '../api/adminUsers';
+import { campaignsApi, type CampaignListItem } from '../api/campaigns';
+import { partnerApi, type AdminPartnerItem } from '../api/partners';
+import { promocodesApi, type PromoGroup } from '../api/promocodes';
+import { tariffsApi, type TariffListItem } from '../api/tariffs';
 import { useCurrency } from '../hooks/useCurrency';
 import { usePlatform } from '../platform/hooks/usePlatform';
-import { toggleVisibleSubscriptions,visibleSelectionState } from '../utils/adminSelection';
+import { toggleVisibleSubscriptions, visibleSelectionState } from '../utils/adminSelection';
 
-import { ActionModal,type ModalState } from '@/components/admin/bulkActions/ActionModal';
+import { ActionModal, type ModalState } from '@/components/admin/bulkActions/ActionModal';
 import { isSubscriptionLevelAction } from '@/components/admin/bulkActions/actionTargets';
-import { DropdownSelect,type DropdownOption } from '@/components/admin/bulkActions/DropdownSelect';
+import { DropdownSelect, type DropdownOption } from '@/components/admin/bulkActions/DropdownSelect';
 import { FloatingActionBar } from '@/components/admin/bulkActions/FloatingActionBar';
 import {
-MultiSelectDropdown,
-type MultiSelectOption,
+  MultiSelectDropdown,
+  type MultiSelectOption,
 } from '@/components/admin/bulkActions/MultiSelectDropdown';
-import { StatusBadge,SubscriptionSubRow } from '@/components/admin/bulkActions/SubscriptionSubRow';
+import { StatusBadge, SubscriptionSubRow } from '@/components/admin/bulkActions/SubscriptionSubRow';
 
 // ============ Types ============
 

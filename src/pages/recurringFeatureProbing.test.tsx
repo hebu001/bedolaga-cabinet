@@ -46,7 +46,10 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
-const capabilities = vi.hoisted(() => ({ recurringPayments: true, casheraRecurringPayments: true }));
+const capabilities = vi.hoisted(() => ({
+  recurringPayments: true,
+  casheraRecurringPayments: true,
+}));
 vi.mock('@/config/integrationCapabilities', () => ({ integrationCapabilities: capabilities }));
 
 const featureDisabled = () =>
@@ -104,7 +107,10 @@ vi.mock('@/api/subscription', () => ({
 }));
 
 vi.mock('@/api/balance', () => ({
-  balanceApi: { getSavedCards: () => Promise.resolve([]), getPaymentMethods: () => Promise.resolve([]) },
+  balanceApi: {
+    getSavedCards: () => Promise.resolve([]),
+    getPaymentMethods: () => Promise.resolve([]),
+  },
 }));
 
 vi.mock('@/api/currency', () => ({

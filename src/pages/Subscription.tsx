@@ -2681,9 +2681,10 @@ export default function Subscription() {
           </div>
         )}
       {subscription &&
-        (integrationCapabilities.recurringPayments || integrationCapabilities.casheraRecurringPayments) && (
-        <RecurringPanels subscription={subscription} subscriptionId={subscriptionId} />
-      )}
+        (integrationCapabilities.recurringPayments ||
+          integrationCapabilities.casheraRecurringPayments) && (
+          <RecurringPanels subscription={subscription} subscriptionId={subscriptionId} />
+        )}
     </div>
   );
 }

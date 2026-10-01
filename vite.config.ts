@@ -11,10 +11,7 @@ import { brandingHtml } from './vite-plugins/brandingHtml.ts';
 // recharts/tiptap — иначе стартовая страница тянет чанк графиков.
 const VENDOR_CHUNKS: ReadonlyArray<readonly [string, RegExp]> = [
   ['vendor-react', /node_modules\/(react|react-dom|react-router|scheduler)\//],
-  [
-    'vendor-utils',
-    /node_modules\/(axios|zustand|clsx|tailwind-merge|class-variance-authority)\//,
-  ],
+  ['vendor-utils', /node_modules\/(axios|zustand|clsx|tailwind-merge|class-variance-authority)\//],
   ['vendor-sanitizer', /node_modules\/dompurify\//],
   ['vendor-query', /@tanstack\/react-query/],
   ['vendor-i18n', /i18next/],
@@ -113,9 +110,11 @@ export default defineConfig(({ mode }) => {
             groups: VENDOR_CHUNKS.map(([name, test], index) => ({
               // Preserve the fork's per-primitive splitting: a Tooltip used by
               // the shell must not pull every lazy admin dialog into startup.
-              name: name === 'vendor-radix'
-                ? (id: string) => `vendor-radix-${id.match(/@radix-ui\/([^/]+)/)?.[1] ?? 'shared'}`
-                : name,
+              name:
+                name === 'vendor-radix'
+                  ? (id: string) =>
+                      `vendor-radix-${id.match(/@radix-ui\/([^/]+)/)?.[1] ?? 'shared'}`
+                  : name,
               test,
               entriesAware: name === 'vendor-radix' || name === 'vendor-query',
               priority: VENDOR_CHUNKS.length - index,

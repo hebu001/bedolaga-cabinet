@@ -6,7 +6,7 @@ import { Button } from '@/components/primitives';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
 import { formatCredits } from '../money';
-import { type TargetProgress,batchEtaMinutes,batchTargets,spentSoFar } from './batchProgress';
+import { type TargetProgress, batchEtaMinutes, batchTargets, spentSoFar } from './batchProgress';
 import type { FleetRow } from './fleet';
 
 interface BatchRunningProps {

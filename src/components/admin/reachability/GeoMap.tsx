@@ -1,34 +1,34 @@
 import { PlusIcon } from '@/components/admin/legacyIcons';
-import { MinusIcon,ResetIcon } from '@/components/icons';
-import { type MouseEvent,type PointerEvent,memo,useMemo,useRef,useState } from 'react';
+import { MinusIcon, ResetIcon } from '@/components/icons';
+import { type MouseEvent, type PointerEvent, memo, useMemo, useRef, useState } from 'react';
 
 import type { Job } from '@/api/reachability';
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
-import { type GeoMapData,MAP_ASPECT,type RussiaMap,useGeoMapData } from './geoMapData';
+import { type GeoMapData, MAP_ASPECT, type RussiaMap, useGeoMapData } from './geoMapData';
 import {
-type CityMarker,
-type GeoMapRow,
-type RegionSummary,
-cityMarkers,
-regionSummaries,
+  type CityMarker,
+  type GeoMapRow,
+  type RegionSummary,
+  cityMarkers,
+  regionSummaries,
 } from './geoMapModel';
 import { GeoMapTooltip } from './GeoMapTooltip';
 import {
-type RecheckContext,
-cityTooltip,
-regionTooltip,
-tooltipHeight,
+  type RecheckContext,
+  cityTooltip,
+  regionTooltip,
+  tooltipHeight,
 } from './geoMapTooltipModel';
 import {
-type MapView,
-ZOOM_STEP,
-fullView,
-panView,
-viewBoxOf,
-zoomOf,
-zoomView,
+  type MapView,
+  ZOOM_STEP,
+  fullView,
+  panView,
+  viewBoxOf,
+  zoomOf,
+  zoomView,
 } from './geoMapView';
 import type { MapPick } from './geoRowsView';
 import type { GeoRecheck } from './useGeoRecheck';

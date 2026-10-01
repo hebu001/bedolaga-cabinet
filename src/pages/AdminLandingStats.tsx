@@ -1,31 +1,31 @@
-import { ChevronRightIcon as ChevronRightSmall,WalletIcon } from '@/components/admin/legacyIcons';
+import { ChevronRightIcon as ChevronRightSmall, WalletIcon } from '@/components/admin/legacyIcons';
 import {
-ArrowRightIcon,
-ChartIcon,
-EmailIcon,
-GiftIcon,
-TelegramSmallIcon,
+  ArrowRightIcon,
+  ChartIcon,
+  EmailIcon,
+  GiftIcon,
+  TelegramSmallIcon,
 } from '@/components/admin/legacyPageIcons/AdminLandingStats';
 import {
-BanknotesIcon,
-CardIcon,
-CheckCircleIcon,
-ChevronLeftIcon as ChevronLeftSmall,
-EyeIcon,
-PercentIcon,
-TicketIcon,
+  BanknotesIcon,
+  CardIcon,
+  CheckCircleIcon,
+  ChevronLeftIcon as ChevronLeftSmall,
+  EyeIcon,
+  PercentIcon,
+  TicketIcon,
 } from '@/components/icons';
-import { PageSkeleton,Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { PageSkeleton, Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
-import { Cell,Funnel,FunnelChart,LabelList,ResponsiveContainer } from 'recharts';
+import { useNavigate, useParams } from 'react-router';
+import { Cell, Funnel, FunnelChart, LabelList, ResponsiveContainer } from 'recharts';
 import {
-adminLandingsApi,
-resolveLocaleDisplay,
-type LandingPurchaseItem,
-type PurchaseItemStatus,
+  adminLandingsApi,
+  resolveLocaleDisplay,
+  type LandingPurchaseItem,
+  type PurchaseItemStatus,
 } from '../api/landings';
 import { AdminBackButton } from '../components/admin';
 import { BreakdownList } from '../components/sales-stats/BreakdownList';

@@ -1,14 +1,14 @@
 import { SearchIcon } from '@/components/admin/legacyIcons';
-import { type ReactNode,useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/primitives';
 import { cn } from '@/lib/utils';
 import { CheckGlyph } from '../SelectableRow';
 import type { GroupState } from '../unitSelection';
-import { COL_AGE,COL_UNITS,FleetRowItem,STATE_DOT } from './FleetRowItem';
+import { COL_AGE, COL_UNITS, FleetRowItem, STATE_DOT } from './FleetRowItem';
 import type { TargetProgress } from './batchProgress';
-import { type FleetRow,type FleetState,groupRows,selectionState } from './fleet';
+import { type FleetRow, type FleetState, groupRows, selectionState } from './fleet';
 
 interface FleetListProps {
   /** Уже отфильтрованные строки; группировка «проблемы сначала» делается здесь. */

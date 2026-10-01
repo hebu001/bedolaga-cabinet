@@ -1,22 +1,22 @@
 import {
-CheckIcon,
-EditIcon,
-GiftIcon,
-SyncIcon,
-UsersIcon,
-XIcon,
+  CheckIcon,
+  EditIcon,
+  GiftIcon,
+  SyncIcon,
+  UsersIcon,
+  XIcon,
 } from '@/components/admin/legacyIcons';
 import { BackIcon } from '@/components/admin/legacyPageIcons/AdminServers';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { serversApi,type ServerListItem } from '../api/servers';
+import { serversApi, type ServerListItem } from '../api/servers';
 
 import Twemoji from '@/lib/twemoji';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // Country flags (simple emoji mapping)
-import { Skeleton,SkeletonGroup } from '../components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '../components/ui/skeleton';
 import { getFlagEmoji as getCountryFlag } from '../utils/subscriptionHelpers';
 
 export default function AdminServers() {

@@ -1,22 +1,22 @@
 import { RefreshIcon } from '@/components/admin/legacyIcons';
 import {
-BackIcon,
-EditIcon,
-PlusIcon,
-TrashIcon,
-UsersIcon,
+  BackIcon,
+  EditIcon,
+  PlusIcon,
+  TrashIcon,
+  UsersIcon,
 } from '@/components/admin/legacyPageIcons/AdminPromoGroups';
 import { usePermissionStore } from '@/store/permissions';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
-import { promocodesApi,type PromoGroup } from '../api/promocodes';
+import { promocodesApi, type PromoGroup } from '../api/promocodes';
 import { useCurrency } from '../hooks/useCurrency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/Spinner';
 import { useRecalculation } from './adminPromoGroups/useRecalculation';
 

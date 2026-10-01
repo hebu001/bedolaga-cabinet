@@ -5,14 +5,14 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import {
-partnerApi,
-type AdminPartnerApplicationItem,
-type AdminPartnerItem,
+  partnerApi,
+  type AdminPartnerApplicationItem,
+  type AdminPartnerItem,
 } from '../api/partners';
 import { AdminBackButton } from '../components/admin';
 import { useCurrency } from '../hooks/useCurrency';
 
-import { Skeleton,SkeletonGroup } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 
 export default function AdminPartners() {
   const { t } = useTranslation();
