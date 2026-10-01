@@ -14,6 +14,7 @@ import {
 import { usePlatform } from '@/platform';
 import { useNativeDialog } from '@/platform/hooks/useNativeDialog';
 import { getApiErrorMessage } from '@/utils/api-error';
+import { assertCurrentSession, getSessionGeneration, isCurrentSession } from '@/utils/session';
 import { buildLink, type Tab } from './deepLink';
 import { activeTargets, canPay } from './formState';
 import { PopPicker } from './PopPicker';
@@ -42,10 +43,11 @@ function Step({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-type ApprovedRun = (
+type ApprovalRequest = (
   | { mode: 'once'; body: CheckCreate }
   | { mode: 'schedule'; body: MonitorCreate }
 ) & { key: string };
+type ApprovedRun = ApprovalRequest & { sessionGeneration: number };
 
 interface CheckFormProps {
   checkType: CheckType;
@@ -135,7 +137,7 @@ export function CheckForm({ checkType, prefill = null }: CheckFormProps) {
         }
       : body;
   const approvalKey = JSON.stringify({ mode: runMode, body: request, cost, balance });
-  const currentApproval: ApprovedRun =
+  const currentApproval: ApprovalRequest =
     runMode === 'schedule'
       ? { mode: 'schedule', body: request as MonitorCreate, key: approvalKey }
       : { mode: 'once', body, key: approvalKey };
@@ -157,10 +159,13 @@ export function CheckForm({ checkType, prefill = null }: CheckFormProps) {
     onSettled: () => {
       inFlight.current = false;
     },
-    mutationFn: (approved: ApprovedRun) =>
-      approved.mode === 'schedule'
+    mutationFn: (approved: ApprovedRun) => {
+      // React Query can defer this call until after the approving session has ended.
+      assertCurrentSession(approved.sessionGeneration);
+      return approved.mode === 'schedule'
         ? dpicheckerApi.createMonitor(approved.body)
-        : dpicheckerApi.launchCheck(approved.body),
+        : dpicheckerApi.launchCheck(approved.body);
+    },
     onSuccess: (action, approved) => {
       void queryClient.invalidateQueries({ queryKey: DPI_STATUS_KEY });
       setConfirmation(null);
@@ -181,6 +186,7 @@ export function CheckForm({ checkType, prefill = null }: CheckFormProps) {
     (approved: ApprovedRun) => {
       const latest = latestApproval.current;
       if (
+        !isCurrentSession(approved.sessionGeneration) ||
         !latest.payable ||
         latest.approval.key !== approved.key ||
         inFlight.current ||
@@ -194,7 +200,10 @@ export function CheckForm({ checkType, prefill = null }: CheckFormProps) {
   );
   const startPay = useCallback(async () => {
     if (!payable || launch.isPending) return;
-    const approved = currentApproval;
+    const approved: ApprovedRun = {
+      ...currentApproval,
+      sessionGeneration: getSessionGeneration(),
+    };
     // A native popup can outlive edits or a quote refresh; submit only its original snapshot.
     if (platform === 'telegram') {
       if (await dialog.confirm(confirmLabel)) submitApproved(approved);

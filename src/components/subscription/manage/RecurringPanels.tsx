@@ -648,7 +648,7 @@ export function RecurringPanels({ subscription, subscriptionId }: RecurringPanel
                 <button
                   onClick={() => enableCasheraMutation.mutate()}
                   disabled={enableCasheraMutation.isPending}
-                  className="w-full whitespace-nowrap rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-medium text-on-accent transition-opacity disabled:opacity-50 sm:w-auto"
+                  className="w-full whitespace-nowrap rounded-xl bg-[#F97315] px-5 py-2.5 text-sm font-medium text-white transition-opacity disabled:opacity-50 sm:w-auto"
                 >
                   {enableCasheraMutation.isPending ? (
                     <span className="mx-auto block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -667,7 +667,7 @@ export function RecurringPanels({ subscription, subscriptionId }: RecurringPanel
                           openPaymentUrl(casheraInfo.redirect_url, platform, openLink);
                         }
                       }}
-                      className="w-full whitespace-nowrap rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-medium text-on-accent transition-opacity sm:w-auto"
+                      className="w-full whitespace-nowrap rounded-xl bg-[#F97315] px-5 py-2.5 text-sm font-medium text-white transition-opacity sm:w-auto"
                     >
                       {t('subscription.casheraRecurring.confirm')}
                     </button>

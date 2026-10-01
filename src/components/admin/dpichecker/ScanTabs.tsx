@@ -5,12 +5,19 @@ import { dpicheckerApi, type NoisyScan, type ProbeScan } from '@/api/dpichecker'
 import { Skeleton, SkeletonGroup } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { getApiErrorMessage } from '@/utils/api-error';
+import { assertCurrentSession, getSessionGeneration, isCurrentSession } from '@/utils/session';
 import { CsvButton } from './CsvButton';
 import { CHECK_POLL_MS } from './pollInterval';
 import { useDpiStatus } from './useDpiStatus';
 
 const FINISHED = new Set(['done', 'completed', 'failed', 'cancelled', 'error']);
 const PROBE_FIXED_USD = '1.00';
+
+interface ApprovedScan {
+  targetKey: string;
+  targets: string[];
+  sessionGeneration: number;
+}
 
 function lines(text: string): string[] {
   return text
@@ -227,14 +234,16 @@ function ScanForm({ kind }: { kind: 'noisy' | 'probe' }) {
   const { t } = useTranslation();
   const { data: status } = useDpiStatus();
   const [text, setText] = useState('');
-  const [confirmation, setConfirmation] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<ApprovedScan | null>(null);
   const [launched, setLaunched] = useState<number[]>([]);
   const inFlight = useRef(false);
   const launch = useMutation({
-    mutationFn: async (targets: string[]) => {
+    mutationFn: async (approved: ApprovedScan) => {
       const ids: number[] = [];
-      for (const target of targets) {
+      for (const target of approved.targets) {
         const call = kind === 'probe' ? dpicheckerApi.launchProbe : dpicheckerApi.launchNoisy;
+        // Every sequential scan belongs to the session that approved the batch.
+        assertCurrentSession(approved.sessionGeneration);
         ids.push((await call({ target, source: 'paste' })).id);
       }
       return ids;
@@ -252,14 +261,25 @@ function ScanForm({ kind }: { kind: 'noisy' | 'probe' }) {
   const targets = kind === 'probe' ? lines(text).slice(0, 1) : lines(text);
   const targetKey = JSON.stringify(targets);
   const canLaunch = targets.length > 0 && !launch.isPending && !exhausted;
-  const confirming = confirmation !== null && confirmation === targetKey;
+  const confirming = confirmation !== null && confirmation.targetKey === targetKey;
   const latestTargets = useRef({ targetKey, targets, canLaunch });
   latestTargets.current = { targetKey, targets, canLaunch };
-  const run = (approvedKey: string) => {
+  const approveTargets = (): ApprovedScan => ({
+    targetKey,
+    targets: [...targets],
+    sessionGeneration: getSessionGeneration(),
+  });
+  const run = (approved: ApprovedScan) => {
     const latest = latestTargets.current;
-    if (inFlight.current || !latest.canLaunch || latest.targetKey !== approvedKey) return;
+    if (
+      !isCurrentSession(approved.sessionGeneration) ||
+      inFlight.current ||
+      !latest.canLaunch ||
+      latest.targetKey !== approved.targetKey
+    )
+      return;
     inFlight.current = true;
-    launch.mutate([...latest.targets]);
+    launch.mutate(approved);
   };
 
   return (
@@ -310,7 +330,7 @@ function ScanForm({ kind }: { kind: 'noisy' | 'probe' }) {
               type="button"
               className="btn-primary min-h-[44px] px-5 text-sm"
               disabled={!canLaunch}
-              onClick={() => run(targetKey)}
+              onClick={() => run(approveTargets())}
             >
               {t('admin.dpichecker.noisy.run')}
             </button>
@@ -321,7 +341,7 @@ function ScanForm({ kind }: { kind: 'noisy' | 'probe' }) {
               className="btn-primary min-h-[44px] px-5 text-sm"
               disabled={!canLaunch}
               onClick={() => {
-                if (canLaunch) setConfirmation(targetKey);
+                if (canLaunch) setConfirmation(approveTargets());
               }}
             >
               {t('admin.dpichecker.form.pay')}
@@ -332,8 +352,10 @@ function ScanForm({ kind }: { kind: 'noisy' | 'probe' }) {
               <button
                 type="button"
                 className="btn-primary min-h-[44px] px-5 text-sm"
-                disabled={!canLaunch || confirmation !== targetKey}
-                onClick={() => run(confirmation ?? '')}
+                disabled={!canLaunch || confirmation?.targetKey !== targetKey}
+                onClick={() => {
+                  if (confirmation) run(confirmation);
+                }}
               >
                 {t('admin.dpichecker.probe.confirm', { value: PROBE_FIXED_USD })}
               </button>

@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { Pop } from '@/api/dpichecker';
 import { usePermissionStore } from '@/store/permissions';
+import * as session from '@/utils/session';
 import { CheckForm } from './CheckForm';
 import { renderWithProviders } from './testUtils';
 
@@ -18,6 +19,15 @@ vi.mock('@/config/integrationCapabilities', () => ({
 }));
 
 vi.mock('react-i18next', async () => (await import('./testUtils')).i18nMock());
+
+const nativeDialog = vi.hoisted(() => ({ platform: 'browser', confirm: vi.fn() }));
+vi.mock('@/platform', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/platform')>()),
+  usePlatform: () => ({ platform: nativeDialog.platform, openLink: vi.fn() }),
+}));
+vi.mock('@/platform/hooks/useNativeDialog', () => ({
+  useNativeDialog: () => ({ confirm: nativeDialog.confirm }),
+}));
 
 const POPS: Pop[] = [
   { id: 1, location: 'russia', region: 'Москва', operator: null, is_healthy: true },
@@ -67,6 +77,8 @@ vi.mock('react-router', async (importOriginal) => ({
 }));
 
 beforeEach(() => {
+  nativeDialog.platform = 'browser';
+  nativeDialog.confirm.mockReset();
   usePermissionStore.setState({ permissions: ['dpichecker:*'], isLoaded: true });
   api.parse.mockResolvedValue({ valid: ['google.com'], invalid_count: 1 });
   api.estimate.mockResolvedValue({
@@ -89,6 +101,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.restoreAllMocks();
   api.reference = { short_uuid: 'Ab12Cd34Ef56Gh78', configs: null, error: null };
 });
 
@@ -105,6 +118,75 @@ async function pasteAndPick() {
   fireEvent.click(optimal);
   await waitFor(() => expect(api.estimate).toHaveBeenCalled());
 }
+
+async function openNativeConfirmation(mode: 'once' | 'schedule' = 'once') {
+  nativeDialog.platform = 'telegram';
+  let resolve!: (approved: boolean) => void;
+  nativeDialog.confirm.mockImplementation(
+    () => new Promise<boolean>((complete) => { resolve = complete; }),
+  );
+  await pasteAndPick();
+  if (mode === 'schedule') fireEvent.click(screen.getByRole('radio', { name: /По расписанию/ }));
+  const pay = await screen.findByRole('button', {
+    name: mode === 'schedule' ? 'Создать монитор' : 'Оплатить',
+  });
+  await waitFor(() => expect((pay as HTMLButtonElement).disabled).toBe(false));
+  fireEvent.click(pay);
+  await waitFor(() => expect(nativeDialog.confirm).toHaveBeenCalledTimes(1));
+  return resolve;
+}
+
+it('native confirmation resolving after unmount cannot launch a check', async () => {
+  const resolve = await openNativeConfirmation();
+  cleanup();
+  await act(async () => resolve(true));
+  expect(api.launchCheck).not.toHaveBeenCalled();
+});
+
+it('native confirmation belongs to its original session before route teardown', async () => {
+  const resolve = await openNativeConfirmation();
+  await act(async () => {
+    session.advanceSession();
+    resolve(true);
+  });
+  expect(api.launchCheck).not.toHaveBeenCalled();
+  expect(api.createMonitor).not.toHaveBeenCalled();
+});
+
+it.each(['once', 'schedule'] as const)(
+  'a queued native %s mutation cannot acquire a new session after unmount',
+  async (mode) => {
+    const owner = session.getSessionGeneration();
+    const assertOwner = vi.spyOn(session, 'assertCurrentSession');
+    const resolve = await openNativeConfirmation(mode);
+    await act(async () => {
+      resolve(true);
+      // The popup continuation queues mutate; the mutation function runs later.
+      await Promise.resolve();
+      session.advanceSession();
+      cleanup();
+    });
+    await waitFor(() => expect(assertOwner).toHaveBeenCalledWith(owner));
+    expect(api.launchCheck).not.toHaveBeenCalled();
+    expect(api.createMonitor).not.toHaveBeenCalled();
+  },
+);
+
+it('native approval still launches its immutable request in the approving session', async () => {
+  const owner = session.getSessionGeneration();
+  api.launchCheck.mockImplementation(async () => {
+    expect(session.getSessionGeneration()).toBe(owner);
+    return { id: 11 };
+  });
+  const resolve = await openNativeConfirmation();
+  await act(async () => resolve(true));
+  await waitFor(() => expect(api.launchCheck).toHaveBeenCalledTimes(1));
+  expect(api.launchCheck).toHaveBeenCalledWith(expect.objectContaining({
+    check_type: 'ip',
+    pop_ids: [1],
+    targets: [{ value: 'google.com', name: 'google.com' }],
+  }));
+});
 
 it('цена считается сервисом по рабочим точкам', async () => {
   await pasteAndPick();

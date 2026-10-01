@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { usePermissionStore } from '@/store/permissions';
+import * as session from '@/utils/session';
 import { CheremshaTab } from './CheremshaTab';
 import { NoisyTab, ProbeTab, ScanResult } from './ScanTabs';
 import { renderWithProviders } from './testUtils';
@@ -142,6 +143,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.restoreAllMocks();
 });
 
 it('Соседи: скан на каждую строку, бесплатно, остаток на сегодня виден', async () => {
@@ -237,4 +239,58 @@ it('clearing a Probe target makes the retained confirmation handler harmless', (
   expect((screen.getByRole('button', { name: 'Оплатить' }) as HTMLButtonElement).disabled).toBe(
     true,
   );
+});
+
+it('Probe confirmation cannot authorize a new authentication session', async () => {
+  renderWithProviders(<ProbeTab />);
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: '198.51.100.0/24' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Оплатить' }));
+  const confirm = screen.getByRole('button', { name: /Списать 1\.00 USD/ });
+  await act(async () => {
+    session.advanceSession();
+    fireEvent.click(confirm);
+  });
+  expect(api.launchProbe).not.toHaveBeenCalled();
+});
+
+it.each(['probe', 'noisy'] as const)(
+  'a queued %s mutation cannot start in a newer session after route cleanup',
+  async (kind) => {
+    const owner = session.getSessionGeneration();
+    const assertOwner = vi.spyOn(session, 'assertCurrentSession');
+    renderWithProviders(kind === 'probe' ? <ProbeTab /> : <NoisyTab />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '198.51.100.0/24' } });
+    if (kind === 'probe') fireEvent.click(screen.getByRole('button', { name: 'Оплатить' }));
+    const submit = screen.getByRole('button', {
+      name: kind === 'probe' ? /Списать 1\.00 USD/ : 'Сканировать',
+    });
+    await act(async () => {
+      fireEvent.click(submit);
+      session.advanceSession();
+      cleanup();
+    });
+    await waitFor(() => expect(assertOwner).toHaveBeenCalledWith(owner));
+    expect(api.launchProbe).not.toHaveBeenCalled();
+    expect(api.launchNoisy).not.toHaveBeenCalled();
+  },
+);
+
+it('Noisy stops before the next batch target if the approving session changes', async () => {
+  let finishFirst!: (action: typeof ACTION) => void;
+  api.launchNoisy.mockImplementation(
+    () => new Promise<typeof ACTION>((resolve) => { finishFirst = resolve; }),
+  );
+  renderWithProviders(<NoisyTab />);
+  fireEvent.change(screen.getByRole('textbox'), {
+    target: { value: '198.51.100.0/24\n203.0.113.0/24\nexample.com' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Сканировать' }));
+  await waitFor(() => expect(api.launchNoisy).toHaveBeenCalledTimes(1));
+  await act(async () => {
+    session.advanceSession();
+    cleanup();
+    finishFirst(ACTION);
+  });
+  expect(api.launchNoisy).toHaveBeenCalledTimes(1);
+  expect(api.launchNoisy).toHaveBeenCalledWith({ target: '198.51.100.0/24', source: 'paste' });
 });
