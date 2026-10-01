@@ -1,4 +1,4 @@
-/** Optional upstream contracts gated by verification against the merged bot.
+/** Optional upstream contracts awaiting verification against the merged bot.
  * These are release integration gates, not permissions or user preferences.
  * Enable only alongside schema fixtures and an explicit bot SHA in docs/upstream-1.79.
  */
@@ -17,11 +17,10 @@ export const integrationCapabilities = Object.freeze({
   // Verified against merged bot 741feec565f9c7046ab73566d61f4a9d7fdf68f4.
   numericPanelIdentity: true,
   recurringPayments: false,
-  // Verified against bot 961b2aaabca67a42d013e196c65213d7ebe47f3d (5.0.0).
-  // Runtime provider enabled/configured state and RBAC still apply; see docs/upstream-1.79.
-  casheraRecurringPayments: true,
-  dpichecker: true,
-  broadcastAudience: true,
+  // Independent new contracts; enable after verification against the deployed bot.
+  casheraRecurringPayments: false,
+  dpichecker: false,
+  broadcastAudience: false,
   referralLevels: false,
   graceAccess: false,
 });
