@@ -13,7 +13,7 @@ type TariffListItem,
 } from '../api/campaigns';
 import { AdminBackButton } from '../components/admin';
 
-import Twemoji from 'react-twemoji';
+import Twemoji from '@/lib/twemoji';
 import { PageSkeleton,Skeleton } from '../components/ui/skeleton';
 import { createNumberInputHandler,toNumber } from '../utils/inputHelpers';
 

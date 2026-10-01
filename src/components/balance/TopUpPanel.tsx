@@ -1,6 +1,7 @@
 import { copyToClipboard } from '@/utils/clipboard';
 import { useState, useRef, useMemo, useEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 
@@ -14,6 +15,8 @@ import type { PaymentMethod, PaymentMethodOption } from '../../types';
 import { saveTopUpPendingInfo } from '../../utils/topUpStorage';
 import { getTopUpQuote, TopUpPreparationError } from '../../utils/topUpFlow';
 import { useModalFocus } from '../../hooks/useModalFocus';
+import { getSessionGeneration, isCurrentSession } from '../../utils/session';
+import { openPaymentUrl } from '../../utils/openPaymentUrl';
 
 /**
  * Top-up modal body — amount input on top, a collapsed payment-method row
@@ -73,7 +76,8 @@ export default function TopUpPanel({
   const { t } = useTranslation();
   const userId = useAuthStore((state) => state.user?.id);
   const { formatAmount, currencySymbol, convertToRub } = useCurrency();
-  const { openInvoice, openTelegramLink, openLink } = usePlatform();
+  const { openInvoice, openTelegramLink, openLink, platform } = usePlatform();
+  const sessionGeneration = useRef(getSessionGeneration()).current;
   const haptic = useHaptic();
   const amountId = useId();
   const errorId = useId();
@@ -115,6 +119,7 @@ export default function TopUpPanel({
   const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [qrPayload, setQrPayload] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -133,10 +138,15 @@ export default function TopUpPanel({
 
   const starsPaymentMutation = useMutation({
     mutationFn: async (amountKopeks: number) => {
+      if (!isCurrentSession(sessionGeneration))
+        throw new TopUpPreparationError(t('common.loadError'));
       if (onBeforeTopUp && (await onBeforeTopUp()) === false) return null;
+      if (!isCurrentSession(sessionGeneration))
+        throw new TopUpPreparationError(t('common.loadError'));
       return balanceApi.createStarsInvoice(amountKopeks);
     },
     onSuccess: async (data) => {
+      if (!isCurrentSession(sessionGeneration)) return;
       if (!data) {
         onSuccess();
         return;
@@ -147,6 +157,7 @@ export default function TopUpPanel({
       }
       try {
         const status = await openInvoice(data.invoice_url);
+        if (!isCurrentSession(sessionGeneration)) return;
         if (status === 'paid') {
           haptic.notification('success');
           setError(null);
@@ -156,10 +167,12 @@ export default function TopUpPanel({
           setError(t('wheel.starsPaymentFailed'));
         }
       } catch (e) {
+        if (!isCurrentSession(sessionGeneration)) return;
         setError(t('balance.errors.generic', { details: String(e) }));
       }
     },
     onError: (err: unknown) => {
+      if (!isCurrentSession(sessionGeneration)) return;
       haptic.notification('error');
       const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data
         ?.detail;
@@ -183,15 +196,21 @@ export default function TopUpPanel({
       amount_rubles: number;
       status: string;
       expires_at: string | null;
+      qr_payload?: string | null;
     } | null,
     unknown,
     number
   >({
     mutationFn: async (amountKopeks: number) => {
+      if (!isCurrentSession(sessionGeneration))
+        throw new TopUpPreparationError(t('common.loadError'));
       if (onBeforeTopUp && (await onBeforeTopUp()) === false) return null;
+      if (!isCurrentSession(sessionGeneration))
+        throw new TopUpPreparationError(t('common.loadError'));
       return balanceApi.createTopUp(amountKopeks, method!.id, selectedOption || undefined);
     },
     onSuccess: (data) => {
+      if (!isCurrentSession(sessionGeneration)) return;
       if (!data) {
         onSuccess();
         return;
@@ -222,8 +241,13 @@ export default function TopUpPanel({
           lowerUrl.startsWith('https://t.me/') ||
           lowerUrl.startsWith('http://t.me/') ||
           lowerUrl.startsWith('tg://');
+        if (data.qr_payload) {
+          setQrPayload(data.qr_payload);
+          setPaymentUrl(redirectUrl);
+          return;
+        }
         if (method?.open_url_direct && !isTelegramDeepLink) {
-          window.location.href = redirectUrl;
+          openPaymentUrl(redirectUrl, platform, openLink);
           return;
         }
 
@@ -233,6 +257,7 @@ export default function TopUpPanel({
       }
     },
     onError: (err: unknown) => {
+      if (!isCurrentSession(sessionGeneration)) return;
       const rawDetail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data
         ?.detail;
       const detail = typeof rawDetail === 'string' ? rawDetail : '';
@@ -258,7 +283,11 @@ export default function TopUpPanel({
   const handleSubmit = useCallback(() => {
     setError(null);
     setPaymentUrl(null);
+    setQrPayload(null);
+    setCopied(false);
     inputRef.current?.blur();
+
+    if (!isCurrentSession(sessionGeneration)) return;
 
     if (!method?.is_available || topUpMutation.isPending || starsPaymentMutation.isPending) return;
     if (!checkRateLimit(RATE_LIMIT_KEYS.PAYMENT, 3, 30000)) {
@@ -315,6 +344,7 @@ export default function TopUpPanel({
     fixedAmountKopeks,
     fixedQuote,
     isStarsMethod,
+    sessionGeneration,
     maxRubles,
     method,
     minRubles,
@@ -400,6 +430,8 @@ export default function TopUpPanel({
               onChange={(e) => {
                 setAmount(e.target.value);
                 setPaymentUrl(null);
+                setQrPayload(null);
+                setCopied(false);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -469,6 +501,22 @@ export default function TopUpPanel({
           </span>
         )}
       </button>
+
+      {paymentUrl && qrPayload && (
+        <div className="flex flex-col items-center gap-3 rounded-2xl bg-apple-card p-4">
+          <div className="rounded-xl bg-white p-3" data-testid="topup-qr">
+            <QRCodeSVG
+              value={qrPayload}
+              size={192}
+              level="M"
+              title={t('balance.scanQrToPay', 'QR-код для оплаты')}
+            />
+          </div>
+          <p className="text-center text-[13px] text-apple-mute">
+            {t('balance.scanQrToPay', 'Отсканируйте QR-код в приложении банка или откройте оплату')}
+          </p>
+        </div>
+      )}
 
       {/* Payment link — appears after submit, above the button */}
       {paymentUrl && (
@@ -582,6 +630,7 @@ export default function TopUpPanel({
                     onClick={() => {
                       setSelectedKey(s.key);
                       setPaymentUrl(null);
+                      setQrPayload(null);
                       setCopied(false);
                       setError(null);
                       setShowPicker(false);

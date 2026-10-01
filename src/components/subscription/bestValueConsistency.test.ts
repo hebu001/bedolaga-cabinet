@@ -2,12 +2,9 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-/**
- * Отмеченный оператором вариант выглядит одинаково на всех витринах: плашка
- * «Выгодно» первой строкой карточки и золотая рамка. Раньше каждая витрина
- * рисовала своё — в продлении рамка и плашка сверху, в подарке и на лендинге
- * плашка посреди текста и без рамки, в покупке — внизу.
- */
+/** Operator highlights exist in both shared badges and preserved Apple Dark
+ * labels. Shared badges keep their gold frame; custom labels are tested through
+ * their actual period selection and tariff status semantics in the UI suites. */
 const SRC = join(__dirname, '..', '..');
 
 function tsxFiles(dir: string): string[] {
@@ -21,22 +18,31 @@ function tsxFiles(dir: string): string[] {
 const showcases = tsxFiles(SRC)
   .filter((path) => !path.endsWith('BestValueBadge.tsx'))
   .map((path) => ({ path: relative(SRC, path), code: readFileSync(path, 'utf8') }))
-  .filter(({ code }) => code.includes('<BestValueBadge'));
+  .filter(({ code }) => code.includes('<BestValueBadge') ||
+    (code.includes("t('subscription.bestValue')") && code.includes('is_highlighted')));
+
+const sharedBadges = showcases.filter(({ code }) => code.includes('<BestValueBadge'));
 
 describe('плашка «Выгодно» на витринах', () => {
   it('витрины найдены', () => {
-    expect(showcases.length).toBeGreaterThanOrEqual(5);
+    expect(showcases.map(({ path }) => path)).toEqual(expect.arrayContaining([
+      'pages/RenewSubscription.tsx',
+      'pages/QuickPurchase.tsx',
+      'pages/GiftSubscription.tsx',
+      'components/subscription/purchase/TariffPurchaseForm.tsx',
+      'components/subscription/purchase/TariffPickerGrid.tsx',
+    ]));
   });
 
-  it.each(showcases.map((s) => [s.path, s.code]))(
-    '%s: у отмеченного варианта общая золотая рамка',
+  it.each(sharedBadges.map((s) => [s.path, s.code]))(
+    '%s: общий компонент отметки сохраняет золотую рамку',
     (_path, code) => {
       expect(/bestValueFrame\(|BEST_VALUE_BORDER/.test(code)).toBe(true);
     },
   );
 
   it.each(showcases.map((s) => [s.path, s.code]))(
-    '%s: плашка не прижата вниз карточки',
+    '%s: общая плашка не прижата вниз карточки',
     (_path, code) => {
       expect(/<BestValueBadge[^>]*className="[^"]*\bmt-/.test(code)).toBe(false);
     },

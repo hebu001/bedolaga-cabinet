@@ -1,23 +1,23 @@
 import {
-DocumentIcon,
-EmailIcon,
-PhotoIcon,
-RefreshIcon,
-StopIcon,
-TelegramIcon,
-VideoIcon,
+  DocumentIcon,
+  EmailIcon,
+  PhotoIcon,
+  RefreshIcon,
+  StopIcon,
+  TelegramIcon,
+  VideoIcon,
 } from '@/components/admin/legacyPageIcons/AdminBroadcastDetail';
-import { PageSkeleton,Skeleton } from '@/components/ui/skeleton';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { PageSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
-import { adminBroadcastsApi,type BroadcastChannel } from '../api/adminBroadcasts';
+import { useNavigate, useParams } from 'react-router';
+import { adminBroadcastsApi, type BroadcastChannel } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
 import {
-BroadcastDeliveryStats,
-BroadcastStatusBadge,
+  BroadcastDeliveryStats,
+  BroadcastStatusBadge,
 } from '../components/broadcasts/BroadcastDeliveryStats';
-import { broadcastPollInterval,isBroadcastInFlight } from '../utils/broadcastStatus';
+import { broadcastPollInterval, isBroadcastInFlight } from '../utils/broadcastStatus';
 
 // Channel badge component
 function ChannelBadge({ channel }: { channel?: BroadcastChannel }) {
@@ -67,8 +67,30 @@ export default function AdminBroadcastDetail() {
       if (!broadcastId) throw new Error('Invalid broadcast ID');
       return adminBroadcastsApi.get(broadcastId);
     },
-    enabled: !!broadcastId && !isNaN(broadcastId),
+    enabled: !!broadcastId && !Number.isNaN(broadcastId),
     refetchInterval: (query) => broadcastPollInterval(query.state.data?.status),
+  });
+
+  const { data: audienceFilters } = useQuery({
+    queryKey: ['admin', 'broadcasts', 'detail-filters', broadcast?.channel],
+    queryFn: async () => {
+      if (broadcast?.channel !== 'email') return adminBroadcastsApi.getFilters();
+      const [emailFilters, tariffs] = await Promise.all([
+        adminBroadcastsApi.getEmailFilters(),
+        adminBroadcastsApi.getTariffs(),
+      ]);
+      return {
+        filters: [...emailFilters.filters, ...(emailFilters.promo_group_filters ?? [])],
+        tariff_filters: tariffs.tariffs.map((tariff) => ({
+          key: tariff.filter_key,
+          label: tariff.name,
+          tariff_id: tariff.id,
+          count: tariff.active_users_count,
+        })),
+        custom_filters: [],
+      };
+    },
+    enabled: !!broadcast?.audience,
   });
 
   // Stop mutation
@@ -82,7 +104,7 @@ export default function AdminBroadcastDetail() {
 
   const isRunning = broadcast && isBroadcastInFlight(broadcast.status);
 
-  if (!broadcastId || isNaN(broadcastId)) {
+  if (!broadcastId || Number.isNaN(broadcastId)) {
     navigate('/admin/broadcasts');
     return null;
   }
@@ -149,7 +171,127 @@ export default function AdminBroadcastDetail() {
       {/* Target */}
       <div className="rounded-2xl bg-apple-card p-4">
         <p className="mb-1 text-sm text-apple-mute">{t('admin.broadcasts.filter')}</p>
-        <p className="font-medium text-apple-ink">{broadcast.target_type}</p>
+        {broadcast.audience ? (
+          <div className="space-y-2 text-sm text-apple-ink">
+            {broadcast.audience.conditions.map((condition, index) => {
+              const filters = [
+                ...(audienceFilters?.filters || []),
+                ...(audienceFilters?.tariff_filters || []),
+                ...(audienceFilters?.custom_filters || []),
+              ];
+              const label =
+                condition.label ||
+                filters.find((filter) => filter.key === condition.value)?.label ||
+                (
+                  {
+                    active: t('admin.broadcasts.atomic.active', 'Активна'),
+                    expired: t('admin.broadcasts.atomic.expired', 'Истекла'),
+                    trial: t('admin.broadcasts.atomic.trial', 'Триальная'),
+                    paid: t('admin.broadcasts.atomic.paid', 'Оплаченная'),
+                    zero: '0 ГБ',
+                    yes: t('common.yes', 'Да'),
+                    no: t('common.no', 'Нет'),
+                    custom_referrals: t('admin.broadcasts.atomic.referral', 'По рефералу'),
+                    custom_direct: t('admin.broadcasts.atomic.direct', 'Напрямую'),
+                    email_only: 'Email',
+                    telegram_with_email: 'Telegram',
+                    expiring: t('admin.broadcasts.atomic.next3Days', 'В ближайшие 3 дня'),
+                    custom_today: t('admin.broadcasts.atomic.today', 'Сегодня'),
+                    custom_week: t('admin.broadcasts.atomic.last7Days', 'За 7 дней'),
+                    custom_month: t('admin.broadcasts.atomic.last30Days', 'За 30 дней'),
+                    custom_active_today: t(
+                      'admin.broadcasts.atomic.activeToday',
+                      'Активен сегодня',
+                    ),
+                    custom_inactive_week: t(
+                      'admin.broadcasts.atomic.inactive7Days',
+                      'Неактивен 7+ дней',
+                    ),
+                    custom_inactive_month: t(
+                      'admin.broadcasts.atomic.inactive30Days',
+                      'Неактивен 30+ дней',
+                    ),
+                  } as Record<string, string>
+                )[condition.value] ||
+                condition.value;
+              const atomicFields: Record<string, string> = {
+                subscription_status: t(
+                  'admin.broadcasts.atomic.subscriptionStatus',
+                  'Статус подписки',
+                ),
+                subscription_type: t('admin.broadcasts.atomic.subscriptionType', 'Тип подписки'),
+                traffic_zero: t(
+                  'admin.broadcasts.atomic.trafficZero',
+                  'Использованный трафик равен 0',
+                ),
+                traffic_gt: t('admin.broadcasts.atomic.trafficGt', 'Использованный трафик больше'),
+                traffic_lt: t('admin.broadcasts.atomic.trafficLt', 'Использованный трафик меньше'),
+                subscription_end_date: t(
+                  'admin.broadcasts.atomic.endDate',
+                  'Окончание подписки: дата',
+                ),
+                registration_date: t(
+                  'admin.broadcasts.atomic.registrationDate',
+                  'Дата регистрации',
+                ),
+                activity_date: t(
+                  'admin.broadcasts.atomic.activityDate',
+                  'Последняя активность: дата',
+                ),
+                paid_history: t('admin.broadcasts.atomic.paidHistory', 'Оплачивал раньше'),
+                subscription_end_preset: t(
+                  'admin.broadcasts.atomic.endPreset',
+                  'Окончание подписки: быстрый период',
+                ),
+                registration: t(
+                  'admin.broadcasts.atomic.registrationPreset',
+                  'Регистрация: быстрый период',
+                ),
+                activity: t('admin.broadcasts.atomic.activityPreset', 'Активность: быстрый период'),
+                source: t('admin.broadcasts.atomic.source', 'Источник регистрации'),
+                telegram_id: 'Telegram ID',
+                telegram_username: t('admin.broadcasts.atomic.telegramUsername', 'Ник Telegram'),
+                email_user: 'Email',
+              };
+              const fieldLabel =
+                atomicFields[condition.field] ||
+                (condition.field === 'auth_type'
+                  ? t('admin.broadcasts.audience.authType')
+                  : t(`admin.broadcasts.filterGroups.${condition.field}`, condition.field));
+              const comparison = {
+                eq: t('admin.broadcasts.audience.equals'),
+                ne: t('admin.broadcasts.audience.notEquals'),
+                before: t('admin.broadcasts.atomic.before', 'До даты'),
+                after: t('admin.broadcasts.atomic.after', 'После даты'),
+                between: t('admin.broadcasts.atomic.between', 'Между датами'),
+              }[condition.operator];
+              return (
+                <div key={index}>
+                  {index > 0 && (
+                    <strong className="mr-2 text-[#F97315]">
+                      {condition.join === 'or'
+                        ? t('admin.broadcasts.audience.or')
+                        : t('admin.broadcasts.audience.and')}
+                    </strong>
+                  )}
+                  {condition.field === 'traffic_zero' ? (
+                    fieldLabel
+                  ) : (
+                    <>
+                      {fieldLabel}{' '}
+                      {['traffic_gt', 'traffic_lt'].includes(condition.field) ? '' : comparison}{' '}
+                      {label}
+                      {['traffic_gt', 'traffic_lt'].includes(condition.field) ? ' ГБ' : ''}
+                      {condition.value_to ? ` – ${condition.value_to}` : ''}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="font-medium text-apple-ink">{broadcast.target_type}</p>
+        )}
       </div>
 
       {/* Telegram Message */}

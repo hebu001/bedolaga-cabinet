@@ -67,6 +67,7 @@ const AdminCouponCreate = lazyAdmin(() => import('./pages/AdminCouponCreate'));
 const AdminCouponDetail = lazyAdmin(() => import('./pages/AdminCouponDetail'));
 const CouponStatus = lazyWithRetry(() => import('./pages/CouponStatus'));
 const AdminReferralLevels = lazyAdmin(() => import('./pages/AdminReferralLevels'));
+const AdminDpiChecker = lazyAdmin(() => import('./pages/AdminDpiChecker'));
 const AdminReachability = lazyAdmin(() => import('./pages/AdminReachability'));
 const AdminReachabilityHistory = lazyAdmin(() => import('./pages/AdminReachabilityHistory'));
 const AdminReachabilityOther = lazyAdmin(() => import('./pages/AdminReachabilityOther'));
@@ -1247,6 +1248,20 @@ function App() {
             </PermissionRoute>
           }
         />
+        {integrationCapabilities.dpichecker ? (
+          <Route
+            path="/admin/dpichecker"
+            element={
+              <PermissionRoute permission="dpichecker:read">
+                <LazyPage>
+                  <AdminDpiChecker />
+                </LazyPage>
+              </PermissionRoute>
+            }
+          />
+        ) : (
+          <Route path="/admin/dpichecker" element={<Navigate to="/" replace />} />
+        )}
         <Route
           path="/admin/ban-system"
           element={

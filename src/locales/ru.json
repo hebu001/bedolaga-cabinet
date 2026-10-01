@@ -967,7 +967,33 @@
       "noTopupHint": "На тестовой подписке слоты докупить нельзя — освободите занятый или оформите платный тариф."
     },
     "newTariff": "Новый тариф",
-    "servers": "Серверы"
+    "servers": "Серверы",
+    "casheraRecurring": {
+      "title": "Автопродление Cashera",
+      "connect": "Подключить",
+      "confirm": "Подтвердить автосписания",
+      "cancel": "Отключить",
+      "confirmCancel": "Отключить автопродление Cashera? Подписка больше не будет продлеваться автоматически.",
+      "cancelled": "Автопродление Cashera отключено",
+      "enableError": "Не удалось подключить автопродление Cashera",
+      "cancelError": "Не удалось отменить автопродление Cashera",
+      "statusPending": "Ожидает подтверждения по ссылке",
+      "statusActive": "Активно",
+      "statusPastDue": "Платёж не прошёл — попробуйте снова",
+      "nextCharge": "следующее списание {{date}}",
+      "amountPerInterval": "{{amount}} ₽ {{interval}}",
+      "interval": {
+        "daily": "ежедневно",
+        "weekly": "еженедельно",
+        "monthly": "ежемесячно",
+        "yearly": "ежегодно"
+      },
+      "autopayHint": "Подписка будет автоматически продлеваться через Cashera",
+      "purchaseButton": "⚡ Оформить с автооплатой Cashera",
+      "purchaseHint": "Подтвердите автосписания по ссылке Cashera; дальше продления списываются автоматически.",
+      "purchaseSelectionHint": "Период и сумма автосписаний задаются тарифом. Выбранные выше срок и трафик используются только при оплате с баланса.",
+      "disabledCancelHint": "Новые подключения отключены. Ранее подключённые автосписания можно отменить."
+    }
   },
   "balance": {
     "title": "Баланс",
@@ -1060,6 +1086,9 @@
       },
       "paritypay": {
         "description": "Оплата картой или через СБП (ParityPay)"
+      },
+      "cashera": {
+        "description": "СБП, карты, криптовалюта (Cashera)"
       }
     },
     "transactionHistory": "История операций",
@@ -1188,7 +1217,8 @@
     "failedRefund": "Неудачный возврат",
     "pollReward": "Награда за опрос",
     "giftPayment": "Оплата подарка",
-    "otherOperation": "Операция"
+    "otherOperation": "Операция",
+    "scanQrToPay": "Отсканируйте QR-код в приложении банка или откройте оплату"
   },
   "referral": {
     "title": "Реферальная программа",
@@ -2230,7 +2260,9 @@
       "allSettings": "Все настройки подписки",
       "delete": "Удалить подписку",
       "plans": "Посмотреть тарифы",
-      "support": "Поддержка"
+      "support": "Поддержка",
+      "copyLink": "Скопировать ссылку подписки",
+      "copied": "Скопировано"
     },
     "error": {
       "load": "Не удалось загрузить данные",
@@ -2251,60 +2283,14 @@
   },
   "admin": {
     "nav": {
-      "title": "Админка",
-      "dashboard": "Статистика",
-      "tickets": "Тикеты",
-      "settings": "Настройки",
-      "apps": "Приложения",
-      "wheel": "Колесо",
-      "tariffs": "Тарифы",
-      "servers": "Сквады",
-      "banSystem": "Мониторинг банов",
-      "broadcasts": "Рассылки",
-      "users": "Пользователи",
-      "payments": "Платежи",
-      "remnawave": "RemnaWave",
-      "emailTemplates": "Email-шаблоны",
-      "paymentMethods": "Платёжные методы",
-      "campaigns": "Кампании",
-      "promoOffers": "Промопредложения",
-      "promocodes": "Промокоды",
-      "promoGroups": "Группы скидок",
-      "trafficUsage": "Расход трафика",
-      "updates": "Обновления",
-      "pinnedMessages": "Закреплённые",
-      "partners": "Партнёры",
-      "withdrawals": "Выводы",
-      "channelSubscriptions": "Обязательные каналы",
-      "roles": "Роли",
-      "roleAssign": "Назначение ролей",
-      "policies": "Политики доступа",
-      "auditLog": "Журнал аудита",
-      "salesStats": "Статистика продаж",
-      "landings": "Лендинги",
-      "referralNetwork": "Реферальная сеть",
-      "news": "Новости",
-      "bulkActions": "Массовые действия",
-      "infoPages": "Инфо-страницы"
+      "title": "Админка"
     },
     "infoPages": {
       "notFound": "Страница не найдена",
       "faq": {
-        "questions": "Вопросы и ответы",
-        "questionsCount": "вопросов",
-        "noQuestions": "Вопросов пока нет. Нажмите кнопку ниже, чтобы добавить.",
-        "questionNumber": "Вопрос #{{n}}",
-        "question": "Вопрос",
-        "answer": "Ответ",
-        "questionPlaceholder": "Введите вопрос...",
-        "answerPlaceholder": "Введите ответ (поддерживается HTML)...",
-        "htmlHint": "Поддерживается HTML-разметка",
-        "addQuestion": "Добавить вопрос",
-        "removeQuestion": "Удалить вопрос",
-        "moveUp": "Переместить вверх",
-        "moveDown": "Переместить вниз",
         "searchPlaceholder": "Поиск по вопросам...",
-        "noResults": "Ничего не найдено"
+        "noResults": "Ничего не найдено",
+        "noQuestions": "Вопросов пока нет. Нажмите кнопку ниже, чтобы добавить."
       }
     }
   },

@@ -1,4 +1,6 @@
 import { integrationCapabilities } from '../../../config/integrationCapabilities';
+import { useRef } from 'react';
+import { getSessionGeneration, isCurrentSession } from '@/utils/session';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +20,12 @@ import {
   lavaUiState,
   type LavaUiState,
 } from '@/utils/lavaRecurring';
+import {
+  casheraIntervalLabelKey,
+  casheraUiState,
+  isCasheraFeatureDisabledError,
+  type CasheraUiState,
+} from '@/utils/casheraRecurring';
 import { isRecurringFeatureOff } from '@/utils/recurringFeature';
 import {
   isSbpFeatureDisabledError,
@@ -32,7 +40,7 @@ export interface RecurringPanelsProps {
 }
 
 /**
- * Автосписания СБП (Platega) и Lava — два независимых движка с одинаковой
+ * Автосписания СБП (Platega), Lava и Cashera — независимые движки с одинаковой
  * семантикой, поэтому живут одним компонентом.
  *
  * Вынесены из тела страницы подписки, чтобы ими мог пользоваться простой вид.
@@ -46,6 +54,7 @@ export interface RecurringPanelsProps {
 export function RecurringPanels({ subscription, subscriptionId }: RecurringPanelsProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const sessionGeneration = useRef(getSessionGeneration()).current;
   const { openLink, platform } = usePlatform();
   const destructiveConfirm = useDestructiveConfirm();
   const { showToast } = useToast();
@@ -66,6 +75,19 @@ export function RecurringPanels({ subscription, subscriptionId }: RecurringPanel
   const featureFlagsSettled = purchaseOptionsQuery.isSuccess || purchaseOptionsQuery.isError;
   const sbpFeatureOff = isRecurringFeatureOff(purchaseOptions, 'platega_recurrent_enabled');
   const lavaFeatureOff = isRecurringFeatureOff(purchaseOptions, 'lava_recurrent_enabled');
+  // An explicit boolean flag identifies the verified Cashera contract. False
+  // disables enrollment/status, but existing authorizations may still charge;
+  // their idempotent cancellation endpoint deliberately remains available.
+  const casheraContractKnown =
+    integrationCapabilities.casheraRecurringPayments &&
+    !!purchaseOptions &&
+    'cashera_recurrent_enabled' in purchaseOptions &&
+    typeof purchaseOptions.cashera_recurrent_enabled === 'boolean';
+  const casheraFeatureOff =
+    !casheraContractKnown ||
+    !purchaseOptions ||
+    !('cashera_recurrent_enabled' in purchaseOptions) ||
+    purchaseOptions.cashera_recurrent_enabled !== true;
 
   // SBP (Platega) recurring auto-payment status. Polls every 8s while a
   // payment is PENDING (waiting for bank-app confirmation) so the UI flips
@@ -86,7 +108,10 @@ export function RecurringPanels({ subscription, subscriptionId }: RecurringPanel
   // 403 with a specific detail means the feature itself is disabled on the
   // backend — distinct from "not resolved yet" or "other error", both of
   // which must fail quiet (render nothing) rather than flash the 'off' state.
-  const sbpFeatureDisabled = sbpFeatureOff || isSbpFeatureDisabledError(sbpQuery.error);
+  const sbpFeatureDisabled =
+    !integrationCapabilities.recurringPayments ||
+    sbpFeatureOff ||
+    isSbpFeatureDisabledError(sbpQuery.error);
   const sbpUiStateValue: SbpUiState =
     sbpInfo !== undefined || sbpFeatureDisabled
       ? sbpUiState(sbpInfo, sbpFeatureDisabled)
@@ -163,7 +188,10 @@ export function RecurringPanels({ subscription, subscriptionId }: RecurringPanel
     refetchInterval: (query) => (query.state.data?.status === 'PENDING' ? 8000 : false),
   });
   const lavaInfo = lavaQuery.data;
-  const lavaFeatureDisabled = lavaFeatureOff || isLavaFeatureDisabledError(lavaQuery.error);
+  const lavaFeatureDisabled =
+    !integrationCapabilities.recurringPayments ||
+    lavaFeatureOff ||
+    isLavaFeatureDisabledError(lavaQuery.error);
   const lavaUiStateValue: LavaUiState =
     lavaInfo !== undefined || lavaFeatureDisabled
       ? lavaUiState(lavaInfo, lavaFeatureDisabled)
@@ -224,7 +252,100 @@ export function RecurringPanels({ subscription, subscriptionId }: RecurringPanel
     cancelLavaMutation.mutate();
   };
 
-  if (!integrationCapabilities.recurringPayments) return null;
+  // Автопродление Cashera — третий движок с той же семантикой состояний.
+  // Поллинг раз в 8с, пока привязка PENDING (ждём подтверждения по ссылке).
+  const casheraQuery = useQuery({
+    queryKey: ['cashera-recurring', subscriptionId],
+    queryFn: () => subscriptionApi.getCasheraRecurring(subscriptionId),
+    enabled: !!subscription && !subscription.is_trial && featureFlagsSettled && !casheraFeatureOff,
+    retry: false,
+    refetchInterval: (query) => (query.state.data?.status === 'PENDING' ? 8000 : false),
+  });
+  const casheraInfo = casheraQuery.data;
+  const casheraFeatureDisabled =
+    casheraFeatureOff || isCasheraFeatureDisabledError(casheraQuery.error);
+  const casheraCancellationOnly = casheraContractKnown && casheraFeatureDisabled;
+  const casheraUiStateValue: CasheraUiState | 'disabled' = !casheraContractKnown
+    ? 'hidden'
+    : casheraCancellationOnly
+      ? casheraInfo?.status === 'none'
+        ? 'hidden'
+        : casheraInfo && casheraUiState(casheraInfo, false) !== 'off'
+          ? casheraUiState(casheraInfo, false)
+          : 'disabled'
+      : casheraInfo !== undefined
+        ? casheraUiState(casheraInfo, false)
+        : 'hidden';
+
+  const enableCasheraMutation = useMutation({
+    mutationFn: () => {
+      if (casheraFeatureDisabled || !isCurrentSession(sessionGeneration))
+        throw new Error(t('common.error'));
+      return subscriptionApi.enableCasheraRecurring(subscriptionId);
+    },
+    onSuccess: (data) => {
+      if (!isCurrentSession(sessionGeneration)) return;
+      if (data.redirect_url) {
+        openPaymentUrl(data.redirect_url, platform, openLink);
+      }
+      queryClient.invalidateQueries({ queryKey: ['cashera-recurring', subscriptionId] });
+      // Бэкенд снимает autopay_enabled при включении рекуррента провайдера.
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+    },
+    onError: (error: unknown) => {
+      if (!isCurrentSession(sessionGeneration)) return;
+      const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data
+        ?.detail;
+      showToast({
+        type: 'error',
+        title: typeof detail === 'string' ? detail : t('subscription.casheraRecurring.enableError'),
+        message: '',
+        duration: 3000,
+      });
+    },
+  });
+
+  const cancelCasheraMutation = useMutation({
+    mutationFn: () => {
+      if (!casheraContractKnown || !isCurrentSession(sessionGeneration))
+        throw new Error(t('common.error'));
+      return subscriptionApi.cancelCasheraRecurring(subscriptionId);
+    },
+    onSuccess: () => {
+      if (!isCurrentSession(sessionGeneration)) return;
+      // When enrollment is disabled, GET is unavailable: retire the cached
+      // binding from the confirmed cancellation response without probing it.
+      queryClient.setQueryData(['cashera-recurring', subscriptionId], { status: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['cashera-recurring', subscriptionId] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscriptionId] });
+      showToast({
+        type: 'success',
+        title: t('subscription.casheraRecurring.cancelled'),
+        message: '',
+        duration: 3000,
+      });
+    },
+    onError: (error: unknown) => {
+      if (!isCurrentSession(sessionGeneration)) return;
+      const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data
+        ?.detail;
+      showToast({
+        type: 'error',
+        title: typeof detail === 'string' ? detail : t('subscription.casheraRecurring.cancelError'),
+        message: '',
+        duration: 3000,
+      });
+    },
+  });
+
+  const handleCancelCashera = async () => {
+    const confirmed = await destructiveConfirm(
+      t('subscription.casheraRecurring.confirmCancel'),
+      t('subscription.casheraRecurring.cancel'),
+    );
+    if (!confirmed) return;
+    cancelCasheraMutation.mutate();
+  };
 
   return (
     <>
@@ -453,6 +574,124 @@ export function RecurringPanels({ subscription, subscriptionId }: RecurringPanel
                   className="w-full whitespace-nowrap rounded-xl border border-error-500/30 bg-error-500/10 px-5 py-2.5 text-sm font-medium text-error-400 transition-colors hover:bg-error-500/20 disabled:opacity-50 sm:w-auto"
                 >
                   {t('subscription.lavaRecurring.cancel')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ─── Автопродление Cashera ───
+           Третий движок с теми же состояниями. Интервал задаётся при
+           оформлении и приезжает строкой (daily/weekly/monthly/yearly). */}
+      {!subscription.is_trial && casheraUiStateValue !== 'hidden' && (
+        <div
+          className="mt-3 rounded-[14px] p-3.5"
+          style={{
+            background: g.innerBg,
+            border: `1px solid ${g.innerBorder}`,
+          }}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-dark-50">
+                {t('subscription.casheraRecurring.title')}
+              </div>
+
+              {!casheraCancellationOnly && casheraUiStateValue === 'off' && (
+                <div className="mt-0.5 text-[11px] text-dark-400">
+                  {t('subscription.casheraRecurring.autopayHint')}
+                </div>
+              )}
+              {casheraCancellationOnly && (
+                <div className="mt-0.5 text-[11px] text-dark-400">
+                  {t(
+                    'subscription.casheraRecurring.disabledCancelHint',
+                    'Новые подключения отключены. Ранее подключённые автосписания можно отменить.',
+                  )}
+                </div>
+              )}
+              {casheraUiStateValue === 'pending' && (
+                <div className="mt-0.5 text-[11px] text-dark-400">
+                  {t('subscription.casheraRecurring.statusPending')}
+                </div>
+              )}
+              {casheraUiStateValue === 'active' && casheraInfo && (
+                <>
+                  <div className="mt-0.5 text-[11px] text-dark-400">
+                    {t('subscription.casheraRecurring.amountPerInterval', {
+                      amount: formatAmount((casheraInfo.amount_kopeks ?? 0) / 100),
+                      interval: t(casheraIntervalLabelKey(casheraInfo.interval)),
+                    })}
+                  </div>
+                  {casheraInfo.next_charge_at && (
+                    <div className="mt-0.5 text-[11px] text-dark-400">
+                      {t('subscription.casheraRecurring.nextCharge', {
+                        date: new Date(casheraInfo.next_charge_at).toLocaleDateString(uiLocale(), {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                        }),
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+              {casheraUiStateValue === 'past_due' && (
+                <div className="mt-0.5 text-[11px] font-medium text-warning-400">
+                  {t('subscription.casheraRecurring.statusPastDue')}
+                </div>
+              )}
+            </div>
+
+            <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+              {!casheraCancellationOnly && casheraUiStateValue === 'off' && (
+                <button
+                  onClick={() => enableCasheraMutation.mutate()}
+                  disabled={enableCasheraMutation.isPending}
+                  className="w-full whitespace-nowrap rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-medium text-on-accent transition-opacity disabled:opacity-50 sm:w-auto"
+                >
+                  {enableCasheraMutation.isPending ? (
+                    <span className="mx-auto block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    t('subscription.casheraRecurring.connect')
+                  )}
+                </button>
+              )}
+
+              {casheraUiStateValue === 'pending' && (
+                <>
+                  {!casheraCancellationOnly && casheraInfo?.redirect_url && (
+                    <button
+                      onClick={() => {
+                        if (casheraInfo.redirect_url) {
+                          openPaymentUrl(casheraInfo.redirect_url, platform, openLink);
+                        }
+                      }}
+                      className="w-full whitespace-nowrap rounded-xl bg-accent-500 px-5 py-2.5 text-sm font-medium text-on-accent transition-opacity sm:w-auto"
+                    >
+                      {t('subscription.casheraRecurring.confirm')}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleCancelCashera}
+                    disabled={cancelCasheraMutation.isPending}
+                    className="text-[11px] font-medium transition-colors disabled:opacity-50 sm:text-right"
+                    style={{ color: 'rgb(var(--color-critical-500))' }}
+                  >
+                    {t('subscription.casheraRecurring.cancel')}
+                  </button>
+                </>
+              )}
+
+              {(casheraUiStateValue === 'active' ||
+                casheraUiStateValue === 'past_due' ||
+                casheraUiStateValue === 'disabled') && (
+                <button
+                  onClick={handleCancelCashera}
+                  disabled={cancelCasheraMutation.isPending}
+                  className="w-full whitespace-nowrap rounded-xl border border-error-500/30 bg-error-500/10 px-5 py-2.5 text-sm font-medium text-error-400 transition-colors hover:bg-error-500/20 disabled:opacity-50 sm:w-auto"
+                >
+                  {t('subscription.casheraRecurring.cancel')}
                 </button>
               )}
             </div>

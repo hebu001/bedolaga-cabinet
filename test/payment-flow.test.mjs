@@ -142,9 +142,13 @@ function loadComponent(relative, options = {}) {
       )
         return new Proxy({}, { get: (_, name) => (name === '__esModule' ? true : () => null) });
       if (specifier.endsWith('/useHaptic')) return { useHaptic: () => ({ impact: noop }) };
+      if (specifier.endsWith('/common/PageLoadingIndicator'))
+        return { usePageLoadingIndicator: () => {} };
       if (specifier.endsWith('/api/branding')) return { brandingApi: {} };
       if (specifier.endsWith('/supportContact')) return { supportContactLink: () => undefined };
       if (specifier.endsWith('/safeRedirect')) return { safeRedirect: (value) => value };
+      if (specifier.endsWith('/openPaymentUrl'))
+        return { openPaymentUrl: (url) => state.navigations.push(url) };
       if (specifier.endsWith('/session'))
         return { getSessionGeneration: () => 1, isCurrentSession: () => true };
       if (specifier.endsWith('/paymentStatus')) return statuses;

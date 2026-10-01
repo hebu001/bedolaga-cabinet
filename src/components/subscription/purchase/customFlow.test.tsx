@@ -11,8 +11,25 @@ const state = vi.hoisted(() => ({
   purchase: vi.fn(),
   topup: null as null | { fixedAmountKopeks: number; onBeforeTopUp: () => Promise<boolean | void> },
   currentSession: true,
+  casheraPurchase: vi.fn(),
+  casheraCapability: false,
+  openPayment: vi.fn(),
 }));
-vi.mock('@/api/subscription', () => ({ subscriptionApi: { purchaseTariff: state.purchase } }));
+vi.mock('@/api/subscription', () => ({
+  subscriptionApi: {
+    purchaseTariff: state.purchase,
+    purchaseWithCasheraRecurring: state.casheraPurchase,
+  },
+}));
+vi.mock('@/config/integrationCapabilities', () => ({
+  integrationCapabilities: {
+    recurringPayments: false,
+    get casheraRecurringPayments() {
+      return state.casheraCapability;
+    },
+  },
+}));
+vi.mock('@/utils/openPaymentUrl', () => ({ openPaymentUrl: state.openPayment }));
 vi.mock('@/api/balance', () => ({ balanceApi: { getPaymentMethods: () => Promise.resolve([]) } }));
 vi.mock('@/hooks/useCurrency', () => ({
   useCurrency: () => ({ formatAmount: (value: number) => String(value), currencySymbol: '₽' }),
@@ -50,6 +67,9 @@ beforeEach(() => {
   state.purchase.mockReset();
   state.topup = null;
   state.currentSession = true;
+  state.casheraCapability = false;
+  state.casheraPurchase.mockReset();
+  state.openPayment.mockReset();
   Element.prototype.scrollIntoView = vi.fn();
 });
 afterEach(cleanup);
@@ -70,6 +90,7 @@ function view(options: { ready?: boolean; balance?: number } = {}) {
           pricingReady={ready}
           sbpPurchaseEnabled
           lavaPurchaseEnabled
+          casheraPurchaseEnabled
           onBack={() => {}}
         />
       </MemoryRouter>
@@ -179,5 +200,47 @@ describe('custom purchase flow after upstream decomposition', () => {
     view();
     expect(screen.queryByText('subscription.sbpRecurring.purchaseButton')).toBeNull();
     expect(screen.queryByText('subscription.lavaRecurring.purchaseButton')).toBeNull();
+    expect(screen.queryByText('subscription.casheraRecurring.purchaseButton')).toBeNull();
   });
+  it('Cashera uses a distinct tariff-only purchase and preserves the selected balance purchase period', async () => {
+    state.casheraCapability = true;
+    state.casheraPurchase.mockResolvedValue({
+      subscription_id: 81,
+      redirect_url: 'https://pay.cashera.cash/recurring',
+    });
+    view();
+    fireEvent.click(screen.getByRole('button', { name: /90 дней/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' }));
+    await waitFor(() => expect(state.casheraPurchase).toHaveBeenCalledExactlyOnceWith(7));
+    expect(state.purchase).not.toHaveBeenCalled();
+    expect(state.openPayment).toHaveBeenCalled();
+  });
+
+  it('stale pricing cannot start Cashera recurring purchase', () => {
+    state.casheraCapability = true;
+    view({ ready: false });
+    const button = screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' });
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(button);
+    expect(state.casheraPurchase).not.toHaveBeenCalled();
+  });
+
+  it('a late Cashera completion cannot redirect or invalidate another session', async () => {
+    let finish!: (value: unknown) => void;
+    state.casheraCapability = true;
+    state.casheraPurchase.mockImplementation(
+      () => new Promise((resolve) => { finish = resolve; }),
+    );
+    const { client } = view();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    fireEvent.click(screen.getByRole('button', { name: 'subscription.casheraRecurring.purchaseButton' }));
+    await waitFor(() => expect(state.casheraPurchase).toHaveBeenCalledOnce());
+    state.currentSession = false;
+    await act(async () => {
+      finish({ subscription_id: 81, redirect_url: 'https://pay.cashera.cash/recurring' });
+    });
+    expect(state.openPayment).not.toHaveBeenCalled();
+    expect(invalidate).not.toHaveBeenCalled();
+  });
+
 });

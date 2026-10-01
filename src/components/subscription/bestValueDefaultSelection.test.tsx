@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ruLocale from '@/locales/ru.json';
 import type { RenewalOption } from '@/types';
@@ -41,7 +41,7 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
-const state = { options: [] as RenewalOption[] };
+const state = { options: [] as RenewalOption[], purchases: [] as unknown[][] };
 
 vi.mock('@/api/subscription', () => ({
   subscriptionApi: {
@@ -49,6 +49,10 @@ vi.mock('@/api/subscription', () => ({
     getSubscription: () => Promise.resolve({ subscription: { id: 42, tariff_name: 'Базовый' } }),
     getPurchaseOptions: () => Promise.resolve({ balance_kopeks: 1_000_000 }),
     renewSubscription: () => Promise.resolve({}),
+    purchaseTariff: (...args: unknown[]) => {
+      state.purchases.push(args);
+      return Promise.resolve({});
+    },
   },
 }));
 
@@ -85,12 +89,11 @@ if (!window.matchMedia) {
 afterEach(() => {
   cleanup();
   state.options = [];
+  state.purchases = [];
 });
 
-// Признак выбора у покупки — оранжевая заливка EvoVPN; рамка выбранного варианта
-// остаётся жёлтой, если оператор отметил его выгодным.
-const SELECTED = 'bg-apple-blue/10';
-const BEST_VALUE_RING = 'border-urgent-400';
+// Apple Dark exposes selection through aria-pressed and the orange inset frame.
+// Operator highlight is a separate visible label; it survives choosing another period.
 // Продление красит рамку и заливку инлайновым стилем, а не классом.
 const SELECTED_BORDER = '--color-accent-400';
 
@@ -104,8 +107,8 @@ describe('покупка: выбранный по умолчанию перио�
       harness.period({ days: 360, label: '12 месяцев', is_highlighted: true }),
     ]);
 
-    expect(harness.cardFor('12 месяцев').className).toContain(SELECTED);
-    expect(harness.cardFor('1 месяц').className).not.toContain(SELECTED);
+    expect(harness.cardFor('12 месяцев').getAttribute('aria-pressed')).toBe('true');
+    expect(harness.cardFor('1 месяц').getAttribute('aria-pressed')).toBe('false');
   });
 
   it('без отметки оператора остаётся первый по счёту', async () => {
@@ -115,11 +118,11 @@ describe('покупка: выбранный по умолчанию перио�
       harness.period({ days: 360, label: '12 месяцев' }),
     ]);
 
-    expect(harness.cardFor('1 месяц').className).toContain(SELECTED);
-    expect(harness.cardFor('12 месяцев').className).not.toContain(SELECTED);
+    expect(harness.cardFor('1 месяц').getAttribute('aria-pressed')).toBe('true');
+    expect(harness.cardFor('12 месяцев').getAttribute('aria-pressed')).toBe('false');
   });
 
-  it('выбранный выгодный период сохраняет жёлтый контур: выбран И выгоден', async () => {
+  it('выгодная отметка сохраняется независимо от выбранного периода', async () => {
     const harness = await import('./purchase/tariffPurchaseHarness');
     harness.render([
       harness.period({ days: 30, label: '1 месяц' }),
@@ -127,8 +130,13 @@ describe('покупка: выбранный по умолчанию перио�
     ]);
 
     const card = harness.cardFor('12 месяцев');
-    expect(card.className).toContain(BEST_VALUE_RING);
-    expect(card.className).toContain(SELECTED);
+    expect(card.getAttribute('aria-pressed')).toBe('true');
+    expect(card.textContent).toContain(ru('subscription.bestValue'));
+    expect(harness.cardFor('1 месяц').textContent).not.toContain(ru('subscription.bestValue'));
+    fireEvent.click(harness.cardFor('1 месяц'));
+    expect(card.getAttribute('aria-pressed')).toBe('false');
+    expect(card.textContent).toContain(ru('subscription.bestValue'));
+    expect(harness.cardFor('1 месяц').getAttribute('aria-pressed')).toBe('true');
   });
 
   it('итог внизу считает выбранный выгодный период, а не первый', async () => {
@@ -143,8 +151,11 @@ describe('покупка: выбранный по умолчанию перио�
       }),
     ]);
 
-    expect(screen.getByText('Период: 12 месяцев')).toBeTruthy();
-    expect(screen.queryByText('Период: 1 месяц')).toBeNull();
+    const pay = screen.getByRole('button', { name: /^Оплатить/ });
+    expect(pay.textContent?.replace(/[\s,]/g, '')).toContain('2640');
+    expect(pay.textContent?.replace(/[\s,]/g, '')).not.toContain('399');
+    fireEvent.click(pay);
+    await waitFor(() => expect(state.purchases).toEqual([[1, 360, undefined, undefined]]));
   });
 });
 

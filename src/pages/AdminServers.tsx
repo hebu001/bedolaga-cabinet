@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { serversApi,type ServerListItem } from '../api/servers';
 
-import Twemoji from 'react-twemoji';
+import Twemoji from '@/lib/twemoji';
 import { usePlatform } from '../platform/hooks/usePlatform';
 
 // Country flags (simple emoji mapping)

@@ -8,7 +8,7 @@ import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
 import { useEffect,useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate,useSearchParams } from 'react-router';
-import Twemoji from 'react-twemoji';
+import Twemoji from '@/lib/twemoji';
 import {
 campaignsApi,
 type CampaignBonusType,

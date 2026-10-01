@@ -74,7 +74,7 @@ const initialized = i18n
     supportedLngs: SUPPORTED_LANGUAGES,
     load: 'languageOnly',
     resources: {},
-    initImmediate: false,
+    initAsync: false,
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
@@ -82,7 +82,6 @@ const initialized = i18n
     },
     interpolation: { escapeValue: false },
     react: { useSuspense: false, bindI18nStore: 'added' },
-    showSupportNotice: false,
   });
 
 async function loadLanguages(lng: string, admin = false): Promise<void> {

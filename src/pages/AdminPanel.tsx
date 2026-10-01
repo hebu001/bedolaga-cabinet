@@ -1,14 +1,14 @@
 import { BellIcon } from '@/components/admin/legacyIcons';
-import { LifebuoyIcon,RadarIcon } from '@/components/icons';
+import { LifebuoyIcon, RadarIcon, WallIcon } from '@/components/icons';
 import { integrationCapabilities } from '@/config/integrationCapabilities';
 import { useQuery } from '@tanstack/react-query';
 
-import { statsApi,type DashboardStats,type SystemInfo } from '@/api/admin';
+import { statsApi, type DashboardStats, type SystemInfo } from '@/api/admin';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { useTelegramSDK } from '@/hooks/useTelegramSDK';
 import { cn } from '@/lib/utils';
 import { usePermissionStore } from '@/store/permissions';
-import { memo,useCallback,useEffect,useMemo,useRef,useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -114,6 +114,7 @@ const StatPaidIcon = () => (
 // Section nav icons (24x24 viewBox)
 const icons = {
   radar: <RadarIcon />,
+  wall: <WallIcon />,
   bell: <BellIcon />,
   lifebuoy: <LifebuoyIcon />,
   'bar-chart': (
@@ -612,6 +613,12 @@ const sections: AdminSection[] = [
         permission: 'reachability:read',
       },
       {
+        name: 'admin.nav.dpichecker',
+        icon: 'wall',
+        to: '/admin/dpichecker',
+        permission: 'dpichecker:read',
+      },
+      {
         name: 'admin.nav.emailTemplates',
         icon: 'mail',
         to: '/admin/email-templates',
@@ -802,6 +809,7 @@ const GlassCard = memo(function GlassCard({ section, index, searchTerm }: GlassC
       section.items.filter((item) => {
         const pending: Record<string, boolean> = {
           '/admin/reachability': integrationCapabilities.reachability,
+          '/admin/dpichecker': integrationCapabilities.dpichecker,
           '/admin/coupons': integrationCapabilities.coupons,
           '/admin/legal-pages': integrationCapabilities.legalConsent,
           '/admin/reminders': integrationCapabilities.reminders,

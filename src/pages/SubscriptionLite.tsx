@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
@@ -21,6 +21,8 @@ import { ServerManagementSheet } from '@/components/subscription/sheets/ServerMa
 import { TrafficTopupSheet } from '@/components/subscription/sheets/TrafficTopupSheet';
 import { PageLoadingIndicator } from '@/components/common/PageLoadingIndicator';
 import { useTheme } from '@/hooks/useTheme';
+import { copyToClipboard } from '@/utils/clipboard';
+import { resolveConnectionUrlForUi } from '@/utils/connectionLink';
 import { getGlassColors } from '@/utils/glassTheme';
 import { showsAddonOptions } from '@/utils/legacySubscription';
 import { formatLiteDate } from '@/utils/liteDate';
@@ -85,6 +87,36 @@ export default function SubscriptionLite() {
     queryFn: () => subscriptionApi.getPurchaseOptions(subscriptionId),
     enabled: Boolean(subscription),
   });
+
+  // Ссылка подписки — та же, что показывает полная страница: иначе в простом
+  // виде её не было нигде, и человеку без приложения-импортёра нечего вставить.
+  const { data: connectionLink, isLoading: isConnectionLinkLoading } = useQuery({
+    queryKey: ['connection-link', subscriptionId],
+    queryFn: () => subscriptionApi.getConnectionLink(subscriptionId),
+    enabled: Boolean(subscription),
+    retry: false,
+  });
+  const connectionUrl = useMemo(
+    () =>
+      resolveConnectionUrlForUi({
+        mode: connectionLink?.connect_mode,
+        happSchemeLink: connectionLink?.happ_scheme_link,
+        displayLink: connectionLink?.display_link,
+        subscriptionUrl: connectionLink?.subscription_url,
+        happCryptLink: connectionLink?.happ_cryptolink,
+        happCryptoLink: connectionLink?.happ_crypto_link,
+        happLink: connectionLink?.happ_link,
+        fallbackUrl: isConnectionLinkLoading ? null : (subscription?.subscription_url ?? null),
+      }),
+    [connectionLink, isConnectionLinkLoading, subscription?.subscription_url],
+  );
+  const hidesLink = Boolean(subscription?.hide_subscription_link || connectionLink?.hide_link);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
 
   if (isError) {
     return (
@@ -153,7 +185,29 @@ export default function SubscriptionLite() {
 
       <div className="mt-6">
         <LiteRowGroup>
-          <LiteRow to={`/subscriptions/${subscription.id}/renew`} label={t('lite.action.renew')} />
+          {subscription.is_trial ? (
+            // Пробный период не продлевается: «Продлить» вела на экран «Нет
+            // вариантов продления». После триала покупают тариф.
+            <LiteRow
+              to="/subscription/purchase"
+              label={t('lite.rows.plans', 'Посмотреть тарифы')}
+            />
+          ) : (
+            <LiteRow
+              to={`/subscriptions/${subscription.id}/renew`}
+              label={t('lite.action.renew')}
+            />
+          )}
+
+          {connectionUrl && !hidesLink && (
+            <LiteRow
+              onClick={() => {
+                void copyToClipboard(connectionUrl).then(() => setCopied(true));
+              }}
+              label={t('lite.rows.copyLink', 'Скопировать ссылку подписки')}
+              value={copied ? t('lite.rows.copied', 'Скопировано') : undefined}
+            />
+          )}
 
           {panel === 'traffic' ? (
             <div className="py-4">

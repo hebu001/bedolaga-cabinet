@@ -1,0 +1,95 @@
+/* DPI//CHECKER is loaded with its page. Surfaces and actions follow Apple Dark;
+   result/status colors retain their meaning and other cabinet pages are unaffected. */
+.dpichecker-page {
+  --color-accent-300: 253, 186, 116;
+  --color-accent-400: 251, 146, 60;
+  --color-accent-500: 249, 115, 21;
+  --color-accent-600: 234, 88, 12;
+  --color-accent-700: 194, 65, 12;
+  --color-on-accent: 255, 255, 255;
+  --color-dark-950: 0, 0, 0;
+  --color-dark-900: 28, 28, 30;
+  --color-dark-800: 44, 44, 46;
+  --color-dark-700: 58, 58, 60;
+  --color-dark-600: 72, 72, 74;
+  --color-dark-500: 147, 147, 151;
+  --color-dark-100: 245, 245, 247;
+  --color-dark-200: 225, 225, 230;
+  --color-dark-300: 174, 174, 180;
+  --color-dark-400: 174, 174, 180;
+  min-width: 0;
+  color: rgb(var(--color-apple-ink));
+}
+
+.dpichecker-page .bento-card {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  background: rgb(var(--color-apple-card));
+  box-shadow: none;
+  backdrop-filter: none;
+  animation: none;
+}
+
+.dpichecker-page :is([class*="border-dark-"], [class*="border-apple-hairline/"]) {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dpichecker-page :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, .input) {
+  border-color: transparent;
+  border-radius: 12px;
+  background: rgb(var(--color-apple-elevated));
+  color: rgb(var(--color-apple-ink));
+}
+
+.dpichecker-page :is(input, textarea, select):focus-visible {
+  outline: 2px solid rgba(249, 115, 21, 0.75);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.dpichecker-page [aria-invalid="true"] {
+  border-color: rgb(var(--color-apple-red));
+}
+
+.dpichecker-page :is(button, a):focus-visible {
+  outline: 2px solid #f97315;
+  outline-offset: 3px;
+}
+
+.dpichecker-page .btn-primary {
+  min-height: 44px;
+  border: 0;
+  border-radius: 9999px;
+  background: #f97315;
+  color: #fff;
+  box-shadow: none;
+}
+
+.dpichecker-page .btn-primary:hover:not(:disabled) {
+  background: #fb923c;
+}
+
+.dpichecker-page .btn-secondary {
+  min-height: 44px;
+  border-color: transparent;
+  border-radius: 12px;
+  background: rgb(var(--color-apple-elevated));
+  color: rgb(var(--color-apple-ink));
+  box-shadow: none;
+}
+
+.dpichecker-page :is([aria-pressed="true"], [aria-selected="true"]):not(:focus-visible) {
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+}
+
+@media (max-width: 639px) {
+  .dpichecker-page .bento-card {
+    border-radius: 20px;
+  }
+
+  .dpichecker-page :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+    font-size: 16px;
+  }
+}

@@ -1,49 +1,39 @@
+import { integrationCapabilities } from '@/config/integrationCapabilities';
+import { LegacyBroadcastTargetPicker } from '../components/broadcasts/LegacyBroadcastTargetPicker';
 import {
-BroadcastIcon,
-ChevronDownIcon,
-DocumentIcon,
-EmailIcon,
-PhotoIcon,
-RefreshIcon,
-TelegramIcon,
-UsersIcon,
-VideoIcon,
-XIcon,
+  BroadcastIcon,
+  DocumentIcon,
+  EmailIcon,
+  PhotoIcon,
+  RefreshIcon,
+  TelegramIcon,
+  VideoIcon,
+  XIcon,
 } from '@/components/admin/legacyPageIcons/AdminBroadcastCreate';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
-import { useEffect,useMemo,useRef,useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation,useNavigate,useSearchParams } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import {
-adminBroadcastsApi,
-emailUserTarget,
-type BroadcastFilter,
-type CombinedBroadcastCreateRequest,
-type CustomBroadcastButton,
-type TariffFilter,
+  adminBroadcastsApi,
+  emailUserTarget,
+  type BroadcastFilter,
+  type CombinedBroadcastCreateRequest,
+  type CustomBroadcastButton,
 } from '../api/adminBroadcasts';
 import { AdminBackButton } from '../components/admin';
-import { EmailPreview,TelegramPreview } from '../components/broadcasts/BroadcastPreview';
+import {
+  BroadcastAudienceEditor,
+  emptyAudience,
+  isAudienceComplete,
+} from '../components/broadcasts/BroadcastAudienceEditor';
+import { EmailPreview, TelegramPreview } from '../components/broadcasts/BroadcastPreview';
 
-// Filter labels
-const FILTER_GROUP_LABEL_KEYS: Record<string, string> = {
-  basic: 'admin.broadcasts.filterGroups.basic',
-  subscription: 'admin.broadcasts.filterGroups.subscription',
-  traffic: 'admin.broadcasts.filterGroups.traffic',
-  registration: 'admin.broadcasts.filterGroups.registration',
-  activity: 'admin.broadcasts.filterGroups.activity',
-  source: 'admin.broadcasts.filterGroups.source',
-  tariff: 'admin.broadcasts.filterGroups.tariff',
-  email: 'admin.broadcasts.filterGroups.email',
-  promo_group: 'admin.broadcasts.filterGroups.promo_group',
-  recipient: 'admin.broadcasts.filterGroups.recipient',
-};
-
-/** `?email_user=<id>` — письмо одному человеку, открытое из карточки пользователя. */
+/** `?email_user=<id>` opens an Email broadcast for one user from their profile. */
 function parseEmailUserParam(value: string | null): number | null {
   if (!value || !/^\d+$/.test(value)) return null;
   const id = Number(value);
-  return id > 0 ? id : null;
+  return Number.isSafeInteger(id) && id > 0 && id <= 2_147_483_647 ? id : null;
 }
 
 export default function AdminBroadcastCreate() {
@@ -62,13 +52,43 @@ export default function AdminBroadcastCreate() {
   const [telegramEnabled, setTelegramEnabled] = useState(presetEmailUserId === null);
   const [emailEnabled, setEmailEnabled] = useState(presetEmailUserId !== null);
 
-  // Separate targets per channel
+  const advancedAudience = integrationCapabilities.broadcastAudience;
   const [telegramTarget, setTelegramTarget] = useState('');
   const [emailTarget, setEmailTarget] = useState(
     presetEmailUserId !== null ? emailUserTarget(presetEmailUserId) : '',
   );
-  const [showTelegramFilters, setShowTelegramFilters] = useState(false);
-  const [showEmailFilters, setShowEmailFilters] = useState(false);
+  const singleUserEmailFilter = useMemo<BroadcastFilter | null>(
+    () =>
+      presetEmailUserId === null
+        ? null
+        : {
+            key: emailUserTarget(presetEmailUserId),
+            label: t('admin.broadcasts.singleUser', {
+              name: presetEmailUserLabel ?? `#${presetEmailUserId}`,
+            }),
+            count: null,
+            group: 'recipient',
+          },
+    [presetEmailUserId, presetEmailUserLabel, t],
+  );
+
+  // Separate audiences per channel, as in the existing form.
+  const [telegramAudience, setTelegramAudience] = useState(emptyAudience);
+  const [emailAudience, setEmailAudience] = useState(() =>
+    presetEmailUserId === null
+      ? emptyAudience()
+      : {
+          conditions: [
+            {
+              field: 'email_user',
+              operator: 'eq' as const,
+              value: String(presetEmailUserId),
+              label: presetEmailUserLabel ?? `#${presetEmailUserId}`,
+              join: null,
+            },
+          ],
+        },
+  );
 
   // Broadcast category (system/news/promo)
   const [category, setCategory] = useState<'system' | 'news' | 'promo'>('system');
@@ -155,6 +175,11 @@ export default function AdminBroadcastCreate() {
     queryFn: adminBroadcastsApi.getEmailFilters,
     enabled: emailEnabled,
   });
+  const { data: emailTariffsData, isLoading: emailTariffsLoading } = useQuery({
+    queryKey: ['admin', 'broadcasts', 'tariffs'],
+    queryFn: adminBroadcastsApi.getTariffs,
+    enabled: emailEnabled && advancedAudience,
+  });
 
   // Fetch buttons
   const { data: buttonsData } = useQuery({
@@ -162,34 +187,6 @@ export default function AdminBroadcastCreate() {
     queryFn: adminBroadcastsApi.getButtons,
     enabled: telegramEnabled,
   });
-
-  // Preview mutations — separate for each channel
-  const telegramPreviewMutation = useMutation({
-    mutationFn: adminBroadcastsApi.preview,
-  });
-
-  const emailPreviewMutation = useMutation({
-    mutationFn: adminBroadcastsApi.previewEmail,
-  });
-
-  // Письмо одному человеку: сразу показать, дойдёт ли оно (0 — нет подтверждённой почты).
-  const presetEmailTarget = presetEmailUserId !== null ? emailUserTarget(presetEmailUserId) : null;
-  const previewEmail = emailPreviewMutation.mutate;
-  useEffect(() => {
-    if (presetEmailTarget) previewEmail(presetEmailTarget);
-  }, [presetEmailTarget, previewEmail]);
-
-  const singleUserEmailFilter = useMemo<BroadcastFilter | null>(() => {
-    if (presetEmailTarget === null) return null;
-    return {
-      key: presetEmailTarget,
-      label: t('admin.broadcasts.singleUser', {
-        name: presetEmailUserLabel ?? `#${presetEmailUserId}`,
-      }),
-      count: null,
-      group: 'recipient',
-    };
-  }, [presetEmailTarget, presetEmailUserLabel, presetEmailUserId, t]);
 
   // Create mutation (used for single-channel sends)
   const createMutation = useMutation({
@@ -200,96 +197,17 @@ export default function AdminBroadcastCreate() {
     },
   });
 
-  // Group Telegram filters
-  const groupedTelegramFilters = useMemo(() => {
-    if (!filtersData) return {};
-    const groups: Record<string, (BroadcastFilter | TariffFilter)[]> = {};
-
-    filtersData.filters.forEach((f) => {
-      const group = f.group || 'basic';
-      if (!groups[group]) groups[group] = [];
-      groups[group].push(f);
-    });
-
-    if (filtersData.tariff_filters.length > 0) {
-      groups['tariff'] = filtersData.tariff_filters;
-    }
-
-    filtersData.custom_filters.forEach((f) => {
-      const group = f.group || 'custom';
-      if (!groups[group]) groups[group] = [];
-      groups[group].push(f);
-    });
-
-    return groups;
-  }, [filtersData]);
-
-  // Group Email filters
-  const groupedEmailFilters = useMemo(() => {
-    if (!emailFiltersData) return {};
-    const groups: Record<string, BroadcastFilter[]> = {};
-
-    if (singleUserEmailFilter) {
-      groups['recipient'] = [singleUserEmailFilter];
-    }
-
-    emailFiltersData.filters.forEach((f) => {
-      const group = f.group || 'email';
-      if (!groups[group]) groups[group] = [];
-      groups[group].push(f);
-    });
-
-    const promoGroupFilters = emailFiltersData.promo_group_filters ?? [];
-    if (promoGroupFilters.length > 0) {
-      groups['promo_group'] = promoGroupFilters;
-    }
-
-    return groups;
-  }, [emailFiltersData, singleUserEmailFilter]);
-
-  // Selected filter info for each channel
-  const selectedTelegramFilter = useMemo(() => {
-    if (!telegramTarget || !filtersData) return null;
-    const all = [
-      ...filtersData.filters,
-      ...filtersData.tariff_filters,
-      ...filtersData.custom_filters,
-    ];
-    return all.find((f) => f.key === telegramTarget) ?? null;
-  }, [telegramTarget, filtersData]);
-
-  const selectedEmailFilter = useMemo(() => {
-    if (!emailTarget) return null;
-    if (singleUserEmailFilter?.key === emailTarget) return singleUserEmailFilter;
-    if (!emailFiltersData) return null;
-    const all = [...emailFiltersData.filters, ...(emailFiltersData.promo_group_filters ?? [])];
-    return all.find((f) => f.key === emailTarget) ?? null;
-  }, [emailTarget, emailFiltersData, singleUserEmailFilter]);
-
   // Handle toggling channels
   const handleToggleTelegram = () => {
     setTelegramEnabled((prev) => !prev);
+    setTelegramAudience(emptyAudience());
     setTelegramTarget('');
-    telegramPreviewMutation.reset();
   };
 
   const handleToggleEmail = () => {
     setEmailEnabled((prev) => !prev);
+    setEmailAudience(emptyAudience());
     setEmailTarget('');
-    emailPreviewMutation.reset();
-  };
-
-  // Handle filter selection per channel
-  const handleTelegramFilterSelect = (filterKey: string) => {
-    setTelegramTarget(filterKey);
-    setShowTelegramFilters(false);
-    telegramPreviewMutation.mutate(filterKey);
-  };
-
-  const handleEmailFilterSelect = (filterKey: string) => {
-    setEmailTarget(filterKey);
-    setShowEmailFilters(false);
-    emailPreviewMutation.mutate(filterKey);
   };
 
   // Handle file selection
@@ -391,9 +309,15 @@ export default function AdminBroadcastCreate() {
   };
 
   // Validate form
-  const isTelegramValid = telegramEnabled && telegramTarget && messageText.trim().length > 0;
+  const isTelegramValid =
+    telegramEnabled &&
+    (advancedAudience ? isAudienceComplete(telegramAudience) : Boolean(telegramTarget)) &&
+    messageText.trim().length > 0;
   const isEmailValid =
-    emailEnabled && emailTarget && emailSubject.trim().length > 0 && emailContent.trim().length > 0;
+    emailEnabled &&
+    (advancedAudience ? isAudienceComplete(emailAudience) : Boolean(emailTarget)) &&
+    emailSubject.trim().length > 0 &&
+    emailContent.trim().length > 0;
 
   const isValid = useMemo(() => {
     if (!telegramEnabled && !emailEnabled) return false;
@@ -412,7 +336,7 @@ export default function AdminBroadcastCreate() {
     if (telegramEnabled && !emailEnabled) {
       const data: CombinedBroadcastCreateRequest = {
         channel: 'telegram',
-        target: telegramTarget,
+        ...(advancedAudience ? { audience: telegramAudience } : { target: telegramTarget }),
         message_text: messageText,
         selected_buttons: selectedButtons,
         custom_buttons: customButtons.length > 0 ? customButtons : undefined,
@@ -428,7 +352,7 @@ export default function AdminBroadcastCreate() {
     if (emailEnabled && !telegramEnabled) {
       const data: CombinedBroadcastCreateRequest = {
         channel: 'email',
-        target: emailTarget,
+        ...(advancedAudience ? { audience: emailAudience } : { target: emailTarget }),
         email_subject: emailSubject,
         email_html_content: emailContent,
         category,
@@ -442,7 +366,7 @@ export default function AdminBroadcastCreate() {
     try {
       const telegramData: CombinedBroadcastCreateRequest = {
         channel: 'telegram',
-        target: telegramTarget,
+        ...(advancedAudience ? { audience: telegramAudience } : { target: telegramTarget }),
         message_text: messageText,
         selected_buttons: selectedButtons,
         custom_buttons: customButtons.length > 0 ? customButtons : undefined,
@@ -454,7 +378,7 @@ export default function AdminBroadcastCreate() {
 
       const emailData: CombinedBroadcastCreateRequest = {
         channel: 'email',
-        target: emailTarget,
+        ...(advancedAudience ? { audience: emailAudience } : { target: emailTarget }),
         email_subject: emailSubject,
         email_html_content: emailContent,
         category,
@@ -470,93 +394,7 @@ export default function AdminBroadcastCreate() {
     }
   };
 
-  // Recipients counts per channel
-  const telegramRecipientsCount = telegramEnabled
-    ? (telegramPreviewMutation.data?.count ?? selectedTelegramFilter?.count ?? null)
-    : null;
-
-  const emailRecipientsCount = emailEnabled
-    ? (emailPreviewMutation.data?.count ?? selectedEmailFilter?.count ?? null)
-    : null;
-
   const isPending = createMutation.isPending || isSubmitting;
-
-  // Render filter dropdown
-  const renderFilterDropdown = (
-    channelType: 'telegram' | 'email',
-    target: string,
-    selectedFilter: BroadcastFilter | TariffFilter | null,
-    recipientsCount: number | null,
-    showFilters: boolean,
-    setShowFilters: (v: boolean) => void,
-    handleFilterSelect: (key: string) => void,
-    groupedFilters: Record<string, (BroadcastFilter | TariffFilter)[]>,
-    isLoading: boolean,
-  ) => (
-    <div>
-      <label className="mb-2 block text-[13px] font-medium text-apple-mute">
-        {channelType === 'telegram'
-          ? t('admin.broadcasts.selectFilter')
-          : t('admin.broadcasts.selectEmailFilter')}
-      </label>
-      <div className="relative">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex w-full items-center justify-between rounded-xl bg-apple-elevated p-3 text-left transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <UsersIcon />
-            <span className={selectedFilter ? 'text-apple-ink' : 'text-apple-mute'}>
-              {selectedFilter
-                ? selectedFilter.label
-                : channelType === 'telegram'
-                  ? t('admin.broadcasts.selectFilterPlaceholder')
-                  : t('admin.broadcasts.selectEmailFilterPlaceholder')}
-            </span>
-            {recipientsCount !== null && (
-              <span className="shrink-0 whitespace-nowrap rounded-full bg-[#F97315]/20 px-2 py-0.5 text-xs text-[#F97315]">
-                {recipientsCount} {t('admin.broadcasts.recipients')}
-              </span>
-            )}
-          </div>
-          <ChevronDownIcon className="h-4 w-4" />
-        </button>
-
-        {showFilters && (
-          <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-xl bg-apple-card shadow-xl">
-            {isLoading ? (
-              <div className="p-4 text-center text-apple-mute">{t('common.loading')}</div>
-            ) : (
-              Object.entries(groupedFilters).map(([group, filters]) => (
-                <div key={group}>
-                  <div className="sticky top-0 bg-apple-bg px-3 py-2 text-xs font-medium text-apple-mute">
-                    {FILTER_GROUP_LABEL_KEYS[group] ? t(FILTER_GROUP_LABEL_KEYS[group]) : group}
-                  </div>
-                  {filters.map((filter) => (
-                    <button
-                      key={filter.key}
-                      onClick={() => handleFilterSelect(filter.key)}
-                      className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-apple-elevated"
-                      style={
-                        target === filter.key
-                          ? { backgroundColor: 'rgba(249,115,21,0.15)' }
-                          : undefined
-                      }
-                    >
-                      <span className="text-apple-ink">{filter.label}</span>
-                      {filter.count !== null && filter.count !== undefined && (
-                        <span className="text-xs text-apple-mute">{filter.count}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -670,16 +508,39 @@ export default function AdminBroadcastCreate() {
           </div>
 
           {/* Telegram filter selection */}
-          {renderFilterDropdown(
-            'telegram',
-            telegramTarget,
-            selectedTelegramFilter,
-            telegramRecipientsCount,
-            showTelegramFilters,
-            setShowTelegramFilters,
-            handleTelegramFilterSelect,
-            groupedTelegramFilters,
-            filtersLoading,
+          {advancedAudience ? (
+            <BroadcastAudienceEditor
+              channel="telegram"
+              category={category}
+              audience={telegramAudience}
+              onChange={setTelegramAudience}
+              filters={
+                filtersData
+                  ? [
+                      ...filtersData.filters,
+                      ...filtersData.tariff_filters,
+                      ...filtersData.custom_filters,
+                    ]
+                  : []
+              }
+              isLoading={filtersLoading}
+            />
+          ) : (
+            <LegacyBroadcastTargetPicker
+              channel="telegram"
+              target={telegramTarget}
+              onChange={setTelegramTarget}
+              filters={
+                filtersData
+                  ? [
+                      ...filtersData.filters,
+                      ...filtersData.tariff_filters,
+                      ...filtersData.custom_filters,
+                    ]
+                  : []
+              }
+              isLoading={filtersLoading}
+            />
           )}
 
           {/* Message text */}
@@ -935,16 +796,36 @@ export default function AdminBroadcastCreate() {
           </div>
 
           {/* Email filter selection */}
-          {renderFilterDropdown(
-            'email',
-            emailTarget,
-            selectedEmailFilter,
-            emailRecipientsCount,
-            showEmailFilters,
-            setShowEmailFilters,
-            handleEmailFilterSelect,
-            groupedEmailFilters,
-            emailFiltersLoading,
+          {advancedAudience ? (
+            <BroadcastAudienceEditor
+              channel="email"
+              category={category}
+              audience={emailAudience}
+              onChange={setEmailAudience}
+              filters={[
+                ...(emailFiltersData?.filters || []),
+                ...(emailFiltersData?.promo_group_filters || []),
+                ...(emailTariffsData?.tariffs.map((tariff) => ({
+                  key: tariff.filter_key,
+                  label: tariff.name,
+                  tariff_id: tariff.id,
+                  count: tariff.active_users_count,
+                })) || []),
+              ]}
+              isLoading={emailFiltersLoading || emailTariffsLoading}
+            />
+          ) : (
+            <LegacyBroadcastTargetPicker
+              channel="email"
+              target={emailTarget}
+              onChange={setEmailTarget}
+              filters={[
+                ...(singleUserEmailFilter ? [singleUserEmailFilter] : []),
+                ...(emailFiltersData?.filters ?? []),
+                ...(emailFiltersData?.promo_group_filters ?? []),
+              ]}
+              isLoading={emailFiltersLoading}
+            />
           )}
 
           {/* Email subject */}
@@ -998,26 +879,8 @@ export default function AdminBroadcastCreate() {
       )}
 
       {/* Footer */}
-      <div className="apple-card-grad flex items-center justify-between rounded-2xl bg-apple-card p-4">
-        <div className="text-sm text-apple-mute">
-          {(telegramRecipientsCount !== null || emailRecipientsCount !== null) && (
-            <span>
-              {t('admin.broadcasts.willBeSent')}:{' '}
-              {telegramRecipientsCount !== null && (
-                <>
-                  <strong style={{ color: '#F97315' }}>{telegramRecipientsCount}</strong> (TG)
-                </>
-              )}
-              {telegramRecipientsCount !== null && emailRecipientsCount !== null && ' + '}
-              {emailRecipientsCount !== null && (
-                <>
-                  <strong style={{ color: '#F97315' }}>{emailRecipientsCount}</strong> (Email)
-                </>
-              )}
-            </span>
-          )}
-        </div>
-        <div className="ml-auto flex gap-3">
+      <div className="apple-card-grad flex items-center justify-end rounded-2xl bg-apple-card p-4">
+        <div className="flex gap-3">
           <button
             onClick={() => navigate('/admin/broadcasts')}
             className="rounded-full bg-apple-elevated px-4 py-2.5 text-sm font-medium text-apple-mute transition-colors hover:text-apple-ink"

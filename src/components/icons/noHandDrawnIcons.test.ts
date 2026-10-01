@@ -1,4 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import baseline from './legacySvgBaseline.json';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -14,24 +16,9 @@ import { describe, expect, it } from 'vitest';
 
 const SRC = join(import.meta.dirname, '..', '..');
 
-// EvoVPN custom icons already present in fork 55a4038f; new locations remain prohibited.
+// Brand logos, charts and decorations may keep their intentionally custom SVGs.
+// Historical fork icons are checked separately against the approved SVG baseline.
 const ALLOWED = new Set([
-  'pages/Subscription.tsx', // baseline custom icon
-  'pages/Login.tsx', // baseline custom icon
-  'pages/Dashboard.tsx', // baseline custom icon
-  'pages/Support.tsx', // baseline custom icon
-  'pages/GiftSubscription.tsx', // baseline custom icon
-  'pages/MergeAccounts.tsx', // baseline custom icon
-  'pages/TopUpResult.tsx', // baseline custom icon
-  'pages/Profile.tsx', // baseline custom icon
-  'pages/Balance.tsx', // baseline custom icon
-  'components/connection/ProgressRing.tsx', // baseline custom icon
-  'components/connection/SetupWizard.tsx', // baseline custom icon
-  'components/balance/TopUpPanel.tsx', // baseline custom icon
-  'components/dashboard/StatsGrid.tsx', // baseline custom icon
-  'components/profile/InfoPanel.tsx', // baseline custom icon
-  'components/layout/AppShell/AppShell.tsx', // baseline custom icon
-  'components/layout/AppShell/icons.tsx', // baseline custom icon
 
   'components/icons/index.tsx', // RemnawaveIcon — логотип панели
   'components/icons/LandingIcons.tsx',
@@ -46,6 +33,7 @@ const ALLOWED = new Set([
   'components/wheel/FortuneWheel.tsx',
   'components/dashboard/Sparkline.tsx',
   'components/admin/reachability/GeoMap.tsx',
+  'components/admin/dpichecker/DpiRegionMap.tsx', // карта регионов, не иконка
   'components/ui/backgrounds/background-beams.tsx',
   'components/ui/backgrounds/background-gradient-animation.tsx',
 ]);
@@ -63,7 +51,21 @@ describe('иконки', () => {
     const offenders = sourceFiles(SRC)
       .map((path) => relative(SRC, path))
       .filter((path) => !ALLOWED.has(path))
-      .filter((path) => /<svg\b/.test(readFileSync(join(SRC, path), 'utf-8')));
+      .filter((path) => {
+        const source = readFileSync(join(SRC, path), 'utf-8');
+        const svgs = source.match(/<svg\b(?:[^>]*\/>|[\s\S]*?<\/svg>)/g) ?? [];
+        if ((source.match(/<svg\b/g) ?? []).length !== svgs.length) return true;
+        const permitted = [...((baseline.files as Record<string, string[]>)[path] ?? [])];
+        return svgs.some((svg) => {
+          const hash = createHash('sha256').update(svg.replace(/\s+/g, ' ').trim()).digest('hex');
+          const index = permitted.indexOf(hash);
+          if (index === -1) return true;
+          // Consume each occurrence: copying an old icon into a new location or
+          // adding one more inline SVG is still an introduction and must fail.
+          permitted.splice(index, 1);
+          return false;
+        });
+      });
 
     expect(offenders).toEqual([]);
   });

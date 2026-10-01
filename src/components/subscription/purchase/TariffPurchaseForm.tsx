@@ -44,6 +44,8 @@ export interface TariffPurchaseFormProps {
   sbpPurchaseEnabled?: boolean;
   /** Оформление привязкой Lava доступно — показать вторую CTA. */
   lavaPurchaseEnabled?: boolean;
+  /** Cashera recurring purchase is independent of Platega/Lava capability. */
+  casheraPurchaseEnabled?: boolean;
   onBack: () => void;
 }
 
@@ -54,6 +56,7 @@ export function TariffPurchaseForm({
   pricingReady = true,
   sbpPurchaseEnabled = false,
   lavaPurchaseEnabled = false,
+  casheraPurchaseEnabled = false,
   onBack,
 }: TariffPurchaseFormProps) {
   const { t } = useTranslation();
@@ -195,11 +198,62 @@ export function TariffPurchaseForm({
     },
   });
 
+  const lavaPurchaseMutation = useMutation({
+    mutationFn: () => {
+      if (!integrationCapabilities.recurringPayments || !isCurrentSession(sessionGeneration))
+        throw new Error(t('common.error'));
+      return subscriptionApi.purchaseWithLavaRecurring(tariff.id);
+    },
+    onSuccess: (data) => {
+      if (!isCurrentSession(sessionGeneration)) return;
+      if (data.redirect_url) {
+        openPaymentUrl(data.redirect_url, platform, openLink);
+      }
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+      queryClient.invalidateQueries({ queryKey: ['lava-recurring', data.subscription_id] });
+      navigate('/subscriptions', { replace: true });
+    },
+  });
+
+  // This API accepts only tariff_id: the recurring schedule and first charge
+  // come from the backend tariff, independently of the period/traffic selection.
+  const casheraPurchaseMutation = useMutation({
+    mutationFn: () => {
+      if (
+        !integrationCapabilities.casheraRecurringPayments ||
+        !casheraPurchaseEnabled ||
+        !isCurrentSession(sessionGeneration)
+      )
+        throw new Error(t('common.error'));
+      if (!pricingReady || extraDevicesReductionMutation.isPending)
+        throw new Error(t('common.loadError'));
+      return subscriptionApi.purchaseWithCasheraRecurring(tariff.id);
+    },
+    onSuccess: (data) => {
+      if (!isCurrentSession(sessionGeneration)) return;
+      if (data.redirect_url) openPaymentUrl(data.redirect_url, platform, openLink);
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
+      queryClient.invalidateQueries({ queryKey: ['cashera-recurring', data.subscription_id] });
+      navigate('/subscriptions', { replace: true });
+    },
+  });
+
   const sbpPurchaseButton = integrationCapabilities.recurringPayments && sbpPurchaseEnabled && (
     <>
       <button
         onClick={() => sbpPurchaseMutation.mutate()}
-        disabled={sbpPurchaseMutation.isPending || purchaseMutation.isPending}
+        disabled={
+          !pricingReady ||
+          extraDevicesReductionMutation.isPending ||
+          sbpPurchaseMutation.isPending ||
+          lavaPurchaseMutation.isPending ||
+          casheraPurchaseMutation.isPending ||
+          purchaseMutation.isPending
+        }
         className="mt-2 w-full rounded-full bg-white py-3 text-[15px] font-medium text-black transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {sbpPurchaseMutation.isPending ? (
@@ -222,30 +276,18 @@ export function TariffPurchaseForm({
     </>
   );
 
-  const lavaPurchaseMutation = useMutation({
-    mutationFn: () => {
-      if (!integrationCapabilities.recurringPayments || !isCurrentSession(sessionGeneration))
-        throw new Error(t('common.error'));
-      return subscriptionApi.purchaseWithLavaRecurring(tariff.id);
-    },
-    onSuccess: (data) => {
-      if (!isCurrentSession(sessionGeneration)) return;
-      if (data.redirect_url) {
-        openPaymentUrl(data.redirect_url, platform, openLink);
-      }
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase-options'] });
-      queryClient.invalidateQueries({ queryKey: ['subscriptions-list'] });
-      queryClient.invalidateQueries({ queryKey: ['lava-recurring', data.subscription_id] });
-      navigate('/subscriptions', { replace: true });
-    },
-  });
-
   const lavaPurchaseButton = integrationCapabilities.recurringPayments && lavaPurchaseEnabled && (
     <>
       <button
         onClick={() => lavaPurchaseMutation.mutate()}
-        disabled={lavaPurchaseMutation.isPending || purchaseMutation.isPending}
+        disabled={
+          !pricingReady ||
+          extraDevicesReductionMutation.isPending ||
+          sbpPurchaseMutation.isPending ||
+          lavaPurchaseMutation.isPending ||
+          casheraPurchaseMutation.isPending ||
+          purchaseMutation.isPending
+        }
         className="mt-2 w-full rounded-xl border border-apple-blue/40 bg-apple-blue/10 py-3 text-sm font-medium text-apple-ink transition-colors hover:bg-apple-blue/20 disabled:opacity-50"
       >
         {lavaPurchaseMutation.isPending ? (
@@ -267,6 +309,48 @@ export function TariffPurchaseForm({
       )}
     </>
   );
+
+  const casheraPurchaseButton =
+    integrationCapabilities.casheraRecurringPayments && casheraPurchaseEnabled && (
+      <>
+        <button
+          type="button"
+          onClick={() => casheraPurchaseMutation.mutate()}
+          disabled={
+            !pricingReady ||
+            extraDevicesReductionMutation.isPending ||
+            casheraPurchaseMutation.isPending ||
+            sbpPurchaseMutation.isPending ||
+            lavaPurchaseMutation.isPending ||
+            purchaseMutation.isPending
+          }
+          className="mt-2 w-full rounded-full border border-apple-blue/40 bg-apple-blue/10 py-3 text-[15px] font-medium text-apple-ink transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {casheraPurchaseMutation.isPending ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              {t('common.loading')}
+            </span>
+          ) : (
+            t('subscription.casheraRecurring.purchaseButton')
+          )}
+        </button>
+        <div className="mt-1.5 text-center text-[11px] text-apple-faint">
+          {t('subscription.casheraRecurring.purchaseHint')}
+        </div>
+        <div className="mt-1 text-center text-[11px] text-apple-mute">
+          {t(
+            'subscription.casheraRecurring.purchaseSelectionHint',
+            'Период и сумма автосписаний задаются тарифом. Выбранные выше срок и трафик используются только при оплате с баланса.',
+          )}
+        </div>
+        {casheraPurchaseMutation.isError && (
+          <div className="mt-2 text-center text-sm text-apple-red">
+            {getErrorMessage(casheraPurchaseMutation.error)}
+          </div>
+        )}
+      </>
+    );
 
   const purchaseOptions =
     typeof balanceKopeks === 'number' && Number.isFinite(balanceKopeks)
@@ -388,6 +472,9 @@ export function TariffPurchaseForm({
                     }}
                     disabled={
                       purchaseMutation.isPending ||
+                      sbpPurchaseMutation.isPending ||
+                      lavaPurchaseMutation.isPending ||
+                      casheraPurchaseMutation.isPending ||
                       extraDevicesReductionMutation.isPending ||
                       !pricingReady ||
                       purchaseOptions === undefined
@@ -411,6 +498,7 @@ export function TariffPurchaseForm({
 
                   {sbpPurchaseButton}
                   {lavaPurchaseButton}
+                  {casheraPurchaseButton}
                   {/* Fallback prompt — used only when the top-up sheet
                               cannot be opened (e.g. payment methods config error). */}
 
@@ -914,6 +1002,9 @@ export function TariffPurchaseForm({
                               }}
                               disabled={
                                 purchaseMutation.isPending ||
+                                sbpPurchaseMutation.isPending ||
+                                lavaPurchaseMutation.isPending ||
+                                casheraPurchaseMutation.isPending ||
                                 extraDevicesReductionMutation.isPending ||
                                 !pricingReady ||
                                 purchaseOptions === undefined
@@ -939,6 +1030,7 @@ export function TariffPurchaseForm({
 
                             {sbpPurchaseButton}
                             {lavaPurchaseButton}
+                            {casheraPurchaseButton}
                             {/* Fallback prompt — used only when the top-up sheet
                                         cannot be opened (e.g. payment methods config error). */}
                           </>

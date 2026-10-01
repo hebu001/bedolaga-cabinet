@@ -37,6 +37,7 @@ function renderConnection(configQuery, linkQuery) {
     '@telegram-apps/sdk-react': { openLink: () => {} },
     '@/components/icons': { PhoneIcon: () => null, SettingsIcon: () => null },
     '@/components/ui/skeleton': { Skeleton: () => null, SkeletonGroup: () => null },
+    '@/components/common/PageLoadingIndicator': { PageLoadingIndicator: () => null },
     '../utils/openAppScheme': { openAppScheme: () => {} },
     '../api/subscription': { subscriptionApi: {} },
     '../hooks/useTelegramSDK': { useTelegramSDK: () => ({ isTelegramWebApp: false }) },

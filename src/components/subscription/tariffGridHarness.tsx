@@ -58,7 +58,7 @@ export function render(
 /** Карточка тарифа — ближайший блок вокруг его названия. */
 export function cardFor(name: string): HTMLElement {
   const title = screen.getByText(name);
-  const card = title.closest('div.bento-card-hover');
+  const card = title.closest('div.tariff-picker-card');
   if (!card) throw new Error(`не нашёл карточку тарифа ${name}`);
   return card as HTMLElement;
 }

@@ -1,18 +1,18 @@
 import {
-adminRemindersApi,
-type AuthCondition,
-type ReminderButtonKind,
-type ReminderChannels,
-type ReminderPayload,
-type ReminderText,
-type SubscriptionSegment,
+  adminRemindersApi,
+  type AuthCondition,
+  type ReminderButtonKind,
+  type ReminderChannels,
+  type ReminderPayload,
+  type ReminderText,
+  type SubscriptionSegment,
 } from '@/api/adminReminders';
 import { PermissionGate } from '@/components/auth/PermissionGate';
-import { useMutation,useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
-import { useEffect,useMemo,useRef,useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate,useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 const LANGS = ['ru', 'en', 'ua', 'zh', 'fa'] as const;
 const CABINET_PRESETS = ['/profile/accounts', '/subscriptions', '/balance'];
@@ -40,6 +40,7 @@ function firstValidationDetailMessage(data: unknown): string | null {
 export default function AdminReminderEdit() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams();
   const editId = id ? Number(id) : null;
 
@@ -159,7 +160,14 @@ export default function AdminReminderEdit() {
   const save = useMutation({
     mutationFn: (p: ReminderPayload) =>
       editId !== null ? adminRemindersApi.update(editId, p) : adminRemindersApi.create(p),
-    onSuccess: () => navigate('/admin/reminders'),
+    onSuccess: async () => {
+      // Список и карточка должны сразу показать сохранённое, а не прошлый кэш.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['admin-reminders'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-reminder', editId] }),
+      ]);
+      navigate('/admin/reminders');
+    },
     onError: (err: unknown) => {
       // 422 всё ещё может прийти после клиентских проверок (гонка правил
       // валидации с бэкендом) — показываем первое detail[].msg, если есть,

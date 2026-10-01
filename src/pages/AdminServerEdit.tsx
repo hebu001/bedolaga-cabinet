@@ -6,7 +6,7 @@ import { useNavigate,useParams } from 'react-router';
 import { serversApi,type ServerUpdateRequest } from '../api/servers';
 import { AdminBackButton } from '../components/admin';
 
-import Twemoji from 'react-twemoji';
+import Twemoji from '@/lib/twemoji';
 import { PageSkeleton,Skeleton } from '../components/ui/skeleton';
 import { createNumberInputHandler,toNumber } from '../utils/inputHelpers';
 import { getFlagEmoji as getCountryFlag } from '../utils/subscriptionHelpers';

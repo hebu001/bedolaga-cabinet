@@ -930,7 +930,33 @@
       "noTopupHint": "Slots cannot be bought on a trial subscription — free one up or switch to a paid plan."
     },
     "newTariff": "New tariff",
-    "servers": "Servers"
+    "servers": "Servers",
+    "casheraRecurring": {
+      "title": "Cashera auto-renewal",
+      "connect": "Connect",
+      "confirm": "Confirm auto-charges",
+      "cancel": "Turn off",
+      "confirmCancel": "Turn off Cashera auto-renewal? The subscription will no longer renew automatically.",
+      "cancelled": "Cashera auto-renewal turned off",
+      "enableError": "Could not connect Cashera auto-renewal",
+      "cancelError": "Could not cancel Cashera auto-renewal",
+      "statusPending": "Waiting for confirmation via the link",
+      "statusActive": "Active",
+      "statusPastDue": "Payment failed — please try again",
+      "nextCharge": "next charge {{date}}",
+      "amountPerInterval": "{{amount}} ₽ {{interval}}",
+      "interval": {
+        "daily": "daily",
+        "weekly": "weekly",
+        "monthly": "monthly",
+        "yearly": "yearly"
+      },
+      "autopayHint": "Your subscription will renew automatically via Cashera",
+      "purchaseButton": "⚡ Subscribe with Cashera auto-pay",
+      "purchaseHint": "Confirm auto-charges via the Cashera link; renewals are then charged automatically.",
+      "purchaseSelectionHint": "The tariff sets the period and amount of auto-charges. The duration and traffic selected above apply only when paying from your balance.",
+      "disabledCancelHint": "New connections are disabled. You can cancel previously connected auto-charges."
+    }
   },
   "balance": {
     "title": "Balance",
@@ -1023,6 +1049,9 @@
       },
       "paritypay": {
         "description": "Pay by card or via SBP (ParityPay)"
+      },
+      "cashera": {
+        "description": "SBP, cards, crypto (Cashera)"
       }
     },
     "transactionHistory": "Transaction History",
@@ -1151,7 +1180,8 @@
     "failedRefund": "Failed refund",
     "pollReward": "Poll reward",
     "giftPayment": "Gift payment",
-    "otherOperation": "Operation"
+    "otherOperation": "Operation",
+    "scanQrToPay": "Scan the QR code in your banking app or open the payment page"
   },
   "referral": {
     "title": "Referral Program",
@@ -2191,7 +2221,9 @@
       "allSettings": "All subscription settings",
       "delete": "Delete subscription",
       "plans": "See plans",
-      "support": "Support"
+      "support": "Support",
+      "copyLink": "Copy subscription link",
+      "copied": "Copied"
     },
     "error": {
       "load": "Could not load your data",
@@ -2212,60 +2244,14 @@
   },
   "admin": {
     "nav": {
-      "title": "Admin",
-      "dashboard": "Dashboard",
-      "tickets": "Tickets",
-      "settings": "Settings",
-      "apps": "Apps",
-      "wheel": "Wheel",
-      "tariffs": "Tariffs",
-      "servers": "Squads",
-      "banSystem": "Ban Monitoring",
-      "broadcasts": "Broadcasts",
-      "users": "Users",
-      "payments": "Payments",
-      "remnawave": "RemnaWave",
-      "emailTemplates": "Email Templates",
-      "paymentMethods": "Payment Methods",
-      "campaigns": "Campaigns",
-      "promoOffers": "Promo Offers",
-      "promocodes": "Promo Codes",
-      "promoGroups": "Discount Groups",
-      "trafficUsage": "Traffic Usage",
-      "updates": "Updates",
-      "pinnedMessages": "Pinned Messages",
-      "partners": "Partners",
-      "withdrawals": "Withdrawals",
-      "channelSubscriptions": "Required Channels",
-      "roles": "Roles",
-      "roleAssign": "Role Assignment",
-      "policies": "Access Policies",
-      "auditLog": "Audit Log",
-      "salesStats": "Sales Statistics",
-      "landings": "Landings",
-      "referralNetwork": "Referral Network",
-      "news": "News",
-      "bulkActions": "Bulk Actions",
-      "infoPages": "Info Pages"
+      "title": "Admin"
     },
     "infoPages": {
       "notFound": "Page not found",
       "faq": {
-        "questions": "Questions & Answers",
-        "questionsCount": "questions",
-        "noQuestions": "No questions yet. Click the button below to add one.",
-        "questionNumber": "Question #{{n}}",
-        "question": "Question",
-        "answer": "Answer",
-        "questionPlaceholder": "Enter question...",
-        "answerPlaceholder": "Enter answer (HTML supported)...",
-        "htmlHint": "HTML markup is supported",
-        "addQuestion": "Add Question",
-        "removeQuestion": "Remove question",
-        "moveUp": "Move up",
-        "moveDown": "Move down",
         "searchPlaceholder": "Search questions...",
-        "noResults": "No results found"
+        "noResults": "No results found",
+        "noQuestions": "No questions yet. Click the button below to add one."
       }
     }
   },

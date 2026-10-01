@@ -329,6 +329,13 @@ export default function SubscriptionPurchase() {
                   'lava_recurrent_enabled' in purchaseOptions &&
                   purchaseOptions.lava_recurrent_enabled === true
                 }
+                casheraPurchaseEnabled={
+                  integrationCapabilities.casheraRecurringPayments &&
+                  isTariffsMode &&
+                  purchaseOptions !== undefined &&
+                  'cashera_recurrent_enabled' in purchaseOptions &&
+                  purchaseOptions.cashera_recurrent_enabled === true
+                }
                 onBack={() => setShowTariffListModal(true)}
               />
             )

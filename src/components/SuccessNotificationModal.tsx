@@ -279,7 +279,9 @@ export default function SuccessNotificationModal() {
               <span className="text-dark-400">
                 {t('successNotification.trafficAdded', 'Traffic added')}
               </span>
-              <span className="text-lg font-bold text-success-400">+{data.trafficGbAdded} GB</span>
+              <span className="text-lg font-bold text-success-400">
+                +{data.trafficGbAdded} {t('common.units.gb', 'GB')}
+              </span>
             </div>
           )}
 
@@ -288,7 +290,9 @@ export default function SuccessNotificationModal() {
               <span className="text-dark-400">
                 {t('successNotification.totalTraffic', 'Total traffic')}
               </span>
-              <span className="font-semibold text-dark-100">{data.newTrafficLimitGb} GB</span>
+              <span className="font-semibold text-dark-100">
+                {data.newTrafficLimitGb} {t('common.units.gb', 'GB')}
+              </span>
             </div>
           )}
 

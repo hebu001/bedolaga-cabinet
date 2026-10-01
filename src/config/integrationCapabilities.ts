@@ -17,6 +17,10 @@ export const integrationCapabilities = Object.freeze({
   // Verified against merged bot 741feec565f9c7046ab73566d61f4a9d7fdf68f4.
   numericPanelIdentity: true,
   recurringPayments: false,
+  // Independent new contracts; enable after verification against the deployed bot.
+  casheraRecurringPayments: false,
+  dpichecker: false,
+  broadcastAudience: false,
   referralLevels: false,
   graceAccess: false,
 });

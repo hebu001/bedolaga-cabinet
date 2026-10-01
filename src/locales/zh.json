@@ -878,7 +878,33 @@
       "noTopupHint": "试用订阅无法购买名额 — 请释放已占用的名额或改用付费套餐。"
     },
     "newTariff": "新套餐",
-    "servers": "服务器"
+    "servers": "服务器",
+    "casheraRecurring": {
+      "title": "Cashera 自动续费",
+      "connect": "开通",
+      "confirm": "确认自动扣款",
+      "cancel": "关闭",
+      "confirmCancel": "关闭 Cashera 自动续费？订阅将不再自动续订。",
+      "cancelled": "已关闭 Cashera 自动续费",
+      "enableError": "无法开通 Cashera 自动续费",
+      "cancelError": "无法取消 Cashera 自动续费",
+      "statusPending": "等待通过链接确认",
+      "statusActive": "已开通",
+      "statusPastDue": "扣款失败，请重试",
+      "nextCharge": "下次扣款 {{date}}",
+      "amountPerInterval": "{{amount}} ₽ {{interval}}",
+      "interval": {
+        "daily": "每天",
+        "weekly": "每周",
+        "monthly": "每月",
+        "yearly": "每年"
+      },
+      "autopayHint": "订阅将通过 Cashera 自动续费",
+      "purchaseButton": "⚡ 使用 Cashera 自动付款订阅",
+      "purchaseHint": "通过 Cashera 链接确认自动扣款，之后续费将自动扣款。",
+      "purchaseSelectionHint": "自动扣款的周期和金额由套餐决定。上方选择的时长和流量仅适用于余额支付。",
+      "disabledCancelHint": "已停用新开通功能。您仍可取消此前开通的自动扣款。"
+    }
   },
   "balance": {
     "title": "余额",
@@ -971,6 +997,9 @@
       },
       "paritypay": {
         "description": "通过 ParityPay 使用银行卡或 SBP 支付"
+      },
+      "cashera": {
+        "description": "SBP、银行卡、加密货币（Cashera）"
       }
     },
     "transactionHistory": "交易记录",
@@ -1099,7 +1128,8 @@
     "failedRefund": "退款失败",
     "pollReward": "问卷奖励",
     "giftPayment": "礼物付款",
-    "otherOperation": "操作"
+    "otherOperation": "操作",
+    "scanQrToPay": "请在银行应用中扫描二维码，或打开支付页面"
   },
   "referral": {
     "title": "推荐计划",
@@ -2101,7 +2131,9 @@
       "allSettings": "全部订阅设置",
       "delete": "删除订阅",
       "plans": "查看套餐",
-      "support": "客服"
+      "support": "客服",
+      "copyLink": "复制订阅链接",
+      "copied": "已复制"
     },
     "error": {
       "load": "无法加载数据",
@@ -2122,60 +2154,14 @@
   },
   "admin": {
     "nav": {
-      "title": "管理",
-      "dashboard": "统计",
-      "tickets": "工单",
-      "settings": "设置",
-      "apps": "应用",
-      "wheel": "转盘",
-      "tariffs": "套餐",
-      "servers": "小队",
-      "broadcasts": "群发",
-      "emailTemplates": "邮件模板",
-      "paymentMethods": "支付方式",
-      "banSystem": "封禁监控",
-      "campaigns": "活动",
-      "payments": "支付",
-      "promoOffers": "促销优惠",
-      "promocodes": "促销码",
-      "promoGroups": "折扣组",
-      "remnawave": "RemnaWave",
-      "users": "用户",
-      "trafficUsage": "流量使用",
-      "updates": "更新",
-      "pinnedMessages": "置顶消息",
-      "partners": "合作伙伴",
-      "withdrawals": "提现",
-      "channelSubscriptions": "必订频道",
-      "roles": "角色",
-      "roleAssign": "角色分配",
-      "policies": "访问策略",
-      "auditLog": "审计日志",
-      "salesStats": "销售统计",
-      "landings": "落地页",
-      "referralNetwork": "推荐网络",
-      "news": "新闻",
-      "infoPages": "信息页面",
-      "bulkActions": "批量操作"
+      "title": "管理"
     },
     "infoPages": {
       "notFound": "页面未找到",
       "faq": {
-        "questions": "问答",
-        "questionsCount": "个问题",
-        "noQuestions": "暂无问题。点击下方按钮添加。",
-        "questionNumber": "问题 #{{n}}",
-        "question": "问题",
-        "answer": "答案",
-        "questionPlaceholder": "输入问题...",
-        "answerPlaceholder": "输入答案（支持HTML）...",
-        "htmlHint": "支持HTML标记",
-        "addQuestion": "添加问题",
-        "removeQuestion": "删除问题",
-        "moveUp": "上移",
-        "moveDown": "下移",
         "searchPlaceholder": "搜索问题...",
-        "noResults": "未找到结果"
+        "noResults": "未找到结果",
+        "noQuestions": "暂无问题。点击下方按钮添加。"
       }
     }
   },

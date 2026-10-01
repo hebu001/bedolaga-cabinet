@@ -1,8 +1,8 @@
-import { adminRemindersApi,type ReminderResponse } from '@/api/adminReminders';
+import { adminRemindersApi, type ReminderResponse } from '@/api/adminReminders';
 import { AdminBackButton } from '@/components/admin';
-import { EditIcon,PlusIcon,TrashIcon } from '@/components/admin/legacyIcons';
+import { EditIcon, PlusIcon, TrashIcon } from '@/components/admin/legacyIcons';
 import { PermissionGate } from '@/components/auth/PermissionGate';
-import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -13,7 +13,12 @@ export default function AdminReminders() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dialog = useNativeDialog();
-  const { data = [], isLoading } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['admin-reminders'],
     queryFn: adminRemindersApi.list,
   });
@@ -45,7 +50,22 @@ export default function AdminReminders() {
       </div>
       <p className="text-sm text-apple-mute">{t('admin.reminders.description')}</p>
       {isLoading && <p className="text-apple-mute">…</p>}
-      {!isLoading && data.length === 0 && (
+      {/* Ошибку загрузки нельзя выдавать за «напоминаний нет»: список падал на
+          сервере, и после «Сохранить» админ видел пустоту, как будто ничего не
+          сохранилось. */}
+      {isError && (
+        <div role="alert" className="flex flex-wrap items-center gap-3">
+          <p className="text-error-400">{t('admin.reminders.loadFailed')}</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="min-h-[44px] rounded-xl bg-apple-elevated px-3 py-1.5 text-sm text-apple-ink"
+          >
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+      {!isLoading && !isError && data.length === 0 && (
         <p className="text-apple-mute">{t('admin.reminders.empty')}</p>
       )}
       <div className="space-y-3">

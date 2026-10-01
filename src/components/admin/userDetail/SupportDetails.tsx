@@ -1,7 +1,7 @@
 import type { PanelIdentity } from '@/api/adminPanelIdentity';
-import { adminUsersApi,type UserPanelInfo } from '@/api/adminUsers';
-import { ChevronDownIcon,CopyIcon } from '@/components/admin/legacyIcons';
-import { RadarIcon } from '@/components/icons';
+import { adminUsersApi, type UserPanelInfo } from '@/api/adminUsers';
+import { ChevronDownIcon, CopyIcon } from '@/components/admin/legacyIcons';
+import { RadarIcon, WallIcon } from '@/components/icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,8 @@ interface SupportDetailsProps {
   panelInfo: UserPanelInfo | null;
   panelIdentity: PanelIdentity | null;
   reachabilityLink: string | null;
+  /** Проверка подписки в DPI//CHECKER; null — раздел выключен или нет права. */
+  dpicheckerLink?: string | null;
 }
 
 const HISTORY_PAGE = 20;
@@ -34,6 +36,7 @@ export function SupportDetails({
   panelInfo,
   panelIdentity,
   reachabilityLink,
+  dpicheckerLink = null,
 }: SupportDetailsProps) {
   const { t } = useTranslation();
   const notify = useNotify();
@@ -116,6 +119,15 @@ export function SupportDetails({
               >
                 <RadarIcon className="h-4 w-4" />
                 {t('admin.reachability.shortcuts.checkSubscription')}
+              </Link>
+            )}
+            {item.key === 'url' && dpicheckerLink && (
+              <Link
+                to={dpicheckerLink}
+                className="btn-secondary order-last mb-1 min-h-0 shrink-0 gap-1.5 px-2.5 py-1.5 text-xs sm:order-none sm:mb-0"
+              >
+                <WallIcon className="h-4 w-4" />
+                {t('admin.dpichecker.shortcuts.checkSubscription')}
               </Link>
             )}
             <button

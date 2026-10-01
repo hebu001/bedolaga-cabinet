@@ -46,16 +46,15 @@ vi.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: () => {} },
 }));
 
-vi.mock('@/config/integrationCapabilities', () => ({
-  integrationCapabilities: { recurringPayments: true },
-}));
+const capabilities = vi.hoisted(() => ({ recurringPayments: true, casheraRecurringPayments: true }));
+vi.mock('@/config/integrationCapabilities', () => ({ integrationCapabilities: capabilities }));
 
 const featureDisabled = () =>
   Promise.reject({
     response: { status: 403, data: { detail: 'Platega recurrent disabled' } },
   });
 
-const calls = { sbp: [] as number[], lava: [] as number[] };
+const calls = { sbp: [] as number[], lava: [] as number[], cashera: [] as number[] };
 const state = { purchaseOptions: {} as Record<string, unknown> };
 
 const subscription = (id: number) => ({
@@ -86,6 +85,10 @@ vi.mock('@/api/subscription', () => ({
       calls.lava.push(id);
       return featureDisabled();
     },
+    getCasheraRecurring: (id: number) => {
+      calls.cashera.push(id);
+      return featureDisabled();
+    },
     getSubscriptions: () =>
       Promise.resolve({
         subscriptions: [subscription(1), subscription(2)],
@@ -101,7 +104,7 @@ vi.mock('@/api/subscription', () => ({
 }));
 
 vi.mock('@/api/balance', () => ({
-  balanceApi: { getSavedCards: () => Promise.resolve([]) },
+  balanceApi: { getSavedCards: () => Promise.resolve([]), getPaymentMethods: () => Promise.resolve([]) },
 }));
 
 vi.mock('@/api/currency', () => ({
@@ -124,12 +127,16 @@ if (!window.matchMedia) {
 beforeEach(() => {
   calls.sbp = [];
   calls.lava = [];
+  calls.cashera = [];
+  capabilities.recurringPayments = true;
+  capabilities.casheraRecurringPayments = true;
   state.purchaseOptions = {
     sales_mode: 'tariffs',
     tariffs: [],
     balance_kopeks: 0,
     platega_recurrent_enabled: false,
     lava_recurrent_enabled: false,
+    cashera_recurrent_enabled: false,
   };
 });
 
@@ -170,6 +177,28 @@ describe('страница подписки', () => {
 
     expect(calls.sbp).toEqual([]);
     expect(calls.lava).toEqual([]);
+    expect(calls.cashera).toEqual([]);
+  });
+
+  it('does not probe Cashera on an old backend that omits its feature flag', async () => {
+    delete state.purchaseOptions.cashera_recurrent_enabled;
+    await renderSubscription();
+    expect(calls.cashera).toEqual([]);
+  });
+
+  it('the independent Cashera gate does not enable unverified Platega or Lava', async () => {
+    capabilities.recurringPayments = false;
+    state.purchaseOptions = {
+      ...state.purchaseOptions,
+      platega_recurrent_enabled: true,
+      lava_recurrent_enabled: true,
+      cashera_recurrent_enabled: true,
+    };
+    await renderSubscription();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(calls.sbp).toEqual([]);
+    expect(calls.lava).toEqual([]);
+    expect(calls.cashera).toEqual([1]);
   });
 
   it('спрашивает, когда автооплата включена', async () => {
@@ -177,12 +206,14 @@ describe('страница подписки', () => {
       ...state.purchaseOptions,
       platega_recurrent_enabled: true,
       lava_recurrent_enabled: true,
+      cashera_recurrent_enabled: true,
     };
     await renderSubscription();
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(calls.sbp).toEqual([1]);
     expect(calls.lava).toEqual([1]);
+    expect(calls.cashera).toEqual([1]);
   });
 });
 

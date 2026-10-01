@@ -64,6 +64,7 @@ export interface SubscriptionTabProps {
   busy: boolean;
   actions: SubscriptionTabActions;
   reachabilityLink: string | null;
+  dpicheckerLink?: string | null;
   mode: SalesMode;
 }
 
@@ -189,6 +190,7 @@ export function SubscriptionTab(props: SubscriptionTabProps) {
             panelInfo={props.panelInfo}
             panelIdentity={user.panel_identity ?? null}
             reachabilityLink={props.reachabilityLink}
+            dpicheckerLink={props.dpicheckerLink ?? null}
           />
         </>
       )}

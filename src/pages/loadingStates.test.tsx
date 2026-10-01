@@ -3,20 +3,58 @@ import type { ComponentType } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@/components/Toast';
 import { PlatformProvider } from '@/platform/PlatformProvider';
 
 /**
- * Проверяет, что состояния загрузки страниц действительно рисуют скелетон и не
- * падают. Раньше это можно было увидеть только вручную и только с поднятым
- * бэкендом: состояния живут доли секунды, а без бэкенда экраны не открываются
- * вовсе — их перекрывает «Сервис недоступен».
- *
- * Все запросы держатся в состоянии загрузки одним моком react-query, поэтому
- * страница обязана уйти в свою loading-ветку. Утверждение одинаковое для всех:
- * должен быть `role="status"` с компактным индикатором загрузки.
+ * User pages keep the approved silent waiting state; admin pages retain their
+ * compact accessible indicators. For silent pages we also resolve the data and
+ * verify real content appears, so removing an indicator cannot hide a dead page.
  */
+
+const queryState = vi.hoisted(() => ({ ready: false }));
+const readyData: Record<string, unknown> = {
+  contests: [],
+  polls: [],
+  'subscriptions-list': { subscriptions: [], multi_tariff_enabled: true },
+  'trial-info': { is_available: false },
+  balance: { balance_kopeks: 125000, balance_rubles: 1250 },
+  subscription: { subscription: null },
+  'purchase-options': { sales_mode: 'tariffs', tariffs: [], periods: [] },
+  'saved-cards': { cards: [] },
+  appConfig: { platforms: {} },
+  connectionLink: { subscription_url: null },
+  'wheel-config': { is_enabled: false },
+  'wheel-history': { items: [] },
+  'pending-gifts': [],
+  devices: { devices: [] },
+  'merge-preview': {
+    primary: { id: 1, auth_methods: [], balance_kopeks: 0, subscription: null },
+    secondary: { id: 2, auth_methods: [], balance_kopeks: 0, subscription: null },
+    expires_in_seconds: 300,
+  },
+  news: { title: 'Loaded news fixture', content: '<p>Loaded article body</p>', category_color: null },
+  'info-pages': {
+    title: { ru: 'Loaded information fixture' },
+    content: { ru: '<p>Loaded document body</p>' },
+    page_type: 'html',
+  },
+};
+const silentContent: Record<string, string> = {
+  Contests: 'contests.title',
+  Polls: 'polls.title',
+  Subscriptions: 'Нет подписок',
+  SavedCards: 'balance.savedCards.empty',
+  Dashboard: 'Купить подписку',
+  Connection: 'subscription.connection.notConfigured',
+  SubscriptionPurchase: 'Нет доступных вариантов подписки',
+  Wheel: 'wheel.disabled',
+  MergeAccounts: 'merge.title',
+  NewsArticle: 'Loaded news fixture',
+  InfoPageView: 'Loaded information fixture',
+};
+beforeEach(() => { queryState.ready = false; });
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -40,7 +78,14 @@ vi.mock('@tanstack/react-query', async () => {
   };
   return {
     ...actual,
-    useQuery: () => pending,
+    useQuery: ({ queryKey }: { queryKey: string[] }) => queryState.ready ? {
+      ...pending,
+      data: readyData[queryKey[0]],
+      isLoading: false,
+      isPending: false,
+      isFetching: false,
+      isSuccess: true,
+    } : pending,
     useInfiniteQuery: () => ({ ...pending, fetchNextPage: () => {}, hasNextPage: false }),
     useMutation: () => ({
       mutate: () => {},
@@ -242,12 +287,12 @@ const PAGES: PageCase[] = [
 
 describe('состояния загрузки страниц', () => {
   for (const { name, load, path, entry } of PAGES) {
-    it(`${name} показывает доступное компактное состояние загрузки`, async () => {
+    it(`${name}: ${silentContent[name] ? 'silent waiting resolves into content' : 'accessible compact loading'}`, async () => {
       const { default: Page } = await load();
       const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
       });
-      render(
+      const renderTree = () => (
         <QueryClientProvider client={queryClient}>
           <PlatformProvider>
             <ToastProvider>
@@ -262,8 +307,20 @@ describe('состояния загрузки страниц', () => {
               </MemoryRouter>
             </ToastProvider>
           </PlatformProvider>
-        </QueryClientProvider>,
+        </QueryClientProvider>
       );
+      const view = render(renderTree());
+      if (silentContent[name]) {
+        expect(screen.queryByRole('status')).toBeNull();
+        expect(view.container.querySelector('.animate-spin')).toBeNull();
+        // The loaded content must stay guarded while query data is pending.
+        expect(screen.queryByText(silentContent[name])).toBeNull();
+        queryState.ready = true;
+        view.rerender(renderTree());
+        expect(await screen.findByText(silentContent[name])).toBeTruthy();
+        expect(screen.queryByRole('status')).toBeNull();
+        return;
+      }
 
       const groups = screen.getAllByRole('status');
       expect(groups.length).toBeGreaterThanOrEqual(1);

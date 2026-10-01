@@ -884,7 +884,33 @@
       "noTopupHint": "روی اشتراک آزمایشی نمی‌توان ظرفیت خرید — یکی را آزاد کنید یا طرح پولی بگیرید."
     },
     "newTariff": "تعرفه جدید",
-    "servers": "سرورها"
+    "servers": "سرورها",
+    "casheraRecurring": {
+      "title": "تمدید خودکار Cashera",
+      "connect": "فعال‌سازی",
+      "confirm": "تأیید برداشت خودکار",
+      "cancel": "غیرفعال",
+      "confirmCancel": "تمدید خودکار Cashera غیرفعال شود؟ اشتراک دیگر به‌طور خودکار تمدید نمی‌شود.",
+      "cancelled": "تمدید خودکار Cashera غیرفعال شد",
+      "enableError": "فعال‌سازی تمدید خودکار Cashera ممکن نشد",
+      "cancelError": "لغو تمدید خودکار Cashera ممکن نشد",
+      "statusPending": "در انتظار تأیید از طریق لینک",
+      "statusActive": "فعال",
+      "statusPastDue": "پرداخت ناموفق بود — دوباره تلاش کنید",
+      "nextCharge": "برداشت بعدی {{date}}",
+      "amountPerInterval": "{{amount}} ₽ {{interval}}",
+      "interval": {
+        "daily": "روزانه",
+        "weekly": "هفتگی",
+        "monthly": "ماهانه",
+        "yearly": "سالانه"
+      },
+      "autopayHint": "اشتراک به‌طور خودکار از طریق Cashera تمدید می‌شود",
+      "purchaseButton": "⚡ خرید با پرداخت خودکار Cashera",
+      "purchaseHint": "برداشت خودکار را از طریق لینک Cashera تأیید کنید؛ سپس تمدیدها خودکار برداشت می‌شوند.",
+      "purchaseSelectionHint": "دوره و مبلغ برداشت خودکار را تعرفه تعیین می‌کند. مدت و ترافیک انتخاب‌شده در بالا فقط برای پرداخت از موجودی اعمال می‌شوند.",
+      "disabledCancelHint": "اتصال‌های جدید غیرفعال هستند. می‌توانید برداشت خودکار قبلی را لغو کنید."
+    }
   },
   "balance": {
     "title": "موجودی",
@@ -977,6 +1003,9 @@
       },
       "paritypay": {
         "description": "پرداخت با کارت یا SBP از طریق ParityPay"
+      },
+      "cashera": {
+        "description": "SBP، کارت‌ها، رمزارز (Cashera)"
       }
     },
     "transactionHistory": "تاریخچه تراکنش‌ها",
@@ -1105,7 +1134,8 @@
     "failedRefund": "بازپرداخت ناموفق",
     "pollReward": "پاداش نظرسنجی",
     "giftPayment": "پرداخت هدیه",
-    "otherOperation": "تراکنش"
+    "otherOperation": "تراکنش",
+    "scanQrToPay": "کد QR را در برنامه بانک اسکن کنید یا صفحه پرداخت را باز کنید"
   },
   "referral": {
     "title": "برنامه معرفی",
@@ -2107,7 +2137,9 @@
       "allSettings": "همه تنظیمات اشتراک",
       "delete": "حذف اشتراک",
       "plans": "دیدن طرح‌ها",
-      "support": "پشتیبانی"
+      "support": "پشتیبانی",
+      "copyLink": "کپی لینک اشتراک",
+      "copied": "کپی شد"
     },
     "error": {
       "load": "داده‌ها بارگذاری نشد",
@@ -2128,60 +2160,14 @@
   },
   "admin": {
     "nav": {
-      "title": "مدیریت",
-      "dashboard": "آمار",
-      "tickets": "تیکت‌ها",
-      "settings": "تنظیمات",
-      "apps": "برنامه‌ها",
-      "wheel": "چرخ",
-      "tariffs": "تعرفه‌ها",
-      "servers": "اسکوادها",
-      "broadcasts": "پیام‌رسانی",
-      "emailTemplates": "قالب‌های ایمیل",
-      "paymentMethods": "روش‌های پرداخت",
-      "banSystem": "نظارت بر مسدودسازی",
-      "campaigns": "کمپین‌ها",
-      "payments": "پرداخت‌ها",
-      "promoOffers": "پیشنهادات تبلیغاتی",
-      "promocodes": "کدهای تخفیف",
-      "promoGroups": "گروه‌های تخفیف",
-      "remnawave": "RemnaWave",
-      "users": "کاربران",
-      "trafficUsage": "مصرف ترافیک",
-      "updates": "به‌روزرسانی‌ها",
-      "pinnedMessages": "پیام‌های سنجاق‌شده",
-      "partners": "شرکا",
-      "withdrawals": "برداشت‌ها",
-      "channelSubscriptions": "کانال‌های اجباری",
-      "roles": "نقش‌ها",
-      "roleAssign": "تخصیص نقش",
-      "policies": "سیاست‌های دسترسی",
-      "auditLog": "گزارش بازرسی",
-      "salesStats": "آمار فروش",
-      "landings": "صفحات فرود",
-      "referralNetwork": "شبکه ارجاع",
-      "news": "اخبار",
-      "infoPages": "صفحات اطلاعات",
-      "bulkActions": "عملیات گروهی"
+      "title": "مدیریت"
     },
     "infoPages": {
       "notFound": "صفحه پیدا نشد",
       "faq": {
-        "questions": "سوالات و پاسخ‌ها",
-        "questionsCount": "سوال",
-        "noQuestions": "هنوز سوالی وجود ندارد. روی دکمه زیر کلیک کنید.",
-        "questionNumber": "سوال #{{n}}",
-        "question": "سوال",
-        "answer": "پاسخ",
-        "questionPlaceholder": "سوال را وارد کنید...",
-        "answerPlaceholder": "پاسخ را وارد کنید (HTML پشتیبانی می‌شود)...",
-        "htmlHint": "نشانه‌گذاری HTML پشتیبانی می‌شود",
-        "addQuestion": "افزودن سوال",
-        "removeQuestion": "حذف سوال",
-        "moveUp": "انتقال به بالا",
-        "moveDown": "انتقال به پایین",
         "searchPlaceholder": "جستجو در سوالات...",
-        "noResults": "نتیجه‌ای یافت نشد"
+        "noResults": "نتیجه‌ای یافت نشد",
+        "noQuestions": "هنوز سوالی وجود ندارد. روی دکمه زیر کلیک کنید."
       }
     }
   },
