@@ -19,7 +19,8 @@ export const integrationCapabilities = Object.freeze({
   recurringPayments: false,
   // Independent new contracts; enable after verification against the deployed bot.
   casheraRecurringPayments: false,
-  dpichecker: false,
+  // Verified against bot 961b2aaabca67a42d013e196c65213d7ebe47f3d; runtime flags and RBAC apply.
+  dpichecker: true,
   broadcastAudience: false,
   referralLevels: false,
   graceAccess: false,
