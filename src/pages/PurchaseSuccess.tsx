@@ -13,6 +13,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { AnimatedCheckmark } from '@/components/ui/AnimatedCheckmark';
 import { AnimatedCrossmark } from '@/components/ui/AnimatedCrossmark';
 import { cn } from '../lib/utils';
+import { resolvePlainSubscriptionUrl } from '../utils/connectionLink';
 
 const MAX_POLL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -220,6 +221,7 @@ function SuccessState({
   }, [subscriptionUrl, cryptoLink]);
 
   const displayUrl = subscriptionUrl ?? cryptoLink;
+  const qrUrl = resolvePlainSubscriptionUrl({ subscriptionUrl });
   const displayContact = isGift ? recipientContactValue : contactValue;
 
   return (
@@ -275,15 +277,17 @@ function SuccessState({
       {/* QR Code */}
       {displayUrl && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-white p-5">
-            <QRCodeSVG
-              value={displayUrl}
-              size={200}
-              level="M"
-              includeMargin={false}
-              className="h-[200px] w-[200px]"
-            />
-          </div>
+          {qrUrl && (
+            <div className="rounded-2xl bg-white p-5">
+              <QRCodeSVG
+                value={qrUrl}
+                size={200}
+                level="M"
+                includeMargin={false}
+                className="h-[200px] w-[200px]"
+              />
+            </div>
+          )}
 
           {/* Copy button */}
           <button

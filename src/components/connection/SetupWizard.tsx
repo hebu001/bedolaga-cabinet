@@ -7,6 +7,7 @@ import { useModalFocus } from '../../hooks/useModalFocus';
 import ProgressRing from './ProgressRing';
 import { useHapticFeedback } from '../../platform/hooks/useHaptic';
 import { usePlatform } from '../../platform/hooks/usePlatform';
+import { resolvePlainSubscriptionUrl } from '../../utils/connectionLink';
 import type { AppConfig, RemnawavePlatformData } from '@/types';
 
 /* ─── Platform detection ─── */
@@ -293,7 +294,10 @@ export default function SetupWizard({
     appConfig.subscriptionUrl ||
     null;
 
-  const qrUrl = connectionUrl || subscriptionLinkUrl || appConfig.subscriptionUrl || null;
+  const qrUrl = resolvePlainSubscriptionUrl({
+    subscriptionUrl: appConfig.subscriptionUrl,
+    displayLink: displayUrl,
+  });
 
   const handleAddSubscription = useCallback(() => {
     if (addSubscriptionUrl) {
@@ -587,7 +591,7 @@ export default function SetupWizard({
       case 2:
         return renderAddSubscription();
       case 3:
-        return renderQR();
+        return qrUrl ? renderQR() : renderIntro();
       default:
         return renderIntro();
     }

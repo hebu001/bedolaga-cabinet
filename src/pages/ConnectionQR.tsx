@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import { useBranding } from '../hooks/useBranding';
 import { AdminBackButton } from '@/components/admin';
+import { resolvePlainSubscriptionUrl } from '../utils/connectionLink';
 
 interface ConnectionQRState {
   url: string;
@@ -26,16 +27,22 @@ export default function ConnectionQR() {
 
   const state = location.state as unknown;
   const validState = isValidState(state) ? state : null;
+  const qrUrl = validState
+    ? resolvePlainSubscriptionUrl({
+        subscriptionUrl: validState.url,
+        displayLink: validState.displayUrl,
+      })
+    : null;
   const subId = validState?.subscriptionId;
   const connectionPath = subId ? `/connection?sub=${subId}` : '/connection';
 
   useEffect(() => {
-    if (!validState) {
+    if (!validState || !qrUrl) {
       navigate(connectionPath, { replace: true });
     }
-  }, [validState, navigate, connectionPath]);
+  }, [validState, qrUrl, navigate, connectionPath]);
 
-  if (!validState) {
+  if (!validState || !qrUrl) {
     return null;
   }
 
@@ -60,7 +67,7 @@ export default function ConnectionQR() {
 
           <div className="w-full rounded-3xl bg-white p-6">
             <QRCodeSVG
-              value={validState.url}
+              value={qrUrl}
               size={280}
               level="M"
               includeMargin={false}

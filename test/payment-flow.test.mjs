@@ -9,6 +9,7 @@ import * as flow from '../src/utils/topUpFlow.ts';
 import * as statuses from '../src/utils/paymentStatus.ts';
 import * as bestValue from '../src/utils/bestValue.ts';
 import * as legacySubscription from '../src/utils/legacySubscription.ts';
+import * as connectionLink from '../src/utils/connectionLink.ts';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -135,6 +136,7 @@ function loadComponent(relative, options = {}) {
       if (specifier.endsWith('/topUpFlow')) return flow;
       if (specifier.endsWith('/bestValue')) return bestValue;
       if (specifier.endsWith('/legacySubscription')) return legacySubscription;
+      if (specifier.endsWith('/connectionLink')) return connectionLink;
       if (
         specifier.endsWith('/icons') ||
         specifier.endsWith('/skeleton') ||
