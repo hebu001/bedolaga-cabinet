@@ -2661,6 +2661,8 @@
           },
           "days": "d",
           "codeOnly": "Code only",
+          "notActivated": "Not activated yet",
+          "userId": "User #{{id}}",
           "via": "via",
           "balance": "balance",
           "unknownUser": "Unknown",

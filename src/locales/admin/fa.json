@@ -2319,6 +2319,8 @@
           },
           "days": "روز",
           "codeOnly": "فقط کد",
+          "notActivated": "هنوز فعال نشده",
+          "userId": "کاربر #{{id}}",
           "via": "از طریق",
           "balance": "موجودی",
           "unknownUser": "ناشناس",

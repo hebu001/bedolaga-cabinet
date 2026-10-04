@@ -2315,6 +2315,8 @@
           },
           "days": "天",
           "codeOnly": "仅代码",
+          "notActivated": "尚未激活",
+          "userId": "用户 #{{id}}",
           "via": "通过",
           "balance": "余额",
           "unknownUser": "未知",

@@ -28,14 +28,18 @@ function GiftRow({
   const methodLabel = usePaymentMethodLabel();
   const ns = 'admin.users.detail.gifts';
   const sent = direction === 'sent';
+  const activated = gift.status === 'delivered' || Boolean(gift.delivered_at);
+  const partyId = sent ? (activated ? gift.receiver_user_id : null) : gift.buyer_user_id;
   const partyName = sent
-    ? gift.receiver_username
-      ? `@${gift.receiver_username}`
-      : gift.gift_recipient_value || t(`${ns}.codeOnly`)
+    ? !activated
+      ? t(`${ns}.notActivated`)
+      : gift.receiver_username
+        ? `@${gift.receiver_username}`
+        : gift.receiver_full_name ||
+          (partyId ? t(`${ns}.userId`, { id: partyId }) : t(`${ns}.unknownUser`))
     : gift.buyer_username
       ? `@${gift.buyer_username}`
       : gift.buyer_full_name || t(`${ns}.unknownUser`);
-  const partyId = sent ? gift.receiver_user_id : gift.buyer_user_id;
   const statusLabel = t(`${ns}.status.${gift.status}`, { defaultValue: '' });
   const method = gift.payment_method ? methodLabel(gift.payment_method) : null;
 
