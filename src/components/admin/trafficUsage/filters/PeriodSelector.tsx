@@ -34,25 +34,20 @@ export function PeriodSelector({
 }) {
   const { t } = useTranslation();
 
-  // Limit: last 31 days
+  // Date strings represent UTC calendar days. The page validates the
+  // inclusive range (up to 31 days) before the administrator applies it.
   const today = new Date().toISOString().split('T')[0];
-  const minDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   if (dateMode) {
     return (
       <div className="flex flex-wrap items-center gap-2">
         <CalendarIcon className="h-4 w-4 shrink-0" />
         <span className="text-xs text-apple-mute">{t('admin.trafficUsage.dateFrom')}</span>
-        <DateField
-          value={customStart}
-          min={minDate}
-          max={customEnd || today}
-          onChange={onCustomStartChange}
-        />
+        <DateField value={customStart} max={customEnd || today} onChange={onCustomStartChange} />
         <span className="text-xs text-apple-mute">{t('admin.trafficUsage.dateTo')}</span>
         <DateField
           value={customEnd}
-          min={customStart || minDate}
+          min={customStart || undefined}
           max={today}
           onChange={onCustomEndChange}
         />

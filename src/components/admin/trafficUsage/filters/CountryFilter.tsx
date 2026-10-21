@@ -1,5 +1,6 @@
 import { CheckIcon } from '@/components/admin/legacyIcons';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ChevronDownIcon, GlobeIcon } from '../TrafficIcons';
 import { getFlagEmoji } from '../trafficUsageHelpers';
@@ -13,6 +14,7 @@ export function CountryFilter({
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,6 +47,8 @@ export function CountryFilter({
     <div className="sm:relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
+        aria-label={t('admin.trafficUsage.top100.countries')}
+        aria-expanded={open}
         className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
           activeCount > 0
             ? 'border-[#F97315]/50 bg-[#F97315]/10 text-[#F97315]'
@@ -75,7 +79,7 @@ export function CountryFilter({
             >
               {allSelected && <CheckIcon className="h-3 w-3 text-white" />}
             </span>
-            All
+            {t('admin.trafficUsage.top100.allCountries')}
           </button>
 
           <div className="mx-2 border-t border-apple-hairline" />

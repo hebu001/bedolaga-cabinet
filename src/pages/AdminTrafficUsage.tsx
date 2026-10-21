@@ -1,702 +1,217 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router';
-import { backTo } from '@/components/admin';
+import { useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
-} from '@tanstack/react-table';
+import { useQuery } from '@tanstack/react-query';
+import { backTo } from '@/components/admin';
 import {
   adminTrafficApi,
-  type UserTrafficItem,
-  type TrafficNodeInfo,
-  type TrafficParams,
-} from '../api/adminTraffic';
-import { usePlatform } from '../platform/hooks/usePlatform';
+  type TrafficTopParams,
+  type TrafficTopResponse,
+} from '@/api/adminTraffic';
+import { usePlatform } from '@/platform/hooks/usePlatform';
+import { PeriodSelector } from '@/components/admin/trafficUsage/filters/PeriodSelector';
+import { NodeFilter } from '@/components/admin/trafficUsage/filters/NodeFilter';
+import { CountryFilter } from '@/components/admin/trafficUsage/filters/CountryFilter';
+import { formatBytes } from '@/components/admin/trafficUsage/trafficUsageHelpers';
 import {
-  formatBytes,
-  getFlagEmoji,
-  formatCurrency,
-  formatShortDate,
-  toBackendSortField,
-  bytesToGbPerDay,
-  getRatio,
-  getRowBgColor,
-  getNodeTextColor,
-  getRiskLevel,
-  getCompositeRisk,
-  formatGbPerDay,
-} from '../components/admin/trafficUsage/trafficUsageHelpers';
-import { RiskBadge } from '../components/admin/trafficUsage/RiskBadge';
-import { PeriodSelector } from '../components/admin/trafficUsage/filters/PeriodSelector';
-import { TariffFilter } from '../components/admin/trafficUsage/filters/TariffFilter';
-import { StatusFilter } from '../components/admin/trafficUsage/filters/StatusFilter';
-import { NodeFilter } from '../components/admin/trafficUsage/filters/NodeFilter';
-import { CountryFilter } from '../components/admin/trafficUsage/filters/CountryFilter';
-import { Skeleton } from '../components/ui/skeleton';
+  filterTrafficTop,
+  isValidTrafficRange,
+  resolveTrafficNodes,
+  utcPeriodRange,
+  type TrafficTopSort,
+} from '@/components/admin/trafficUsage/trafficTopHelpers';
 import {
-  SearchIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   RefreshIcon,
-  DownloadIcon,
+  SearchIcon,
   SortIcon,
-  XIcon,
-  ShieldIcon,
-  ServerSmallIcon,
-} from '../components/admin/trafficUsage/TrafficIcons';
+} from '@/components/admin/trafficUsage/TrafficIcons';
 
-// (TanStack Table augmentation + utils + risk helpers moved into ./trafficUsage/trafficUsageHelpers.ts)
+const QUERY_POLICY = {
+  staleTime: 5 * 60 * 1000,
+  gcTime: 5 * 60 * 1000,
+  retry: false,
+  retryOnMount: false,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+} as const;
 
-// (Icons moved into ./trafficUsage/TrafficIcons.tsx)
-
-// Заглушка ячейки, пока догружается обогащение строки. SkeletonGroup здесь не
-// применяется: заглушки живут в разных ячейках таблицы, и объявлять role="status"
-// в каждой значило бы заставить скринридер зачитать «загрузка» по разу на ячейку.
-const cellSkeleton = (width: string) => <Skeleton className={`mx-auto h-4 ${width}`} />;
-
-// ============ Progress Bar ============
-
-function ProgressBar({ loading }: { loading: boolean }) {
-  const [progress, setProgress] = useState(0);
-  const [visible, setVisible] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
-
-  useEffect(() => {
-    if (loading) {
-      setProgress(0);
-      setVisible(true);
-      // Fast initial progress, then slow down
-      intervalRef.current = setInterval(() => {
-        setProgress((prev) => {
-          if (prev < 30) return prev + 8;
-          if (prev < 60) return prev + 3;
-          if (prev < 85) return prev + 1;
-          if (prev < 95) return prev + 0.3;
-          return prev;
-        });
-      }, 100);
-    } else {
-      if (visible) {
-        setProgress(100);
-        clearInterval(intervalRef.current);
-        const timer = setTimeout(() => {
-          setVisible(false);
-          setProgress(0);
-        }, 300);
-        return () => clearTimeout(timer);
-      }
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [loading, visible]);
-
-  if (!visible) return null;
-
+function TrafficDailyChart({ daily }: { daily: TrafficTopResponse['daily'] }) {
+  const { t } = useTranslation();
+  const peak = Math.max(1, ...daily.map((day) => day.total_bytes));
   return (
-    <div className="absolute left-0 right-0 top-0 z-50 h-0.5 overflow-hidden rounded-full bg-apple-elevated">
+    <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+      <h2 className="mb-4 text-sm font-medium text-apple-ink">
+        {t('admin.trafficUsage.top100.daily')}
+      </h2>
       <div
-        className="h-full rounded-full bg-[#F97315] transition-all duration-200 ease-out"
-        style={{ width: `${progress}%` }}
-      />
+        className="flex h-40 items-end gap-1"
+        role="img"
+        aria-label={t('admin.trafficUsage.top100.daily')}
+      >
+        {daily.map((day) => (
+          <div
+            key={day.date}
+            className="group relative flex h-full min-w-0 flex-1 items-end"
+            tabIndex={0}
+            aria-label={`${day.date} UTC: ${formatBytes(day.total_bytes)}`}
+            title={`${day.date} UTC: ${formatBytes(day.total_bytes)}`}
+          >
+            <div
+              className="w-full rounded-t bg-[#F97315]/80 transition-colors group-hover:bg-[#F97315] group-focus:bg-[#F97315]"
+              style={{
+                height: `${(day.total_bytes / peak) * 100}%`,
+                minHeight: day.total_bytes > 0 ? 2 : 0,
+              }}
+            />
+            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-apple-elevated px-2 py-1 text-xs text-apple-ink shadow-lg group-hover:block group-focus:block">
+              {day.date} · {formatBytes(day.total_bytes)}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex justify-between text-[10px] text-apple-faint">
+        <span>{daily[0]?.date}</span>
+        <span>UTC</span>
+        <span>{daily.length > 1 ? daily[daily.length - 1]?.date : ''}</span>
+      </div>
     </div>
   );
 }
-
-// ============ Components ============
-
-// (Filter components + PERIODS / STATUS_COLORS constants moved into
-//  ./trafficUsage/filters/{PeriodSelector,TariffFilter,StatusFilter,
-//   NodeFilter,CountryFilter}.tsx)
-
-// (RiskBadge moved into ./trafficUsage/RiskBadge.tsx)
-
-// ============ Main Page ============
 
 export default function AdminTrafficUsage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { capabilities } = usePlatform();
-
-  const [nodes, setNodes] = useState<TrafficNodeInfo[]>([]);
-  const [availableTariffs, setAvailableTariffs] = useState<string[]>([]);
-  const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
-  const [period, setPeriod] = useState(30);
+  const [period, setPeriod] = useState(7);
   const [dateMode, setDateMode] = useState(false);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [committedSearch, setCommittedSearch] = useState('');
-  const [selectedTariffs, setSelectedTariffs] = useState<Set<string>>(new Set());
-  const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
+  const [appliedDates, setAppliedDates] = useState<{ start_date: string; end_date: string } | null>(
+    null,
+  );
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [selectedCountries, setSelectedCountries] = useState<Set<string>>(new Set());
-  const [offset, setOffset] = useState(0);
-  const [exporting, setExporting] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'total_bytes', desc: true }]);
-  const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
-  const [totalThreshold, setTotalThreshold] = useState('');
-  const [nodeThreshold, setNodeThreshold] = useState('');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<TrafficTopSort>({ field: 'rank', descending: false });
+  const [page, setPage] = useState(0);
 
-  const limit = 50;
-
-  const sortBy = sorting[0] ? toBackendSortField(sorting[0].id) : 'total_bytes';
-  const sortDesc = sorting[0]?.desc ?? true;
-  const tariffsParam = selectedTariffs.size > 0 ? [...selectedTariffs].join(',') : undefined;
-  const statusesParam = selectedStatuses.size > 0 ? [...selectedStatuses].join(',') : undefined;
-
-  // Merge country filter into node UUIDs so backend filters data consistently
-  const mergedNodesParam = useMemo(() => {
-    const countryUuids =
-      selectedCountries.size > 0
-        ? new Set(
-            nodes.filter((n) => selectedCountries.has(n.country_code)).map((n) => n.node_uuid),
-          )
-        : null;
-    const nodeUuids = selectedNodes.size > 0 ? new Set(selectedNodes) : null;
-
-    let merged: Set<string> | null = null;
-    if (countryUuids && nodeUuids) {
-      merged = new Set([...countryUuids].filter((id) => nodeUuids.has(id)));
-    } else {
-      merged = countryUuids || nodeUuids;
-    }
-    return merged && merged.size > 0 ? [...merged].join(',') : undefined;
-  }, [nodes, selectedCountries, selectedNodes]);
-
-  const buildParams = useCallback((): TrafficParams => {
-    const params: TrafficParams = {
-      limit,
-      offset,
-      search: committedSearch || undefined,
-      sort_by: sortBy,
-      sort_desc: sortDesc,
-      tariffs: tariffsParam,
-      statuses: statusesParam,
-      nodes: mergedNodesParam,
-    };
-    if (dateMode && customStart && customEnd) {
-      params.start_date = customStart;
-      params.end_date = customEnd;
-    } else {
-      params.period = period;
-    }
-    return params;
-  }, [
-    period,
-    offset,
-    committedSearch,
-    sortBy,
-    sortDesc,
-    tariffsParam,
-    statusesParam,
-    mergedNodesParam,
-    dateMode,
-    customStart,
-    customEnd,
-  ]);
-
-  const queryClient = useQueryClient();
-  const params = useMemo(() => buildParams(), [buildParams]);
-
-  // Only calculate the requested period. React Query owns the cache and
-  // cancellation, including requests made obsolete by navigation or filters.
-  const trafficQuery = useQuery({
-    queryKey: ['admin-traffic', params] as const,
-    queryFn: ({ signal }) => adminTrafficApi.getTrafficUsage(params, { signal }),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-    retry: false,
-    retryOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+  const nodesQuery = useQuery({
+    queryKey: ['admin-traffic-nodes'],
+    queryFn: ({ signal }) => adminTrafficApi.getNodes(signal),
+    ...QUERY_POLICY,
   });
-  const items = trafficQuery.data?.items ?? [];
-  const total = trafficQuery.data?.total ?? 0;
-  const periodDays = trafficQuery.data?.period_days ?? period;
-  const loading = trafficQuery.isFetching;
-  const initialLoading = trafficQuery.isLoading;
-  const hasData = !!trafficQuery.data && (items.length > 0 || nodes.length > 0);
-
-  // Keep filter choices available while loading a different page or period.
-  useEffect(() => {
-    if (!trafficQuery.data) return;
-    setNodes(trafficQuery.data.nodes);
-    setAvailableTariffs(trafficQuery.data.available_tariffs);
-    setAvailableStatuses(trafficQuery.data.available_statuses);
-  }, [trafficQuery.data]);
-
-  const visibleUserIds = useMemo(
+  const nodes = useMemo(
     () =>
-      [...new Set(trafficQuery.data?.items.map((item) => item.user_id) ?? [])].sort(
-        (a, b) => a - b,
-      ),
-    [trafficQuery.data],
+      nodesQuery.data?.nodes.map((node) => ({
+        node_uuid: node.uuid,
+        node_name: node.name,
+        country_code: node.country_code ?? '',
+      })) ?? [],
+    [nodesQuery.data],
   );
-  // Additional details belong to the visible users, not every user in the bot.
-  const enrichmentQuery = useQuery({
-    queryKey: ['admin-traffic-enrichment', visibleUserIds] as const,
-    queryFn: ({ signal }) => adminTrafficApi.getEnrichment(visibleUserIds, { signal }),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-    enabled: visibleUserIds.length > 0,
-    retry: false,
-    retryOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
-  const enrichment = enrichmentQuery.data?.data ?? null;
-  const enrichmentLoading = enrichmentQuery.isFetching;
-
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
-  const handleSearch = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setOffset(0);
-    setCommittedSearch(searchInput);
-  };
-
-  const handleExport = async () => {
-    try {
-      setExporting(true);
-      const exportData: {
-        period: number;
-        start_date?: string;
-        end_date?: string;
-        tariffs?: string;
-        statuses?: string;
-        nodes?: string;
-        total_threshold_gb?: number;
-        node_threshold_gb?: number;
-      } = { period };
-      if (dateMode && customStart && customEnd) {
-        exportData.start_date = customStart;
-        exportData.end_date = customEnd;
-      }
-      if (tariffsParam) exportData.tariffs = tariffsParam;
-      if (statusesParam) exportData.statuses = statusesParam;
-      if (mergedNodesParam) exportData.nodes = mergedNodesParam;
-
-      if (totalThresholdNum > 0) exportData.total_threshold_gb = totalThresholdNum;
-      if (nodeThresholdNum > 0) exportData.node_threshold_gb = nodeThresholdNum;
-
-      await adminTrafficApi.exportCsv(exportData);
-      setToast({ message: t('admin.trafficUsage.exportSuccess'), type: 'success' });
-    } catch {
-      setToast({ message: t('admin.trafficUsage.exportError'), type: 'error' });
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handlePeriodChange = (p: number) => {
-    setPeriod(p);
-    setOffset(0);
-  };
-
-  const handleToggleDateMode = () => {
-    if (dateMode) {
-      // Switch back to period mode
-      setDateMode(false);
-      setCustomStart('');
-      setCustomEnd('');
-      setOffset(0);
-    } else {
-      // Switch to date mode — pre-fill with last N days
-      const end = new Date();
-      const start = new Date(end.getTime() - period * 24 * 60 * 60 * 1000);
-      setCustomStart(start.toISOString().split('T')[0]);
-      setCustomEnd(end.toISOString().split('T')[0]);
-      setDateMode(true);
-      setOffset(0);
-    }
-  };
-
-  const handleCustomStartChange = (v: string) => {
-    setCustomStart(v);
-    setOffset(0);
-  };
-
-  const handleCustomEndChange = (v: string) => {
-    setCustomEnd(v);
-    setOffset(0);
-  };
-
-  const handleSortingChange = (updater: SortingState | ((old: SortingState) => SortingState)) => {
-    const next = typeof updater === 'function' ? updater(sorting) : updater;
-    setSorting(next);
-    setOffset(0);
-  };
-
-  const handleTariffChange = (next: Set<string>) => {
-    setSelectedTariffs(next);
-    setOffset(0);
-  };
-
-  const handleStatusChange = (next: Set<string>) => {
-    setSelectedStatuses(next);
-    setOffset(0);
-  };
-
-  const handleNodeChange = (next: Set<string>) => {
-    setSelectedNodes(next);
-    setOffset(0);
-  };
-
-  const handleCountryChange = (next: Set<string>) => {
-    setSelectedCountries(next);
-    setOffset(0);
-  };
-
-  const handleRefresh = () => {
-    // Each active query refetches once. Inactive periods stay invalidated
-    // until the administrator selects them.
-    queryClient.invalidateQueries({ queryKey: ['admin-traffic'] });
-    queryClient.invalidateQueries({ queryKey: ['admin-traffic-enrichment'] });
-  };
-
-  const availableCountries = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const n of nodes) {
-      if (n.country_code) map.set(n.country_code, (map.get(n.country_code) || 0) + 1);
-    }
-    return Array.from(map.entries())
+  const nodeUuids = useMemo(
+    () => resolveTrafficNodes(nodes, selectedNodes, selectedCountries),
+    [nodes, selectedNodes, selectedCountries],
+  );
+  const emptySelection = nodeUuids !== null && nodeUuids.length === 0;
+  const countries = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const node of nodes)
+      if (node.country_code)
+        counts.set(node.country_code, (counts.get(node.country_code) ?? 0) + 1);
+    return [...counts]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([code, count]) => ({ code, count }));
   }, [nodes]);
 
-  // When country/node filter is active, show only matching node columns
-  const displayNodes = useMemo(() => {
-    let filtered = nodes;
-    if (selectedCountries.size > 0) {
-      filtered = filtered.filter((n) => selectedCountries.has(n.country_code));
-    }
-    if (selectedNodes.size > 0) {
-      filtered = filtered.filter((n) => selectedNodes.has(n.node_uuid));
-    }
-    return filtered;
-  }, [nodes, selectedCountries, selectedNodes]);
-
-  const totalThresholdNum = Math.max(0, parseFloat(totalThreshold) || 0);
-  const hasTotalThreshold = totalThresholdNum > 0;
-  const nodeThresholdNum = Math.max(0, parseFloat(nodeThreshold) || 0);
-  const hasNodeThreshold = nodeThresholdNum > 0;
-  const hasAnyThreshold = hasTotalThreshold || hasNodeThreshold;
-
-  const columns = useMemo<ColumnDef<UserTrafficItem>[]>(() => {
-    const cols: ColumnDef<UserTrafficItem>[] = [
-      {
-        id: 'user',
-        accessorFn: (row) => row.full_name,
-        header: t('admin.trafficUsage.user'),
-        enableSorting: true,
-        size: 120,
-        minSize: 40,
-        maxSize: 200,
-        cell: ({ row }) => {
-          const item = row.original;
-          return (
-            <div className="flex items-center gap-1.5">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F97315] text-[10px] font-medium text-white">
-                {item.full_name?.[0] || '?'}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-xs font-medium text-apple-ink">{item.full_name}</div>
-                {item.username ? (
-                  <div className="truncate text-[10px] leading-tight text-apple-faint">
-                    @{item.username}
-                  </div>
-                ) : item.email ? (
-                  <div className="truncate text-[10px] leading-tight text-apple-faint">
-                    {item.email}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          );
-        },
-        meta: { sticky: true },
-      },
-      {
-        accessorKey: 'tariff_name',
-        header: t('admin.trafficUsage.tariff'),
-        enableSorting: true,
-        size: 120,
-        minSize: 80,
-        cell: ({ getValue }) => (
-          <span className="text-xs text-apple-mute">
-            {(getValue() as string | null) || t('admin.trafficUsage.noTariff')}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'device_limit',
-        header: t('admin.trafficUsage.devices'),
-        enableSorting: true,
-        size: 80,
-        minSize: 60,
-        meta: { align: 'center' as const },
-        cell: ({ getValue }) => (
-          <span className="text-xs text-apple-mute">{getValue() as number}</span>
-        ),
-      },
-      {
-        accessorKey: 'traffic_limit_gb',
-        header: t('admin.trafficUsage.trafficLimit'),
-        enableSorting: true,
-        size: 80,
-        minSize: 60,
-        meta: { align: 'center' as const },
-        cell: ({ getValue }) => {
-          const gb = getValue() as number;
-          return <span className="text-xs text-apple-mute">{gb > 0 ? `${gb} GB` : '\u221E'}</span>;
-        },
-      },
-      // ---- Enrichment columns ----
-      {
-        id: 'connected',
-        accessorFn: (row) => enrichment?.[row.user_id]?.devices_connected,
-        header: t('admin.trafficUsage.connected'),
-        size: 65,
-        minSize: 50,
-        enableSorting: true,
-        meta: { align: 'center' as const },
-        cell: ({ row }) => {
-          const e = enrichment?.[row.original.user_id];
-          if (enrichmentLoading && !enrichment) return cellSkeleton('w-8');
-          return (
-            <span className="text-xs text-apple-mute">{e?.devices_connected ?? '\u2014'}</span>
-          );
-        },
-      },
-      {
-        id: 'total_spent',
-        accessorFn: (row) => enrichment?.[row.user_id]?.total_spent_kopeks,
-        header: t('admin.trafficUsage.totalSpent'),
-        size: 75,
-        minSize: 55,
-        enableSorting: true,
-        meta: { align: 'center' as const },
-        cell: ({ row }) => {
-          const e = enrichment?.[row.original.user_id];
-          if (enrichmentLoading && !enrichment) return cellSkeleton('w-12');
-          if (!e || e.total_spent_kopeks === 0)
-            return <span className="text-xs text-apple-mute">{'\u2014'}</span>;
-          return (
-            <span className="text-xs text-apple-mute">{formatCurrency(e.total_spent_kopeks)}</span>
-          );
-        },
-      },
-      {
-        id: 'sub_start',
-        accessorFn: (row) => enrichment?.[row.user_id]?.subscription_start_date,
-        header: t('admin.trafficUsage.subStart'),
-        size: 80,
-        minSize: 65,
-        enableSorting: true,
-        meta: { align: 'center' as const },
-        cell: ({ row }) => {
-          const e = enrichment?.[row.original.user_id];
-          if (enrichmentLoading && !enrichment) return cellSkeleton('w-14');
-          return (
-            <span className="text-xs text-apple-mute">
-              {formatShortDate(e?.subscription_start_date ?? null)}
-            </span>
-          );
-        },
-      },
-      {
-        id: 'sub_end',
-        accessorFn: (row) => enrichment?.[row.user_id]?.subscription_end_date,
-        header: t('admin.trafficUsage.subEnd'),
-        size: 80,
-        minSize: 65,
-        enableSorting: true,
-        meta: { align: 'center' as const },
-        cell: ({ row }) => {
-          const e = enrichment?.[row.original.user_id];
-          if (enrichmentLoading && !enrichment) return cellSkeleton('w-14');
-          return (
-            <span className="text-xs text-apple-mute">
-              {formatShortDate(e?.subscription_end_date ?? null)}
-            </span>
-          );
-        },
-      },
-      {
-        id: 'last_node',
-        accessorFn: (row) => enrichment?.[row.user_id]?.last_node_name,
-        header: t('admin.trafficUsage.lastNode'),
-        size: 100,
-        minSize: 70,
-        enableSorting: true,
-        meta: { align: 'center' as const },
-        cell: ({ row }) => {
-          const e = enrichment?.[row.original.user_id];
-          if (enrichmentLoading && !enrichment) return cellSkeleton('w-16');
-          return <span className="text-xs text-apple-mute">{e?.last_node_name ?? '\u2014'}</span>;
-        },
-      },
-      // ---- Dynamic node columns ----
-      ...displayNodes.map(
-        (node): ColumnDef<UserTrafficItem> => ({
-          id: `node_${node.node_uuid}`,
-          accessorFn: (row) => row.node_traffic[node.node_uuid] || 0,
-          header: `${getFlagEmoji(node.country_code)} ${node.node_name}`,
-          enableSorting: true,
-          size: 110,
-          minSize: 80,
-          meta: { align: 'center' as const },
-          cell: ({ getValue }) => {
-            const bytes = getValue() as number;
-            if (bytes <= 0) {
-              return <span className="text-xs text-apple-mute">{'\u2014'}</span>;
-            }
-            const dailyNode = bytesToGbPerDay(bytes, periodDays);
-            const nodeRatio = hasNodeThreshold ? getRatio(dailyNode, nodeThresholdNum) : 0;
-            const textColor = hasNodeThreshold ? getNodeTextColor(nodeRatio) : undefined;
-            return (
-              <div className="flex flex-col items-center">
-                <span
-                  className="text-xs text-apple-mute"
-                  style={{
-                    color: textColor,
-                    fontWeight: nodeRatio > 0.8 ? 600 : undefined,
-                  }}
-                >
-                  {formatBytes(bytes)}
-                </span>
-                {hasNodeThreshold && (
-                  <span
-                    className="text-[9px] leading-tight opacity-60"
-                    style={{ color: textColor }}
-                  >
-                    {formatGbPerDay(dailyNode)} GB/d
-                  </span>
-                )}
-              </div>
-            );
-          },
-        }),
-      ),
-    ];
-
-    // Risk column — insert before total when any threshold is set
-    if (hasAnyThreshold) {
-      cols.push({
-        id: 'risk',
-        header: t('admin.trafficUsage.risk'),
-        size: 100,
-        minSize: 80,
-        meta: { align: 'center' as const },
-        accessorFn: (row) => {
-          const result = getCompositeRisk(row, totalThresholdNum, nodeThresholdNum, periodDays);
-          return result.ratio;
-        },
-        enableSorting: false,
-        cell: ({ row }) => {
-          const result = getCompositeRisk(
-            row.original,
-            totalThresholdNum,
-            nodeThresholdNum,
-            periodDays,
-          );
-          const level = getRiskLevel(result.ratio);
-          return <RiskBadge level={level} ratio={result.ratio} gbPerDay={result.gbPerDay} />;
-        },
-      });
-    }
-
-    cols.push({
-      accessorKey: 'total_bytes',
-      header: t('admin.trafficUsage.total'),
-      enableSorting: true,
-      size: 110,
-      minSize: 80,
-      meta: { align: 'center' as const, bold: true },
-      cell: ({ getValue }) => {
-        const bytes = getValue() as number;
-        if (bytes <= 0) {
-          return <span className="text-xs font-semibold text-apple-ink">{'\u2014'}</span>;
-        }
-        const dailyTotal = bytesToGbPerDay(bytes, periodDays);
-        return (
-          <div className="flex flex-col items-center">
-            <span className="text-xs font-semibold text-apple-ink">{formatBytes(bytes)}</span>
-            {hasTotalThreshold && (
-              <span className="text-[9px] leading-tight text-apple-mute">
-                {formatGbPerDay(dailyTotal)} GB/d
-              </span>
-            )}
-          </div>
-        );
-      },
-    });
-
-    return cols;
-  }, [
-    displayNodes,
-    t,
-    hasAnyThreshold,
-    hasTotalThreshold,
-    hasNodeThreshold,
-    totalThresholdNum,
-    nodeThresholdNum,
-    periodDays,
-    enrichment,
-    enrichmentLoading,
-  ]);
-
-  const table = useReactTable({
-    data: items,
-    columns,
-    state: { sorting, columnSizing },
-    onSortingChange: handleSortingChange,
-    onColumnSizingChange: setColumnSizing,
-    getCoreRowModel: getCoreRowModel(),
-    manualSorting: true,
-    enableSortingRemoval: false,
-    enableColumnResizing: true,
-    columnResizeMode: 'onChange',
+  const params = useMemo<TrafficTopParams>(
+    () => ({ ...(appliedDates ?? { period }), node_uuids: nodeUuids }),
+    [appliedDates, period, nodeUuids],
+  );
+  const canRequest = nodesQuery.isSuccess && !emptySelection;
+  const reportQuery = useQuery({
+    queryKey: ['admin-traffic-top', params],
+    queryFn: ({ signal }) => adminTrafficApi.getTop(params, signal),
+    enabled: canRequest,
+    ...QUERY_POLICY,
   });
+  // Metadata, chart and rows always come from the same completed response.
+  // Changing scope never leaves rows from the previous scope on screen.
+  const report = canRequest ? reportQuery.data : undefined;
+  const loading = nodesQuery.isFetching || (canRequest && reportQuery.isFetching);
+  const error = nodesQuery.isError || (canRequest && reportQuery.isError);
+  const filtered = useMemo(
+    () => filterTrafficTop(report?.items ?? [], search, sort),
+    [report, search, sort],
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 50));
+  const visiblePage = Math.min(page, pageCount - 1);
+  const visibleItems = filtered.slice(visiblePage * 50, (visiblePage + 1) * 50);
+  const peak = report?.daily.reduce(
+    (best, day) => (day.total_bytes > best.total_bytes ? day : best),
+    { date: '', total_bytes: 0 },
+  );
+  const scopeLabel = !report
+    ? ''
+    : report.scope.kind === 'all'
+      ? t('admin.trafficUsage.allNodes')
+      : report.scope.node_count === 1
+        ? (nodes.find((node) => node.node_uuid === report.scope.node_uuids[0])?.node_name ??
+          t('admin.trafficUsage.top100.selectedNodes', { count: 1 }))
+        : t('admin.trafficUsage.top100.selectedNodes', { count: report.scope.node_count });
+  const validDraft = isValidTrafficRange(customStart, customEnd);
+  const draftChanged =
+    dateMode && (customStart !== appliedDates?.start_date || customEnd !== appliedDates?.end_date);
 
-  const totalPages = Math.ceil(total / limit);
-  const currentPage = Math.floor(offset / limit) + 1;
+  const changePeriod = (next: number) => {
+    setPeriod(next);
+    setAppliedDates(null);
+    setPage(0);
+  };
+  const toggleDates = () => {
+    if (dateMode) {
+      setDateMode(false);
+      setAppliedDates(null);
+      setPage(0);
+    } else {
+      const range = appliedDates ?? utcPeriodRange(period);
+      setCustomStart(range.start_date);
+      setCustomEnd(range.end_date);
+      setDateMode(true);
+    }
+  };
+  const refresh = () => {
+    if (nodesQuery.isError) void nodesQuery.refetch();
+    else if (canRequest) void reportQuery.refetch();
+  };
+  const toggleSort = (field: TrafficTopSort['field']) => {
+    setSort((previous) => ({
+      field,
+      descending: previous.field === field ? !previous.descending : field === 'traffic',
+    }));
+    setPage(0);
+  };
+  const sortHeader = (field: TrafficTopSort['field'], label: string) => (
+    <button
+      onClick={() => toggleSort(field)}
+      className="inline-flex items-center gap-1 hover:text-apple-ink"
+    >
+      {label}
+      <SortIcon direction={sort.field === field ? (sort.descending ? 'desc' : 'asc') : false} />
+    </button>
+  );
 
   return (
     <div className="relative animate-fade-in">
-      {/* Progress bar — shown during background refresh */}
-      <ProgressBar loading={loading} />
-
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-xl px-4 py-2 text-sm shadow-lg ${
-            toast.type === 'success'
-              ? 'bg-apple-green/15 text-apple-green'
-              : 'bg-apple-red/15 text-apple-red'
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
-
-      {/* Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 basis-48 items-center gap-3">
           {!capabilities.hasBackButton && (
             <button
               onClick={() => navigate('/admin')}
+              aria-label={t('common.back')}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-apple-card transition-colors hover:bg-apple-elevated"
             >
               <ChevronLeftIcon />
@@ -704,267 +219,267 @@ export default function AdminTrafficUsage() {
           )}
           <div>
             <h1 className="text-xl font-bold text-apple-ink">{t('admin.trafficUsage.title')}</h1>
-            <p className="text-sm text-apple-mute">{t('admin.trafficUsage.subtitle')}</p>
+            <p className="text-sm text-apple-mute">{t('admin.trafficUsage.top100.subtitle')}</p>
           </div>
         </div>
         <button
-          onClick={handleRefresh}
-          disabled={loading || enrichmentLoading}
+          onClick={refresh}
+          disabled={loading || (!nodesQuery.isError && !canRequest)}
           aria-label={t('common.refresh')}
           className="rounded-lg p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
         >
           <RefreshIcon className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
-
-      {/* Controls */}
-      <div className="mb-4 flex flex-col gap-3">
-        {/* На телефоне выпадашки фильтров во всю ширину ряда: привязанные к кнопке,
-            они уходили за правый край экрана. */}
-        <div className="relative flex flex-wrap items-center gap-3">
-          <PeriodSelector
-            value={period}
-            onChange={handlePeriodChange}
-            label={t('admin.trafficUsage.period')}
-            dateMode={dateMode}
-            customStart={customStart}
-            customEnd={customEnd}
-            onToggleDateMode={handleToggleDateMode}
-            onCustomStartChange={handleCustomStartChange}
-            onCustomEndChange={handleCustomEndChange}
-          />
-          <TariffFilter
-            available={availableTariffs}
-            selected={selectedTariffs}
-            onChange={handleTariffChange}
-          />
-          <NodeFilter available={nodes} selected={selectedNodes} onChange={handleNodeChange} />
-          <CountryFilter
-            available={availableCountries}
-            selected={selectedCountries}
-            onChange={handleCountryChange}
-          />
-          <StatusFilter
-            available={availableStatuses}
-            selected={selectedStatuses}
-            onChange={handleStatusChange}
-          />
-
-          {/* Threshold inputs */}
-          <div className="flex items-center gap-1.5 rounded-full bg-apple-elevated px-3 py-1.5">
-            <ShieldIcon className="h-3.5 w-3.5" />
-            <input
-              type="number"
-              value={totalThreshold}
-              onChange={(e) => setTotalThreshold(e.target.value)}
-              placeholder={t('admin.trafficUsage.totalThreshold')}
-              step="0.1"
-              min="0"
-              max="9999"
-              className="w-20 bg-transparent text-xs text-apple-ink [appearance:textfield] placeholder:text-apple-faint focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-            {totalThreshold && (
-              <button
-                onClick={() => setTotalThreshold('')}
-                className="text-apple-faint hover:text-apple-mute"
-              >
-                <XIcon className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-apple-elevated px-3 py-1.5">
-            <ServerSmallIcon className="h-3.5 w-3.5" />
-            <input
-              type="number"
-              value={nodeThreshold}
-              onChange={(e) => setNodeThreshold(e.target.value)}
-              placeholder={t('admin.trafficUsage.nodeThreshold')}
-              step="0.1"
-              min="0"
-              max="9999"
-              className="w-20 bg-transparent text-xs text-apple-ink [appearance:textfield] placeholder:text-apple-faint focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-            {nodeThreshold && (
-              <button
-                onClick={() => setNodeThreshold('')}
-                className="text-apple-faint hover:text-apple-mute"
-              >
-                <XIcon className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-
+      <div className="relative mb-4 flex flex-wrap items-center gap-3">
+        <PeriodSelector
+          value={period}
+          onChange={changePeriod}
+          label={t('admin.trafficUsage.period')}
+          dateMode={dateMode}
+          customStart={customStart}
+          customEnd={customEnd}
+          onToggleDateMode={toggleDates}
+          onCustomStartChange={setCustomStart}
+          onCustomEndChange={setCustomEnd}
+        />
+        {dateMode && (
           <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="flex items-center gap-1.5 rounded-full bg-apple-elevated px-3 py-1.5 text-xs font-medium text-apple-ink transition-colors hover:opacity-90 disabled:opacity-50"
+            onClick={() => {
+              if (validDraft) {
+                setAppliedDates({ start_date: customStart, end_date: customEnd });
+                setPage(0);
+              }
+            }}
+            disabled={!validDraft || !draftChanged}
+            className="rounded-lg bg-[#F97315] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
           >
-            <DownloadIcon />
-            {t('admin.trafficUsage.exportCsv')}
+            {t('admin.trafficUsage.top100.applyDates')}
           </button>
+        )}
+        <NodeFilter
+          available={nodes}
+          selected={selectedNodes}
+          onChange={(value) => {
+            setSelectedNodes(value);
+            setPage(0);
+          }}
+        />
+        <CountryFilter
+          available={countries}
+          selected={selectedCountries}
+          onChange={(value) => {
+            setSelectedCountries(value);
+            setPage(0);
+          }}
+        />
+      </div>
+      {dateMode && (
+        <p className={`mb-4 text-xs ${validDraft ? 'text-apple-mute' : 'text-apple-red'}`}>
+          {t('admin.trafficUsage.top100.dateHint')}
+        </p>
+      )}
+      {error && (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red"
+        >
+          {t(report ? 'common.staleData' : 'common.loadError')}
         </div>
-
-        <form onSubmit={handleSearch}>
-          <div className="relative">
+      )}
+      {emptySelection && nodesQuery.isSuccess && (
+        <p role="status" className="rounded-xl bg-apple-card p-4 text-sm text-apple-mute">
+          {t('admin.trafficUsage.top100.emptySelection')}
+        </p>
+      )}
+      {loading && !report && (
+        <p role="status" className="py-12 text-center text-sm text-apple-mute">
+          {t('admin.trafficUsage.loading')}
+        </p>
+      )}
+      {report && (
+        <section aria-busy={loading}>
+          <div className="mb-4 text-sm text-apple-mute" data-testid="traffic-scope">
+            <span className="font-medium text-apple-ink">{scopeLabel}</span>
+            <span className="mx-2">·</span>
+            {report.range.start_date} — {report.range.end_date} · UTC
+          </div>
+          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+              { key: 'allTraffic', value: formatBytes(report.all_recorded_total_bytes) },
+              {
+                key: 'averageDaily',
+                value: formatBytes(report.all_recorded_total_bytes / report.range.days),
+              },
+              { key: 'peakDaily', value: formatBytes(peak?.total_bytes ?? 0), note: peak?.date },
+              { key: 'topTraffic', value: formatBytes(report.top_sum_bytes) },
+            ].map((stat) => (
+              <div
+                key={stat.key}
+                className="apple-card-grad rounded-2xl bg-apple-card p-4"
+                data-testid={`traffic-${stat.key}`}
+              >
+                <p className="mb-1 text-xs text-apple-mute">
+                  {t(`admin.trafficUsage.top100.${stat.key}`)}
+                </p>
+                <p className="text-xl font-semibold text-apple-ink">{stat.value}</p>
+                {stat.note && <p className="mt-1 text-[10px] text-apple-faint">{stat.note} UTC</p>}
+              </div>
+            ))}
+          </div>
+          <TrafficDailyChart daily={report.daily} />
+          <div className="mb-3 mt-6">
+            <h2 className="text-lg font-semibold text-apple-ink">
+              {t('admin.trafficUsage.top100.title')}
+            </h2>
+            <p className="mt-1 text-xs text-apple-mute">
+              {t('admin.trafficUsage.top100.description')}
+            </p>
+            <p className="mt-1 text-xs text-apple-mute">
+              {t('admin.trafficUsage.top100.accountCount', {
+                count: report.returned_count,
+                limit: report.top_limit,
+              })}
+            </p>
+          </div>
+          <div className="relative mb-3">
             <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={t('admin.trafficUsage.search')}
+              type="search"
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(0);
+              }}
+              placeholder={t('admin.trafficUsage.top100.search')}
+              aria-label={t('admin.trafficUsage.top100.search')}
               className="w-full rounded-xl bg-apple-elevated py-3 pl-10 pr-4 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
             />
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-faint">
               <SearchIcon />
             </div>
           </div>
-        </form>
-      </div>
-
-      {(trafficQuery.isError || enrichmentQuery.isError) && (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red"
-        >
-          {t(trafficQuery.isError && trafficQuery.data ? 'common.staleData' : 'common.loadError')}
-        </div>
-      )}
-
-      {/* Table */}
-      {initialLoading && !hasData ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
-        </div>
-      ) : trafficQuery.isError && !hasData ? null : !hasData && !loading ? (
-        <div className="py-12 text-center text-apple-mute">{t('admin.trafficUsage.noData')}</div>
-      ) : (
-        <div
-          className={`transition-opacity duration-200 ${loading && hasData ? 'opacity-70' : 'opacity-100'}`}
-        >
-          <div className="apple-card-grad overflow-x-auto rounded-2xl bg-apple-card">
-            <table className="text-left text-sm" style={{ width: table.getCenterTotalSize() }}>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b border-apple-hairline">
-                    {headerGroup.headers.map((header) => {
-                      const meta = header.column.columnDef.meta;
-                      const isSticky = meta?.sticky;
-                      const align = meta?.align === 'center' ? 'text-center' : 'text-left';
-                      const isBold = meta?.bold;
-
-                      return (
-                        <th
-                          key={header.id}
-                          className={`relative overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2 text-xs font-medium ${
-                            isBold ? 'font-semibold text-apple-ink' : 'text-apple-mute'
-                          } ${align} ${
-                            isSticky ? 'sticky left-0 z-10 bg-apple-card' : ''
-                          } ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-apple-ink' : ''}`}
-                          style={{ width: header.getSize(), maxWidth: header.getSize() }}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {header.column.getCanSort() && (
-                            <SortIcon direction={header.column.getIsSorted()} />
-                          )}
-                          <div
-                            onMouseDown={header.getResizeHandler()}
-                            onTouchStart={header.getResizeHandler()}
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute -right-2 top-0 z-20 h-full w-5 cursor-col-resize select-none"
-                            style={{ touchAction: 'none' }}
-                          >
-                            <div
-                              className={`absolute right-2 top-0 h-full w-1 ${
-                                header.column.getIsResizing()
-                                  ? 'bg-[#F97315]'
-                                  : 'bg-transparent hover:bg-apple-faint'
-                              }`}
-                            />
-                          </div>
-                        </th>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => {
-                  const compositeRatio = hasAnyThreshold
-                    ? getCompositeRisk(
-                        row.original,
-                        totalThresholdNum,
-                        nodeThresholdNum,
-                        periodDays,
-                      ).ratio
-                    : 0;
-                  const rowBg = hasAnyThreshold ? getRowBgColor(compositeRatio) : undefined;
-
-                  return (
-                    <tr
-                      key={row.id}
-                      className="cursor-pointer border-b border-apple-hairline transition-colors hover:bg-apple-elevated"
-                      style={{ backgroundColor: rowBg }}
-                      onClick={() =>
-                        navigate(`/admin/users/${row.original.user_id}`, backTo(location))
+          <p className="mb-3 text-xs text-apple-faint">
+            {search.trim()
+              ? t('admin.trafficUsage.top100.matches', {
+                  count: filtered.length,
+                  total: report.returned_count,
+                })
+              : t('admin.trafficUsage.top100.localSort')}
+          </p>
+          {visibleItems.length === 0 ? (
+            <p className="py-10 text-center text-apple-mute">
+              {t(
+                search.trim()
+                  ? 'admin.trafficUsage.top100.noMatches'
+                  : 'admin.trafficUsage.top100.noAccounts',
+              )}
+            </p>
+          ) : (
+            <div className="apple-card-grad overflow-x-auto rounded-2xl bg-apple-card">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-apple-hairline text-xs text-apple-mute">
+                    <th
+                      className="w-16 px-3 py-3"
+                      aria-sort={
+                        sort.field === 'rank'
+                          ? sort.descending
+                            ? 'descending'
+                            : 'ascending'
+                          : 'none'
                       }
                     >
-                      {row.getVisibleCells().map((cell) => {
-                        const meta = cell.column.columnDef.meta;
-                        const isSticky = meta?.sticky;
-                        const align = meta?.align === 'center' ? 'text-center' : 'text-left';
-
-                        return (
-                          <td
-                            key={cell.id}
-                            className={`overflow-hidden px-3 py-2 ${align} ${
-                              isSticky ? 'sticky left-0 z-10 bg-apple-card' : ''
-                            }`}
-                            style={{
-                              width: cell.column.getSize(),
-                              maxWidth: cell.column.getSize(),
-                            }}
+                      {sortHeader('rank', t('admin.trafficUsage.top100.rank'))}
+                    </th>
+                    <th
+                      className="px-3 py-3"
+                      aria-sort={
+                        sort.field === 'name'
+                          ? sort.descending
+                            ? 'descending'
+                            : 'ascending'
+                          : 'none'
+                      }
+                    >
+                      {sortHeader('name', t('admin.trafficUsage.top100.account'))}
+                    </th>
+                    <th
+                      className="px-3 py-3 text-right"
+                      aria-sort={
+                        sort.field === 'traffic'
+                          ? sort.descending
+                            ? 'descending'
+                            : 'ascending'
+                          : 'none'
+                      }
+                    >
+                      {sortHeader('traffic', t('admin.trafficUsage.top100.accountTraffic'))}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleItems.map((item) => (
+                    <tr
+                      key={item.panel_user_id}
+                      className="border-b border-apple-hairline last:border-0"
+                      data-panel-id={item.panel_user_id}
+                    >
+                      <td className="px-3 py-3 text-apple-mute">{item.rank}</td>
+                      <td className="px-3 py-3">
+                        {item.mapping_status === 'matched' && item.local_user ? (
+                          <Link
+                            to={`/admin/users/${item.local_user.id}`}
+                            state={backTo(location).state}
+                            className="font-medium text-[#F97315] hover:underline"
                           >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        );
-                      })}
+                            {item.local_user.display_name || item.panel_username}
+                          </Link>
+                        ) : (
+                          <span className="font-medium text-apple-ink">{item.panel_username}</span>
+                        )}
+                        {item.local_user && (
+                          <div className="text-xs text-apple-mute">{item.panel_username}</div>
+                        )}
+                        <div className="mt-0.5 text-[10px] text-apple-faint">
+                          {t('admin.trafficUsage.top100.panelId', { id: item.panel_user_id })}
+                          {item.mapping_status !== 'matched' && (
+                            <> · {t(`admin.trafficUsage.top100.${item.mapping_status}`)}</>
+                          )}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3 text-right font-medium text-apple-ink">
+                        {formatBytes(item.total_bytes)}
+                      </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-apple-mute">
-            {offset + 1}
-            {'\u2013'}
-            {Math.min(offset + limit, total)} / {total}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setOffset(Math.max(0, offset - limit))}
-              disabled={offset === 0}
-              className="rounded-lg bg-apple-elevated p-2 transition-colors hover:opacity-90 disabled:opacity-50"
-            >
-              <ChevronLeftIcon />
-            </button>
-            <span className="px-3 py-2 text-apple-mute">
-              {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setOffset(offset + limit)}
-              disabled={offset + limit >= total}
-              className="rounded-lg bg-apple-elevated p-2 transition-colors hover:opacity-90 disabled:opacity-50"
-            >
-              <ChevronRightIcon />
-            </button>
-          </div>
-        </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {pageCount > 1 && (
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                onClick={() => setPage(visiblePage - 1)}
+                disabled={visiblePage === 0}
+                aria-label={t('admin.trafficUsage.top100.previousPage')}
+                className="rounded-lg bg-apple-elevated p-2 disabled:opacity-50"
+              >
+                <ChevronLeftIcon />
+              </button>
+              <span className="px-3 text-sm text-apple-mute">
+                {visiblePage + 1} / {pageCount}
+              </span>
+              <button
+                onClick={() => setPage(visiblePage + 1)}
+                disabled={visiblePage + 1 >= pageCount}
+                aria-label={t('admin.trafficUsage.top100.nextPage')}
+                className="rounded-lg bg-apple-elevated p-2 disabled:opacity-50"
+              >
+                <ChevronRightIcon />
+              </button>
+            </div>
+          )}
+        </section>
       )}
     </div>
   );

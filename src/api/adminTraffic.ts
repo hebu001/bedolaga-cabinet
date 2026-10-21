@@ -20,85 +20,43 @@ export interface UserTrafficItem {
   total_bytes: number;
 }
 
-export interface TrafficUsageResponse {
-  items: UserTrafficItem[];
-  nodes: TrafficNodeInfo[];
-  total: number;
-  offset: number;
-  limit: number;
-  period_days: number;
-  available_tariffs: string[];
-  available_statuses: string[];
+export interface TrafficNodesResponse {
+  nodes: { uuid: string; name: string; country_code: string | null }[];
 }
 
-export interface ExportCsvResponse {
-  success: boolean;
-  message: string;
+export type TrafficTopParams = (
+  | { period: number; start_date?: never; end_date?: never }
+  | { period?: never; start_date: string; end_date: string }
+) & { node_uuids: string[] | null };
+
+export interface TrafficTopItem {
+  rank: number;
+  panel_user_id: number;
+  panel_username: string;
+  total_bytes: number;
+  mapping_status: 'matched' | 'unmapped' | 'ambiguous';
+  local_user: { id: number; display_name: string } | null;
 }
 
-export interface TrafficEnrichmentData {
-  devices_connected: number;
-  total_spent_kopeks: number;
-  subscription_start_date: string | null;
-  subscription_end_date: string | null;
-  last_node_name: string | null;
+export interface TrafficTopResponse {
+  scope: { kind: 'all' | 'selected'; node_uuids: string[]; node_count: number };
+  range: { start_date: string; end_date: string; days: number; timezone: 'UTC' };
+  top_limit: 100;
+  returned_count: number;
+  all_recorded_total_bytes: number;
+  top_sum_bytes: number;
+  daily: { date: string; total_bytes: number }[];
+  items: TrafficTopItem[];
+  generated_at: string;
 }
-
-export interface TrafficEnrichmentResponse {
-  data: Record<number, TrafficEnrichmentData>;
-}
-
-export type TrafficParams = {
-  period?: number;
-  limit?: number;
-  offset?: number;
-  search?: string;
-  sort_by?: string;
-  sort_desc?: boolean;
-  tariffs?: string;
-  statuses?: string;
-  nodes?: string;
-  start_date?: string;
-  end_date?: string;
-};
 
 export const adminTrafficApi = {
-  getTrafficUsage: async (
-    params: TrafficParams,
-    options?: { signal?: AbortSignal },
-  ): Promise<TrafficUsageResponse> => {
-    const response = await apiClient.get('/cabinet/admin/traffic', {
-      params,
-      signal: options?.signal,
-    });
+  getNodes: async (signal?: AbortSignal): Promise<TrafficNodesResponse> => {
+    const response = await apiClient.get('/cabinet/admin/traffic/nodes', { signal });
     return response.data;
   },
-
-  getEnrichment: async (
-    userIds: number[],
-    options?: { signal?: AbortSignal },
-  ): Promise<TrafficEnrichmentResponse> => {
-    // An absent user_ids parameter requests the legacy full dataset. Never
-    // accidentally trigger that expensive path for an empty table.
-    if (userIds.length === 0) return { data: {} };
-    const response = await apiClient.get('/cabinet/admin/traffic/enrichment', {
-      params: { user_ids: [...new Set(userIds)].sort((a, b) => a - b).join(',') },
-      signal: options?.signal,
-    });
-    return response.data;
-  },
-
-  exportCsv: async (data: {
-    period: number;
-    start_date?: string;
-    end_date?: string;
-    tariffs?: string;
-    statuses?: string;
-    nodes?: string;
-    total_threshold_gb?: number;
-    node_threshold_gb?: number;
-  }): Promise<ExportCsvResponse> => {
-    const response = await apiClient.post('/cabinet/admin/traffic/export-csv', data);
+  getTop: async (params: TrafficTopParams, signal?: AbortSignal): Promise<TrafficTopResponse> => {
+    const response = await apiClient.post('/cabinet/admin/traffic/top', params, { signal });
     return response.data;
   },
 };
