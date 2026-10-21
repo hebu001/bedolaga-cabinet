@@ -62,91 +62,30 @@ export type TrafficParams = {
   end_date?: string;
 };
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const MAX_CACHE_ENTRIES = 20;
-
-const trafficCache = new Map<string, { data: TrafficUsageResponse; timestamp: number }>();
-
-function buildCacheKey(params: TrafficParams): string {
-  return JSON.stringify({
-    period: params.period ?? 30,
-    limit: params.limit ?? 50,
-    offset: params.offset ?? 0,
-    search: params.search ?? '',
-    sort_by: params.sort_by ?? 'total_bytes',
-    sort_desc: params.sort_desc ?? true,
-    tariffs: params.tariffs ?? '',
-    statuses: params.statuses ?? '',
-    nodes: params.nodes ?? '',
-    start_date: params.start_date ?? '',
-    end_date: params.end_date ?? '',
-  });
-}
-
-const enrichmentCache: { data: TrafficEnrichmentResponse | null; timestamp: number } = {
-  data: null,
-  timestamp: 0,
-};
-
 export const adminTrafficApi = {
   getTrafficUsage: async (
     params: TrafficParams,
-    options?: { skipCache?: boolean },
+    options?: { signal?: AbortSignal },
   ): Promise<TrafficUsageResponse> => {
-    const key = buildCacheKey(params);
-
-    if (!options?.skipCache) {
-      const cached = trafficCache.get(key);
-      if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        return cached.data;
-      }
-    }
-
-    const response = await apiClient.get('/cabinet/admin/traffic', { params });
-    const data: TrafficUsageResponse = response.data;
-
-    trafficCache.set(key, { data, timestamp: Date.now() });
-
-    // Evict oldest entries to prevent unbounded memory growth
-    if (trafficCache.size > MAX_CACHE_ENTRIES) {
-      const iterator = trafficCache.keys();
-      while (trafficCache.size > MAX_CACHE_ENTRIES) {
-        const oldest = iterator.next();
-        if (oldest.done) break;
-        trafficCache.delete(oldest.value);
-      }
-    }
-
-    return data;
+    const response = await apiClient.get('/cabinet/admin/traffic', {
+      params,
+      signal: options?.signal,
+    });
+    return response.data;
   },
 
-  getCached: (params: TrafficParams): TrafficUsageResponse | null => {
-    const key = buildCacheKey(params);
-    const cached = trafficCache.get(key);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-    return null;
-  },
-
-  invalidateCache: () => {
-    trafficCache.clear();
-  },
-
-  getEnrichment: async (options?: { skipCache?: boolean }): Promise<TrafficEnrichmentResponse> => {
-    if (
-      !options?.skipCache &&
-      enrichmentCache.data &&
-      Date.now() - enrichmentCache.timestamp < CACHE_TTL
-    ) {
-      return enrichmentCache.data;
-    }
-
-    const response = await apiClient.get('/cabinet/admin/traffic/enrichment');
-    const data: TrafficEnrichmentResponse = response.data;
-    enrichmentCache.data = data;
-    enrichmentCache.timestamp = Date.now();
-    return data;
+  getEnrichment: async (
+    userIds: number[],
+    options?: { signal?: AbortSignal },
+  ): Promise<TrafficEnrichmentResponse> => {
+    // An absent user_ids parameter requests the legacy full dataset. Never
+    // accidentally trigger that expensive path for an empty table.
+    if (userIds.length === 0) return { data: {} };
+    const response = await apiClient.get('/cabinet/admin/traffic/enrichment', {
+      params: { user_ids: [...new Set(userIds)].sort((a, b) => a - b).join(',') },
+      signal: options?.signal,
+    });
+    return response.data;
   },
 
   exportCsv: async (data: {

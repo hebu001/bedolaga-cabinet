@@ -15,7 +15,6 @@ import {
   type UserTrafficItem,
   type TrafficNodeInfo,
   type TrafficParams,
-  type TrafficEnrichmentData,
 } from '../api/adminTraffic';
 import { usePlatform } from '../platform/hooks/usePlatform';
 import {
@@ -33,7 +32,7 @@ import {
   formatGbPerDay,
 } from '../components/admin/trafficUsage/trafficUsageHelpers';
 import { RiskBadge } from '../components/admin/trafficUsage/RiskBadge';
-import { PeriodSelector, PERIODS } from '../components/admin/trafficUsage/filters/PeriodSelector';
+import { PeriodSelector } from '../components/admin/trafficUsage/filters/PeriodSelector';
 import { TariffFilter } from '../components/admin/trafficUsage/filters/TariffFilter';
 import { StatusFilter } from '../components/admin/trafficUsage/filters/StatusFilter';
 import { NodeFilter } from '../components/admin/trafficUsage/filters/NodeFilter';
@@ -123,12 +122,9 @@ export default function AdminTrafficUsage() {
   const location = useLocation();
   const { capabilities } = usePlatform();
 
-  const [items, setItems] = useState<UserTrafficItem[]>([]);
   const [nodes, setNodes] = useState<TrafficNodeInfo[]>([]);
   const [availableTariffs, setAvailableTariffs] = useState<string[]>([]);
   const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [period, setPeriod] = useState(30);
   const [dateMode, setDateMode] = useState(false);
   const [customStart, setCustomStart] = useState('');
@@ -140,19 +136,14 @@ export default function AdminTrafficUsage() {
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [selectedCountries, setSelectedCountries] = useState<Set<string>>(new Set());
   const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [enrichment, setEnrichment] = useState<Record<number, TrafficEnrichmentData> | null>(null);
-  const [enrichmentLoading, setEnrichmentLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'total_bytes', desc: true }]);
   const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
   const [totalThreshold, setTotalThreshold] = useState('');
   const [nodeThreshold, setNodeThreshold] = useState('');
-  const [periodDays, setPeriodDays] = useState(30);
 
   const limit = 50;
-  const hasData = items.length > 0 || nodes.length > 0;
 
   const sortBy = sorting[0] ? toBackendSortField(sorting[0].id) : 'total_bytes';
   const sortDesc = sorting[0]?.desc ?? true;
@@ -213,72 +204,54 @@ export default function AdminTrafficUsage() {
   const queryClient = useQueryClient();
   const params = useMemo(() => buildParams(), [buildParams]);
 
-  // 5 min staleTime mirrors the previous in-memory cache TTL, so navigating
-  // away and back inside the window doesn't refetch. React Query handles
-  // dedup + per-key caching; the adminTrafficApi's own Map cache stays as a
-  // harmless L2 (still hit by background prefetch + tests).
+  // Only calculate the requested period. React Query owns the cache and
+  // cancellation, including requests made obsolete by navigation or filters.
   const trafficQuery = useQuery({
     queryKey: ['admin-traffic', params] as const,
-    queryFn: () => adminTrafficApi.getTrafficUsage(params),
+    queryFn: ({ signal }) => adminTrafficApi.getTrafficUsage(params, { signal }),
     staleTime: 5 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
+  const items = trafficQuery.data?.items ?? [];
+  const total = trafficQuery.data?.total ?? 0;
+  const periodDays = trafficQuery.data?.period_days ?? period;
+  const loading = trafficQuery.isFetching;
+  const initialLoading = trafficQuery.isLoading;
+  const hasData = !!trafficQuery.data && (items.length > 0 || nodes.length > 0);
 
-  // Sync trafficQuery into the existing state vars so the rest of the
-  // page (selectors, table, derived memos) is untouched.
+  // Keep filter choices available while loading a different page or period.
   useEffect(() => {
     if (!trafficQuery.data) return;
-    setItems(trafficQuery.data.items);
     setNodes(trafficQuery.data.nodes);
-    setTotal(trafficQuery.data.total);
     setAvailableTariffs(trafficQuery.data.available_tariffs);
     setAvailableStatuses(trafficQuery.data.available_statuses);
-    setPeriodDays(trafficQuery.data.period_days);
   }, [trafficQuery.data]);
-  useEffect(() => {
-    setLoading(trafficQuery.isFetching);
-    if (!trafficQuery.isLoading) setInitialLoading(false);
-  }, [trafficQuery.isFetching, trafficQuery.isLoading]);
 
-  // Enrichment query — gated on first data arrival so we don't fetch tags
-  // before there's anyone to tag.
+  const visibleUserIds = useMemo(
+    () =>
+      [...new Set(trafficQuery.data?.items.map((item) => item.user_id) ?? [])].sort(
+        (a, b) => a - b,
+      ),
+    [trafficQuery.data],
+  );
+  // Additional details belong to the visible users, not every user in the bot.
   const enrichmentQuery = useQuery({
-    queryKey: ['admin-traffic-enrichment'] as const,
-    queryFn: () => adminTrafficApi.getEnrichment(),
+    queryKey: ['admin-traffic-enrichment', visibleUserIds] as const,
+    queryFn: ({ signal }) => adminTrafficApi.getEnrichment(visibleUserIds, { signal }),
     staleTime: 5 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
-    enabled: !trafficQuery.isLoading && items.length > 0,
+    enabled: visibleUserIds.length > 0,
+    retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
-  useEffect(() => {
-    if (enrichmentQuery.data) setEnrichment(enrichmentQuery.data.data);
-  }, [enrichmentQuery.data]);
-  useEffect(() => {
-    setEnrichmentLoading(enrichmentQuery.isFetching);
-  }, [enrichmentQuery.isFetching]);
-
-  // Prefetch adjacent periods in background via queryClient — populates the
-  // cache so switching period feels instant.
-  useEffect(() => {
-    if (dateMode) return;
-    const prefetchPeriods = PERIODS.filter((p) => p !== period);
-    const timer = setTimeout(() => {
-      prefetchPeriods.forEach((p) => {
-        const prefetchParams: TrafficParams = {
-          period: p,
-          limit,
-          offset: 0,
-          sort_by: 'total_bytes',
-          sort_desc: true,
-        };
-        queryClient.prefetchQuery({
-          queryKey: ['admin-traffic', prefetchParams] as const,
-          queryFn: () => adminTrafficApi.getTrafficUsage(prefetchParams),
-          staleTime: 5 * 60 * 1000,
-        });
-      });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [period, dateMode, limit, queryClient]);
+  const enrichment = enrichmentQuery.data?.data ?? null;
+  const enrichmentLoading = enrichmentQuery.isFetching;
 
   useEffect(() => {
     if (toast) {
@@ -386,12 +359,10 @@ export default function AdminTrafficUsage() {
   };
 
   const handleRefresh = () => {
-    // Force-bypass both layers: drop the API's Map cache, invalidate React
-    // Query, and explicitly refetch enrichment.
-    adminTrafficApi.invalidateCache();
+    // Each active query refetches once. Inactive periods stay invalidated
+    // until the administrator selects them.
     queryClient.invalidateQueries({ queryKey: ['admin-traffic'] });
     queryClient.invalidateQueries({ queryKey: ['admin-traffic-enrichment'] });
-    enrichmentQuery.refetch();
   };
 
   const availableCountries = useMemo(() => {
@@ -494,6 +465,7 @@ export default function AdminTrafficUsage() {
       // ---- Enrichment columns ----
       {
         id: 'connected',
+        accessorFn: (row) => enrichment?.[row.user_id]?.devices_connected,
         header: t('admin.trafficUsage.connected'),
         size: 65,
         minSize: 50,
@@ -509,6 +481,7 @@ export default function AdminTrafficUsage() {
       },
       {
         id: 'total_spent',
+        accessorFn: (row) => enrichment?.[row.user_id]?.total_spent_kopeks,
         header: t('admin.trafficUsage.totalSpent'),
         size: 75,
         minSize: 55,
@@ -526,6 +499,7 @@ export default function AdminTrafficUsage() {
       },
       {
         id: 'sub_start',
+        accessorFn: (row) => enrichment?.[row.user_id]?.subscription_start_date,
         header: t('admin.trafficUsage.subStart'),
         size: 80,
         minSize: 65,
@@ -543,6 +517,7 @@ export default function AdminTrafficUsage() {
       },
       {
         id: 'sub_end',
+        accessorFn: (row) => enrichment?.[row.user_id]?.subscription_end_date,
         header: t('admin.trafficUsage.subEnd'),
         size: 80,
         minSize: 65,
@@ -560,6 +535,7 @@ export default function AdminTrafficUsage() {
       },
       {
         id: 'last_node',
+        accessorFn: (row) => enrichment?.[row.user_id]?.last_node_name,
         header: t('admin.trafficUsage.lastNode'),
         size: 100,
         minSize: 70,
@@ -733,7 +709,8 @@ export default function AdminTrafficUsage() {
         </div>
         <button
           onClick={handleRefresh}
-          disabled={loading}
+          disabled={loading || enrichmentLoading}
+          aria-label={t('common.refresh')}
           className="rounded-lg p-2 transition-colors hover:bg-apple-elevated disabled:opacity-50"
         >
           <RefreshIcon className={loading ? 'animate-spin' : ''} />
@@ -843,12 +820,21 @@ export default function AdminTrafficUsage() {
         </form>
       </div>
 
+      {(trafficQuery.isError || enrichmentQuery.isError) && (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl bg-apple-red/10 px-4 py-3 text-sm text-apple-red"
+        >
+          {t(trafficQuery.isError && trafficQuery.data ? 'common.staleData' : 'common.loadError')}
+        </div>
+      )}
+
       {/* Table */}
       {initialLoading && !hasData ? (
         <div className="flex justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F97315] border-t-transparent" />
         </div>
-      ) : !hasData && !loading ? (
+      ) : trafficQuery.isError && !hasData ? null : !hasData && !loading ? (
         <div className="py-12 text-center text-apple-mute">{t('admin.trafficUsage.noData')}</div>
       ) : (
         <div

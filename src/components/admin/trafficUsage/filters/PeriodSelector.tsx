@@ -7,8 +7,6 @@ import { DateField } from '../../../DateField';
 // days) and a free custom-date-range mode. Parent owns all state;
 // component is fully controlled.
 //
-// PERIODS is re-exported so the parent's prefetch effect iterates
-// the same canonical list.
 // ──────────────────────────────────────────────────────────────────
 
 export const PERIODS = [1, 3, 7, 14, 30] as const;
