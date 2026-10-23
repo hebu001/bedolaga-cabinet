@@ -28,6 +28,12 @@ import {
   isAudienceComplete,
 } from '../components/broadcasts/BroadcastAudienceEditor';
 import { EmailPreview, TelegramPreview } from '../components/broadcasts/BroadcastPreview';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '../components/primitives/Dialog';
 
 /** `?email_user=<id>` opens an Email broadcast for one user from their profile. */
 function parseEmailUserParam(value: string | null): number | null {
@@ -94,6 +100,8 @@ export default function AdminBroadcastCreate() {
   const [category, setCategory] = useState<'system' | 'news' | 'promo'>('system');
 
   // Telegram-specific state
+  const [messageType, setMessageType] = useState<'message' | 'main_menu'>('message');
+  const isMainMenu = messageType === 'main_menu';
   const [messageText, setMessageText] = useState('');
   const [selectedButtons, setSelectedButtons] = useState<string[]>(['home']);
   const [customButtons, setCustomButtons] = useState<CustomBroadcastButton[]>([]);
@@ -126,6 +134,7 @@ export default function AdminBroadcastCreate() {
   // Preview modals
   const [showTelegramPreview, setShowTelegramPreview] = useState(false);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [showMainMenuConfirm, setShowMainMenuConfirm] = useState(false);
 
   const previewMediaTypeForModal: 'photo' | 'video' | null =
     mediaType === 'photo' || mediaType === 'video' ? mediaType : null;
@@ -199,12 +208,16 @@ export default function AdminBroadcastCreate() {
 
   // Handle toggling channels
   const handleToggleTelegram = () => {
+    setMessageType('message');
+    setShowTelegramPreview(false);
+    setShowMainMenuConfirm(false);
     setTelegramEnabled((prev) => !prev);
     setTelegramAudience(emptyAudience());
     setTelegramTarget('');
   };
 
   const handleToggleEmail = () => {
+    if (isMainMenu) return;
     setEmailEnabled((prev) => !prev);
     setEmailAudience(emptyAudience());
     setEmailTarget('');
@@ -312,7 +325,7 @@ export default function AdminBroadcastCreate() {
   const isTelegramValid =
     telegramEnabled &&
     (advancedAudience ? isAudienceComplete(telegramAudience) : Boolean(telegramTarget)) &&
-    messageText.trim().length > 0;
+    (isMainMenu || messageText.trim().length > 0);
   const isEmailValid =
     emailEnabled &&
     (advancedAudience ? isAudienceComplete(emailAudience) : Boolean(emailTarget)) &&
@@ -328,24 +341,76 @@ export default function AdminBroadcastCreate() {
 
   const bothChannels = telegramEnabled && emailEnabled;
 
+  const menuAudiencePreview = useQuery<{ count: number }>({
+    queryKey: [
+      'admin',
+      'broadcasts',
+      'main-menu-confirm',
+      advancedAudience,
+      category,
+      advancedAudience ? telegramAudience : telegramTarget,
+    ],
+    queryFn: () =>
+      advancedAudience
+        ? adminBroadcastsApi.previewAudience({
+            channel: 'telegram',
+            category,
+            audience: telegramAudience,
+            limit: 1,
+          })
+        : adminBroadcastsApi.preview(telegramTarget),
+    enabled: showMainMenuConfirm && isMainMenu && isTelegramValid,
+    retry: false,
+  });
+
+  const handleMessageTypeChange = (next: 'message' | 'main_menu') => {
+    setMessageType(next);
+    setShowTelegramPreview(false);
+    setShowEmailPreview(false);
+    setShowMainMenuConfirm(false);
+    if (next === 'main_menu') {
+      setTelegramEnabled(true);
+      setEmailEnabled(false);
+      setEmailAudience(emptyAudience());
+      setEmailTarget('');
+    }
+  };
+
   // Submit
-  const handleSubmit = async () => {
-    if (!isValid) return;
+  const handleSubmit = async (confirmedMainMenu = false) => {
+    if (!isValid || createMutation.isPending || isSubmitting || isUploading) return;
+    if (isMainMenu && !confirmedMainMenu) {
+      setShowMainMenuConfirm(true);
+      return;
+    }
+    if (
+      isMainMenu &&
+      (menuAudiencePreview.isFetching ||
+        menuAudiencePreview.isError ||
+        !menuAudiencePreview.data?.count)
+    ) {
+      return;
+    }
 
     // Single channel — use existing createMutation with navigation to detail
     if (telegramEnabled && !emailEnabled) {
       const data: CombinedBroadcastCreateRequest = {
         channel: 'telegram',
         ...(advancedAudience ? { audience: telegramAudience } : { target: telegramTarget }),
-        message_text: messageText,
-        selected_buttons: selectedButtons,
-        custom_buttons: customButtons.length > 0 ? customButtons : undefined,
+        ...(isMainMenu
+          ? { message_type: 'main_menu', message_text: '', selected_buttons: [] }
+          : {
+              message_text: messageText,
+              selected_buttons: selectedButtons,
+              custom_buttons: customButtons.length > 0 ? customButtons : undefined,
+            }),
         category,
       };
-      if (uploadedFileId) {
+      if (uploadedFileId && !isMainMenu) {
         data.media = { type: mediaType, file_id: uploadedFileId };
       }
       createMutation.mutate(data);
+      setShowMainMenuConfirm(false);
       return;
     }
 
@@ -412,6 +477,40 @@ export default function AdminBroadcastCreate() {
         </div>
       </div>
 
+      <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
+        <p className="mb-3 text-[13px] font-medium text-apple-mute">
+          {t('admin.broadcasts.messageType', 'Тип рассылки')}
+        </p>
+        <div className="flex gap-3">
+          {(['message', 'main_menu'] as const).map((type) => (
+            <button
+              key={type}
+              type="button"
+              aria-pressed={messageType === type}
+              onClick={() => handleMessageTypeChange(type)}
+              disabled={isUploading || isPending}
+              className={`flex-1 rounded-xl p-3 text-sm font-medium transition-all disabled:opacity-50 ${
+                messageType === type
+                  ? 'bg-[#F97315]/10 text-[#F97315]'
+                  : 'bg-apple-elevated text-apple-mute'
+              }`}
+            >
+              {type === 'main_menu'
+                ? t('admin.broadcasts.mainMenu', 'Обновить главное меню')
+                : t('admin.broadcasts.message', 'Сообщение')}
+            </button>
+          ))}
+        </div>
+        {isMainMenu && (
+          <p className="mt-3 text-sm text-apple-mute">
+            {t(
+              'admin.broadcasts.mainMenuHint',
+              'Каждый получатель получит своё актуальное главное меню с подпиской и кнопками. Нажимать /start не потребуется. Доступно только в Telegram.',
+            )}
+          </p>
+        )}
+      </div>
+
       {/* Channel toggles */}
       <div className="apple-card-grad rounded-2xl bg-apple-card p-4">
         <label className="mb-3 block text-[13px] font-medium text-apple-mute">
@@ -434,7 +533,8 @@ export default function AdminBroadcastCreate() {
           </button>
           <button
             onClick={handleToggleEmail}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl p-4 transition-all ${
+            disabled={isMainMenu}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl p-4 transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
               emailEnabled ? '' : 'bg-apple-elevated text-apple-mute'
             }`}
             style={
@@ -500,7 +600,7 @@ export default function AdminBroadcastCreate() {
             <button
               type="button"
               onClick={() => setShowTelegramPreview(true)}
-              disabled={messageText.trim().length === 0}
+              disabled={!isMainMenu && messageText.trim().length === 0}
               className="rounded-full bg-apple-elevated px-3 py-1.5 text-sm text-apple-mute transition-colors hover:text-apple-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t('admin.broadcasts.preview', 'Предпросмотр')}
@@ -543,238 +643,246 @@ export default function AdminBroadcastCreate() {
             />
           )}
 
-          {/* Message text */}
-          <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
-              {t('admin.broadcasts.messageText')}
-            </label>
-            <textarea
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              placeholder={t('admin.broadcasts.messageTextPlaceholder')}
-              rows={6}
-              maxLength={4000}
-              className="min-h-[150px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
-            />
-            <div className="mt-1 text-right text-xs text-apple-mute">{messageText.length}/4000</div>
-          </div>
-
-          {/* Media upload */}
-          <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
-              {t('admin.broadcasts.media')}
-            </label>
-            {mediaFile ? (
-              <div className="rounded-xl bg-apple-elevated p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {mediaType === 'photo' && <PhotoIcon />}
-                    {mediaType === 'video' && <VideoIcon />}
-                    {mediaType === 'document' && <DocumentIcon />}
-                    <div>
-                      <p className="text-sm text-apple-ink">{mediaFile.name}</p>
-                      <p className="text-xs text-apple-mute">
-                        {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleRemoveMedia}
-                    className="rounded-lg p-2 text-apple-mute hover:text-apple-red"
-                    disabled={isUploading}
-                  >
-                    <XIcon className="h-5 w-5" />
-                  </button>
-                </div>
-                {mediaPreview && (
-                  <img
-                    src={mediaPreview}
-                    alt="Preview"
-                    className="mt-3 max-h-48 rounded-lg object-cover"
-                  />
-                )}
-                {isUploading && (
-                  <div
-                    className="mt-2 flex items-center gap-2 text-sm"
-                    style={{ color: '#F97315' }}
-                  >
-                    <RefreshIcon />
-                    {t('admin.broadcasts.uploading')}
-                  </div>
-                )}
-              </div>
-            ) : (
+          {!isMainMenu && (
+            <>
+              {/* Message text */}
               <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/*,application/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+                  {t('admin.broadcasts.messageText')}
+                </label>
+                <textarea
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder={t('admin.broadcasts.messageTextPlaceholder')}
+                  rows={6}
+                  maxLength={4000}
+                  className="min-h-[150px] w-full resize-y rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
                 />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-elevated p-6 text-apple-mute transition-colors hover:text-apple-ink"
-                >
-                  <PhotoIcon />
-                  <span>{t('admin.broadcasts.addMedia')}</span>
-                </button>
+                <div className="mt-1 text-right text-xs text-apple-mute">
+                  {messageText.length}/4000
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Buttons selection */}
-          <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
-              {t('admin.broadcasts.buttons')}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {buttonsData?.buttons.map((button) => (
-                <button
-                  key={button.key}
-                  onClick={() => toggleButton(button.key)}
-                  className={`rounded-full px-3 py-2 text-sm transition-colors ${
-                    selectedButtons.includes(button.key)
-                      ? 'bg-[#F97315] text-white'
-                      : 'border border-apple-hairline bg-apple-card text-apple-mute hover:bg-apple-elevated'
-                  }`}
-                >
-                  {button.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Custom buttons */}
-          <div>
-            <label className="mb-2 block text-[13px] font-medium text-apple-mute">
-              {t('admin.broadcasts.customButtons')}
-            </label>
-
-            {/* Existing custom buttons */}
-            {customButtons.length > 0 && (
-              <div className="mb-3 space-y-2">
-                {customButtons.map((btn, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between rounded-xl bg-apple-elevated px-3 py-2"
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="shrink-0 rounded bg-apple-card px-1.5 py-0.5 text-xs text-apple-mute">
-                        {btn.action_type === 'url'
-                          ? t('admin.broadcasts.customButtonTypeUrl')
-                          : t('admin.broadcasts.customButtonTypeCallback')}
-                      </span>
-                      <span className="truncate text-sm text-apple-ink">{btn.label}</span>
-                      <span className="truncate text-xs text-apple-faint">{btn.action_value}</span>
+              {/* Media upload */}
+              <div>
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+                  {t('admin.broadcasts.media')}
+                </label>
+                {mediaFile ? (
+                  <div className="rounded-xl bg-apple-elevated p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {mediaType === 'photo' && <PhotoIcon />}
+                        {mediaType === 'video' && <VideoIcon />}
+                        {mediaType === 'document' && <DocumentIcon />}
+                        <div>
+                          <p className="text-sm text-apple-ink">{mediaFile.name}</p>
+                          <p className="text-xs text-apple-mute">
+                            {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRemoveMedia}
+                        className="rounded-lg p-2 text-apple-mute hover:text-apple-red"
+                        disabled={isUploading}
+                      >
+                        <XIcon className="h-5 w-5" />
+                      </button>
                     </div>
+                    {mediaPreview && (
+                      <img
+                        src={mediaPreview}
+                        alt="Preview"
+                        className="mt-3 max-h-48 rounded-lg object-cover"
+                      />
+                    )}
+                    {isUploading && (
+                      <div
+                        className="mt-2 flex items-center gap-2 text-sm"
+                        style={{ color: '#F97315' }}
+                      >
+                        <RefreshIcon />
+                        {t('admin.broadcasts.uploading')}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,video/*,application/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
                     <button
-                      onClick={() => removeCustomButton(index)}
-                      className="ml-2 shrink-0 rounded p-1 text-apple-mute hover:text-apple-red"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-elevated p-6 text-apple-mute transition-colors hover:text-apple-ink"
                     >
-                      <XIcon className="h-5 w-5" />
+                      <PhotoIcon />
+                      <span>{t('admin.broadcasts.addMedia')}</span>
                     </button>
                   </div>
-                ))}
+                )}
               </div>
-            )}
 
-            {/* Inline add form */}
-            {isAddingCustomButton ? (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  addCustomButton();
-                }}
-                className="space-y-3 rounded-xl bg-apple-elevated p-3"
-              >
-                <input
-                  type="text"
-                  value={newButtonLabel}
-                  onChange={(e) => setNewButtonLabel(e.target.value)}
-                  placeholder={t('admin.broadcasts.customButtonLabelPlaceholder')}
-                  maxLength={64}
-                  className="w-full rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
-                  autoFocus
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setNewButtonActionType('callback')}
-                    className={`flex-1 rounded-full px-3 py-2 text-sm transition-colors ${
-                      newButtonActionType === 'callback'
-                        ? 'bg-[#F97315] text-white'
-                        : 'border border-apple-hairline bg-apple-card text-apple-mute hover:bg-apple-elevated'
-                    }`}
-                  >
-                    {t('admin.broadcasts.customButtonTypeCallback')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewButtonActionType('url')}
-                    className={`flex-1 rounded-full px-3 py-2 text-sm transition-colors ${
-                      newButtonActionType === 'url'
-                        ? 'bg-[#F97315] text-white'
-                        : 'border border-apple-hairline bg-apple-card text-apple-mute hover:bg-apple-elevated'
-                    }`}
-                  >
-                    {t('admin.broadcasts.customButtonTypeUrl')}
-                  </button>
+              {/* Buttons selection */}
+              <div>
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+                  {t('admin.broadcasts.buttons')}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {buttonsData?.buttons.map((button) => (
+                    <button
+                      key={button.key}
+                      onClick={() => toggleButton(button.key)}
+                      className={`rounded-full px-3 py-2 text-sm transition-colors ${
+                        selectedButtons.includes(button.key)
+                          ? 'bg-[#F97315] text-white'
+                          : 'border border-apple-hairline bg-apple-card text-apple-mute hover:bg-apple-elevated'
+                      }`}
+                    >
+                      {button.label}
+                    </button>
+                  ))}
                 </div>
-                <input
-                  type="text"
-                  value={newButtonActionValue}
-                  onChange={(e) => setNewButtonActionValue(e.target.value)}
-                  placeholder={
-                    newButtonActionType === 'url'
-                      ? t('admin.broadcasts.customButtonUrlPlaceholder')
-                      : t('admin.broadcasts.customButtonCallbackPlaceholder')
-                  }
-                  maxLength={newButtonActionType === 'callback' ? 64 : 256}
-                  className="w-full rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
-                />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={newButtonEmojiId}
-                  onChange={(e) => setNewButtonEmojiId(e.target.value)}
-                  placeholder={t('admin.broadcasts.customButtonEmojiIdPlaceholder')}
-                  maxLength={64}
-                  className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAddingCustomButton(false);
-                      setNewButtonLabel('');
-                      setNewButtonActionValue('');
-                      setNewButtonEmojiId('');
+              </div>
+
+              {/* Custom buttons */}
+              <div>
+                <label className="mb-2 block text-[13px] font-medium text-apple-mute">
+                  {t('admin.broadcasts.customButtons')}
+                </label>
+
+                {/* Existing custom buttons */}
+                {customButtons.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {customButtons.map((btn, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-xl bg-apple-elevated px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className="shrink-0 rounded bg-apple-card px-1.5 py-0.5 text-xs text-apple-mute">
+                            {btn.action_type === 'url'
+                              ? t('admin.broadcasts.customButtonTypeUrl')
+                              : t('admin.broadcasts.customButtonTypeCallback')}
+                          </span>
+                          <span className="truncate text-sm text-apple-ink">{btn.label}</span>
+                          <span className="truncate text-xs text-apple-faint">
+                            {btn.action_value}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => removeCustomButton(index)}
+                          className="ml-2 shrink-0 rounded p-1 text-apple-mute hover:text-apple-red"
+                        >
+                          <XIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Inline add form */}
+                {isAddingCustomButton ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      addCustomButton();
                     }}
-                    className="flex-1 rounded-full bg-apple-card px-4 py-2.5 text-sm font-medium text-apple-mute transition-colors hover:text-apple-ink"
+                    className="space-y-3 rounded-xl bg-apple-elevated p-3"
                   >
-                    {t('common.cancel')}
-                  </button>
+                    <input
+                      type="text"
+                      value={newButtonLabel}
+                      onChange={(e) => setNewButtonLabel(e.target.value)}
+                      placeholder={t('admin.broadcasts.customButtonLabelPlaceholder')}
+                      maxLength={64}
+                      className="w-full rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNewButtonActionType('callback')}
+                        className={`flex-1 rounded-full px-3 py-2 text-sm transition-colors ${
+                          newButtonActionType === 'callback'
+                            ? 'bg-[#F97315] text-white'
+                            : 'border border-apple-hairline bg-apple-card text-apple-mute hover:bg-apple-elevated'
+                        }`}
+                      >
+                        {t('admin.broadcasts.customButtonTypeCallback')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewButtonActionType('url')}
+                        className={`flex-1 rounded-full px-3 py-2 text-sm transition-colors ${
+                          newButtonActionType === 'url'
+                            ? 'bg-[#F97315] text-white'
+                            : 'border border-apple-hairline bg-apple-card text-apple-mute hover:bg-apple-elevated'
+                        }`}
+                      >
+                        {t('admin.broadcasts.customButtonTypeUrl')}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={newButtonActionValue}
+                      onChange={(e) => setNewButtonActionValue(e.target.value)}
+                      placeholder={
+                        newButtonActionType === 'url'
+                          ? t('admin.broadcasts.customButtonUrlPlaceholder')
+                          : t('admin.broadcasts.customButtonCallbackPlaceholder')
+                      }
+                      maxLength={newButtonActionType === 'callback' ? 64 : 256}
+                      className="w-full rounded-xl bg-apple-card px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={newButtonEmojiId}
+                      onChange={(e) => setNewButtonEmojiId(e.target.value)}
+                      placeholder={t('admin.broadcasts.customButtonEmojiIdPlaceholder')}
+                      maxLength={64}
+                      className="w-full rounded-xl bg-apple-elevated px-4 py-3 text-[15px] text-apple-ink outline-none placeholder:text-apple-faint focus:ring-2 focus:ring-[#F97315]/50"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddingCustomButton(false);
+                          setNewButtonLabel('');
+                          setNewButtonActionValue('');
+                          setNewButtonEmojiId('');
+                        }}
+                        className="flex-1 rounded-full bg-apple-card px-4 py-2.5 text-sm font-medium text-apple-mute transition-colors hover:text-apple-ink"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!isNewButtonValid}
+                        className="flex-1 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {t('common.add')}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
                   <button
-                    type="submit"
-                    disabled={!isNewButtonValid}
-                    className="flex-1 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => setIsAddingCustomButton(true)}
+                    disabled={customButtons.length >= 10}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-elevated px-4 py-3 text-sm text-apple-mute transition-colors hover:text-apple-ink"
                   >
-                    {t('common.add')}
+                    <span>+</span>
+                    <span>{t('admin.broadcasts.addCustomButton')}</span>
                   </button>
-                </div>
-              </form>
-            ) : (
-              <button
-                onClick={() => setIsAddingCustomButton(true)}
-                disabled={customButtons.length >= 10}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-apple-hairline bg-apple-elevated px-4 py-3 text-sm text-apple-mute transition-colors hover:text-apple-ink"
-              >
-                <span>+</span>
-                <span>{t('admin.broadcasts.addCustomButton')}</span>
-              </button>
-            )}
-          </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -888,7 +996,7 @@ export default function AdminBroadcastCreate() {
             {t('common.cancel')}
           </button>
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={!isValid || isPending || isUploading}
             className="flex items-center gap-2 rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -899,13 +1007,86 @@ export default function AdminBroadcastCreate() {
       </div>
 
       <TelegramPreview
-        open={showTelegramPreview}
+        open={showTelegramPreview && !isMainMenu}
         onClose={() => setShowTelegramPreview(false)}
         text={messageText}
         mediaUrl={mediaPreview}
         mediaType={previewMediaTypeForModal}
         buttons={previewButtonRows}
       />
+      <Dialog open={showTelegramPreview && isMainMenu} onOpenChange={setShowTelegramPreview}>
+        <DialogContent className="rounded-2xl bg-apple-card">
+          <DialogTitle>{t('admin.broadcasts.mainMenu', 'Обновить главное меню')}</DialogTitle>
+          <DialogDescription>
+            {t(
+              'admin.broadcasts.mainMenuPreview',
+              'Меню будет сформировано отдельно для каждого получателя в момент отправки: его профиль, актуальная подписка и доступные кнопки. Общего текста, дополнительных кнопок и вложений не будет.',
+            )}
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showMainMenuConfirm} onOpenChange={setShowMainMenuConfirm}>
+        <DialogContent className="rounded-2xl bg-apple-card" showCloseButton={false}>
+          <DialogTitle>
+            {t('admin.broadcasts.mainMenuConfirmTitle', 'Отправить главное меню?')}
+          </DialogTitle>
+          <DialogDescription>
+            {t(
+              'admin.broadcasts.mainMenuConfirmText',
+              'Бот отправит новое сообщение с персональным главным меню каждому пользователю выбранной аудитории. Пользователю не нужно нажимать кнопку или отправлять /start.',
+            )}
+          </DialogDescription>
+          {menuAudiencePreview.isFetching ? (
+            <p className="text-sm text-apple-mute">{t('common.loading')}</p>
+          ) : menuAudiencePreview.isError ? (
+            <div>
+              <p className="text-sm text-apple-red">
+                {t('admin.broadcasts.mainMenuCountError', 'Не удалось проверить аудиторию.')}
+              </p>
+              <button
+                type="button"
+                onClick={() => menuAudiencePreview.refetch()}
+                className="mt-2 text-sm text-[#F97315]"
+              >
+                {t('common.retry', 'Повторить')}
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-apple-ink">
+              {t('admin.broadcasts.mainMenuAudience', 'Аудитория')}:{' '}
+              {menuAudiencePreview.data?.count ?? 0}
+            </p>
+          )}
+          <p className="text-xs text-apple-mute">
+            {t(
+              'admin.broadcasts.mainMenuDeliveryHint',
+              'Доставка учитывает выбранную категорию и настройки уведомлений. Заблокировавшие бота сообщение не получат.',
+            )}
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowMainMenuConfirm(false)}
+              className="rounded-full bg-apple-elevated px-4 py-2.5 text-sm text-apple-mute"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit(true)}
+              disabled={
+                isPending ||
+                menuAudiencePreview.isFetching ||
+                menuAudiencePreview.isError ||
+                !menuAudiencePreview.data?.count
+              }
+              className="rounded-full bg-[#F97315] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {t('admin.broadcasts.mainMenuConfirmSend', 'Отправить меню')}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <EmailPreview
         open={showEmailPreview}
         onClose={() => setShowEmailPreview(false)}

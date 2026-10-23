@@ -113,6 +113,7 @@ export interface CombinedBroadcastCreateRequest {
   // Broadcast category for user notification preference filtering
   category?: 'system' | 'news' | 'promo';
   // Telegram fields
+  message_type?: 'message' | 'main_menu';
   message_text?: string;
   selected_buttons?: string[];
   custom_buttons?: CustomBroadcastButton[];
