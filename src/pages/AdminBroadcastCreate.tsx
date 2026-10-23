@@ -1015,7 +1015,10 @@ export default function AdminBroadcastCreate() {
         buttons={previewButtonRows}
       />
       <Dialog open={showTelegramPreview && isMainMenu} onOpenChange={setShowTelegramPreview}>
-        <DialogContent className="rounded-2xl bg-apple-card">
+        <DialogContent
+          className="translate-x-0 translate-y-0 rounded-2xl bg-apple-card"
+          style={{ translate: '-50% -50%', width: 'calc(100% - 2rem)' }}
+        >
           <DialogTitle>{t('admin.broadcasts.mainMenu', 'Обновить главное меню')}</DialogTitle>
           <DialogDescription>
             {t(
@@ -1026,7 +1029,11 @@ export default function AdminBroadcastCreate() {
         </DialogContent>
       </Dialog>
       <Dialog open={showMainMenuConfirm} onOpenChange={setShowMainMenuConfirm}>
-        <DialogContent className="rounded-2xl bg-apple-card" showCloseButton={false}>
+        <DialogContent
+          className="translate-x-0 translate-y-0 rounded-2xl bg-apple-card"
+          style={{ translate: '-50% -50%', width: 'calc(100% - 2rem)' }}
+          showCloseButton={false}
+        >
           <DialogTitle>
             {t('admin.broadcasts.mainMenuConfirmTitle', 'Отправить главное меню?')}
           </DialogTitle>
