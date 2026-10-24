@@ -7,7 +7,6 @@ import {
   init,
   restoreInitData,
   mountMiniApp,
-  miniAppReady,
   mountViewport,
   expandViewport,
   mountSwipeBehavior,
@@ -29,6 +28,7 @@ import { getTelegramInitData } from './utils/telegramInitData';
 import { applyTelegramLanguage } from './i18n';
 import { installEncodingSurrogateGuard } from './utils/installEncodingSurrogateGuard';
 import { checkBackendOnStartup } from './api/health';
+import { installTelegramReady } from './utils/telegramReady';
 import './styles/globals.css';
 
 installEncodingSurrogateGuard();
@@ -54,10 +54,9 @@ const HMR_KEY = '__tg_sdk_initialized';
 const alreadyInitialized = (window as unknown as Record<string, unknown>)[HMR_KEY] === true;
 
 if (isTelegramEnv && !alreadyInitialized) {
-  (window as unknown as Record<string, unknown>)[HMR_KEY] = true;
-
   try {
     init();
+    (window as unknown as Record<string, unknown>)[HMR_KEY] = true;
     restoreInitData();
 
     clearStaleSessionIfNeeded(getTelegramInitData());
@@ -67,7 +66,7 @@ if (isTelegramEnv && !alreadyInitialized) {
     // mountMiniApp() internally mounts themeParams in SDK v3,
     // so we don't call mountThemeParams() separately to avoid ConcurrentCallError.
     try {
-      mountMiniApp();
+      void Promise.resolve(mountMiniApp()).catch(() => {});
     } catch {}
     try {
       bindThemeParamsCssVars();
@@ -97,12 +96,17 @@ if (isTelegramEnv && !alreadyInitialized) {
         }
       })
       .catch(() => {});
-
-    miniAppReady();
   } catch {}
 } else if (!isTelegramEnv) {
   // Outside Telegram — still clear stale session tokens if any
   clearStaleSessionIfNeeded(null);
+}
+
+if (isTelegramEnv) {
+  // Native loading must not depend on SDK restoration or optional UI mounts.
+  // A retained WebView also needs this even when the SDK is already initialized.
+  const disposeTelegramReady = installTelegramReady();
+  import.meta.hot?.dispose(disposeTelegramReady);
 }
 
 void checkBackendOnStartup();

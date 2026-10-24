@@ -17,6 +17,8 @@ interface ImportMeta {
 
 /** Telegram WebApp global — available when running inside Telegram Mini App */
 interface TelegramWebAppGlobal {
+  /** Hides the native Mini App loading placeholder. */
+  ready?: () => void;
   onEvent?: (event: string, callback: () => void) => void;
   offEvent?: (event: string, callback: () => void) => void;
   /** Closes the Mini App (injected by telegram-web-app.js). */
