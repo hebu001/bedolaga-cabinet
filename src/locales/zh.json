@@ -962,6 +962,9 @@
       "wata": {
         "description": "通过 Wata 支付"
       },
+      "cardlink": {
+        "description": "通过 Cardlink 使用银行卡或 SBP 支付"
+      },
       "cloudpayments": {
         "description": "通过 CloudPayments 使用银行卡支付"
       },

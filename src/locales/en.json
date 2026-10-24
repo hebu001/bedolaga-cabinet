@@ -990,6 +990,9 @@
       "wata": {
         "description": "Pay via Wata"
       },
+      "cardlink": {
+        "description": "Pay by card or SBP via Cardlink"
+      },
       "cloudpayments": {
         "description": "Pay with bank card via CloudPayments"
       },

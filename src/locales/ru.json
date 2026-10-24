@@ -1027,6 +1027,9 @@
       "wata": {
         "description": "Оплата через Wata"
       },
+      "cardlink": {
+        "description": "Оплата картой или через СБП в Cardlink"
+      },
       "cloudpayments": {
         "description": "Оплата банковской картой через CloudPayments"
       },

@@ -968,6 +968,9 @@
       "wata": {
         "description": "پرداخت از طریق Wata"
       },
+      "cardlink": {
+        "description": "پرداخت با کارت یا SBP از طریق Cardlink"
+      },
       "cloudpayments": {
         "description": "پرداخت با کارت بانکی از طریق CloudPayments"
       },

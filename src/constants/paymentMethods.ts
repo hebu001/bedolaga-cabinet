@@ -8,6 +8,7 @@ export const METHOD_LABELS: Record<string, string> = {
   pal24: 'PayPalych',
   platega: 'Platega',
   wata: 'WATA',
+  cardlink: 'Cardlink',
   freekassa: 'Freekassa',
   freekassa_sbp: 'Freekassa СБП',
   freekassa_card: 'Freekassa Карта',

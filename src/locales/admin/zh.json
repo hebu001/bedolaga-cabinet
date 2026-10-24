@@ -1042,6 +1042,7 @@
         "payments_mulenpay": "MulenPay",
         "payments_tribute": "Tribute",
         "payments_wata": "Wata",
+        "payments_cardlink": "Cardlink",
         "payments_riopay": "RioPay",
         "payments_severpay": "SeverPay",
         "payments_paypear": "PayPear",

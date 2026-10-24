@@ -91,6 +91,24 @@ export default function PaymentMethodIcon({
         </svg>
       );
 
+    case 'cardlink':
+      return (
+        <svg className={className} viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="20" fill="#2563EB" />
+          <rect
+            x="9"
+            y="13"
+            width="22"
+            height="15"
+            rx="3"
+            fill="none"
+            stroke="#fff"
+            strokeWidth="2"
+          />
+          <path d="M10 18h20M14 23h5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+
     case 'wata':
       return (
         <svg className={className} viewBox="0 0 40 40">

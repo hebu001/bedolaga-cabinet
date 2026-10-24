@@ -63,6 +63,7 @@ export const SETTINGS_TREE: SettingsTreeConfig = {
         { id: 'payments_mulenpay', categories: ['MULENPAY'] },
         { id: 'payments_tribute', categories: ['TRIBUTE'] },
         { id: 'payments_wata', categories: ['WATA'] },
+        { id: 'payments_cardlink', categories: ['CARDLINK'] },
         { id: 'payments_riopay', categories: ['RIOPAY'] },
         { id: 'payments_severpay', categories: ['SEVERPAY'] },
         { id: 'payments_paypear', categories: ['PAYPEAR'] },
